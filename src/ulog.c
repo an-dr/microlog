@@ -21,19 +21,19 @@
  * IN THE SOFTWARE.
  */
 
-#include "log.h"
+#include "ulog.h"
 
 #define MAX_CALLBACKS 32
 
 typedef struct {
-    log_LogFn fn;
+    ulog_LogFn fn;
     void *udata;
     int level;
 } Callback;
 
 static struct {
     void *udata;
-    log_LockFn lock;
+    ulog_LockFn lock;
     int level;
     bool quiet;
     Callback callbacks[MAX_CALLBACKS];
@@ -41,43 +41,42 @@ static struct {
 
 
 static const char *level_strings[] = {
-#ifdef LOG_SHORT_LEVEL_STRINGS
-    "T", "D", "I", "W", "E", "F"
+#ifdef ULOG_SHORT_LEVEL_STRINGS
+        "T", "D", "I", "W", "E", "F"
 #else
-    "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"
+        "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"
 #endif
 };
 
-#ifdef LOG_USE_COLOR
+#ifdef ULOG_USE_COLOR
 static const char *level_colors[] = {
-    "\x1b[34m", // TRACE : Blue #00f
-    "\x1b[36m", // DEBUG : Cyan #0ff
-    "\x1b[32m", // INFO : Green #0f0
-    "\x1b[33m", // WARN : Yellow #ff0
-    "\x1b[31m", // ERROR : Red #f00
-    "\x1b[35m" // FATAL : Magenta #f0f
+        "\x1b[34m",  // TRACE : Blue #00f
+        "\x1b[36m",  // DEBUG : Cyan #0ff
+        "\x1b[32m",  // INFO : Green #0f0
+        "\x1b[33m",  // WARN : Yellow #ff0
+        "\x1b[31m",  // ERROR : Red #f00
+        "\x1b[35m"   // FATAL : Magenta #f0f
 };
 #endif
 
 
-static void stdout_callback(log_Event *ev)
-{
-#ifdef LOG_USE_COLOR
+static void stdout_callback(ulog_Event *ev) {
+#ifdef ULOG_USE_COLOR
     fprintf(
-#ifndef LOG_HIDE_FILE_STRING
-        ev->udata, "%s%u %-1s\x1b[0m \x1b[90m%s:%d:\x1b[0m ",
-         level_colors[ev->level], log_get_time(), level_strings[ev->level], ev->file, ev->line
+#ifndef ULOG_HIDE_FILE_STRING
+            ev->udata, "%s%u %-1s\x1b[0m \x1b[90m%s:%d:\x1b[0m ",
+            level_colors[ev->level], ulog_get_time(), level_strings[ev->level], ev->file, ev->line
 #else
-        ev->udata, "%s%lu %-1s\x1b[0m ", level_colors[ev->level], log_get_time(), level_strings[ev->level]
+            ev->udata, "%s%lu %-1s\x1b[0m ", level_colors[ev->level], ulog_get_time(), level_strings[ev->level]
 #endif
     );
 #else
     fprintf(
-#ifndef LOG_HIDE_FILE_STRING
-        ev->udata, "%u %-1s %s:%d: ",
-        log_get_time(), level_strings[ev->level], ev->file, ev->line
+#ifndef ULOG_HIDE_FILE_STRING
+            ev->udata, "%lu %-1s %s:%d: ",
+            ulog_get_time(), level_strings[ev->level], ev->file, ev->line
 #else
-        ev->udata, "%u %-1s ",log_get_time(), level_strings[ev->level]
+            ev->udata, "%lu %-1s ", ulog_get_time(), level_strings[ev->level]
 #endif
     );
 #endif
@@ -87,65 +86,56 @@ static void stdout_callback(log_Event *ev)
 }
 
 
-static void file_callback(log_Event *ev)
-{
+static void file_callback(ulog_Event *ev) {
     fprintf(
-        ev->udata, "%lu %-5s %s:%d: ",
-        log_get_time(), level_strings[ev->level], ev->file, ev->line);
+            ev->udata, "%lu %-5s %s:%d: ",
+            ulog_get_time(), level_strings[ev->level], ev->file, ev->line);
     vfprintf(ev->udata, ev->fmt, ev->ap);
     fprintf(ev->udata, "\n");
     fflush(ev->udata);
 }
 
 
-static void lock(void)
-{
+static void lock(void) {
     if (L.lock) {
         L.lock(true, L.udata);
     }
 }
 
 
-static void unlock(void)
-{
+static void unlock(void) {
     if (L.lock) {
         L.lock(false, L.udata);
     }
 }
 
 
-const char *log_level_string(int level)
-{
+const char *ulog_level_string(int level) {
     return level_strings[level];
 }
 
 
-void log_set_lock(log_LockFn fn, void *udata)
-{
-    L.lock = fn;
+void ulog_set_lock(ulog_LockFn fn, void *udata) {
+    L.lock  = fn;
     L.udata = udata;
 }
 
 
-void log_set_level(int level)
-{
+void ulog_set_level(int level) {
     L.level = level;
 }
 
 
-void log_set_quiet(bool enable)
-{
+void ulog_set_quiet(bool enable) {
     L.quiet = enable;
 }
 
 
-int log_add_callback(log_LogFn fn, void *udata, int level)
-{
+int ulog_add_callback(ulog_LogFn fn, void *udata, int level) {
     for (int i = 0; i < MAX_CALLBACKS; i++) {
         if (!L.callbacks[i].fn) {
-            L.callbacks[i] = (Callback) {
-                fn, udata, level
-            };
+            L.callbacks[i] = (Callback){
+                    fn, udata, level};
             return 0;
         }
     }
@@ -153,25 +143,22 @@ int log_add_callback(log_LogFn fn, void *udata, int level)
 }
 
 
-int log_add_fp(FILE *fp, int level)
-{
-    return log_add_callback(file_callback, fp, level);
+int ulog_add_fp(FILE *fp, int level) {
+    return ulog_add_callback(file_callback, fp, level);
 }
 
 
-static void init_event(log_Event *ev, void *udata)
-{
+static void init_event(ulog_Event *ev, void *udata) {
     ev->udata = udata;
 }
 
 
-void log_log(int level, const char *file, int line, const char *fmt, ...)
-{
-    log_Event ev = {
-        .fmt   = fmt,
-        .file  = file,
-        .line  = line,
-        .level = level,
+void ulog_log(int level, const char *file, int line, const char *fmt, ...) {
+    ulog_Event ev = {
+            .fmt   = fmt,
+            .file  = file,
+            .line  = line,
+            .level = level,
     };
 
     lock();
@@ -196,7 +183,7 @@ void log_log(int level, const char *file, int line, const char *fmt, ...)
     unlock();
 }
 
-#pragma weak log_get_time = log_get_time_default
-long unsigned log_get_time_default(void) {
+#pragma weak ulog_get_time = ulog_get_time_default
+long unsigned ulog_get_time_default(void) {
     return 0;
 }
