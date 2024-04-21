@@ -17,8 +17,6 @@
 #include "ulog_cfg.h"
 #endif
 
-#define ULOG_VERSION "1.0.0"
-
 typedef struct {
     va_list ap;
     const char *fmt;
