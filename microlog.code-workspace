@@ -1,0 +1,69 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+    ],
+    "settings": {},
+    "tasks": {
+        "version": "2.0.0",
+        "tasks": [
+            {
+                "label": "manual_test: Configure",
+                "type": "shell",
+                "command": "cmake",
+                "args": [
+                    "-G",
+                    "Ninja",
+                    "-B",
+                    "build",
+                    "-S ."
+                ],
+                "group": {
+                    "kind": "build",
+                    "isDefault": true
+                },
+                "options": {
+                    "cwd": "${workspaceFolder}/tests/manual_test",
+                    "env": {
+                        "ABCMAKE_PATH": "${workspaceFolder}/src"
+                    }
+                },
+                "problemMatcher": []
+            },
+            // Cmake build
+            {
+                "label": "manual_test: Build",
+                "type": "shell",
+                "command": "cmake",
+                "args": [
+                    "--build",
+                    "build",
+                    "--target",
+                    "all",
+                    "--config",
+                    "Release"
+                ],
+                "group": {
+                    "kind": "build",
+                    "isDefault": true
+                },
+                "options": {
+                    "cwd": "${workspaceFolder}/tests/manual_test"
+                },
+                "problemMatcher": [],
+            },
+            // Install to workspace/install
+            {
+                "label": "manual_test: Run",
+                "type": "shell",
+                "command": "${workspaceFolder}/tests/manual_test/build/manual_test",
+                "group": {
+                    "kind": "test",
+                    "isDefault": true
+                },
+                "problemMatcher": [],
+            },
+        ]
+    },
+}

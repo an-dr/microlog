@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020 rxi
- * Additions Copyright (c) 2020 Andrei Gramakov - mail@agramakov.me
+ * Additions Copyright (c) 2024 Andrei Gramakov - mail@agramakov.me
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -61,35 +61,40 @@ static const char *level_colors[] = {
 
 
 static void stdout_callback(ulog_Event *ev) {
+
 #ifdef ULOG_USE_COLOR
-    fprintf(
+    fprintf(ev->udata, "%s", level_colors[ev->level]);  // color start
+#endif
+
+#ifdef ULOG_HAVE_TIME
+    fprintf(ev->udata, "%lu [%-1s] ", ulog_get_time(), level_strings[ev->level]);
+#else
+    fprintf(ev->udata, "[%-1s] ", level_strings[ev->level]);
+#endif
+
 #ifndef ULOG_HIDE_FILE_STRING
-            ev->udata, "%s%u %-1s\x1b[0m \x1b[90m%s:%d:\x1b[0m ",
-            level_colors[ev->level], ulog_get_time(), level_strings[ev->level], ev->file, ev->line
-#else
-            ev->udata, "%s%lu %-1s\x1b[0m ", level_colors[ev->level], ulog_get_time(), level_strings[ev->level]
+    fprintf(ev->udata, "%s:%d: ", ev->file, ev->line);  // file and line
+#endif // ULOG_HIDE_FILE_STRING
+
+    vfprintf(ev->udata, ev->fmt, ev->ap); // message
+    
+#ifdef ULOG_USE_COLOR
+fprintf(ev->udata, "\x1b[0m");  // color end
 #endif
-    );
-#else
-    fprintf(
-#ifndef ULOG_HIDE_FILE_STRING
-            ev->udata, "%lu %-1s %s:%d: ",
-            ulog_get_time(), level_strings[ev->level], ev->file, ev->line
-#else
-            ev->udata, "%lu %-1s ", ulog_get_time(), level_strings[ev->level]
-#endif
-    );
-#endif
-    vfprintf(ev->udata, ev->fmt, ev->ap);
+
     fprintf(ev->udata, "\n");
     fflush(ev->udata);
 }
 
 
 static void file_callback(ulog_Event *ev) {
-    fprintf(
-            ev->udata, "%lu %-5s %s:%d: ",
+#ifdef ULOG_HAVE_TIME
+    fprintf(ev->udata, "%lu %-5s %s:%d: ",
             ulog_get_time(), level_strings[ev->level], ev->file, ev->line);
+#else
+    fprintf(ev->udata, "%-5s %s:%d: ",
+            level_strings[ev->level], ev->file, ev->line);
+#endif
     vfprintf(ev->udata, ev->fmt, ev->ap);
     fprintf(ev->udata, "\n");
     fflush(ev->udata);
@@ -181,9 +186,4 @@ void ulog_log(int level, const char *file, int line, const char *fmt, ...) {
     }
 
     unlock();
-}
-
-#pragma weak ulog_get_time = ulog_get_time_default
-long unsigned ulog_get_time_default(void) {
-    return 0;
 }

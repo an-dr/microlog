@@ -57,8 +57,9 @@ int ulog_add_callback(ulog_LogFn fn, void *udata, int level);
 int ulog_add_fp(FILE *fp, int level);
 void ulog_log(int level, const char *file, int line, const char *fmt, ...);
 
-// Weak function
+#ifdef ULOG_HAVE_TIME
 long unsigned ulog_get_time(void);
+#endif
 
 #ifdef __cplusplus
 }

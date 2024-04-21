@@ -4,7 +4,11 @@
 
 A simple customizable logging library implemented in C99.
 
-![screenshot](https://cloud.githubusercontent.com/assets/3920290/23831970/a2415e96-0723-11e7-9886-f8f5d2de60fe.png)
+![plain](doc/demo0.png)
+
+![color](doc/demo1.png)
+
+![short](doc/demo2.png)
 
 ## Table of Contents
 
@@ -20,7 +24,6 @@ A simple customizable logging library implemented in C99.
             - [const char\* ulog\_level\_string(int level)](#const-char-ulog_level_stringint-level)
         - [Customization](#customization)
             - [Customization defines](#customization-defines)
-            - [ulog\_get\_time](#ulog_get_time)
     - [License](#license)
     - [Credits](#credits)
 
@@ -102,12 +105,9 @@ Returns the name of the given log level as a string.
 - `ULOG_HIDE_FILE_STRING` - Hide the file name and line number.
 - `ULOG_SHORT_LEVEL_STRINGS` - Use short level strings, e.g. "T" for "TRACE", "I" for "INFO".
 - `HAVE_ULOG_CFG_H` - Use a custom configuration file.
+- `ULOG_HAVE_TIME` - Print the time in the log messages. Requires implementation of `long unsigned ulog_get_time(void)`
 
 You can use the defines in the compiler options, e.g. `-DULOG_USE_COLOR`. Or you can provide `-DHAVE_ULOG_CFG_H` to your compiler and the options in `ulog_cfg.h` - a custom configuration file.
-
-#### ulog_get_time
-
-You can implement `long unsigned ulog_get_time(void)` to see some time metrics in the log messages
 
 ## License
 
