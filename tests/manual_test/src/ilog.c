@@ -9,18 +9,18 @@
 
 #include "ulog.h"
 
-#define ILOG_IMPL_START(a) (va_list (a); va_start((a), fmt))
-#define ILOG_IMPL_END(a) (va_end(a))
+#define ILOG_GET_ARGS va_list args; va_start(args , fmt)
+#define ILOG_FINALIZE va_end(args)
 
 void ilog_debug(const char *fmt, ...){
-    ILOG_IMPL_START(args);
+    ILOG_GET_ARGS;
     log_debug(fmt, args);
-    va_end(args);
+    ILOG_FINALIZE;
 }
 
 void ilog_info(const char *fmt, ...){
-    va_list args; va_start(args, fmt);
+    ILOG_GET_ARGS;
     log_info(fmt, args);
-    va_end(args);
+    ILOG_FINALIZE;
 }
 
