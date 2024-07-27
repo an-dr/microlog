@@ -132,8 +132,6 @@ const char *ulog_get_level_string(int level) {
 }
 
 /// @brief  Sets the lock function and user data
-/// @param fn - Lock function
-/// @param udata - User data
 void ulog_set_lock(ulog_LockFn fn, void *udata) {
     L.lock  = fn;
     L.udata = udata;
@@ -141,24 +139,18 @@ void ulog_set_lock(ulog_LockFn fn, void *udata) {
 
 
 /// @brief Sets the debug level
-/// @param level - Debug level
 void ulog_set_level(int level) {
     L.level = level;
 }
 
 
 /// @brief Sets the quiet mode
-/// @param enable - Quiet mode
 void ulog_set_quiet(bool enable) {
     L.quiet = enable;
 }
 
 
 /// @brief Adds a callback
-/// @param fn - Callback function
-/// @param udata - User data
-/// @param level - Debug level
-/// @return 0 if success, -1 if failed
 #if ULOG_EXTRA_DESTINATIONS > 0
 int ulog_add_callback(ulog_LogFn fn, void *udata, int level) {
     for (int i = 0; i < ULOG_EXTRA_DESTINATIONS; i++) {
@@ -174,9 +166,6 @@ int ulog_add_callback(ulog_LogFn fn, void *udata, int level) {
 
 
 /// @brief Add file callback
-/// @param fp - File pointer
-/// @param level - Debug level
-/// @return 0 if success, -1 if failed
 #if ULOG_EXTRA_DESTINATIONS > 0
 int ulog_add_fp(FILE *fp, int level) {
     return ulog_add_callback(file_callback, fp, level);
@@ -193,11 +182,6 @@ static void init_event(ulog_Event *ev, void *udata) {
 
 
 /// @brief Logs the message
-/// @param level - Debug level
-/// @param file - File name
-/// @param line - Line number
-/// @param fmt - Format string
-/// @param ... - Format arguments
 void ulog_log(int level, const char *file, int line, const char *fmt, ...) {
     ulog_Event ev = {
             .fmt   = fmt,

@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 3.5)
 project(manual_test)
 
-# add_definitions(-DULOG_USE_COLOR)
-# add_definitions(-DULOG_HAVE_TIME)
-# add_definitions(-DULOG_HIDE_FILE_STRING)
-# add_definitions(-DULOG_SHORT_LEVEL_STRINGS)
+add_definitions(-DULOG_USE_COLOR)
+add_definitions(-DULOG_HAVE_TIME)
+add_definitions(-DULOG_HIDE_FILE_STRING)
+add_definitions(-DULOG_SHORT_LEVEL_STRINGS)
+add_definitions(-DULOG_EXTRA_DESTINATIONS=3)
+
 include(${CMAKE_CURRENT_LIST_DIR}/../../ab.cmake)
 add_main_component(manual_test)
 target_link_components(manual_test PATH ${CMAKE_CURRENT_LIST_DIR}/../../)

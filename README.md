@@ -86,7 +86,6 @@ file pointer a value less-than-zero is returned.
 
 One or more callback functions which are called with the log data can be provided to the library by using the `ulog_add_callback()` function. A callback function is passed a `ulog_Event` structure containing the `line` number, `filename`, `fmt` string, `va` printf va\_list, `level` and the given `udata`.
 
-
 #### ulog_set_lock(ulog_LockFn fn, void *udata)
 
 If the log will be written to from multiple threads a lock function can be set.
@@ -96,7 +95,6 @@ The function is passed the boolean `true` if the lock should be acquired or `fal
 
 Returns the name of the given log level as a string.
 
-
 ### Customization
 
 #### Customization defines
@@ -104,11 +102,14 @@ Returns the name of the given log level as a string.
 - `ULOG_USE_COLOR` - Use ANSI color escape codes when printing.
 - `ULOG_HIDE_FILE_STRING` - Hide the file name and line number.
 - `ULOG_SHORT_LEVEL_STRINGS` - Use short level strings, e.g. "T" for "TRACE", "I" for "INFO".
-- `HAVE_ULOG_CFG_H` - Use a custom configuration file.
 - `ULOG_HAVE_TIME` - Print the time in the log messages. Requires implementation of `long unsigned ulog_get_time(void)`
 - `ULOG_EXTRA_DESTINATIONS` - The maximum number of extra logging destinations that can be added. Each extra destination requires some memory. When it is 0, the entire extra destination code is not compiled. Default is 0.
 
-You can use the defines in the compiler options, e.g. `-DULOG_USE_COLOR`. Or you can provide `-DHAVE_ULOG_CFG_H` to your compiler and the options in `ulog_cfg.h` - a custom configuration file.
+You can use the defines in the compiler options, e.g. `-DULOG_USE_COLOR`. For CMake projects, you can use the `add_definitions` function.
+
+```cmake
+add_definitions(-DULOG_USE_COLOR)
+```
 
 ## License
 

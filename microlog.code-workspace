@@ -17,7 +17,8 @@
                     "Ninja",
                     "-B",
                     "build",
-                    "-S ."
+                    "-S .",
+                    "-DCMAKE_TOOLCHAIN_FILE=${workspaceFolder}/tests/manual_test/toolchain-gcc.cmake",
                 ],
                 "group": {
                     "kind": "build",
