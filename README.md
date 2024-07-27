@@ -21,7 +21,7 @@ A simple customizable logging library implemented in C99.
             - [ulog\_add\_fp(FILE \*fp, int level)](#ulog_add_fpfile-fp-int-level)
             - [ulog\_add\_callback(ulog\_LogFn fn, void \*udata, int level)](#ulog_add_callbackulog_logfn-fn-void-udata-int-level)
             - [ulog\_set\_lock(ulog\_LockFn fn, void \*udata)](#ulog_set_lockulog_lockfn-fn-void-udata)
-            - [const char\* ulog\_level\_string(int level)](#const-char-ulog_level_stringint-level)
+            - [const char\* ulog\_level\_string(int level)](#const-char-ulog_get_level_stringint-level)
         - [Customization](#customization)
             - [Customization defines](#customization-defines)
     - [License](#license)
@@ -92,7 +92,7 @@ One or more callback functions which are called with the log data can be provide
 If the log will be written to from multiple threads a lock function can be set.
 The function is passed the boolean `true` if the lock should be acquired or `false` if the lock should be released and the given `udata` value.
 
-#### const char* ulog_level_string(int level)
+#### const char* ulog_get_level_string(int level)
 
 Returns the name of the given log level as a string.
 
@@ -106,6 +106,7 @@ Returns the name of the given log level as a string.
 - `ULOG_SHORT_LEVEL_STRINGS` - Use short level strings, e.g. "T" for "TRACE", "I" for "INFO".
 - `HAVE_ULOG_CFG_H` - Use a custom configuration file.
 - `ULOG_HAVE_TIME` - Print the time in the log messages. Requires implementation of `long unsigned ulog_get_time(void)`
+- `ULOG_EXTRA_DESTINATIONS` - The maximum number of extra logging destinations that can be added. Each extra destination requires some memory. When it is 0, the entire extra destination code is not compiled. Default is 0.
 
 You can use the defines in the compiler options, e.g. `-DULOG_USE_COLOR`. Or you can provide `-DHAVE_ULOG_CFG_H` to your compiler and the options in `ulog_cfg.h` - a custom configuration file.
 

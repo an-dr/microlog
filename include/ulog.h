@@ -47,13 +47,16 @@ enum { LOG_TRACE,
 extern "C" {
 #endif
 
-const char *ulog_level_string(int level);
+const char *ulog_get_level_string(int level);
 void ulog_set_lock(ulog_LockFn fn, void *udata);
 void ulog_set_level(int level);
 void ulog_set_quiet(bool enable);
+void ulog_log(int level, const char *file, int line, const char *fmt, ...);
+
+#if ULOG_EXTRA_DESTINATIONS > 0
 int ulog_add_callback(ulog_LogFn fn, void *udata, int level);
 int ulog_add_fp(FILE *fp, int level);
-void ulog_log(int level, const char *file, int line, const char *fmt, ...);
+#endif
 
 #ifdef ULOG_HAVE_TIME
 long unsigned ulog_get_time(void);
