@@ -16,21 +16,23 @@
 ilog_t log_funcs = { 0 };
 
 
-static void ilog_run_if_exists(ilog_func func, const char *fmt, ...) {
+static int ilog_run_if_exists(ilog_func func, const char *fmt, ...) {
+    int res = 0;
     if (func) {
         va_list args;
         va_start(args, fmt);
-        func(fmt, args);
+        res = func(fmt, args);
         va_end(args);
     }
+    return res;
 }
 
-void ilog_trace(const char *fmt, ...) { ilog_run_if_exists(log_funcs.trace, fmt); }
-void ilog_debug(const char *fmt, ...) { ilog_run_if_exists(log_funcs.debug, fmt); }
-void ilog_info(const char *fmt, ...) { ilog_run_if_exists(log_funcs.info, fmt); }
-void ilog_warn(const char *fmt, ...) { ilog_run_if_exists(log_funcs.warn, fmt); }
-void ilog_error(const char *fmt, ...) { ilog_run_if_exists(log_funcs.error, fmt); }
-void ilog_fatal(const char *fmt, ...) { ilog_run_if_exists(log_funcs.fatal, fmt); }
+int ilog_trace(const char *fmt, ...) {return  ilog_run_if_exists(log_funcs.trace, fmt); }
+int ilog_debug(const char *fmt, ...) {return  ilog_run_if_exists(log_funcs.debug, fmt); }
+int ilog_info(const char *fmt, ...) { return ilog_run_if_exists(log_funcs.info, fmt); }
+int ilog_warn(const char *fmt, ...) { return ilog_run_if_exists(log_funcs.warn, fmt); }
+int ilog_error(const char *fmt, ...) {return  ilog_run_if_exists(log_funcs.error, fmt); }
+int ilog_fatal(const char *fmt, ...) {return  ilog_run_if_exists(log_funcs.fatal, fmt); }
 
 ilog_t ilog = { 
     .trace = ilog_trace,

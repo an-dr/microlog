@@ -12,7 +12,7 @@
 
 #pragma once
 
-typedef void(*ilog_func)(const char *fmt, ...);
+typedef int(*ilog_func)(const char *fmt, ...);
 
 typedef struct {
     ilog_func trace;

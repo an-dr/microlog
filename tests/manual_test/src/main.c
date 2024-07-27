@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
     log_warn("Warning message");
     log_fatal("Fatal message");
     
-    ilog_funcs.debug = printf;
+    log_funcs.debug = printf;
     
     ilog.info("Info message");
     ilog.debug("Debug message");
