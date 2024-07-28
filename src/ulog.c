@@ -68,14 +68,8 @@ static const char *level_colors[] = {
 };
 #endif
 
-/// @brief Callback for stdout
-/// @param ev
-static void stdout_callback(ulog_Event *ev) {
-
-#ifdef ULOG_USE_COLOR
-    fprintf(ev->udata, "%s", level_colors[ev->level]);  // color start
-#endif
-
+static void callback_print_msg(ulog_Event *ev) {
+    
 #ifdef ULOG_HAVE_TIME
     fprintf(ev->udata, "%lu [%-1s] ", ulog_get_time(), level_strings[ev->level]);
 #else
@@ -87,28 +81,42 @@ static void stdout_callback(ulog_Event *ev) {
 #endif                                                  // ULOG_HIDE_FILE_STRING
 
     vfprintf(ev->udata, ev->fmt, ev->ap);  // message
+}
 
+static void callback_finalize(ulog_Event *ev) {
+    fprintf(ev->udata, "\n");
+    fflush(ev->udata);
+}
+
+static void callback_color_start(ulog_Event *ev) {
+#ifdef ULOG_USE_COLOR
+    fprintf(ev->udata, "%s", level_colors[ev->level]);  // color start
+#endif
+}
+
+static void callback_color_end(ulog_Event *ev) {
 #ifdef ULOG_USE_COLOR
     fprintf(ev->udata, "\x1b[0m");  // color end
 #endif
+}
 
-    fprintf(ev->udata, "\n");
-    fflush(ev->udata);
+/// @brief Callback for stdout
+/// @param ev
+static void stdout_callback(ulog_Event *ev) {
+
+    callback_color_start(ev);
+    callback_print_msg(ev);
+    callback_color_end(ev);
+
+    callback_finalize(ev);
 }
 
 
 /// @brief Callback for file
 static void file_callback(ulog_Event *ev) {
-#ifdef ULOG_HAVE_TIME
-    fprintf(ev->udata, "%lu %-5s %s:%d: ",
-            ulog_get_time(), level_strings[ev->level], ev->file, ev->line);
-#else
-    fprintf(ev->udata, "%-5s %s:%d: ",
-            level_strings[ev->level], ev->file, ev->line);
-#endif
-    vfprintf(ev->udata, ev->fmt, ev->ap);
-    fprintf(ev->udata, "\n");
-    fflush(ev->udata);
+    callback_print_msg(ev);
+    
+    callback_finalize(ev);
 }
 
 /// @brief Locks if the function provided
