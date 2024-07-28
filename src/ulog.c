@@ -30,22 +30,49 @@
 /// @brief Callback structure
 typedef struct {
     ulog_LogFn fn;  // Callback function
-    void *udata;    // User data
+    void *arg;      // Any argument that will be passed to the event
     int level;      // Debug level
 } Callback;
 
-/// @brief Global logger structure
-static struct {
-    void *udata;       // User data
+//==================================================================
+// Main logger object
+//==================================================================
+
+typedef struct {
     ulog_LockFn lock;  // Mutex function
+    void *lock_arg;    // Mutex argument
     int level;         // Debug level
     bool quiet;        // Quiet mode
-    
+
+#ifndef ULOG_NO_STDOUT
+    Callback callback_stdout;  // to stdout
+#endif
+
 #if ULOG_EXTRA_DESTINATIONS > 0
     Callback callbacks[ULOG_EXTRA_DESTINATIONS];  // Extra callbacks
-#endif
-} L;
+#endif // ULOG_EXTRA_DESTINATIONS
 
+} ulog_t;
+
+static ulog_t ulog = {
+        .lock     = NULL,
+        .lock_arg = NULL,
+        .level    = LOG_INFO,
+        .quiet    = false,
+        
+#ifndef ULOG_NO_STDOUT
+        .callback_stdout = {0},
+#endif // ULOG_NO_STDOUT
+
+#if ULOG_EXTRA_DESTINATIONS > 0
+        .callbacks = {{0}},
+#endif // ULOG_EXTRA_DESTINATIONS
+
+};
+
+//==================================================================
+// Internal callbacks for stdout and file
+//==================================================================
 
 /// @brief Level strings
 static const char *level_strings[] = {
@@ -68,162 +95,189 @@ static const char *level_colors[] = {
 };
 #endif
 
-static void callback_print_msg(ulog_Event *ev) {
-    
+static void print_message(ulog_Event *ev, FILE *file) {
+
 #ifdef ULOG_HAVE_TIME
-    fprintf(ev->udata, "%lu [%-1s] ", ulog_get_time(), level_strings[ev->level]);
+    fprintf(file, "%lu [%-1s] ", ulog_get_time(), level_strings[ev->level]);
 #else
-    fprintf(ev->udata, "[%-1s] ", level_strings[ev->level]);
+    fprintf(file, "[%-1s] ", level_strings[ev->level]);
 #endif
 
 #ifndef ULOG_HIDE_FILE_STRING
-    fprintf(ev->udata, "%s:%d: ", ev->file, ev->line);  // file and line
-#endif                                                  // ULOG_HIDE_FILE_STRING
+    fprintf(file, "%s:%d: ", ev->file, ev->line);  // file and line
+#endif                                             // ULOG_HIDE_FILE_STRING
 
-    vfprintf(ev->udata, ev->fmt, ev->ap);  // message
+    vfprintf(file, ev->message, ev->message_format_args);  // message
 }
 
-static void callback_finalize(ulog_Event *ev) {
-    fprintf(ev->udata, "\n");
-    fflush(ev->udata);
+static void print_newline_and_flush(ulog_Event *ev, FILE *file) {
+    fprintf(file, "\n");
+    fflush(file);
 }
 
-static void callback_color_start(ulog_Event *ev) {
+static void print_color_start(ulog_Event *ev, FILE *file) {
 #ifdef ULOG_USE_COLOR
-    fprintf(ev->udata, "%s", level_colors[ev->level]);  // color start
+    fprintf(file, "%s", level_colors[ev->level]);  // color start
 #endif
 }
 
-static void callback_color_end(ulog_Event *ev) {
+static void print_color_end(ulog_Event *ev, FILE *file) {
 #ifdef ULOG_USE_COLOR
-    fprintf(ev->udata, "\x1b[0m");  // color end
+    fprintf(file, "\x1b[0m");  // color end
 #endif
 }
 
-#ifndef ULOG_NO_STDOUT
 /// @brief Callback for stdout
 /// @param ev
-static void stdout_callback(ulog_Event *ev) {
+static void callback_stdout(ulog_Event *ev, void *arg) {
+#ifndef ULOG_NO_STDOUT
+    FILE *fp = (FILE *) arg;
+    print_color_start(ev, fp);
+    print_message(ev, fp);
+    print_color_end(ev, fp);
 
-    callback_color_start(ev);
-    callback_print_msg(ev);
-    callback_color_end(ev);
-
-    callback_finalize(ev);
+    print_newline_and_flush(ev, fp);
+#else   // ULOG_NO_STDOUT
+    (void) ev;
+    (void) arg;
+#endif  // ULOG_NO_STDOUT
 }
-#endif // ULOG_NO_STDOUT
 
 
 /// @brief Callback for file
-static void file_callback(ulog_Event *ev) {
-    callback_print_msg(ev);
-    
-    callback_finalize(ev);
+static void callback_file(ulog_Event *ev, void *arg) {
+    FILE *fp = (FILE *) arg;
+    print_message(ev, fp);
+    print_newline_and_flush(ev, fp);
 }
+
+//==================================================================
+// Locks
+//==================================================================
 
 /// @brief Locks if the function provided
 static void lock(void) {
-    if (L.lock) {
-        L.lock(true, L.udata);
+    if (ulog.lock) {
+        ulog.lock(true, ulog.lock_arg);
     }
 }
 
 /// @brief Unlocks if the function provided
 static void unlock(void) {
-    if (L.lock) {
-        L.lock(false, L.udata);
+    if (ulog.lock) {
+        ulog.lock(false, ulog.lock_arg);
     }
 }
 
+
+/// @brief  Sets the lock function and user data
+void ulog_set_lock(ulog_LockFn fn, void *lock_arg) {
+    ulog.lock     = fn;
+    ulog.lock_arg = lock_arg;
+}
+
+//==================================================================
+// Logger configuration
+//==================================================================
 
 /// @brief Returns the string representation of the level
 const char *ulog_get_level_string(int level) {
     return level_strings[level];
 }
 
-/// @brief  Sets the lock function and user data
-void ulog_set_lock(ulog_LockFn fn, void *udata) {
-    L.lock  = fn;
-    L.udata = udata;
-}
-
-
 /// @brief Sets the debug level
 void ulog_set_level(int level) {
-    L.level = level;
+    ulog.level = level;
 }
 
 
 /// @brief Sets the quiet mode
 void ulog_set_quiet(bool enable) {
-    L.quiet = enable;
+    ulog.quiet = enable;
 }
 
 
-/// @brief Adds a callback
 #if ULOG_EXTRA_DESTINATIONS > 0
-int ulog_add_callback(ulog_LogFn fn, void *udata, int level) {
+/// @brief Adds a callback
+int ulog_add_callback(ulog_LogFn fn, void *arg, int level) {
     for (int i = 0; i < ULOG_EXTRA_DESTINATIONS; i++) {
-        if (!L.callbacks[i].fn) {
-            L.callbacks[i] = (Callback){
-                    fn, udata, level};
+        if (!ulog.callbacks[i].fn) {
+            ulog.callbacks[i] = (Callback){
+                    fn, arg, level};
             return 0;
         }
     }
     return -1;
 }
-#endif
-
 
 /// @brief Add file callback
-#if ULOG_EXTRA_DESTINATIONS > 0
 int ulog_add_fp(FILE *fp, int level) {
-    return ulog_add_callback(file_callback, fp, level);
+    return ulog_add_callback(callback_file, fp, level);
 }
 #endif
 
 
-/// @brief Initializes the event
+//==================================================================
+// Main logging code
+//==================================================================
+
+/// @brief Processes the callback with the event
 /// @param ev - Event
-/// @param udata - User data
-static void init_event(ulog_Event *ev, void *udata) {
-    ev->udata = udata;
+/// @param cb - Callback
+static void process_callback(ulog_Event *ev, Callback *cb) {
+    if (ev->level >= cb->level) {
+        cb->fn(ev, cb->arg);
+    }
 }
 
 
-/// @brief Logs the message
-void ulog_log(int level, const char *file, int line, const char *fmt, ...) {
-    ulog_Event ev = {
-            .fmt   = fmt,
-            .file  = file,
-            .line  = line,
-            .level = level,
-    };
-
-    lock();
-
+/// @brief Processes the stdout callback
+/// @param ev - Event
+static void log_to_stdout(ulog_Event *ev) {
 #ifndef ULOG_NO_STDOUT
-    // Processing the message for stdout
-    if (!L.quiet && level >= L.level) {
-        init_event(&ev, stderr);
-        va_start(ev.ap, fmt);
-        stdout_callback(&ev);
-        va_end(ev.ap);
+    if (!ulog.quiet) {
+        // Initializing the stdout callback if not set
+        if (!ulog.callback_stdout.fn) {
+            ulog.callback_stdout = (Callback){callback_stdout,
+                                              stdout,  // we use udata to pass the file pointer
+                                              LOG_TRACE};
+        }
+        process_callback(ev, &ulog.callback_stdout);
     }
-#endif // ULOG_NO_STDOUT
+#else   // ULOG_NO_STDOUT
+    (void) ev;
+#endif  // ULOG_NO_STDOUT
+}
 
+
+/// @brief Processes the extra callbacks
+/// @param ev - Event
+static void log_to_extra_destinations(ulog_Event *ev) {
 #if ULOG_EXTRA_DESTINATIONS > 0
     // Processing the message for callbacks
-    for (int i = 0; i < ULOG_EXTRA_DESTINATIONS && L.callbacks[i].fn; i++) {
-        Callback *cb = &L.callbacks[i];
-        if (level >= cb->level) {
-            init_event(&ev, cb->udata);
-            va_start(ev.ap, fmt);
-            cb->fn(&ev);
-            va_end(ev.ap);
-        }
+    for (int i = 0; i < ULOG_EXTRA_DESTINATIONS && ulog.callbacks[i].fn; i++) {
+        process_callback(ev, &ulog.callbacks[i]);
     }
-#endif // ULOG_EXTRA_DESTINATIONS > 0
+#else   // ULOG_EXTRA_DESTINATIONS
+    (void) ev;
+#endif  // ULOG_EXTRA_DESTINATIONS
+}
 
+/// @brief Logs the message
+void ulog_log(int level, const char *file, int line, const char *message, ...) {
+    ulog_Event ev = {
+            .message = message,
+            .file    = file,
+            .line    = line,
+            .level   = level,
+    };
+
+    va_start(ev.message_format_args, message);
+
+    lock();
+    log_to_stdout(&ev);
+    log_to_extra_destinations(&ev);
     unlock();
+
+    va_end(ev.message_format_args);
 }
