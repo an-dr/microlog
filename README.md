@@ -1,6 +1,6 @@
 # microlog
 
-[![abcmake](https://img.shields.io/badge/uses-abcmake-blue)](https://github.com/an-dr/abcmake)
+[![abcmake](https://img.shields.io/badge/uses-abcmake-blue)](https://github.com/an-dr/abcmake) ![version](https://img.shields.io/badge/version-3.0.0-green)
 
 A simple customizable logging library implemented in C99.
 

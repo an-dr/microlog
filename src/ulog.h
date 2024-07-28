@@ -14,16 +14,15 @@
 #include <stdio.h>
 
 typedef struct {
-    va_list ap;
-    const char *fmt;
-    const char *file;
-    void *udata;
-    int line;
-    int level;
+    const char *message;          // Message format string
+    va_list message_format_args;  // Format arguments
+    const char *file;             // Event file name
+    int line;                     // Event line number
+    int level;                    // Event debug level
 } ulog_Event;
 
-typedef void (*ulog_LogFn)(ulog_Event *ev);
-typedef void (*ulog_LockFn)(bool lock, void *udata);
+typedef void (*ulog_LogFn)(ulog_Event *ev, void *arg);
+typedef void (*ulog_LockFn)(bool lock, void *lock_arg);
 
 enum { LOG_TRACE,
        LOG_DEBUG,
@@ -47,9 +46,9 @@ extern "C" {
 const char *ulog_get_level_string(int level);
 
 /// @brief  Sets the lock function and user data
-/// @param fn - Lock function
-/// @param udata - User data
-void ulog_set_lock(ulog_LockFn fn, void *udata);
+/// @param function - Lock function
+/// @param lock_arg - User data
+void ulog_set_lock(ulog_LockFn function, void *lock_arg);
 
 /// @brief Sets the debug level
 /// @param level - Debug level
@@ -63,17 +62,17 @@ void ulog_set_quiet(bool enable);
 /// @param level - Debug level
 /// @param file - File name
 /// @param line - Line number
-/// @param fmt - Format string
+/// @param message - Message format string
 /// @param ... - Format arguments
-void ulog_log(int level, const char *file, int line, const char *fmt, ...);
+void ulog_log(int level, const char *file, int line, const char *message, ...);
 
 #if ULOG_EXTRA_DESTINATIONS > 0
 /// @brief Adds a callback
-/// @param fn - Callback function
-/// @param udata - User data
+/// @param function - Callback function
+/// @param arg - Optional argument that will be added to the event to be processed by the callback
 /// @param level - Debug level
 /// @return 0 if success, -1 if failed
-int ulog_add_callback(ulog_LogFn fn, void *udata, int level);
+int ulog_add_callback(ulog_LogFn function, void *arg, int level);
 
 /// @brief Add file callback
 /// @param fp - File pointer

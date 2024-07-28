@@ -5,8 +5,11 @@ int main(int argc, char *argv[])
 {
     FILE *fp = fopen("manual_test.log", "w");
     
+    ulog_set_level(LOG_TRACE);
     ulog_add_fp(fp, LOG_TRACE);
-    ulog_add_fp(stdout, LOG_DEBUG);
+    ulog_add_fp(stdout, LOG_ERROR);
+    
+    log_trace("Trace message");
     log_info("Info message");
     log_debug("Debug message");
     log_error("Error message");
