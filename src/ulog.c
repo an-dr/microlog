@@ -27,6 +27,10 @@
 #define ULOG_EXTRA_DESTINATIONS 0
 #endif
 
+#ifndef ULOG_CUSTOM_PREFIX_SIZE
+#define ULOG_CUSTOM_PREFIX_SIZE 0
+#endif
+
 /// @brief Callback structure
 typedef struct {
     ulog_LogFn function;  // Callback function
@@ -39,10 +43,10 @@ typedef struct {
 //==================================================================
 
 typedef struct {
-    ulog_LockFn lock_function;  // Mutex function
-    void *lock_arg;             // Mutex argument
-    int level;                  // Debug level
-    bool quiet;                 // Quiet mode
+    ulog_LockFn lock_function;          // Mutex function
+    void *lock_arg;                     // Mutex argument
+    int level;                          // Debug level
+    bool quiet;                         // Quiet mode
 
 #ifndef ULOG_NO_STDOUT
     Callback callback_stdout;  // to stdout
@@ -52,13 +56,18 @@ typedef struct {
     Callback callbacks[ULOG_EXTRA_DESTINATIONS];  // Extra callbacks
 #endif                                            // ULOG_EXTRA_DESTINATIONS
 
+#if ULOG_CUSTOM_PREFIX_SIZE > 0
+    ulog_UpdPrefixFn update_prefix_function;  // Custom prefix function
+    char custom_prefix[ULOG_CUSTOM_PREFIX_SIZE];  // Custom prefix
+#endif
+
 } ulog_t;
 
 static ulog_t ulog = {
-        .lock_function = NULL,
-        .lock_arg      = NULL,
-        .level         = LOG_INFO,
-        .quiet         = false,
+        .lock_function          = NULL,
+        .lock_arg               = NULL,
+        .level                  = LOG_INFO,
+        .quiet                  = false,
 
 #ifndef ULOG_NO_STDOUT
         .callback_stdout = {0},
@@ -67,6 +76,11 @@ static ulog_t ulog = {
 #if ULOG_EXTRA_DESTINATIONS > 0
         .callbacks = {{0}},
 #endif  // ULOG_EXTRA_DESTINATIONS
+
+#if ULOG_CUSTOM_PREFIX_SIZE > 0
+        .update_prefix_function = NULL,
+        .custom_prefix = {0},
+#endif
 
 };
 
@@ -117,6 +131,18 @@ static void print_time_full(ulog_Event *ev, FILE *file) {
 #endif
 }
 
+static void print_prefix(ulog_Event *ev, FILE *file) {
+#if ULOG_CUSTOM_PREFIX_SIZE > 0
+    if (ulog.update_prefix_function) {
+        ulog.update_prefix_function(ev, ulog.custom_prefix, ULOG_CUSTOM_PREFIX_SIZE);
+        fprintf(file, "%s ", ulog.custom_prefix);
+    }
+#else
+    (void) ev;
+    (void) file;
+#endif
+}
+
 static void print_message(ulog_Event *ev, FILE *file) {
 
     fprintf(file, "[%-1s] ", level_strings[ev->level]);
@@ -152,6 +178,7 @@ static void callback_stdout(ulog_Event *ev, void *arg) {
     FILE *fp = (FILE *) arg;
     print_color_start(ev, fp);
     print_time_sec(ev, fp);
+    print_prefix(ev, fp);
     print_message(ev, fp);
     print_color_end(ev, fp);
 
@@ -167,6 +194,7 @@ static void callback_stdout(ulog_Event *ev, void *arg) {
 static void callback_file(ulog_Event *ev, void *arg) {
     FILE *fp = (FILE *) arg;
     print_time_full(ev, fp);
+    print_prefix(ev, fp);
     print_message(ev, fp);
     print_newline_and_flush(ev, fp);
 }
@@ -216,6 +244,10 @@ void ulog_set_quiet(bool enable) {
     ulog.quiet = enable;
 }
 
+void ulog_set_prefix(ulog_UpdPrefixFn function) {
+    ulog.update_prefix_function = function;
+}
+
 
 #if ULOG_EXTRA_DESTINATIONS > 0
 /// @brief Adds a callback
@@ -228,6 +260,7 @@ int ulog_add_callback(ulog_LogFn function, void *arg, int level) {
     }
     return -1;
 }
+
 
 /// @brief Add file callback
 int ulog_add_fp(FILE *fp, int level) {

@@ -6,6 +6,7 @@ add_definitions(-DULOG_HAVE_TIME)
 add_definitions(-DULOG_HIDE_FILE_STRING)
 add_definitions(-DULOG_SHORT_LEVEL_STRINGS)
 add_definitions(-DULOG_EXTRA_DESTINATIONS=2)
+add_definitions(-DULOG_CUSTOM_PREFIX_SIZE=8)
 # add_definitions(-DULOG_NO_STDOUT)
 
 include(${CMAKE_CURRENT_LIST_DIR}/../../ab.cmake)
