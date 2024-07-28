@@ -100,6 +100,7 @@ static void callback_color_end(ulog_Event *ev) {
 #endif
 }
 
+#ifndef ULOG_NO_STDOUT
 /// @brief Callback for stdout
 /// @param ev
 static void stdout_callback(ulog_Event *ev) {
@@ -110,6 +111,7 @@ static void stdout_callback(ulog_Event *ev) {
 
     callback_finalize(ev);
 }
+#endif // ULOG_NO_STDOUT
 
 
 /// @brief Callback for file
@@ -200,6 +202,7 @@ void ulog_log(int level, const char *file, int line, const char *fmt, ...) {
 
     lock();
 
+#ifndef ULOG_NO_STDOUT
     // Processing the message for stdout
     if (!L.quiet && level >= L.level) {
         init_event(&ev, stderr);
@@ -207,6 +210,7 @@ void ulog_log(int level, const char *file, int line, const char *fmt, ...) {
         stdout_callback(&ev);
         va_end(ev.ap);
     }
+#endif // ULOG_NO_STDOUT
 
 #if ULOG_EXTRA_DESTINATIONS > 0
     // Processing the message for callbacks

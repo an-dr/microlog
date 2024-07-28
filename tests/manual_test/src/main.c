@@ -6,6 +6,7 @@ int main(int argc, char *argv[])
     FILE *fp = fopen("manual_test.log", "w");
     
     ulog_add_fp(fp, LOG_TRACE);
+    ulog_add_fp(stdout, LOG_DEBUG);
     log_info("Info message");
     log_debug("Debug message");
     log_error("Error message");
