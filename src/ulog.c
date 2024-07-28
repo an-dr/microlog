@@ -95,10 +95,21 @@ static const char *level_colors[] = {
 };
 #endif
 
-static void print_time(ulog_Event *ev, FILE *file){
+static void print_time_sec(ulog_Event *ev, FILE *file) {
 #ifdef ULOG_HAVE_TIME
-    char buf[16];
+    char buf[9];
     buf[strftime(buf, sizeof(buf), "%H:%M:%S", ev->time)] = '\0';
+    fprintf(file, "%s ", buf);
+#else
+    (void) ev;
+    (void) file;
+#endif
+}
+
+static void print_time_full(ulog_Event *ev, FILE *file) {
+#ifdef ULOG_HAVE_TIME
+    char buf[64];
+    buf[strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", ev->time)] = '\0';
     fprintf(file, "%s ", buf);
 #else
     (void) ev;
@@ -140,7 +151,7 @@ static void callback_stdout(ulog_Event *ev, void *arg) {
 #ifndef ULOG_NO_STDOUT
     FILE *fp = (FILE *) arg;
     print_color_start(ev, fp);
-    print_time(ev, fp);
+    print_time_sec(ev, fp);
     print_message(ev, fp);
     print_color_end(ev, fp);
 
@@ -155,7 +166,7 @@ static void callback_stdout(ulog_Event *ev, void *arg) {
 /// @brief Callback for file
 static void callback_file(ulog_Event *ev, void *arg) {
     FILE *fp = (FILE *) arg;
-    print_time(ev, fp);
+    print_time_full(ev, fp);
     print_message(ev, fp);
     print_newline_and_flush(ev, fp);
 }
@@ -234,6 +245,12 @@ int ulog_add_fp(FILE *fp, int level) {
 /// @param cb - Callback
 static void process_callback(ulog_Event *ev, Callback *cb) {
     if (ev->level >= cb->level) {
+#ifdef ULOG_HAVE_TIME
+        if (!ev->time) {
+            time_t t = time(NULL);
+            ev->time = localtime(&t);
+        }
+#endif  // ULOG_HAVE_TIME
         cb->function(ev, cb->arg);
     }
 }
