@@ -13,12 +13,21 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#ifdef ULOG_HAVE_TIME
+#include <time.h>
+#endif
+
 typedef struct {
     const char *message;          // Message format string
     va_list message_format_args;  // Format arguments
-    const char *file;             // Event file name
-    int line;                     // Event line number
-    int level;                    // Event debug level
+
+#ifdef ULOG_HAVE_TIME
+    struct tm *time;
+#endif // ULOG_HAVE_TIME
+
+    const char *file;  // Event file name
+    int line;          // Event line number
+    int level;         // Event debug level
 } ulog_Event;
 
 typedef void (*ulog_LogFn)(ulog_Event *ev, void *arg);
