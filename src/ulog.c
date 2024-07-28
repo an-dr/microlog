@@ -29,9 +29,9 @@
 
 /// @brief Callback structure
 typedef struct {
-    ulog_LogFn fn;  // Callback function
-    void *arg;      // Any argument that will be passed to the event
-    int level;      // Debug level
+    ulog_LogFn function;  // Callback function
+    void *arg;            // Any argument that will be passed to the event
+    int level;            // Debug level
 } Callback;
 
 //==================================================================
@@ -39,10 +39,10 @@ typedef struct {
 //==================================================================
 
 typedef struct {
-    ulog_LockFn lock;  // Mutex function
-    void *lock_arg;    // Mutex argument
-    int level;         // Debug level
-    bool quiet;        // Quiet mode
+    ulog_LockFn lock_function;  // Mutex function
+    void *lock_arg;             // Mutex argument
+    int level;                  // Debug level
+    bool quiet;                 // Quiet mode
 
 #ifndef ULOG_NO_STDOUT
     Callback callback_stdout;  // to stdout
@@ -50,23 +50,23 @@ typedef struct {
 
 #if ULOG_EXTRA_DESTINATIONS > 0
     Callback callbacks[ULOG_EXTRA_DESTINATIONS];  // Extra callbacks
-#endif // ULOG_EXTRA_DESTINATIONS
+#endif                                            // ULOG_EXTRA_DESTINATIONS
 
 } ulog_t;
 
 static ulog_t ulog = {
-        .lock     = NULL,
-        .lock_arg = NULL,
-        .level    = LOG_INFO,
-        .quiet    = false,
-        
+        .lock_function = NULL,
+        .lock_arg      = NULL,
+        .level         = LOG_INFO,
+        .quiet         = false,
+
 #ifndef ULOG_NO_STDOUT
         .callback_stdout = {0},
-#endif // ULOG_NO_STDOUT
+#endif  // ULOG_NO_STDOUT
 
 #if ULOG_EXTRA_DESTINATIONS > 0
         .callbacks = {{0}},
-#endif // ULOG_EXTRA_DESTINATIONS
+#endif  // ULOG_EXTRA_DESTINATIONS
 
 };
 
@@ -157,23 +157,23 @@ static void callback_file(ulog_Event *ev, void *arg) {
 
 /// @brief Locks if the function provided
 static void lock(void) {
-    if (ulog.lock) {
-        ulog.lock(true, ulog.lock_arg);
+    if (ulog.lock_function) {
+        ulog.lock_function(true, ulog.lock_arg);
     }
 }
 
 /// @brief Unlocks if the function provided
 static void unlock(void) {
-    if (ulog.lock) {
-        ulog.lock(false, ulog.lock_arg);
+    if (ulog.lock_function) {
+        ulog.lock_function(false, ulog.lock_arg);
     }
 }
 
 
 /// @brief  Sets the lock function and user data
-void ulog_set_lock(ulog_LockFn fn, void *lock_arg) {
-    ulog.lock     = fn;
-    ulog.lock_arg = lock_arg;
+void ulog_set_lock(ulog_LockFn function, void *lock_arg) {
+    ulog.lock_function = function;
+    ulog.lock_arg      = lock_arg;
 }
 
 //==================================================================
@@ -199,11 +199,10 @@ void ulog_set_quiet(bool enable) {
 
 #if ULOG_EXTRA_DESTINATIONS > 0
 /// @brief Adds a callback
-int ulog_add_callback(ulog_LogFn fn, void *arg, int level) {
+int ulog_add_callback(ulog_LogFn function, void *arg, int level) {
     for (int i = 0; i < ULOG_EXTRA_DESTINATIONS; i++) {
-        if (!ulog.callbacks[i].fn) {
-            ulog.callbacks[i] = (Callback){
-                    fn, arg, level};
+        if (!ulog.callbacks[i].function) {
+            ulog.callbacks[i] = (Callback){function, arg, level};
             return 0;
         }
     }
@@ -226,7 +225,7 @@ int ulog_add_fp(FILE *fp, int level) {
 /// @param cb - Callback
 static void process_callback(ulog_Event *ev, Callback *cb) {
     if (ev->level >= cb->level) {
-        cb->fn(ev, cb->arg);
+        cb->function(ev, cb->arg);
     }
 }
 
@@ -237,7 +236,7 @@ static void log_to_stdout(ulog_Event *ev) {
 #ifndef ULOG_NO_STDOUT
     if (!ulog.quiet) {
         // Initializing the stdout callback if not set
-        if (!ulog.callback_stdout.fn) {
+        if (!ulog.callback_stdout.function) {
             ulog.callback_stdout = (Callback){callback_stdout,
                                               stdout,  // we use udata to pass the file pointer
                                               LOG_TRACE};
@@ -255,7 +254,9 @@ static void log_to_stdout(ulog_Event *ev) {
 static void log_to_extra_destinations(ulog_Event *ev) {
 #if ULOG_EXTRA_DESTINATIONS > 0
     // Processing the message for callbacks
-    for (int i = 0; i < ULOG_EXTRA_DESTINATIONS && ulog.callbacks[i].fn; i++) {
+    for (int i = 0;
+         i < ULOG_EXTRA_DESTINATIONS && ulog.callbacks[i].function;
+         i++) {
         process_callback(ev, &ulog.callbacks[i]);
     }
 #else   // ULOG_EXTRA_DESTINATIONS

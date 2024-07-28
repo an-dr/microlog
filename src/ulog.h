@@ -46,9 +46,9 @@ extern "C" {
 const char *ulog_get_level_string(int level);
 
 /// @brief  Sets the lock function and user data
-/// @param fn - Lock function
+/// @param function - Lock function
 /// @param lock_arg - User data
-void ulog_set_lock(ulog_LockFn fn, void *lock_arg);
+void ulog_set_lock(ulog_LockFn function, void *lock_arg);
 
 /// @brief Sets the debug level
 /// @param level - Debug level
@@ -68,11 +68,11 @@ void ulog_log(int level, const char *file, int line, const char *message, ...);
 
 #if ULOG_EXTRA_DESTINATIONS > 0
 /// @brief Adds a callback
-/// @param fn - Callback function
+/// @param function - Callback function
 /// @param arg - Optional argument that will be added to the event to be processed by the callback
 /// @param level - Debug level
 /// @return 0 if success, -1 if failed
-int ulog_add_callback(ulog_LogFn fn, void *arg, int level);
+int ulog_add_callback(ulog_LogFn function, void *arg, int level);
 
 /// @brief Add file callback
 /// @param fp - File pointer
