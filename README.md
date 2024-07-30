@@ -30,7 +30,7 @@ A simple customizable logging library implemented in C99.
 ## Usage
 
 The library can be linked as a CMake project or can be added manually:
-copy **[ulog.c](src/ulog.c?raw=1)** and **[ulog.h](src/ulog.h?raw=1)** into your project and compiled along with it.
+copy **[ulog.c](src/ulog.c?raw=1)** and **[ulog.h](include/ulog.h?raw=1)** into your project and compiled along with it.
 
 The library provides 6 function-like macros for logging:
 
