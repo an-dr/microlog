@@ -243,10 +243,11 @@ void ulog_set_level(int level) {
 void ulog_set_quiet(bool enable) {
     ulog.quiet = enable;
 }
-
+#if ULOG_CUSTOM_PREFIX_SIZE > 0
 void ulog_set_prefix(ulog_UpdPrefixFn function) {
     ulog.update_prefix_function = function;
 }
+#endif // ULOG_CUSTOM_PREFIX_SIZE
 
 
 #if ULOG_EXTRA_DESTINATIONS > 0
