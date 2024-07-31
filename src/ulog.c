@@ -57,7 +57,7 @@ typedef struct {
 #endif                                            // ULOG_EXTRA_DESTINATIONS
 
 #if ULOG_CUSTOM_PREFIX_SIZE > 0
-    ulog_UpdPrefixFn update_prefix_function;  // Custom prefix function
+    ulog_BuildPrefixFn update_prefix_function;  // Custom prefix function
     char custom_prefix[ULOG_CUSTOM_PREFIX_SIZE];  // Custom prefix
 #endif
 
@@ -243,8 +243,9 @@ void ulog_set_level(int level) {
 void ulog_set_quiet(bool enable) {
     ulog.quiet = enable;
 }
+
 #if ULOG_CUSTOM_PREFIX_SIZE > 0
-void ulog_set_prefix(ulog_UpdPrefixFn function) {
+void ulog_set_build_prefix_fn(ulog_BuildPrefixFn function) {
     ulog.update_prefix_function = function;
 }
 #endif // ULOG_CUSTOM_PREFIX_SIZE

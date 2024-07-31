@@ -21,7 +21,7 @@ A simple customizable logging library implemented in C99.
             - [ulog\_add\_fp(FILE \*fp, int level)](#ulog_add_fpfile-fp-int-level)
             - [ulog\_add\_callback(ulog\_LogFn fn, void \*udata, int level)](#ulog_add_callbackulog_logfn-fn-void-udata-int-level)
             - [ulog\_set\_lock(ulog\_LockFn fn, void \*udata)](#ulog_set_lockulog_lockfn-fn-void-udata)
-            - [const char\* ulog\_level\_string(int level)](#const-char-ulog_get_level_stringint-level)
+            - [const char\* ulog\_get\_level\_string(int level)](#const-char-ulog_get_level_stringint-level)
         - [Customization](#customization)
             - [Customization defines](#customization-defines)
     - [License](#license)
@@ -75,7 +75,7 @@ library by using the `ulog_add_fp()` function. The data written to the file
 output is of the following format:
 
 ```
-2047-03-11 20:18:26 TRACE src/main.c:11: Hello world
+2047-03-11 20:18:26 [TRACE] src/main.c:11: Hello world
 ```
 
 Any messages below the given `level` are ignored. If the library failed to add a

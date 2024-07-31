@@ -32,7 +32,7 @@ typedef struct {
 
 typedef void (*ulog_LogFn)(ulog_Event *ev, void *arg);
 typedef void (*ulog_LockFn)(bool lock, void *lock_arg);
-typedef void (*ulog_UpdPrefixFn)(ulog_Event *ev, char *prefix, size_t prefix_size);
+typedef void (*ulog_BuildPrefixFn)(ulog_Event *ev, char *prefix, size_t prefix_size);
 
 enum { LOG_TRACE,
        LOG_DEBUG,
@@ -68,9 +68,11 @@ void ulog_set_level(int level);
 /// @param enable - Quiet mode
 void ulog_set_quiet(bool enable);
 
+#if ULOG_CUSTOM_PREFIX_SIZE > 0
 /// @brief Sets the prefix function
 /// @param function - Prefix function
-void ulog_set_prefix(ulog_UpdPrefixFn function);
+void ulog_set_build_prefix_fn(ulog_BuildPrefixFn function);
+#endif
 
 /// @brief Logs the message
 /// @param level - Debug level

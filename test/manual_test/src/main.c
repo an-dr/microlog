@@ -10,12 +10,18 @@ void update_prefix(ulog_Event *ev, char *prefix, size_t prefix_size) {
 
 int main(int argc, char *argv[])
 {
-    FILE *fp = fopen("manual_test.log", "w");
     
     ulog_set_level(LOG_TRACE);
+
+#if ULOG_EXTRA_DESTINATIONS > 0
+    FILE *fp = fopen("manual_test.log", "w");
     ulog_add_fp(fp, LOG_TRACE);
     ulog_add_fp(stdout, LOG_ERROR);
-    ulog_set_prefix(update_prefix);
+#endif
+    
+#if ULOG_CUSTOM_PREFIX_SIZE > 0
+    ulog_set_build_prefix_fn(update_prefix);
+#endif
     
     log_trace("Trace message");
     log_info("Info message");
