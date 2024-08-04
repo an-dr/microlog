@@ -28,6 +28,7 @@ In the default configuration it looks like this:
             - [ulog\_add\_callback(ulog\_LogFn fn, void \*udata, int level)](#ulog_add_callbackulog_logfn-fn-void-udata-int-level)
             - [ulog\_set\_lock(ulog\_LockFn fn, void \*udata)](#ulog_set_lockulog_lockfn-fn-void-udata)
             - [const char\* ulog\_get\_level\_string(int level)](#const-char-ulog_get_level_stringint-level)
+            - [ulog\_set\_prefix\_fn(ulog\_PrefixFn function)](#ulog_set_prefix_fnulog_prefixfn-function)
         - [Customization](#customization)
             - [Customization defines](#customization-defines)
     - [License](#license)
@@ -99,6 +100,10 @@ The function is passed the boolean `true` if the lock should be acquired or `fal
 #### const char* ulog_get_level_string(int level)
 
 Returns the name of the given log level as a string.
+
+#### ulog_set_prefix_fn(ulog_PrefixFn function)
+
+Sets a custom prefix function. The function is called with the log level and should return a string that will be printed before the log message. Requires `ULOG_CUSTOM_PREFIX_SIZE` to be more than 0.
 
 ### Customization
 

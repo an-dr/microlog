@@ -137,12 +137,6 @@ int ulog_add_callback(ulog_LogFn function, void *arg, int level);
 int ulog_add_fp(FILE *fp, int level);
 #endif
 
-#ifdef ULOG_HAVE_TIME
-/// @brief Returns the time. Must be implemented by the user
-/// @return Time as a dec number
-long unsigned ulog_get_time(void);
-#endif
-
 #ifdef __cplusplus
 }
 #endif
