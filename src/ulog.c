@@ -57,7 +57,7 @@ typedef struct {
 #endif                                            // ULOG_EXTRA_DESTINATIONS
 
 #if ULOG_CUSTOM_PREFIX_SIZE > 0
-    ulog_BuildPrefixFn update_prefix_function;  // Custom prefix function
+    ulog_PrefixFn update_prefix_function;  // Custom prefix function
     char custom_prefix[ULOG_CUSTOM_PREFIX_SIZE];  // Custom prefix
 #endif
 
@@ -66,7 +66,7 @@ typedef struct {
 static ulog_t ulog = {
         .lock_function          = NULL,
         .lock_arg               = NULL,
-        .level                  = LOG_INFO,
+        .level                  = LOG_TRACE,
         .quiet                  = false,
 
 #ifndef ULOG_NO_STDOUT
@@ -80,7 +80,7 @@ static ulog_t ulog = {
 #if ULOG_CUSTOM_PREFIX_SIZE > 0
         .update_prefix_function = NULL,
         .custom_prefix = {0},
-#endif
+#endif // ULOG_CUSTOM_PREFIX_SIZE
 
 };
 
@@ -90,17 +90,23 @@ static ulog_t ulog = {
 
 /// @brief Level strings
 static const char *level_strings[] = {
-#ifdef ULOG_SHORT_LEVEL_STRINGS
-        "T", "D", "I", "W", "E", "F"
+#ifdef ULOG_USE_EMOJI
+        "⚪", "🔵", "🟢", "🟡", "🔴", "💥"
 #else
-        "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"
+    
+#ifdef ULOG_SHORT_LEVEL_STRINGS
+        "[T]", "[D]", "[I]", "[W]", "[E]", "[F]"
+#else
+        "[TRACE]", "[DEBUG]", "[INFO]", "[WARN]", "[ERROR]", "[FATAL]"
 #endif
+
+#endif // ULOG_USE_EMOJI
 };
 
-#ifdef ULOG_USE_COLOR
+#ifndef ULOG_NO_COLOR
 /// @brief Level colors
 static const char *level_colors[] = {
-        "\x1b[34m",  // TRACE : Blue #00f
+        "\x1b[37m",  // TRACE : White #000
         "\x1b[36m",  // DEBUG : Cyan #0ff
         "\x1b[32m",  // INFO : Green #0f0
         "\x1b[33m",  // WARN : Yellow #ff0
@@ -145,7 +151,7 @@ static void print_prefix(ulog_Event *ev, FILE *file) {
 
 static void print_message(ulog_Event *ev, FILE *file) {
 
-    fprintf(file, "[%-1s] ", level_strings[ev->level]);
+    fprintf(file, "%-1s ", level_strings[ev->level]);
 
 #ifndef ULOG_HIDE_FILE_STRING
     fprintf(file, "%s:%d: ", ev->file, ev->line);  // file and line
@@ -160,13 +166,13 @@ static void print_newline_and_flush(ulog_Event *ev, FILE *file) {
 }
 
 static void print_color_start(ulog_Event *ev, FILE *file) {
-#ifdef ULOG_USE_COLOR
+#ifndef ULOG_NO_COLOR
     fprintf(file, "%s", level_colors[ev->level]);  // color start
 #endif
 }
 
 static void print_color_end(ulog_Event *ev, FILE *file) {
-#ifdef ULOG_USE_COLOR
+#ifndef ULOG_NO_COLOR
     fprintf(file, "\x1b[0m");  // color end
 #endif
 }
@@ -245,7 +251,7 @@ void ulog_set_quiet(bool enable) {
 }
 
 #if ULOG_CUSTOM_PREFIX_SIZE > 0
-void ulog_set_build_prefix_fn(ulog_BuildPrefixFn function) {
+void ulog_set_prefix_fn(ulog_PrefixFn function) {
     ulog.update_prefix_function = function;
 }
 #endif // ULOG_CUSTOM_PREFIX_SIZE

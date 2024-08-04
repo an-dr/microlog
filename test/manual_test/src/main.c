@@ -4,7 +4,7 @@
 
 void update_prefix(ulog_Event *ev, char *prefix, size_t prefix_size) {
     static int count = 0;
-    snprintf(prefix, prefix_size, "%d", count++);
+    snprintf(prefix, prefix_size, "[Custom: %d ms]", count++);
 }
 
 
@@ -20,26 +20,15 @@ int main(int argc, char *argv[])
 #endif
     
 #if ULOG_CUSTOM_PREFIX_SIZE > 0
-    ulog_set_build_prefix_fn(update_prefix);
+    ulog_set_prefix_fn(update_prefix);
 #endif
     
     log_trace("Trace message");
-    log_info("Info message");
     log_debug("Debug message");
-    log_error("Error message");
+    log_info("Info message");
     log_warn("Warning message");
+    log_error("Error message");
     log_fatal("Fatal message");
     return 0;
     
-}
-
-
-// Time has to be implemented by the user
-
-#include <sys/time.h>
-
-long unsigned ulog_get_time(void) {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return (long unsigned)(tv.tv_sec * 1000 + tv.tv_usec / 1000);
 }

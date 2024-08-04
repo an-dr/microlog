@@ -9,6 +9,46 @@
 #ifndef ULOG_H
 #define ULOG_H
 
+// =====================
+// Default configuration
+// =====================
+
+#ifndef ULOG_EXTRA_DESTINATIONS
+#define ULOG_EXTRA_DESTINATIONS 0
+#endif
+
+#ifndef ULOG_CUSTOM_PREFIX_SIZE
+#define ULOG_CUSTOM_PREFIX_SIZE 0
+#endif
+
+#if !defined(ULOG_HAVE_TIME) || ULOG_HAVE_TIME == 0
+#undef ULOG_HAVE_TIME 
+#endif
+
+#if !defined(ULOG_NO_COLOR) || ULOG_NO_COLOR == 0
+#undef ULOG_NO_COLOR
+#endif
+
+#if !defined(ULOG_CUSTOM_PREFIX_SIZE)
+#define ULOG_CUSTOM_PREFIX_SIZE 0
+#endif
+
+#if !defined(ULOG_HIDE_FILE_STRING) || ULOG_HIDE_FILE_STRING == 0
+#undef ULOG_HIDE_FILE_STRING
+#endif
+
+#if !defined(ULOG_SHORT_LEVEL_STRINGS) || ULOG_SHORT_LEVEL_STRINGS == 0
+#undef ULOG_SHORT_LEVEL_STRINGS
+#endif
+
+#if !defined(ULOG_NO_STDOUT) || ULOG_NO_STDOUT == 0
+#undef ULOG_NO_STDOUT
+#endif
+
+// ============
+// Declarations
+// ============
+
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -32,7 +72,7 @@ typedef struct {
 
 typedef void (*ulog_LogFn)(ulog_Event *ev, void *arg);
 typedef void (*ulog_LockFn)(bool lock, void *lock_arg);
-typedef void (*ulog_BuildPrefixFn)(ulog_Event *ev, char *prefix, size_t prefix_size);
+typedef void (*ulog_PrefixFn)(ulog_Event *ev, char *prefix, size_t prefix_size);
 
 enum { LOG_TRACE,
        LOG_DEBUG,
@@ -71,7 +111,7 @@ void ulog_set_quiet(bool enable);
 #if ULOG_CUSTOM_PREFIX_SIZE > 0
 /// @brief Sets the prefix function
 /// @param function - Prefix function
-void ulog_set_build_prefix_fn(ulog_BuildPrefixFn function);
+void ulog_set_prefix_fn(ulog_PrefixFn function);
 #endif
 
 /// @brief Logs the message

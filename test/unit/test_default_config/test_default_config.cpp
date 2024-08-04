@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
     ulog_set_level(LOG_TRACE);
     ulog_add_fp(fp, LOG_TRACE);
     ulog_add_fp(stdout, LOG_ERROR);
-    ulog_set_prefix(update_prefix);
+    ulog_set_prefix_fn(update_prefix);
     
     log_trace("Trace message");
     log_info("Info message");
