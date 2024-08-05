@@ -18,14 +18,14 @@
                     "-B",
                     "build",
                     "-S .",
-                    "-DCMAKE_TOOLCHAIN_FILE=${workspaceFolder}/tests/manual_test/toolchain-gcc.cmake",
+                    "-DCMAKE_TOOLCHAIN_FILE=${workspaceFolder}/test/manual_test/toolchain-gcc.cmake",
                 ],
                 "group": {
                     "kind": "build",
                     "isDefault": true
                 },
                 "options": {
-                    "cwd": "${workspaceFolder}/tests/manual_test",
+                    "cwd": "${workspaceFolder}/test/manual_test",
                     "env": {
                         "ABCMAKE_PATH": "${workspaceFolder}/src"
                     }
@@ -50,7 +50,7 @@
                     "isDefault": true
                 },
                 "options": {
-                    "cwd": "${workspaceFolder}/tests/manual_test"
+                    "cwd": "${workspaceFolder}/test/manual_test"
                 },
                 "problemMatcher": [],
             },
@@ -58,7 +58,7 @@
             {
                 "label": "manual_test: Run",
                 "type": "shell",
-                "command": "${workspaceFolder}/tests/manual_test/build/manual_test",
+                "command": "${workspaceFolder}/test/manual_test/build/manual_test",
                 "group": {
                     "kind": "test",
                     "isDefault": true

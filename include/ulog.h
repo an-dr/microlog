@@ -9,20 +9,70 @@
 #ifndef ULOG_H
 #define ULOG_H
 
+// =====================
+// Default configuration
+// =====================
+
+#ifndef ULOG_EXTRA_DESTINATIONS
+#define ULOG_EXTRA_DESTINATIONS 0
+#endif
+
+#ifndef ULOG_CUSTOM_PREFIX_SIZE
+#define ULOG_CUSTOM_PREFIX_SIZE 0
+#endif
+
+#if !defined(ULOG_HAVE_TIME) || ULOG_HAVE_TIME == 0
+#undef ULOG_HAVE_TIME 
+#endif
+
+#if !defined(ULOG_NO_COLOR) || ULOG_NO_COLOR == 0
+#undef ULOG_NO_COLOR
+#endif
+
+#if !defined(ULOG_CUSTOM_PREFIX_SIZE)
+#define ULOG_CUSTOM_PREFIX_SIZE 0
+#endif
+
+#if !defined(ULOG_HIDE_FILE_STRING) || ULOG_HIDE_FILE_STRING == 0
+#undef ULOG_HIDE_FILE_STRING
+#endif
+
+#if !defined(ULOG_SHORT_LEVEL_STRINGS) || ULOG_SHORT_LEVEL_STRINGS == 0
+#undef ULOG_SHORT_LEVEL_STRINGS
+#endif
+
+#if !defined(ULOG_NO_STDOUT) || ULOG_NO_STDOUT == 0
+#undef ULOG_NO_STDOUT
+#endif
+
+// ============
+// Declarations
+// ============
+
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 
+#ifdef ULOG_HAVE_TIME
+#include <time.h>
+#endif
+
 typedef struct {
     const char *message;          // Message format string
     va_list message_format_args;  // Format arguments
-    const char *file;             // Event file name
-    int line;                     // Event line number
-    int level;                    // Event debug level
+
+#ifdef ULOG_HAVE_TIME
+    struct tm *time;
+#endif // ULOG_HAVE_TIME
+
+    const char *file;  // Event file name
+    int line;          // Event line number
+    int level;         // Event debug level
 } ulog_Event;
 
 typedef void (*ulog_LogFn)(ulog_Event *ev, void *arg);
 typedef void (*ulog_LockFn)(bool lock, void *lock_arg);
+typedef void (*ulog_PrefixFn)(ulog_Event *ev, char *prefix, size_t prefix_size);
 
 enum { LOG_TRACE,
        LOG_DEBUG,
@@ -58,6 +108,12 @@ void ulog_set_level(int level);
 /// @param enable - Quiet mode
 void ulog_set_quiet(bool enable);
 
+#if ULOG_CUSTOM_PREFIX_SIZE > 0
+/// @brief Sets the prefix function
+/// @param function - Prefix function
+void ulog_set_prefix_fn(ulog_PrefixFn function);
+#endif
+
 /// @brief Logs the message
 /// @param level - Debug level
 /// @param file - File name
@@ -79,12 +135,6 @@ int ulog_add_callback(ulog_LogFn function, void *arg, int level);
 /// @param level - Debug level
 /// @return 0 if success, -1 if failed
 int ulog_add_fp(FILE *fp, int level);
-#endif
-
-#ifdef ULOG_HAVE_TIME
-/// @brief Returns the time. Must be implemented by the user
-/// @return Time as a dec number
-long unsigned ulog_get_time(void);
 #endif
 
 #ifdef __cplusplus

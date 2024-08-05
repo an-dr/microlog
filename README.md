@@ -1,14 +1,20 @@
 # microlog
 
-[![abcmake](https://img.shields.io/badge/uses-abcmake-blue)](https://github.com/an-dr/abcmake) ![version](https://img.shields.io/badge/version-3.0.0-green)
+[![abcmake](https://img.shields.io/badge/uses-abcmake-blue)](https://github.com/an-dr/abcmake) ![version](https://img.shields.io/badge/version-4.0.0-green)
 
 A simple customizable logging library implemented in C99.
 
-![plain](doc/demo0.png)
+In the default configuration it looks like this:
 
-![color](doc/demo1.png)
+<img src="doc/demo0.png" height="100">
 
-![short](doc/demo2.png)
+...but in can be very minimalistic
+
+<img src="doc/demo1.png" height="100">
+
+... or feature-rich:
+
+<img src="doc/demo2.png" height="100">
 
 ## Table of Contents
 
@@ -21,7 +27,8 @@ A simple customizable logging library implemented in C99.
             - [ulog\_add\_fp(FILE \*fp, int level)](#ulog_add_fpfile-fp-int-level)
             - [ulog\_add\_callback(ulog\_LogFn fn, void \*udata, int level)](#ulog_add_callbackulog_logfn-fn-void-udata-int-level)
             - [ulog\_set\_lock(ulog\_LockFn fn, void \*udata)](#ulog_set_lockulog_lockfn-fn-void-udata)
-            - [const char\* ulog\_level\_string(int level)](#const-char-ulog_get_level_stringint-level)
+            - [const char\* ulog\_get\_level\_string(int level)](#const-char-ulog_get_level_stringint-level)
+            - [ulog\_set\_prefix\_fn(ulog\_PrefixFn function)](#ulog_set_prefix_fnulog_prefixfn-function)
         - [Customization](#customization)
             - [Customization defines](#customization-defines)
     - [License](#license)
@@ -30,7 +37,7 @@ A simple customizable logging library implemented in C99.
 ## Usage
 
 The library can be linked as a CMake project or can be added manually:
-copy **[ulog.c](src/ulog.c?raw=1)** and **[ulog.h](src/ulog.h?raw=1)** into your project and compiled along with it.
+copy **[ulog.c](src/ulog.c?raw=1)** and **[ulog.h](include/ulog.h?raw=1)** into your project and compiled along with it.
 
 The library provides 6 function-like macros for logging:
 
@@ -52,7 +59,7 @@ log_trace("Hello %s", "world")
 Resulting in a line with the given format printed to stderr:
 
 ```
-20:18:26 TRACE src/main.c:11: Hello world
+20:18:26 [TRACE] src/main.c:11: Hello world
 ```
 
 ### ulog_set_quiet(bool enable)
@@ -75,7 +82,7 @@ library by using the `ulog_add_fp()` function. The data written to the file
 output is of the following format:
 
 ```
-2047-03-11 20:18:26 TRACE src/main.c:11: Hello world
+2047-03-11 20:18:26 [TRACE] src/main.c:11: Hello world
 ```
 
 Any messages below the given `level` are ignored. If the library failed to add a
@@ -94,21 +101,27 @@ The function is passed the boolean `true` if the lock should be acquired or `fal
 
 Returns the name of the given log level as a string.
 
+#### ulog_set_prefix_fn(ulog_PrefixFn function)
+
+Sets a custom prefix function. The function is called with the log level and should return a string that will be printed before the log message. Requires `ULOG_CUSTOM_PREFIX_SIZE` to be more than 0.
+
 ### Customization
 
 #### Customization defines
 
-- `ULOG_USE_COLOR` - Use ANSI color escape codes when printing.
+- `ULOG_NO_COLOR` - Do not use ANSI color escape codes when printing.
 - `ULOG_HIDE_FILE_STRING` - Hide the file name and line number.
 - `ULOG_SHORT_LEVEL_STRINGS` - Use short level strings, e.g. "T" for "TRACE", "I" for "INFO".
+- `ULOG_USE_EMOJI` - Use emojis for log levels (⚪, 🟢, 🔵, 🟡, 🟠, 🔴, 💥). Overrides `ULOG_SHORT_LEVEL_STRINGS`.
 - `ULOG_HAVE_TIME` - Print the time in the log messages. Requires implementation of `long unsigned ulog_get_time(void)`
 - `ULOG_EXTRA_DESTINATIONS` - The maximum number of extra logging destinations that can be added. Each extra destination requires some memory. When it is 0, the entire extra destination code is not compiled. Default is 0.
 - `ULOG_NO_STDOUT` - Do not write to `stdout` by default. This can be overridden by adding a file pointer with `ulog_add_fp(stdout, level)`. If enabled, and `ULOG_EXTRA_DESTINATIONS` is not set, `ULOG_EXTRA_DESTINATIONS` will be forced to 1. Default is not defined.
+- `ULOG_CUSTOM_PREFIX_SIZE` - The maximum size of the custom prefix. Default is 0. If set to 0, the custom prefix code is not compiled. If set to a value greater than 0, the custom prefix can be set with `ulog_set_custom_prefix(ulog_PrefixFn func)`.
 
-You can use the defines in the compiler options, e.g. `-DULOG_USE_COLOR`. For CMake projects, you can use the `add_definitions` function.
+You can use the defines in the compiler options, e.g. `-DULOG_NO_COLOR`. For CMake projects, you can use the `add_definitions` function.
 
 ```cmake
-add_definitions(-DULOG_USE_COLOR)
+add_definitions(-DULOG_NO_COLOR)
 ```
 
 ## License
