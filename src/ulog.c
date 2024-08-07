@@ -126,16 +126,6 @@ static void print_time_sec(ulog_Event *ev, FILE *file) {
 #endif
 }
 
-static void print_time_full(ulog_Event *ev, FILE *file) {
-#ifdef ULOG_HAVE_TIME
-    char buf[64];
-    buf[strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", ev->time)] = '\0';
-    fprintf(file, "%s ", buf);
-#else
-    (void) ev;
-    (void) file;
-#endif
-}
 
 static void print_prefix(ulog_Event *ev, FILE *file) {
 #if ULOG_CUSTOM_PREFIX_SIZE > 0
@@ -161,20 +151,28 @@ static void print_message(ulog_Event *ev, FILE *file) {
 }
 
 static void print_newline_and_flush(ulog_Event *ev, FILE *file) {
+    (void) ev;
     fprintf(file, "\n");
     fflush(file);
 }
 
 static void print_color_start(ulog_Event *ev, FILE *file) {
+    (void) ev;
 #ifndef ULOG_NO_COLOR
     fprintf(file, "%s", level_colors[ev->level]);  // color start
+#else
+    (void) file;
 #endif
 }
 
 static void print_color_end(ulog_Event *ev, FILE *file) {
+    (void) ev;
 #ifndef ULOG_NO_COLOR
     fprintf(file, "\x1b[0m");  // color end
+#else
+    (void) file;
 #endif
+
 }
 
 /// @brief Callback for stdout
@@ -196,14 +194,6 @@ static void callback_stdout(ulog_Event *ev, void *arg) {
 }
 
 
-/// @brief Callback for file
-static void callback_file(ulog_Event *ev, void *arg) {
-    FILE *fp = (FILE *) arg;
-    print_time_full(ev, fp);
-    print_prefix(ev, fp);
-    print_message(ev, fp);
-    print_newline_and_flush(ev, fp);
-}
 
 //==================================================================
 // Locks
@@ -258,6 +248,27 @@ void ulog_set_prefix_fn(ulog_PrefixFn function) {
 
 
 #if ULOG_EXTRA_DESTINATIONS > 0
+
+static void print_time_full(ulog_Event *ev, FILE *file) {
+#ifdef ULOG_HAVE_TIME
+    char buf[64];
+    buf[strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", ev->time)] = '\0';
+    fprintf(file, "%s ", buf);
+#else
+    (void) ev;
+    (void) file;
+#endif
+}
+
+/// @brief Callback for file
+static void callback_file(ulog_Event *ev, void *arg) {
+    FILE *fp = (FILE *) arg;
+    print_time_full(ev, fp);
+    print_prefix(ev, fp);
+    print_message(ev, fp);
+    print_newline_and_flush(ev, fp);
+}
+
 /// @brief Adds a callback
 int ulog_add_callback(ulog_LogFn function, void *arg, int level) {
     for (int i = 0; i < ULOG_EXTRA_DESTINATIONS; i++) {

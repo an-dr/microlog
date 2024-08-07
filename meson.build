@@ -1,4 +1,4 @@
-project('ulog', 'c',
+project('microlog', 'c',
         version : files('version'),
         license : 'MIT',
         default_options : ['warning_level=3'])
