@@ -1,8 +1,8 @@
 # microlog
 
-[![abcmake](https://img.shields.io/badge/uses-abcmake-blue)](https://github.com/an-dr/abcmake) ![version](https://img.shields.io/badge/version-4.0.0-green)
+![version](https://img.shields.io/badge/version-4.0.1-green)
 
-A simple customizable logging library implemented in C99.
+A simple customizable logging library.
 
 In the default configuration it looks like this:
 

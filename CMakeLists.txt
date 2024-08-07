@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
-project(ulog)
+project(microlog)
 
-include(${CMAKE_CURRENT_LIST_DIR}/ab.cmake)
-add_component(ulog)
+add_library(microlog STATIC src/ulog.c)
+target_include_directories(microlog PUBLIC include)
+
+install(TARGETS microlog DESTINATION lib)
