@@ -112,7 +112,7 @@ Sets a custom prefix function. The function is called with the log level and sho
 - `ULOG_NO_COLOR` - Do not use ANSI color escape codes when printing.
 - `ULOG_HIDE_FILE_STRING` - Hide the file name and line number.
 - `ULOG_SHORT_LEVEL_STRINGS` - Use short level strings, e.g. "T" for "TRACE", "I" for "INFO".
-- `ULOG_USE_EMOJI` - Use emojis for log levels (⚪, 🟢, 🔵, 🟡, 🟠, 🔴, 💥). Overrides `ULOG_SHORT_LEVEL_STRINGS`.
+- `ULOG_USE_EMOJI` - Use emojis for log levels (⚪, 🟢, 🔵, 🟡, 🟠, 🔴, 💥). Overrides `ULOG_SHORT_LEVEL_STRINGS`. WARNING: not all compilers support emoji.
 - `ULOG_HAVE_TIME` - Print the time in the log messages if the platform supports time.h.
 - `ULOG_EXTRA_DESTINATIONS` - The maximum number of extra logging destinations that can be added. Each extra destination requires some memory. When it is 0, the entire extra destination code is not compiled. Default is 0.
 - `ULOG_NO_STDOUT` - Do not write to `stdout` by default. This can be overridden by adding a file pointer with `ulog_add_fp(stdout, level)`. If enabled, and `ULOG_EXTRA_DESTINATIONS` is not set, `ULOG_EXTRA_DESTINATIONS` will be forced to 1. Default is not defined.

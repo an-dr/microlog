@@ -16,7 +16,8 @@
                     "setup",
                     "build",
                     // "--reconfigure",
-                    "--buildtype=debug"
+                    "--cross-file=cross-gcc.txt",
+                    "--buildtype=debug",
                 ],
                 "group": {
                     "kind": "build",
