@@ -1,8 +1,8 @@
 # microlog
 
-[![abcmake](https://img.shields.io/badge/uses-abcmake-blue)](https://github.com/an-dr/abcmake) ![version](https://img.shields.io/badge/version-4.0.0-green)
+![version](https://img.shields.io/badge/version-4.0.1-green)
 
-A simple customizable logging library implemented in C99.
+A simple customizable logging library.
 
 In the default configuration it looks like this:
 
@@ -112,8 +112,8 @@ Sets a custom prefix function. The function is called with the log level and sho
 - `ULOG_NO_COLOR` - Do not use ANSI color escape codes when printing.
 - `ULOG_HIDE_FILE_STRING` - Hide the file name and line number.
 - `ULOG_SHORT_LEVEL_STRINGS` - Use short level strings, e.g. "T" for "TRACE", "I" for "INFO".
-- `ULOG_USE_EMOJI` - Use emojis for log levels (⚪, 🟢, 🔵, 🟡, 🟠, 🔴, 💥). Overrides `ULOG_SHORT_LEVEL_STRINGS`.
-- `ULOG_HAVE_TIME` - Print the time in the log messages. Requires implementation of `long unsigned ulog_get_time(void)`
+- `ULOG_USE_EMOJI` - Use emojis for log levels (⚪, 🟢, 🔵, 🟡, 🟠, 🔴, 💥). Overrides `ULOG_SHORT_LEVEL_STRINGS`. WARNING: not all compilers support emoji.
+- `ULOG_HAVE_TIME` - Print the time in the log messages if the platform supports time.h.
 - `ULOG_EXTRA_DESTINATIONS` - The maximum number of extra logging destinations that can be added. Each extra destination requires some memory. When it is 0, the entire extra destination code is not compiled. Default is 0.
 - `ULOG_NO_STDOUT` - Do not write to `stdout` by default. This can be overridden by adding a file pointer with `ulog_add_fp(stdout, level)`. If enabled, and `ULOG_EXTRA_DESTINATIONS` is not set, `ULOG_EXTRA_DESTINATIONS` will be forced to 1. Default is not defined.
 - `ULOG_CUSTOM_PREFIX_SIZE` - The maximum size of the custom prefix. Default is 0. If set to 0, the custom prefix code is not compiled. If set to a value greater than 0, the custom prefix can be set with `ulog_set_custom_prefix(ulog_PrefixFn func)`.
@@ -122,6 +122,12 @@ You can use the defines in the compiler options, e.g. `-DULOG_NO_COLOR`. For CMa
 
 ```cmake
 add_definitions(-DULOG_NO_COLOR)
+```
+
+For meson all the customization options are available as meson options.
+
+```bash
+meson build -Dno_color=true
 ```
 
 ## License

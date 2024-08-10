@@ -11,14 +11,13 @@
             {
                 "label": "manual_test: Configure",
                 "type": "shell",
-                "command": "cmake",
+                "command": "meson",
                 "args": [
-                    "-G",
-                    "Ninja",
-                    "-B",
+                    "setup",
                     "build",
-                    "-S .",
-                    "-DCMAKE_TOOLCHAIN_FILE=${workspaceFolder}/test/manual_test/toolchain-gcc.cmake",
+                    // "--reconfigure",
+                    "--cross-file=cross-gcc.txt",
+                    "--buildtype=debug",
                 ],
                 "group": {
                     "kind": "build",
@@ -36,14 +35,11 @@
             {
                 "label": "manual_test: Build",
                 "type": "shell",
-                "command": "cmake",
+                "command": "meson",
                 "args": [
-                    "--build",
+                    "compile",
+                    "-C",
                     "build",
-                    "--target",
-                    "all",
-                    "--config",
-                    "Release"
                 ],
                 "group": {
                     "kind": "build",
