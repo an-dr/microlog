@@ -16,6 +16,7 @@ extern "C" {
 #include <stdbool.h>
 #include <stdio.h>
 
+
 /* ============================================================================
    Configuration options
 ===============================================================================
@@ -34,44 +35,71 @@ extern "C" {
 ============================================================================ */
 
 #ifdef ULOG_HAVE_TIME
-#define FEATURE_TIME 1
+#define FEATURE_TIME true
+#else
+#define FEATURE_TIME false
 #endif
+
 
 #ifndef ULOG_NO_COLOR
-#define FEATURE_COLOR 1
+#define FEATURE_COLOR true
+#else
+#define FEATURE_COLOR false
 #endif
+
 
 #if ULOG_CUSTOM_PREFIX_SIZE > 0
-#define FEATURE_CUSTOM_PREFIX 1
+#define FEATURE_CUSTOM_PREFIX true
 #define CFG_CUSTOM_PREFIX_SIZE ULOG_CUSTOM_PREFIX_SIZE
+#else
+#define FEATURE_CUSTOM_PREFIX false
 #endif
+
 
 #ifndef ULOG_HIDE_FILE_STRING
-#define FEATURE_FILE_STRING 1
+#define FEATURE_FILE_STRING true
+#else
+#define FEATURE_FILE_STRING false
 #endif
 
-#ifndef ULOG_SHORT_LEVEL_STRINGS
-#define FEATURE_SHORT_LEVELS 1
-#endif
 
 #ifndef ULOG_NO_STDOUT
-#define FEATURE_STDOUT 1
+#define FEATURE_STDOUT true
+#else
+#define FEATURE_STDOUT false
 #endif
+
 
 #if ULOG_EXTRA_DESTINATIONS > 0
-#define FEATURE_EXTRA_DESTS 1
+#define FEATURE_EXTRA_DESTS true
 #define CFG_EXTRA_DESTS ULOG_EXTRA_DESTINATIONS
+#else
+#define FEATURE_EXTRA_DESTS false
 #endif
 
-#ifndef ULOG_USE_EMOJI
 
 #ifdef ULOG_SHORT_LEVEL_STRINGS
-#warning "ULOG_USE_EMOJI overrides ULOG_SHORT_LEVEL_STRINGS!"
-#undef FEATURE_SHORT_LEVELS
+#define FEATURE_SHORT_LEVELS true
+#else
+#define FEATURE_SHORT_LEVELS false
 #endif
 
-#define FEATURE_EMOJI_LEVELS 1
-#endif // ULOG_USE_EMOJI
+
+#ifdef ULOG_USE_EMOJI
+
+#define FEATURE_EMOJI_LEVELS true
+
+#if FEATURE_SHORT_LEVELS
+#define FEATURE_SHORT_LEVELS false
+#warning "ULOG_USE_EMOJI overrides ULOG_SHORT_LEVEL_STRINGS! Disable ULOG_SHORT_LEVEL_STRINGS"
+#endif  // FEATURE_SHORT_LEVELS
+
+#else  // ULOG_USE_EMOJI
+
+#define FEATURE_EMOJI_LEVELS false
+
+#endif  // ULOG_USE_EMOJI
+
 
 /* ============================================================================
    Core Functionality

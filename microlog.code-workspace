@@ -1,15 +1,26 @@
 {
-	"folders": [
-		{
-			"path": "."
-		}
+    "folders": [
+        {
+            "path": "."
+        }
     ],
     "settings": {},
     "tasks": {
         "version": "2.0.0",
         "tasks": [
+            
             {
-                "label": "manual_test: Configure",
+                "label": "Clean",
+                "type": "shell",
+                "command": "rm -r ${workspaceFolder}/test/manual_test/build",
+                "group": {
+                    "kind": "build",
+                    "isDefault": true
+                },
+                "problemMatcher": [],
+            },
+            {
+                "label": "Configure",
                 "type": "shell",
                 "command": "meson",
                 "args": [
@@ -29,11 +40,13 @@
                         "ABCMAKE_PATH": "${workspaceFolder}/src"
                     }
                 },
-                "problemMatcher": []
+                "problemMatcher": [],
+                "dependsOn": [
+                    "Clean"
+                ]
             },
-            // Cmake build
             {
-                "label": "manual_test: Build",
+                "label": "Build",
                 "type": "shell",
                 "command": "meson",
                 "args": [
@@ -49,10 +62,12 @@
                     "cwd": "${workspaceFolder}/test/manual_test"
                 },
                 "problemMatcher": [],
+                "dependsOn": [
+                    "Configure"
+                ]
             },
-            // Install to workspace/install
             {
-                "label": "manual_test: Run",
+                "label": "Run",
                 "type": "shell",
                 "command": "${workspaceFolder}/test/manual_test/build/manual_test",
                 "group": {
@@ -60,6 +75,9 @@
                     "isDefault": true
                 },
                 "problemMatcher": [],
+                "dependsOn": [
+                    "Build"
+                ]
             },
         ]
     },
