@@ -7,7 +7,7 @@ src = [
 
 
 microlog_dep = dependency('microlog', 
-                          default_options : ['no_color=true',
+                          default_options : ['no_color=false',
                                              'hide_file_string=true',
                                              'short_level_strings=true',
                                              'use_emoji=true',

@@ -49,12 +49,12 @@ typedef struct {
 #endif
 
 #if FEATURE_EXTRA_DESTS
-    Callback callbacks[ULOG_EXTRA_DESTINATIONS];  // Extra callbacks
-#endif                                            // ULOG_EXTRA_DESTINATIONS
+    Callback callbacks[CFG_EXTRA_DESTS];  // Extra callbacks
+#endif
 
 #if FEATURE_CUSTOM_PREFIX
-    ulog_PrefixFn update_prefix_function;         // Custom prefix function
-    char custom_prefix[ULOG_CUSTOM_PREFIX_SIZE];  // Custom prefix
+    ulog_PrefixFn update_prefix_function;        // Custom prefix function
+    char custom_prefix[CFG_CUSTOM_PREFIX_SIZE];  // Custom prefix
 #endif
 
 } ulog_t;
@@ -72,7 +72,7 @@ static ulog_t ulog = {
 #endif
 
 
-#if ULOG_EXTRA_DESTINATIONS > 0
+#if FEATURE_EXTRA_DESTS
         .callbacks = {{0}},
 #endif
 
@@ -83,6 +83,14 @@ static ulog_t ulog = {
 #endif
 
 };
+
+/* ============================================================================
+   Prototypes
+============================================================================ */
+
+static void print_message(ulog_Event *ev, FILE *file);
+static void print_newline_and_flush(ulog_Event *ev, FILE *file);
+static void process_callback(ulog_Event *ev, Callback *cb);
 
 /* ============================================================================
    Feature: Color
@@ -131,6 +139,24 @@ static void print_time_full(ulog_Event *ev, FILE *file) {
 #endif  // FEATURE_TIME
 
 /* ============================================================================
+   Feature: Custom Prefix
+============================================================================ */
+#if FEATURE_CUSTOM_PREFIX
+
+void ulog_set_prefix_fn(ulog_PrefixFn function) {
+    ulog.update_prefix_function = function;
+}
+
+static void print_prefix(ulog_Event *ev, FILE *file) {
+    if (ulog.update_prefix_function) {
+        ulog.update_prefix_function(ev, ulog.custom_prefix, CFG_CUSTOM_PREFIX_SIZE);
+        fprintf(file, "%s ", ulog.custom_prefix);
+    }
+}
+
+#endif  // FEATURE_CUSTOM_PREFIX
+
+/* ============================================================================
    Feature: Stdout
 ============================================================================ */
 #if FEATURE_STDOUT
@@ -147,7 +173,7 @@ static void callback_stdout(ulog_Event *ev, void *arg) {
 #if FEATURE_TIME
     print_time_sec(ev, fp);
 #endif
-    
+
 #if FEATURE_CUSTOM_PREFIX
     print_prefix(ev, fp);
 #endif
@@ -178,24 +204,6 @@ static void log_to_stdout(ulog_Event *ev) {
 #endif  // FEATURE_STDOUT
 
 /* ============================================================================
-   Feature: Custom Prefix
-============================================================================ */
-#if FEATURE_CUSTOM_PREFIX
-
-void ulog_set_prefix_fn(ulog_PrefixFn function) {
-    ulog.update_prefix_function = function;
-}
-
-static void print_prefix(ulog_Event *ev, FILE *file) {
-    if (ulog.update_prefix_function) {
-        ulog.update_prefix_function(ev, ulog.custom_prefix, CFG_CUSTOM_PREFIX_SIZE);
-        fprintf(file, "%s ", ulog.custom_prefix);
-    }
-}
-
-#endif  // FEATURE_CUSTOM_PREFIX
-
-/* ============================================================================
    Feature: Extra Destinations
 ============================================================================ */
 #if FEATURE_EXTRA_DESTS
@@ -205,11 +213,11 @@ static void print_prefix(ulog_Event *ev, FILE *file) {
 /// @param arg - File pointer
 static void callback_file(ulog_Event *ev, void *arg) {
     FILE *fp = (FILE *) arg;
-    
+
 #if FEATURE_TIME
     print_time_full(ev, fp);
 #endif
-    
+
 #if FEATURE_CUSTOM_PREFIX
     print_prefix(ev, fp);
 #endif
@@ -224,7 +232,7 @@ static void callback_file(ulog_Event *ev, void *arg) {
 ///              processed by the callback
 /// @param level - Debug level
 int ulog_add_callback(ulog_LogFn function, void *arg, int level) {
-    for (int i = 0; i < ULOG_EXTRA_DESTINATIONS; i++) {
+    for (int i = 0; i < CFG_EXTRA_DESTS; i++) {
         if (!ulog.callbacks[i].function) {
             ulog.callbacks[i] = (Callback){function, arg, level};
             return 0;
@@ -242,15 +250,14 @@ int ulog_add_fp(FILE *fp, int level) {
 /// @param ev - Event
 static void log_to_extra_destinations(ulog_Event *ev) {
     // Processing the message for callbacks
-    for (int i = 0;
-         i < ULOG_EXTRA_DESTINATIONS && ulog.callbacks[i].function;
+    for (int i = 0; i < CFG_EXTRA_DESTS && ulog.callbacks[i].function;
          i++) {
         process_callback(ev, &ulog.callbacks[i]);
     }
 }
 
 
-#endif // FEATURE_EXTRA_DESTS
+#endif  // FEATURE_EXTRA_DESTS
 
 /* ============================================================================
    Core Functionality: Thread Safety
@@ -320,10 +327,9 @@ void ulog_log(int level, const char *file, int line, const char *message, ...) {
 }
 
 
-
 /// @brief Prints the message
-/// @param ev 
-/// @param file 
+/// @param ev
+/// @param file
 static void print_message(ulog_Event *ev, FILE *file) {
 
     fprintf(file, "%-1s ", level_strings[ev->level]);
@@ -337,8 +343,8 @@ static void print_message(ulog_Event *ev, FILE *file) {
 
 
 /// @brief Prints the newline and flushes the file
-/// @param ev 
-/// @param file 
+/// @param ev
+/// @param file
 static void print_newline_and_flush(ulog_Event *ev, FILE *file) {
     (void) ev;
     fprintf(file, "\n");
@@ -351,7 +357,7 @@ static void print_newline_and_flush(ulog_Event *ev, FILE *file) {
 /// @param cb - Callback
 static void process_callback(ulog_Event *ev, Callback *cb) {
     if (ev->level >= cb->level) {
-        
+
 #if FEATURE_TIME
         if (!ev->time) {
             time_t t = time(NULL);
