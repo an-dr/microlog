@@ -41,9 +41,6 @@
                     }
                 },
                 "problemMatcher": [],
-                "dependsOn": [
-                    "Clean"
-                ]
             },
             {
                 "label": "Build",
@@ -62,9 +59,6 @@
                     "cwd": "${workspaceFolder}/test/manual_test"
                 },
                 "problemMatcher": [],
-                "dependsOn": [
-                    "Configure"
-                ]
             },
             {
                 "label": "Run",

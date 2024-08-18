@@ -43,10 +43,7 @@ typedef struct {
     void *lock_arg;             // Mutex argument
     int level;                  // Debug level
     bool quiet;                 // Quiet mode
-
-#if FEATURE_STDOUT
-    Callback callback_stdout;  // to stdout
-#endif
+    Callback callback_stdout;   // to stdout
 
 #if FEATURE_EXTRA_DESTS
     Callback callbacks[CFG_EXTRA_DESTS];  // Extra callbacks
@@ -61,15 +58,11 @@ typedef struct {
 
 /// @brief Main logger object himself
 static ulog_t ulog = {
-        .lock_function = NULL,
-        .lock_arg      = NULL,
-        .level         = LOG_TRACE,
-        .quiet         = false,
-
-
-#if FEATURE_STDOUT
+        .lock_function   = NULL,
+        .lock_arg        = NULL,
+        .level           = LOG_TRACE,
+        .quiet           = false,
         .callback_stdout = {0},
-#endif
 
 
 #if FEATURE_EXTRA_DESTS
@@ -77,7 +70,7 @@ static ulog_t ulog = {
 #endif
 
 
-#if FEATURE_EXTRA_DESTS
+#if FEATURE_CUSTOM_PREFIX
         .update_prefix_function = NULL,
         .custom_prefix          = {0},
 #endif
@@ -157,53 +150,6 @@ static void print_prefix(ulog_Event *ev, FILE *file) {
 #endif  // FEATURE_CUSTOM_PREFIX
 
 /* ============================================================================
-   Feature: Stdout
-============================================================================ */
-#if FEATURE_STDOUT
-
-/// @brief Callback for stdout
-/// @param ev
-static void callback_stdout(ulog_Event *ev, void *arg) {
-    FILE *fp = (FILE *) arg;
-
-#if FEATURE_COLOR
-    print_color_start(ev, fp);
-#endif
-
-#if FEATURE_TIME
-    print_time_sec(ev, fp);
-#endif
-
-#if FEATURE_CUSTOM_PREFIX
-    print_prefix(ev, fp);
-#endif
-
-    print_message(ev, fp);
-
-#if FEATURE_COLOR
-    print_color_end(ev, fp);
-#endif
-
-    print_newline_and_flush(ev, fp);
-}
-
-/// @brief Processes the stdout callback
-/// @param ev - Event
-static void log_to_stdout(ulog_Event *ev) {
-    if (!ulog.quiet) {
-        // Initializing the stdout callback if not set
-        if (!ulog.callback_stdout.function) {
-            ulog.callback_stdout = (Callback){callback_stdout,
-                                              stdout,  // we use udata to pass the file pointer
-                                              LOG_TRACE};
-        }
-        process_callback(ev, &ulog.callback_stdout);
-    }
-}
-
-#endif  // FEATURE_STDOUT
-
-/* ============================================================================
    Feature: Extra Destinations
 ============================================================================ */
 #if FEATURE_EXTRA_DESTS
@@ -256,7 +202,6 @@ static void log_to_extra_destinations(ulog_Event *ev) {
     }
 }
 
-
 #endif  // FEATURE_EXTRA_DESTS
 
 /* ============================================================================
@@ -300,6 +245,46 @@ static const char *level_strings[] = {
 #endif
 };
 
+/// @brief Callback for stdout
+/// @param ev
+static void callback_stdout(ulog_Event *ev, void *arg) {
+    FILE *fp = (FILE *) arg;
+
+#if FEATURE_COLOR
+    print_color_start(ev, fp);
+#endif
+
+#if FEATURE_TIME
+    print_time_sec(ev, fp);
+#endif
+
+#if FEATURE_CUSTOM_PREFIX
+    print_prefix(ev, fp);
+#endif
+
+    print_message(ev, fp);
+
+#if FEATURE_COLOR
+    print_color_end(ev, fp);
+#endif
+
+    print_newline_and_flush(ev, fp);
+}
+
+/// @brief Processes the stdout callback
+/// @param ev - Event
+static void log_to_stdout(ulog_Event *ev) {
+    if (!ulog.quiet) {
+        // Initializing the stdout callback if not set
+        if (!ulog.callback_stdout.function) {
+            ulog.callback_stdout = (Callback){callback_stdout,
+                                              stdout,  // we use udata to pass the file pointer
+                                              LOG_TRACE};
+        }
+        process_callback(ev, &ulog.callback_stdout);
+    }
+}
+
 /// @brief Logs the message
 void ulog_log(int level, const char *file, int line, const char *message, ...) {
     ulog_Event ev = {
@@ -313,9 +298,7 @@ void ulog_log(int level, const char *file, int line, const char *message, ...) {
 
     lock();
 
-#if FEATURE_STDOUT
     log_to_stdout(&ev);
-#endif
 
 #if FEATURE_EXTRA_DESTS
     log_to_extra_destinations(&ev);

@@ -29,7 +29,6 @@ extern "C" {
 | FEATURE_FILE_STRING   | ON              | ULOG_HIDE_FILE_STRING             |
 | FEATURE_SHORT_LEVELS  | OFF             | ULOG_SHORT_LEVEL_STRINGS          |
 | FEATURE_EMOJI_LEVELS  | OFF             | ULOG_USE_EMOJI                    |
-| FEATURE_STDOUT        | ON              | ULOG_NO_STDOUT                    |
 | FEATURE_EXTRA_DESTS   | OFF             | ULOG_EXTRA_DESTINATIONS           |
 
 ============================================================================ */
@@ -60,13 +59,6 @@ extern "C" {
 #define FEATURE_FILE_STRING true
 #else
 #define FEATURE_FILE_STRING false
-#endif
-
-
-#ifndef ULOG_NO_STDOUT
-#define FEATURE_STDOUT true
-#else
-#define FEATURE_STDOUT false
 #endif
 
 

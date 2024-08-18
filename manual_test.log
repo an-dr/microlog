@@ -1,0 +1,6 @@
+1 ms [T] ../src/main.c:27: Trace message
+3 ms [D] ../src/main.c:28: Debug message
+5 ms [I] ../src/main.c:29: Info message
+7 ms [W] ../src/main.c:30: Warning message
+9 ms [E] ../src/main.c:31: Error message
+12 ms [F] ../src/main.c:32: Fatal message
