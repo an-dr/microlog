@@ -1,25 +1,29 @@
-/*
- * Copyright (c) 2020 rxi
- * Additions Copyright (c) 2024 Andrei Gramakov - mail@agramakov.me
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to
- * deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- * sell copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- */
+// *************************************************************************
+//
+// ulog v5.0.0 - A simple customizable logging library.
+// https://github.com/an-dr/microlog
+//
+// *************************************************************************
+//
+// Original implementation by rxi: https://gitlab.com/rxi
+// Modified by Andrei Gramakov: https://agramakov.me, mail@agramakov.me
+//
+// Copyright (c) 2024 Andrei Gramakov. All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+//
+// *************************************************************************
 
 #include "ulog.h"
 
@@ -123,11 +127,13 @@ static void print_time_sec(ulog_Event *ev, FILE *file) {
     fprintf(file, "%s ", buf);
 }
 
+#if FEATURE_EXTRA_DESTS
 static void print_time_full(ulog_Event *ev, FILE *file) {
     char buf[64];
     buf[strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", ev->time)] = '\0';
     fprintf(file, "%s ", buf);
 }
+#endif // FEATURE_EXTRA_DESTS
 
 #endif  // FEATURE_TIME
 

@@ -1,6 +1,6 @@
 # microlog
 
-![version](https://img.shields.io/badge/version-4.0.1-green)
+![version](https://img.shields.io/badge/version-5.0.0-green)
 
 A simple customizable logging library.
 
@@ -36,7 +36,7 @@ In the default configuration it looks like this:
 
 ## Usage
 
-The library can be linked as a CMake project or can be added manually:
+The library can be linked as a CMake project, Meson subproject or can be added manually:
 copy **[ulog.c](src/ulog.c?raw=1)** and **[ulog.h](include/ulog.h?raw=1)** into your project and compiled along with it.
 
 The library provides 6 function-like macros for logging:
