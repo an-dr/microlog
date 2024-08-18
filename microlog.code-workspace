@@ -12,7 +12,7 @@
             {
                 "label": "Clean",
                 "type": "shell",
-                "command": "rm -r ${workspaceFolder}/test/manual_test/build",
+                "command": "rm -r ${workspaceFolder}/example/build",
                 "group": {
                     "kind": "build",
                     "isDefault": true
@@ -35,12 +35,12 @@
                     "isDefault": true
                 },
                 "options": {
-                    "cwd": "${workspaceFolder}/test/manual_test",
+                    "cwd": "${workspaceFolder}/example",
                     "env": {
                         "ABCMAKE_PATH": "${workspaceFolder}/src"
                     }
                 },
-                "problemMatcher": [],
+                "problemMatcher": []
             },
             {
                 "label": "Build",
@@ -56,14 +56,14 @@
                     "isDefault": true
                 },
                 "options": {
-                    "cwd": "${workspaceFolder}/test/manual_test"
+                    "cwd": "${workspaceFolder}/example"
                 },
                 "problemMatcher": [],
             },
             {
                 "label": "Run",
                 "type": "shell",
-                "command": "${workspaceFolder}/test/manual_test/build/manual_test",
+                "command": "${workspaceFolder}/example/build/example",
                 "group": {
                     "kind": "test",
                     "isDefault": true
