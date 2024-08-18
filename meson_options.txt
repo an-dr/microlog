@@ -1,8 +1,0 @@
-option('no_color', type : 'boolean', value : false, description : 'Do not use ANSI color escape codes when printing')
-option('hide_file_string', type : 'boolean', value : false, description : 'Hide the file name and line number')
-option('short_level_strings', type : 'boolean', value : false, description : 'Use short level strings, e.g. "T" for "TRACE", "I" for "INFO"')
-option('use_emoji', type : 'boolean', value : false, description : 'Use emoji in log messages')
-option('have_time', type : 'boolean', value : true, description : 'Print the time in the log messages if the platform supports time.h')
-option('extra_destinations', type: 'integer', value: 0, description: 'The maximum number of extra logging destinations that can be added. Each extra destination requires some memory. When it is 0, the entire extra destination code is not compiled.')
-option('no_stdout', type: 'boolean', value: false, description: 'Do not print log messages to stdout')
-option('custom_prefix_size', type: 'integer', value: 0, description: 'The size of the custom prefix buffer. If it is 0, the custom prefix feature is not compiled.')

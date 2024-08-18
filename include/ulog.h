@@ -1,78 +1,114 @@
-/**
- * Copyright (c) 2020 rxi
- * Additions Copyright (c) 2024 Andrei Gramakov - mail@agramakov.me
- *
- * This library is free software; you can redistribute it and/or modify it
- * under the terms of the MIT license. See `ulog.c` for details.
- */
+// *************************************************************************
+//
+// ulog v5.0.0 - A simple customizable logging library.
+// https://github.com/an-dr/microlog
+//
+// *************************************************************************
+//
+// Original implementation by rxi: https://gitlab.com/rxi
+// Modified by Andrei Gramakov: https://agramakov.me, mail@agramakov.me
+//
+// Copyright (c) 2024 Andrei Gramakov. All rights reserved.
+//
+// This file is licensed under the terms of the MIT license.  
+// For a copy, see: https://opensource.org/licenses/MIT
+//
+// *************************************************************************
 
-#ifndef ULOG_H
-#define ULOG_H
+#pragma once
 
-// =====================
-// Default configuration
-// =====================
-
-#ifndef ULOG_EXTRA_DESTINATIONS
-#define ULOG_EXTRA_DESTINATIONS 0
+#ifdef __cplusplus
+extern "C" {
 #endif
-
-#ifndef ULOG_CUSTOM_PREFIX_SIZE
-#define ULOG_CUSTOM_PREFIX_SIZE 0
-#endif
-
-#if !defined(ULOG_HAVE_TIME) || ULOG_HAVE_TIME == 0
-#undef ULOG_HAVE_TIME 
-#endif
-
-#if !defined(ULOG_NO_COLOR) || ULOG_NO_COLOR == 0
-#undef ULOG_NO_COLOR
-#endif
-
-#if !defined(ULOG_CUSTOM_PREFIX_SIZE)
-#define ULOG_CUSTOM_PREFIX_SIZE 0
-#endif
-
-#if !defined(ULOG_HIDE_FILE_STRING) || ULOG_HIDE_FILE_STRING == 0
-#undef ULOG_HIDE_FILE_STRING
-#endif
-
-#if !defined(ULOG_SHORT_LEVEL_STRINGS) || ULOG_SHORT_LEVEL_STRINGS == 0
-#undef ULOG_SHORT_LEVEL_STRINGS
-#endif
-
-#if !defined(ULOG_NO_STDOUT) || ULOG_NO_STDOUT == 0
-#undef ULOG_NO_STDOUT
-#endif
-
-// ============
-// Declarations
-// ============
 
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 
+
+/* ============================================================================
+   Configuration options
+===============================================================================
+
+| Feature               | Feature Default | Controlling Options               |
+|-----------------------|-----------------|-----------------------------------|
+| FEATURE_TIME          | OFF             | ULOG_HAVE_TIME                    |
+| FEATURE_COLOR         | ON              | ULOG_NO_COLOR                     |
+| FEATURE_CUSTOM_PREFIX | OFF             | ULOG_CUSTOM_PREFIX_SIZE           |
+| FEATURE_FILE_STRING   | ON              | ULOG_HIDE_FILE_STRING             |
+| FEATURE_SHORT_LEVELS  | OFF             | ULOG_SHORT_LEVEL_STRINGS          |
+| FEATURE_EMOJI_LEVELS  | OFF             | ULOG_USE_EMOJI                    |
+| FEATURE_EXTRA_DESTS   | OFF             | ULOG_EXTRA_DESTINATIONS           |
+
+============================================================================ */
+
 #ifdef ULOG_HAVE_TIME
-#include <time.h>
+#define FEATURE_TIME true
+#else
+#define FEATURE_TIME false
 #endif
 
-typedef struct {
-    const char *message;          // Message format string
-    va_list message_format_args;  // Format arguments
 
-#ifdef ULOG_HAVE_TIME
-    struct tm *time;
-#endif // ULOG_HAVE_TIME
+#ifndef ULOG_NO_COLOR
+#define FEATURE_COLOR true
+#else
+#define FEATURE_COLOR false
+#endif
 
-    const char *file;  // Event file name
-    int line;          // Event line number
-    int level;         // Event debug level
-} ulog_Event;
 
-typedef void (*ulog_LogFn)(ulog_Event *ev, void *arg);
-typedef void (*ulog_LockFn)(bool lock, void *lock_arg);
-typedef void (*ulog_PrefixFn)(ulog_Event *ev, char *prefix, size_t prefix_size);
+#if ULOG_CUSTOM_PREFIX_SIZE > 0
+#define FEATURE_CUSTOM_PREFIX true
+#define CFG_CUSTOM_PREFIX_SIZE ULOG_CUSTOM_PREFIX_SIZE
+#else
+#define FEATURE_CUSTOM_PREFIX false
+#endif
+
+
+#ifndef ULOG_HIDE_FILE_STRING
+#define FEATURE_FILE_STRING true
+#else
+#define FEATURE_FILE_STRING false
+#endif
+
+
+#if ULOG_EXTRA_DESTINATIONS > 0
+#define FEATURE_EXTRA_DESTS true
+#define CFG_EXTRA_DESTS ULOG_EXTRA_DESTINATIONS
+#else
+#define FEATURE_EXTRA_DESTS false
+#endif
+
+
+#ifdef ULOG_SHORT_LEVEL_STRINGS
+#define FEATURE_SHORT_LEVELS true
+#else
+#define FEATURE_SHORT_LEVELS false
+#endif
+
+
+#ifdef ULOG_USE_EMOJI
+
+#define FEATURE_EMOJI_LEVELS true
+
+#if FEATURE_SHORT_LEVELS
+#define FEATURE_SHORT_LEVELS false
+#warning "ULOG_USE_EMOJI overrides ULOG_SHORT_LEVEL_STRINGS! Disable ULOG_SHORT_LEVEL_STRINGS"
+#endif  // FEATURE_SHORT_LEVELS
+
+#else  // ULOG_USE_EMOJI
+
+#define FEATURE_EMOJI_LEVELS false
+
+#endif  // ULOG_USE_EMOJI
+
+
+/* ============================================================================
+   Core Functionality
+============================================================================ */
+
+#if FEATURE_TIME
+#include <time.h>
+#endif
 
 enum { LOG_TRACE,
        LOG_DEBUG,
@@ -88,17 +124,25 @@ enum { LOG_TRACE,
 #define log_error(...) ulog_log(LOG_ERROR, __FILE__, __LINE__, __VA_ARGS__)
 #define log_fatal(...) ulog_log(LOG_FATAL, __FILE__, __LINE__, __VA_ARGS__)
 
-#ifdef __cplusplus
-extern "C" {
+
+/// @brief Event structure
+typedef struct {
+    const char *message;          // Message format string
+    va_list message_format_args;  // Format arguments
+
+#if FEATURE_TIME
+    struct tm *time;
 #endif
+
+    const char *file;  // Event file name
+    int line;          // Event line number
+    int level;         // Event debug level
+} ulog_Event;
+
+typedef void (*ulog_LogFn)(ulog_Event *ev, void *arg);
 
 /// @brief Returns the string representation of the level
 const char *ulog_get_level_string(int level);
-
-/// @brief  Sets the lock function and user data
-/// @param function - Lock function
-/// @param lock_arg - User data
-void ulog_set_lock(ulog_LockFn function, void *lock_arg);
 
 /// @brief Sets the debug level
 /// @param level - Debug level
@@ -108,12 +152,6 @@ void ulog_set_level(int level);
 /// @param enable - Quiet mode
 void ulog_set_quiet(bool enable);
 
-#if ULOG_CUSTOM_PREFIX_SIZE > 0
-/// @brief Sets the prefix function
-/// @param function - Prefix function
-void ulog_set_prefix_fn(ulog_PrefixFn function);
-#endif
-
 /// @brief Logs the message
 /// @param level - Debug level
 /// @param file - File name
@@ -122,10 +160,39 @@ void ulog_set_prefix_fn(ulog_PrefixFn function);
 /// @param ... - Format arguments
 void ulog_log(int level, const char *file, int line, const char *message, ...);
 
-#if ULOG_EXTRA_DESTINATIONS > 0
+/* ============================================================================
+   Core Functionality: Thread Safety
+============================================================================ */
+
+typedef void (*ulog_LockFn)(bool lock, void *lock_arg);
+
+/// @brief  Sets the lock function and user data
+/// @param function - Lock function
+/// @param lock_arg - User data
+void ulog_set_lock(ulog_LockFn function, void *lock_arg);
+
+/* ============================================================================
+   Feature: Custom Prefix
+============================================================================ */
+#if FEATURE_CUSTOM_PREFIX
+
+typedef void (*ulog_PrefixFn)(ulog_Event *ev, char *prefix, size_t prefix_size);
+
+/// @brief Sets the prefix function
+/// @param function - Prefix function
+void ulog_set_prefix_fn(ulog_PrefixFn function);
+
+#endif  // FEATURE_CUSTOM_PREFIX
+
+/* ============================================================================
+   Feature: Extra Destinations
+============================================================================ */
+#if FEATURE_EXTRA_DESTS
+
 /// @brief Adds a callback
 /// @param function - Callback function
-/// @param arg - Optional argument that will be added to the event to be processed by the callback
+/// @param arg - Optional argument that will be added to the event to be
+///              processed by the callback
 /// @param level - Debug level
 /// @return 0 if success, -1 if failed
 int ulog_add_callback(ulog_LogFn function, void *arg, int level);
@@ -135,10 +202,9 @@ int ulog_add_callback(ulog_LogFn function, void *arg, int level);
 /// @param level - Debug level
 /// @return 0 if success, -1 if failed
 int ulog_add_fp(FILE *fp, int level);
-#endif
+
+#endif  // FEATURE_EXTRA_DESTS
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif

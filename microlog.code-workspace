@@ -1,15 +1,26 @@
 {
-	"folders": [
-		{
-			"path": "."
-		}
+    "folders": [
+        {
+            "path": "."
+        }
     ],
     "settings": {},
     "tasks": {
         "version": "2.0.0",
         "tasks": [
+            
             {
-                "label": "manual_test: Configure",
+                "label": "Clean",
+                "type": "shell",
+                "command": "rm -r ${workspaceFolder}/example/build",
+                "group": {
+                    "kind": "build",
+                    "isDefault": true
+                },
+                "problemMatcher": [],
+            },
+            {
+                "label": "Configure",
                 "type": "shell",
                 "command": "meson",
                 "args": [
@@ -24,16 +35,15 @@
                     "isDefault": true
                 },
                 "options": {
-                    "cwd": "${workspaceFolder}/test/manual_test",
+                    "cwd": "${workspaceFolder}/example",
                     "env": {
                         "ABCMAKE_PATH": "${workspaceFolder}/src"
                     }
                 },
                 "problemMatcher": []
             },
-            // Cmake build
             {
-                "label": "manual_test: Build",
+                "label": "Build",
                 "type": "shell",
                 "command": "meson",
                 "args": [
@@ -46,20 +56,22 @@
                     "isDefault": true
                 },
                 "options": {
-                    "cwd": "${workspaceFolder}/test/manual_test"
+                    "cwd": "${workspaceFolder}/example"
                 },
                 "problemMatcher": [],
             },
-            // Install to workspace/install
             {
-                "label": "manual_test: Run",
+                "label": "Run",
                 "type": "shell",
-                "command": "${workspaceFolder}/test/manual_test/build/manual_test",
+                "command": "${workspaceFolder}/example/build/example",
                 "group": {
                     "kind": "test",
                     "isDefault": true
                 },
                 "problemMatcher": [],
+                "dependsOn": [
+                    "Build"
+                ]
             },
         ]
     },
