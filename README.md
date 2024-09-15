@@ -1,6 +1,6 @@
 # microlog
 
-![version](https://img.shields.io/badge/version-5.1.0-green)
+![version](https://img.shields.io/badge/version-5.2.0-green)
 
 A simple customizable logging library.
 
@@ -15,6 +15,14 @@ In the default configuration it looks like this:
 ... or feature-rich:
 
 <img src="doc/demo2.png" height="100">
+
+The project is based on several core principles:
+
+- Universal for embedded and desktop applications
+- No feature - no code for compilation
+- Shallow learning curve, works out of box
+- No dependencies
+- Two files
 
 ## Table of Contents
 
