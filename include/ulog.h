@@ -1,6 +1,6 @@
 // *************************************************************************
 //
-// ulog v5.0.0 - A simple customizable logging library.
+// ulog v5.1.0 - A simple customizable logging library.
 // https://github.com/an-dr/microlog
 //
 // *************************************************************************
@@ -151,6 +151,13 @@ void ulog_set_level(int level);
 /// @brief Sets the quiet mode
 /// @param enable - Quiet mode
 void ulog_set_quiet(bool enable);
+
+/// @brief Write event content to a buffer as a log message
+/// @param ev - Event
+/// @param out_buf - Output buffer
+/// @param out_buf_size - Output buffer size
+/// @return 0 if success, -1 if failed
+int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size);
 
 /// @brief Logs the message
 /// @param level - Debug level

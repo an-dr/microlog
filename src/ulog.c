@@ -1,6 +1,6 @@
 // *************************************************************************
 //
-// ulog v5.0.0 - A simple customizable logging library.
+// ulog v5.1.0 - A simple customizable logging library.
 // https://github.com/an-dr/microlog
 //
 // *************************************************************************
@@ -10,13 +10,19 @@
 //
 // Copyright (c) 2024 Andrei Gramakov. All rights reserved.
 //
-// This file is licensed under the terms of the MIT license.  
+// This file is licensed under the terms of the MIT license.
 // For a copy, see: https://opensource.org/licenses/MIT
 //
 // *************************************************************************
 
 #include "ulog.h"
 
+#define ULOG_NEW_LINE_ON true
+#define ULOG_NEW_LINE_OFF false
+#define ULOG_COLOR_ON true
+#define ULOG_COLOR_OFF false
+#define ULOG_TIME_FULL true
+#define ULOG_TIME_SHORT false
 
 /* ============================================================================
    Main logger object
@@ -76,8 +82,8 @@ static ulog_t ulog = {
 ============================================================================ */
 
 static void print_message(ulog_Event *ev, FILE *file);
-static void print_newline_and_flush(ulog_Event *ev, FILE *file);
 static void process_callback(ulog_Event *ev, Callback *cb);
+static void write_formatted_message(ulog_Event *ev, FILE *file, bool full_time, bool color, bool new_line);
 
 /* ============================================================================
    Feature: Color
@@ -123,7 +129,7 @@ static void print_time_full(ulog_Event *ev, FILE *file) {
     buf[strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", ev->time)] = '\0';
     fprintf(file, "%s ", buf);
 }
-#endif // FEATURE_EXTRA_DESTS
+#endif  // FEATURE_EXTRA_DESTS
 
 #endif  // FEATURE_TIME
 
@@ -155,17 +161,7 @@ static void print_prefix(ulog_Event *ev, FILE *file) {
 /// @param arg - File pointer
 static void callback_file(ulog_Event *ev, void *arg) {
     FILE *fp = (FILE *) arg;
-
-#if FEATURE_TIME
-    print_time_full(ev, fp);
-#endif
-
-#if FEATURE_CUSTOM_PREFIX
-    print_prefix(ev, fp);
-#endif
-
-    print_message(ev, fp);
-    print_newline_and_flush(ev, fp);
+    write_formatted_message(ev, fp, ULOG_TIME_FULL, ULOG_COLOR_OFF, ULOG_NEW_LINE_ON);
 }
 
 /// @brief Adds a callback
@@ -241,30 +237,60 @@ static const char *level_strings[] = {
 #endif
 };
 
+static void write_formatted_message(ulog_Event *ev, FILE *file, bool full_time, bool color, bool new_line) {
+
+#if FEATURE_COLOR
+    if (color) {
+        print_color_start(ev, file);
+    }
+#else
+    (void) color;
+#endif  // FEATURE_COLOR
+
+#if FEATURE_TIME
+    if (full_time) {
+        print_time_full(ev, file);
+    } else {
+        print_time_sec(ev, file);
+    }
+#else
+    (void) full_time;
+#endif  // FEATURE_TIME
+
+#if FEATURE_CUSTOM_PREFIX
+    print_prefix(ev, file);
+#endif
+
+    print_message(ev, file);
+
+#if FEATURE_COLOR
+    if (color) {
+        print_color_end(ev, file);
+    }
+#endif
+
+    if (new_line) {
+    fprintf(file, "\n");
+    }
+}
+
+
 /// @brief Callback for stdout
 /// @param ev
 static void callback_stdout(ulog_Event *ev, void *arg) {
     FILE *fp = (FILE *) arg;
+    write_formatted_message(ev, fp, ULOG_TIME_SHORT, ULOG_COLOR_ON, ULOG_NEW_LINE_ON);
+}
 
-#if FEATURE_COLOR
-    print_color_start(ev, fp);
-#endif
 
-#if FEATURE_TIME
-    print_time_sec(ev, fp);
-#endif
-
-#if FEATURE_CUSTOM_PREFIX
-    print_prefix(ev, fp);
-#endif
-
-    print_message(ev, fp);
-
-#if FEATURE_COLOR
-    print_color_end(ev, fp);
-#endif
-
-    print_newline_and_flush(ev, fp);
+int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size) {
+    FILE *mem = fmemopen(out, out_size, "w");
+    if (!mem) {
+        return -1;
+    }
+    write_formatted_message(ev, mem, ULOG_TIME_SHORT, ULOG_COLOR_OFF, ULOG_NEW_LINE_OFF);
+    fclose(mem);
+    return 0;
 }
 
 /// @brief Processes the stdout callback
@@ -319,17 +345,6 @@ static void print_message(ulog_Event *ev, FILE *file) {
 
     vfprintf(file, ev->message, ev->message_format_args);  // message
 }
-
-
-/// @brief Prints the newline and flushes the file
-/// @param ev
-/// @param file
-static void print_newline_and_flush(ulog_Event *ev, FILE *file) {
-    (void) ev;
-    fprintf(file, "\n");
-    fflush(file);
-}
-
 
 /// @brief Processes the callback with the event
 /// @param ev - Event

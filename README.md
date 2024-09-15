@@ -1,6 +1,6 @@
 # microlog
 
-![version](https://img.shields.io/badge/version-5.0.0-green)
+![version](https://img.shields.io/badge/version-5.1.0-green)
 
 A simple customizable logging library.
 
@@ -25,6 +25,7 @@ In the default configuration it looks like this:
         - [ulog\_set\_level(int level)](#ulog_set_levelint-level)
         - [Advanced Functions](#advanced-functions)
             - [ulog\_add\_fp(FILE \*fp, int level)](#ulog_add_fpfile-fp-int-level)
+            - [ulog\_event\_to\_cstr(ulog\_Event \*ev, char \*out, size\_t out\_size)](#ulog_event_to_cstrulog_event-ev-char-out-size_t-out_size)
             - [ulog\_add\_callback(ulog\_LogFn fn, void \*udata, int level)](#ulog_add_callbackulog_logfn-fn-void-udata-int-level)
             - [ulog\_set\_lock(ulog\_LockFn fn, void \*udata)](#ulog_set_lockulog_lockfn-fn-void-udata)
             - [const char\* ulog\_get\_level\_string(int level)](#const-char-ulog_get_level_stringint-level)
@@ -88,9 +89,27 @@ output is of the following format:
 Any messages below the given `level` are ignored. If the library failed to add a
 file pointer a value less-than-zero is returned.
 
+#### ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size)
+
+Converts a `ulog_Event` structure to a string. The `out` buffer should be large enough to hold the entire log message. The function returns 0 on success and -1 on failure. See `ulog_add_callback` for an example.
+
 #### ulog_add_callback(ulog_LogFn fn, void *udata, int level)
 
 One or more callback functions which are called with the log data can be provided to the library by using the `ulog_add_callback()` function. A callback function is passed a `ulog_Event` structure containing the `line` number, `filename`, `fmt` string, `va` printf va\_list, `level` and the given `udata`.
+
+```c
+// Example
+
+void arduino_callback(ulog_Event *ev, void *arg) {
+    static char buffer[128];
+    ulog_event_to_cstr(ev, buffer, sizeof(buffer));
+    Serial.println(buffer);
+}
+
+...
+
+ulog_add_callback(arduino_callback, NULL, LOG_INFO);
+```
 
 #### ulog_set_lock(ulog_LockFn fn, void *udata)
 
