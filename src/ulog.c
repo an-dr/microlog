@@ -1,6 +1,6 @@
 // *************************************************************************
 //
-// ulog v5.0.0 - A simple customizable logging library.
+// ulog v5.1.0 - A simple customizable logging library.
 // https://github.com/an-dr/microlog
 //
 // *************************************************************************
@@ -155,7 +155,7 @@ static void print_prefix(ulog_Event *ev, FILE *file) {
 /// @param arg - File pointer
 static void callback_file(ulog_Event *ev, void *arg) {
     FILE *fp = (FILE *) arg;
-    write_formatted_message(ev, fp, true, false, true);
+    write_formatted_message(ev, fp, ULOG_TIME_FULL, ULOG_COLOR_OFF, ULOG_NEW_LINE_ON);
 }
 
 /// @brief Adds a callback
@@ -274,15 +274,15 @@ static void write_formatted_message(ulog_Event *ev, FILE *file, bool full_time, 
 /// @param ev
 static void callback_stdout(ulog_Event *ev, void *arg) {
     FILE *fp = (FILE *) arg;
-    write_formatted_message(ev, fp, false, true, true);
+    write_formatted_message(ev, fp, ULOG_TIME_SHORT, ULOG_COLOR_ON, ULOG_NEW_LINE_ON);
 }
 
-int ulog_event_to_cstr(ulog_Event *ev, bool new_line, char *out, size_t out_size) {
+int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size) {
     FILE *mem = fmemopen(out, out_size, "w");
     if (!mem) {
         return -1;
     }
-    write_formatted_message(ev, mem, false, false, new_line);
+    write_formatted_message(ev, mem, ULOG_TIME_SHORT, ULOG_COLOR_ON, ULOG_NEW_LINE_OFF);
     fclose(mem);
     return 0;
 }

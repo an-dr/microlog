@@ -10,7 +10,7 @@ void update_prefix(ulog_Event *ev, char *prefix, size_t prefix_size) {
 void custom_callback(ulog_Event *ev, void *arg) {
     printf("%s", (const char *) arg);
     static char buffer[128];
-    ulog_event_to_cstr(ev, false, buffer, sizeof(buffer));
+    ulog_event_to_cstr(ev, buffer, sizeof(buffer));
     printf("%s\n", buffer);
 }
 
@@ -23,9 +23,7 @@ int main(int argc, char *argv[]) {
     printf("Extra destinations: %d\n", ULOG_EXTRA_DESTINATIONS);
     FILE *fp = fopen("example.log", "w");
     ulog_add_fp(fp, LOG_TRACE);
-    // ulog_add_fp(stdout, LOG_ERROR);
-
-    ulog_add_callback(custom_callback, "Custom Callback: ", LOG_TRACE);
+    ulog_add_callback(custom_callback, "Custom Callback: ", LOG_FATAL);
 #endif
 
 #if FEATURE_CUSTOM_PREFIX
@@ -35,8 +33,8 @@ int main(int argc, char *argv[]) {
     log_trace("Trace message %d", 1);
     log_debug("Debug message 0x%x", 2);
     log_info("Info message %f", 3.0);
-    log_warn("Warning message");
-    log_error("Error message");
-    log_fatal("Fatal message");
+    log_warn("Warning message %c", '4');
+    log_error("Error message %s", "Five");
+    log_fatal("Fatal message %s", "6\n");
     return 0;
 }

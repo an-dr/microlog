@@ -1,6 +1,6 @@
 // *************************************************************************
 //
-// ulog v5.0.0 - A simple customizable logging library.
+// ulog v5.1.0 - A simple customizable logging library.
 // https://github.com/an-dr/microlog
 //
 // *************************************************************************
@@ -110,6 +110,13 @@ extern "C" {
 #include <time.h>
 #endif
 
+#define ULOG_NEW_LINE_ON true
+#define ULOG_NEW_LINE_OFF false
+#define ULOG_COLOR_ON true
+#define ULOG_COLOR_OFF false
+#define ULOG_TIME_FULL true
+#define ULOG_TIME_SHORT false
+
 enum { LOG_TRACE,
        LOG_DEBUG,
        LOG_INFO,
@@ -154,11 +161,10 @@ void ulog_set_quiet(bool enable);
 
 /// @brief Write event content to a buffer as a log message
 /// @param ev - Event
-/// @param new_line - Add a new line at the end
 /// @param out_buf - Output buffer
 /// @param out_buf_size - Output buffer size
 /// @return 0 if success, -1 if failed
-int ulog_event_to_cstr(ulog_Event *ev, bool new_line, char *out, size_t out_size);
+int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size);
 
 /// @brief Logs the message
 /// @param level - Debug level
