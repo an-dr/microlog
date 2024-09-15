@@ -100,16 +100,15 @@ One or more callback functions which are called with the log data can be provide
 ```c
 // Example
 
-void custom_callback(ulog_Event *ev, void *arg) {
-    (void)arg;
+void arduino_callback(ulog_Event *ev, void *arg) {
     static char buffer[128];
     ulog_event_to_cstr(ev, buffer, sizeof(buffer));
-    printf("%s\n", buffer);
+    Serial.println(buffer);
 }
 
 ...
 
-ulog_add_callback(custom_callback, NULL, LOG_INFO);
+ulog_add_callback(arduino_callback, NULL, LOG_INFO);
 ```
 
 #### ulog_set_lock(ulog_LockFn fn, void *udata)
