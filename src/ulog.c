@@ -17,6 +17,12 @@
 
 #include "ulog.h"
 
+#define ULOG_NEW_LINE_ON true
+#define ULOG_NEW_LINE_OFF false
+#define ULOG_COLOR_ON true
+#define ULOG_COLOR_OFF false
+#define ULOG_TIME_FULL true
+#define ULOG_TIME_SHORT false
 
 /* ============================================================================
    Main logger object
@@ -266,7 +272,6 @@ static void write_formatted_message(ulog_Event *ev, FILE *file, bool full_time, 
     if (new_line) {
     fprintf(file, "\n");
     }
-    fflush(file);
 }
 
 
@@ -276,6 +281,7 @@ static void callback_stdout(ulog_Event *ev, void *arg) {
     FILE *fp = (FILE *) arg;
     write_formatted_message(ev, fp, ULOG_TIME_SHORT, ULOG_COLOR_ON, ULOG_NEW_LINE_ON);
 }
+
 
 int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size) {
     FILE *mem = fmemopen(out, out_size, "w");

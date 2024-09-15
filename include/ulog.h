@@ -110,13 +110,6 @@ extern "C" {
 #include <time.h>
 #endif
 
-#define ULOG_NEW_LINE_ON true
-#define ULOG_NEW_LINE_OFF false
-#define ULOG_COLOR_ON true
-#define ULOG_COLOR_OFF false
-#define ULOG_TIME_FULL true
-#define ULOG_TIME_SHORT false
-
 enum { LOG_TRACE,
        LOG_DEBUG,
        LOG_INFO,
@@ -210,7 +203,6 @@ void ulog_set_prefix_fn(ulog_PrefixFn function);
 /// @param level - Debug level
 /// @return 0 if success, -1 if failed
 int ulog_add_callback(ulog_LogFn function, void *arg, int level);
-
 
 /// @brief Add file callback
 /// @param fp - File pointer
