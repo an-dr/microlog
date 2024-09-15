@@ -152,6 +152,14 @@ void ulog_set_level(int level);
 /// @param enable - Quiet mode
 void ulog_set_quiet(bool enable);
 
+/// @brief Write event content to a buffer as a log message
+/// @param ev - Event
+/// @param new_line - Add a new line at the end
+/// @param out_buf - Output buffer
+/// @param out_buf_size - Output buffer size
+/// @return 0 if success, -1 if failed
+int ulog_event_to_cstr(ulog_Event *ev, bool new_line, char *out, size_t out_size);
+
 /// @brief Logs the message
 /// @param level - Debug level
 /// @param file - File name
@@ -197,8 +205,6 @@ void ulog_set_prefix_fn(ulog_PrefixFn function);
 /// @return 0 if success, -1 if failed
 int ulog_add_callback(ulog_LogFn function, void *arg, int level);
 
-
-int ulog_callback_print(ulog_Event *ev, void *out_buf, size_t out_buf_size);
 
 /// @brief Add file callback
 /// @param fp - File pointer

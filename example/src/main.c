@@ -9,8 +9,8 @@ void update_prefix(ulog_Event *ev, char *prefix, size_t prefix_size) {
 
 void custom_callback(ulog_Event *ev, void *arg) {
     printf("%s", (const char *) arg);
-    static char buffer[32];
-    ulog_callback_print(ev, buffer, sizeof(buffer));
+    static char buffer[128];
+    ulog_event_to_cstr(ev, false, buffer, sizeof(buffer));
     printf("%s\n", buffer);
 }
 
