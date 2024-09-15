@@ -39,6 +39,7 @@ extern "C" {
 | FEATURE_SHORT_LEVELS  | OFF             | ULOG_SHORT_LEVEL_STRINGS          |
 | FEATURE_EMOJI_LEVELS  | OFF             | ULOG_USE_EMOJI                    |
 | FEATURE_EXTRA_DESTS   | OFF             | ULOG_EXTRA_DESTINATIONS           |
+| FEATURE_TOPICS        | OFF             | ULOG_TOPICS_NUM                   |
 
 ============================================================================ */
 
@@ -101,6 +102,13 @@ extern "C" {
 
 #endif  // ULOG_USE_EMOJI
 
+#if ULOG_TOPICS_NUM > 0
+#define FEATURE_TOPICS true
+#define CFG_TOPICS_NUM ULOG_TOPICS_NUM
+#else
+#define FEATURE_TOPICS false
+#endif
+
 
 /* ============================================================================
    Core Functionality
@@ -117,18 +125,22 @@ enum { LOG_TRACE,
        LOG_ERROR,
        LOG_FATAL };
 
-#define log_trace(...) ulog_log(LOG_TRACE, __FILE__, __LINE__, __VA_ARGS__)
-#define log_debug(...) ulog_log(LOG_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
-#define log_info(...) ulog_log(LOG_INFO, __FILE__, __LINE__, __VA_ARGS__)
-#define log_warn(...) ulog_log(LOG_WARN, __FILE__, __LINE__, __VA_ARGS__)
-#define log_error(...) ulog_log(LOG_ERROR, __FILE__, __LINE__, __VA_ARGS__)
-#define log_fatal(...) ulog_log(LOG_FATAL, __FILE__, __LINE__, __VA_ARGS__)
+#define log_trace(...) ulog_log(LOG_TRACE, __FILE__, __LINE__, -1, __VA_ARGS__)
+#define log_debug(...) ulog_log(LOG_DEBUG, __FILE__, __LINE__, -1, __VA_ARGS__)
+#define log_info(...) ulog_log(LOG_INFO, __FILE__, __LINE__, -1, __VA_ARGS__)
+#define log_warn(...) ulog_log(LOG_WARN, __FILE__, __LINE__, -1, __VA_ARGS__)
+#define log_error(...) ulog_log(LOG_ERROR, __FILE__, __LINE__, -1, __VA_ARGS__)
+#define log_fatal(...) ulog_log(LOG_FATAL, __FILE__, __LINE__, -1, __VA_ARGS__)
 
 
 /// @brief Event structure
 typedef struct {
     const char *message;          // Message format string
     va_list message_format_args;  // Format arguments
+
+#if FEATURE_TOPICS
+    int topic;
+#endif
 
 #if FEATURE_TIME
     struct tm *time;
@@ -165,7 +177,7 @@ int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size);
 /// @param line - Line number
 /// @param message - Message format string
 /// @param ... - Format arguments
-void ulog_log(int level, const char *file, int line, const char *message, ...);
+void ulog_log(int level, const char *file, int line, int topic, const char *message, ...);
 
 /* ============================================================================
    Core Functionality: Thread Safety
@@ -211,6 +223,19 @@ int ulog_add_callback(ulog_LogFn function, void *arg, int level);
 int ulog_add_fp(FILE *fp, int level);
 
 #endif  // FEATURE_EXTRA_DESTS
+
+/* ============================================================================
+   Feature: Log Topics
+============================================================================ */
+#if FEATURE_TOPICS
+
+int add_topic(const char *topic_name, bool enable);
+int get_topic(const char *topic_name);
+int enable_topic(int topic);
+int disable_topic(int topic);
+
+
+#endif  // FEATURE_TOPICS
 
 #ifdef __cplusplus
 }

@@ -23,11 +23,18 @@ int main(int argc, char *argv[]) {
     printf("Extra destinations: %d\n", ULOG_EXTRA_DESTINATIONS);
     FILE *fp = fopen("example.log", "w");
     ulog_add_fp(fp, LOG_TRACE);
-    ulog_add_callback(custom_callback, "Custom Callback: ", LOG_FATAL);
+    ulog_add_callback(custom_callback, "     - Custom Callback: ", LOG_FATAL);
 #endif
 
 #if FEATURE_CUSTOM_PREFIX
     ulog_set_prefix_fn(update_prefix);
+#endif
+
+#if FEATURE_TOPICS
+    printf("Topics: %d\n", ULOG_TOPICS_NUM);
+    add_topic("Subsystem 1", true);
+    add_topic("Subsystem 3", false);
+    enable_topic(get_topic("topic2"));
 #endif
 
     log_trace("Trace message %d", 1);
@@ -36,5 +43,9 @@ int main(int argc, char *argv[]) {
     log_warn("Warning message %c", '4');
     log_error("Error message %s", "Five");
     log_fatal("Fatal message %s", "6\n");
+    
+    ulog_log(LOG_INFO, __FILE__, __LINE__, get_topic("Subsystem 1"), "Subsystem 1 message");
+    ulog_log(LOG_INFO, __FILE__, __LINE__, get_topic("Subsystem 2"), "Subsystem 2 message (no topic created)");
+    ulog_log(LOG_WARN, __FILE__, __LINE__, get_topic("Subsystem 3"), "Subsystem 3 message");
     return 0;
 }

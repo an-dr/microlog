@@ -17,6 +17,10 @@
 
 #include "ulog.h"
 
+#if FEATURE_TOPICS
+#include <string.h>
+#endif
+
 #define ULOG_NEW_LINE_ON true
 #define ULOG_NEW_LINE_OFF false
 #define ULOG_COLOR_ON true
@@ -81,6 +85,7 @@ static ulog_t ulog = {
    Prototypes
 ============================================================================ */
 
+static void print_level(ulog_Event *ev, FILE *file);
 static void print_message(ulog_Event *ev, FILE *file);
 static void process_callback(ulog_Event *ev, Callback *cb);
 static void write_formatted_message(ulog_Event *ev, FILE *file, bool full_time, bool color, bool new_line);
@@ -196,6 +201,64 @@ static void log_to_extra_destinations(ulog_Event *ev) {
 
 #endif  // FEATURE_EXTRA_DESTS
 
+
+/* ============================================================================
+   Feature: Log Topics
+============================================================================ */
+#if FEATURE_TOPICS
+
+typedef struct {
+    const char *name;
+    bool enabled;
+} Topic;
+
+static Topic topics[CFG_TOPICS_NUM] = {{0}};
+
+int add_topic(const char *topic_name, bool enable) {
+    for (int i = 0; i < CFG_TOPICS_NUM; i++) {
+        if (!topics[i].name) {
+            topics[i].name    = topic_name;
+            topics[i].enabled = enable;
+            return i;
+        }
+    }
+    return -1;
+}
+
+int enable_topic(int topic) {
+    if (topic < CFG_TOPICS_NUM) {
+        topics[topic].enabled = true;
+        return 0;
+    }
+    return -1;
+}
+
+int disable_topic(int topic) {
+    if (topic < CFG_TOPICS_NUM) {
+        topics[topic].enabled = false;
+        return 0;
+    }
+    return -1;
+}
+
+int get_topic(const char *topic_name) {
+    for (int i = 0; i < CFG_TOPICS_NUM; i++) {
+        if (topics[i].name && strcmp(topics[i].name, topic_name) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+static void print_topic(ulog_Event *ev, FILE *file) {
+    if (ev->topic >= 0 && ev->topic < CFG_TOPICS_NUM) {
+        fprintf(file, "- %s - ", topics[ev->topic].name);
+    }
+}
+
+
+#endif  // FEATURE_TOPICS
+
 /* ============================================================================
    Core Functionality: Thread Safety
 ============================================================================ */
@@ -260,6 +323,12 @@ static void write_formatted_message(ulog_Event *ev, FILE *file, bool full_time, 
 #if FEATURE_CUSTOM_PREFIX
     print_prefix(ev, file);
 #endif
+    
+#if FEATURE_TOPICS
+    print_topic(ev, file);
+#endif
+
+    print_level(ev, file);
 
     print_message(ev, file);
 
@@ -270,7 +339,7 @@ static void write_formatted_message(ulog_Event *ev, FILE *file, bool full_time, 
 #endif
 
     if (new_line) {
-    fprintf(file, "\n");
+        fprintf(file, "\n");
     }
 }
 
@@ -308,12 +377,19 @@ static void log_to_stdout(ulog_Event *ev) {
 }
 
 /// @brief Logs the message
-void ulog_log(int level, const char *file, int line, const char *message, ...) {
+void ulog_log(int level, const char *file, int line, int topic, const char *message, ...) {
+#if !FEATURE_TOPICS
+    (void) topic;
+#endif
+
     ulog_Event ev = {
             .message = message,
             .file    = file,
             .line    = line,
             .level   = level,
+#if FEATURE_TOPICS
+            .topic   = topic,
+#endif
     };
 
     va_start(ev.message_format_args, message);
@@ -331,13 +407,14 @@ void ulog_log(int level, const char *file, int line, const char *message, ...) {
     va_end(ev.message_format_args);
 }
 
+static void print_level(ulog_Event *ev, FILE *file) {
+    fprintf(file, "%-1s ", level_strings[ev->level]);
+}
 
 /// @brief Prints the message
 /// @param ev
 /// @param file
 static void print_message(ulog_Event *ev, FILE *file) {
-
-    fprintf(file, "%-1s ", level_strings[ev->level]);
 
 #if FEATURE_FILE_STRING
     fprintf(file, "%s:%d: ", ev->file, ev->line);  // file and line
