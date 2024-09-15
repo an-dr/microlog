@@ -288,7 +288,7 @@ int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size) {
     if (!mem) {
         return -1;
     }
-    write_formatted_message(ev, mem, ULOG_TIME_SHORT, ULOG_COLOR_ON, ULOG_NEW_LINE_OFF);
+    write_formatted_message(ev, mem, ULOG_TIME_SHORT, ULOG_COLOR_OFF, ULOG_NEW_LINE_OFF);
     fclose(mem);
     return 0;
 }
