@@ -78,6 +78,7 @@ static ulog_t ulog = {
 static void print_message(ulog_Event *ev, FILE *file);
 static void print_newline_and_flush(ulog_Event *ev, FILE *file);
 static void process_callback(ulog_Event *ev, Callback *cb);
+static void write_formatted_message(ulog_Event *ev, FILE *file, bool full_time, bool color);
 
 /* ============================================================================
    Feature: Color
@@ -155,17 +156,7 @@ static void print_prefix(ulog_Event *ev, FILE *file) {
 /// @param arg - File pointer
 static void callback_file(ulog_Event *ev, void *arg) {
     FILE *fp = (FILE *) arg;
-
-#if FEATURE_TIME
-    print_time_full(ev, fp);
-#endif
-
-#if FEATURE_CUSTOM_PREFIX
-    print_prefix(ev, fp);
-#endif
-
-    print_message(ev, fp);
-    print_newline_and_flush(ev, fp);
+    write_formatted_message(ev, fp, true, false);
 }
 
 /// @brief Adds a callback
@@ -241,30 +232,59 @@ static const char *level_strings[] = {
 #endif
 };
 
+static void write_formatted_message(ulog_Event *ev, FILE *file, bool full_time, bool color) {
+
+#if FEATURE_COLOR
+    if (color) {
+        print_color_start(ev, file);
+    }
+#else
+    (void) color;
+#endif // FEATURE_COLOR
+
+#if FEATURE_TIME
+    if (full_time) {
+        print_time_full(ev, file);
+    } else {
+        print_time_sec(ev, file);
+    }
+#else
+    (void) full_time;
+#endif // FEATURE_TIME
+
+#if FEATURE_CUSTOM_PREFIX
+    print_prefix(ev, file);
+#endif
+
+    print_message(ev, file);
+
+#if FEATURE_COLOR
+    if (color) {
+        print_color_end(ev, file);
+    }
+#endif
+    
+    print_newline_and_flush(ev, file);
+}
+
+
 /// @brief Callback for stdout
 /// @param ev
 static void callback_stdout(ulog_Event *ev, void *arg) {
     FILE *fp = (FILE *) arg;
+    write_formatted_message(ev, fp, false, true);
+}
 
-#if FEATURE_COLOR
-    print_color_start(ev, fp);
-#endif
+int ulog_callback_print(ulog_Event *ev, void *out_buf, size_t out_buf_size) {
+    FILE *mem = fmemopen(out_buf, out_buf_size, "w");
+    if (!mem) {
+        return -1;
+    }
 
-#if FEATURE_TIME
-    print_time_sec(ev, fp);
-#endif
+    write_formatted_message(ev, mem, false, false);
 
-#if FEATURE_CUSTOM_PREFIX
-    print_prefix(ev, fp);
-#endif
-
-    print_message(ev, fp);
-
-#if FEATURE_COLOR
-    print_color_end(ev, fp);
-#endif
-
-    print_newline_and_flush(ev, fp);
+    fclose(mem);
+    return 0;
 }
 
 /// @brief Processes the stdout callback

@@ -197,6 +197,9 @@ void ulog_set_prefix_fn(ulog_PrefixFn function);
 /// @return 0 if success, -1 if failed
 int ulog_add_callback(ulog_LogFn function, void *arg, int level);
 
+
+int ulog_callback_print(ulog_Event *ev, void *out_buf, size_t out_buf_size);
+
 /// @brief Add file callback
 /// @param fp - File pointer
 /// @param level - Debug level
