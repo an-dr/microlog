@@ -247,13 +247,20 @@ int get_topic(const char *topic_name) {
             return i;
         }
     }
-    return -1;
+    return 0x7FFFFFFF;
 }
 
 static void print_topic(ulog_Event *ev, FILE *file) {
     if (ev->topic >= 0 && ev->topic < CFG_TOPICS_NUM) {
         fprintf(file, "- %s - ", topics[ev->topic].name);
     }
+}
+
+static bool is_topic_enabled(int topic) {
+    if (topic < 0) {
+        return true;
+    }
+    return topic < CFG_TOPICS_NUM && topics[topic].enabled;
 }
 
 
@@ -380,6 +387,10 @@ static void log_to_stdout(ulog_Event *ev) {
 void ulog_log(int level, const char *file, int line, int topic, const char *message, ...) {
 #if !FEATURE_TOPICS
     (void) topic;
+#else
+    if (!is_topic_enabled(topic)) {
+        return;
+    }
 #endif
 
     ulog_Event ev = {

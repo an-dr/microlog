@@ -30,12 +30,7 @@ int main(int argc, char *argv[]) {
     ulog_set_prefix_fn(update_prefix);
 #endif
 
-#if FEATURE_TOPICS
-    printf("Topics: %d\n", ULOG_TOPICS_NUM);
-    add_topic("Subsystem 1", true);
-    add_topic("Subsystem 3", false);
-    enable_topic(get_topic("topic2"));
-#endif
+
 
     log_trace("Trace message %d", 1);
     log_debug("Debug message 0x%x", 2);
@@ -44,8 +39,18 @@ int main(int argc, char *argv[]) {
     log_error("Error message %s", "Five");
     log_fatal("Fatal message %s", "6\n");
     
-    ulog_log(LOG_INFO, __FILE__, __LINE__, get_topic("Subsystem 1"), "Subsystem 1 message");
-    ulog_log(LOG_INFO, __FILE__, __LINE__, get_topic("Subsystem 2"), "Subsystem 2 message (no topic created)");
-    ulog_log(LOG_WARN, __FILE__, __LINE__, get_topic("Subsystem 3"), "Subsystem 3 message");
+#if FEATURE_TOPICS
+    printf("Topics: %d\n", ULOG_TOPICS_NUM);
+    add_topic("Subsystem 1", true);
+    add_topic("Subsystem 3", false);
+    add_topic("Subsystem 4", true);
+    enable_topic(get_topic("Subsystem 3"));
+    
+    logt_trace("Subsystem 1", "Subsystem 1 message");
+    logt_debug("Subsystem 2", "Subsystem 2 message (no topic created)");
+    logt_info("Subsystem 3", "Subsystem 3 message");
+    logt_warn("Subsystem 4", "Subsystem 4 message");
+#endif
+
     return 0;
 }
