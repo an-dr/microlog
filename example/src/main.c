@@ -37,18 +37,17 @@ int main(int argc, char *argv[]) {
     log_info("Info message %f", 3.0);
     log_warn("Warning message %c", '4');
     log_error("Error message %s", "Five");
-    log_fatal("Fatal message %s", "6\n");
+    log_fatal("Fatal message %s", "6");
     
 #if FEATURE_TOPICS
-    printf("Topics: %d\n", ULOG_TOPICS_NUM);
-    add_topic("Subsystem 1", true);
-    add_topic("Subsystem 3", false);
+    add_topic("Bluetooth", true);
+    add_topic("Audio", false);
     add_topic("Subsystem 4", true);
-    enable_topic(get_topic("Subsystem 3"));
+    enable_topic(get_topic("Audio"));
     
-    logt_trace("Subsystem 1", "Subsystem 1 message");
+    logt_trace("Bluetooth", "Subsystem 1 message");
     logt_debug("Subsystem 2", "Subsystem 2 message (no topic created)");
-    logt_info("Subsystem 3", "Subsystem 3 message");
+    logt_info("Audio", "Subsystem 3 message");
     logt_warn("Subsystem 4", "Subsystem 4 message");
 #endif
 

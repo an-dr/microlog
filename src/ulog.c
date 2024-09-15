@@ -252,7 +252,7 @@ int get_topic(const char *topic_name) {
 
 static void print_topic(ulog_Event *ev, FILE *file) {
     if (ev->topic >= 0 && ev->topic < CFG_TOPICS_NUM) {
-        fprintf(file, "- %s - ", topics[ev->topic].name);
+        fprintf(file, "%s - ", topics[ev->topic].name);
     }
 }
 
