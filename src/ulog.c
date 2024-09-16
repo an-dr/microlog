@@ -207,7 +207,10 @@ static void log_to_extra_destinations(ulog_Event *ev) {
 ============================================================================ */
 #if FEATURE_TOPICS
 
+#if CFG_TOPICS_DYNAMIC == false
+
 typedef struct {
+    int id;
     const char *name;
     bool enabled;
 } Topic;
@@ -217,6 +220,7 @@ static Topic topics[CFG_TOPICS_NUM] = {{0}};
 int add_topic(const char *topic_name, bool enable) {
     for (int i = 0; i < CFG_TOPICS_NUM; i++) {
         if (!topics[i].name) {
+            topics[i].id      = i;
             topics[i].name    = topic_name;
             topics[i].enabled = enable;
             return i;
@@ -225,30 +229,27 @@ int add_topic(const char *topic_name, bool enable) {
     return -1;
 }
 
-int enable_topic(int topic) {
+static Topic *_get_topic_ptr(int topic) {
     if (topic < CFG_TOPICS_NUM) {
-        topics[topic].enabled = true;
-        return 0;
+        return &topics[topic];
     }
-    return -1;
+    return NULL;
 }
 
-int disable_topic(int topic) {
-    if (topic < CFG_TOPICS_NUM) {
-        topics[topic].enabled = false;
-        return 0;
-    }
-    return -1;
+static Topic *_get_topic_begin(void) {
+    return topics;
 }
 
-int get_topic(const char *topic_name) {
-    for (int i = 0; i < CFG_TOPICS_NUM; i++) {
-        if (topics[i].name && strcmp(topics[i].name, topic_name) == 0) {
-            return i;
-        }
+static Topic * _get_topic_next(Topic * t) {
+    if (t && t->id < CFG_TOPICS_NUM) {
+        return t + 1;
     }
-    return 0x7FFFFFFF;
+    return NULL;
 }
+
+#else  // CFG_TOPICS_DYNAMIC == 0
+
+#endif  // CFG_TOPICS_DYNAMIC == 0
 
 static void print_topic(ulog_Event *ev, FILE *file) {
     if (ev->topic >= 0 && ev->topic < CFG_TOPICS_NUM) {
@@ -256,11 +257,41 @@ static void print_topic(ulog_Event *ev, FILE *file) {
     }
 }
 
+int enable_topic(int topic) {
+    Topic *t = _get_topic_ptr(topic);
+    if (t) {
+        t->enabled = true;
+        return 0;
+    }
+    return -1;
+}
+
+int disable_topic(int topic) {
+    Topic *t = _get_topic_ptr(topic);
+    if (t) {
+        t->enabled = false;
+        return 0;
+    }
+    return -1;
+}
+
+int get_topic_id(const char *topic_name) {
+    Topic *t = NULL;
+    for (int i = 0; i < CFG_TOPICS_NUM; i++) {
+        t = _get_topic_ptr(i);
+        if (t && t->name && strcmp(t->name, topic_name) == 0) {
+            return i;
+        }
+    }
+    return 0x7FFFFFFF;
+}
+
+
 static bool is_topic_enabled(int topic) {
     if (topic < 0) {
         return true;
     }
-    return topic < CFG_TOPICS_NUM && topics[topic].enabled;
+    return topic < CFG_TOPICS_NUM && _get_topic_ptr(topic)->enabled;
 }
 
 
@@ -330,7 +361,7 @@ static void write_formatted_message(ulog_Event *ev, FILE *file, bool full_time, 
 #if FEATURE_CUSTOM_PREFIX
     print_prefix(ev, file);
 #endif
-    
+
 #if FEATURE_TOPICS
     print_topic(ev, file);
 #endif
@@ -399,7 +430,7 @@ void ulog_log(int level, const char *file, int line, int topic, const char *mess
             .line    = line,
             .level   = level,
 #if FEATURE_TOPICS
-            .topic   = topic,
+            .topic = topic,
 #endif
     };
 

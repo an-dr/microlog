@@ -104,10 +104,17 @@ extern "C" {
 
 #if ULOG_TOPICS_NUM > 0
 #define FEATURE_TOPICS true
+#define CFG_TOPICS_DINAMIC_ALLOC false
 #define CFG_TOPICS_NUM ULOG_TOPICS_NUM
-#else
+
+#elif ULOG_TOPICS_NUM == -1
+#define FEATURE_TOPICS true
+#define CFG_TOPICS_DINAMIC_ALLOC true
+
+#else // ULOG_TOPICS_NUM == 0
 #define FEATURE_TOPICS false
-#endif
+
+#endif // ULOG_TOPICS_NUM
 
 
 /* ============================================================================
@@ -229,15 +236,15 @@ int ulog_add_fp(FILE *fp, int level);
 ============================================================================ */
 #if FEATURE_TOPICS
 
-#define logt_trace(TOPIC_NAME, ...) ulog_log(LOG_TRACE, __FILE__, __LINE__, get_topic(TOPIC_NAME), __VA_ARGS__)
-#define logt_debug(TOPIC_NAME,...) ulog_log(LOG_DEBUG, __FILE__, __LINE__, get_topic(TOPIC_NAME), __VA_ARGS__)
-#define logt_info(TOPIC_NAME,...) ulog_log(LOG_INFO, __FILE__, __LINE__, get_topic(TOPIC_NAME), __VA_ARGS__)
-#define logt_warn(TOPIC_NAME,...) ulog_log(LOG_WARN, __FILE__, __LINE__, get_topic(TOPIC_NAME), __VA_ARGS__)
-#define logt_error(TOPIC_NAME,...) ulog_log(LOG_ERROR, __FILE__, __LINE__, get_topic(TOPIC_NAME), __VA_ARGS__)
-#define logt_fatal(TOPIC_NAME,...) ulog_log(LOG_FATAL, __FILE__, __LINE__, get_topic(TOPIC_NAME), __VA_ARGS__)
+#define logt_trace(TOPIC_NAME, ...) ulog_log(LOG_TRACE, __FILE__, __LINE__, get_topic_id(TOPIC_NAME), __VA_ARGS__)
+#define logt_debug(TOPIC_NAME,...) ulog_log(LOG_DEBUG, __FILE__, __LINE__, get_topic_id(TOPIC_NAME), __VA_ARGS__)
+#define logt_info(TOPIC_NAME,...) ulog_log(LOG_INFO, __FILE__, __LINE__, get_topic_id(TOPIC_NAME), __VA_ARGS__)
+#define logt_warn(TOPIC_NAME,...) ulog_log(LOG_WARN, __FILE__, __LINE__, get_topic_id(TOPIC_NAME), __VA_ARGS__)
+#define logt_error(TOPIC_NAME,...) ulog_log(LOG_ERROR, __FILE__, __LINE__, get_topic_id(TOPIC_NAME), __VA_ARGS__)
+#define logt_fatal(TOPIC_NAME,...) ulog_log(LOG_FATAL, __FILE__, __LINE__, get_topic_id(TOPIC_NAME), __VA_ARGS__)
 
 int add_topic(const char *topic_name, bool enable);
-int get_topic(const char *topic_name);
+int get_topic_id(const char *topic_name);
 int enable_topic(int topic);
 int disable_topic(int topic);
 

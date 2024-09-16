@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
     add_topic("Bluetooth", true);
     add_topic("Audio", false);
     add_topic("Subsystem 4", true);
-    enable_topic(get_topic("Audio"));
+    enable_topic(get_topic_id("Audio"));
     
     logt_trace("Bluetooth", "Subsystem 1 message");
     logt_debug("Subsystem 2", "Subsystem 2 message (no topic created)");
