@@ -207,7 +207,7 @@ static void log_to_extra_destinations(ulog_Event *ev) {
 ============================================================================ */
 #if FEATURE_TOPICS
 
-#if CFG_TOPICS_DYNAMIC == false
+#if CFG_TOPICS_DINAMIC_ALLOC == false
 
 typedef struct {
     int id;
@@ -216,6 +216,27 @@ typedef struct {
 } Topic;
 
 static Topic topics[CFG_TOPICS_NUM] = {{0}};
+
+
+static Topic *_get_topic_begin(void) {
+    return topics;
+}
+
+
+static Topic *_get_topic_next(Topic *t) {
+    if ((t >= topics) && (t < topics + CFG_TOPICS_NUM - 1)) {
+        return t + 1;
+    }
+    return NULL;
+}
+
+
+static Topic *_get_topic_ptr(int topic) {
+    if (topic < CFG_TOPICS_NUM) {
+        return &topics[topic];
+    }
+    return NULL;
+}
 
 int add_topic(const char *topic_name, bool enable) {
     for (int i = 0; i < CFG_TOPICS_NUM; i++) {
@@ -229,31 +250,83 @@ int add_topic(const char *topic_name, bool enable) {
     return -1;
 }
 
+#else  // CFG_TOPICS_DINAMIC_ALLOC == true
+
+#include <stdlib.h>
+
+typedef struct {
+    int id;
+    const char *name;
+    bool enabled;
+    void *next; // Pointer to the next topic pointer (Topic **)
+} Topic;
+
+static Topic *topics = NULL;
+
+static Topic **_get_topic_begin(void) {
+    return &topics;
+}
+
+static Topic *_get_topic_next(Topic *t) {
+    return t->next;
+}
+
 static Topic *_get_topic_ptr(int topic) {
-    if (topic < CFG_TOPICS_NUM) {
-        return &topics[topic];
+    for (Topic *t = _get_topic_begin(); t != NULL; t = _get_topic_next(t)) {
+        if (t->id == topic) {
+            return t;
+        }
     }
     return NULL;
 }
 
-static Topic *_get_topic_begin(void) {
-    return topics;
-}
-
-static Topic * _get_topic_next(Topic * t) {
-    if (t && t->id < CFG_TOPICS_NUM) {
-        return t + 1;
+static void *_create_topic(int id, const char *topic_name, bool enable) {
+    Topic *t = malloc(sizeof(Topic));
+    if (t) {
+        t->id      = id;
+        t->name    = topic_name;
+        t->enabled = enable;
+        t->next    = NULL;
     }
-    return NULL;
+    return t;
 }
 
-#else  // CFG_TOPICS_DYNAMIC == 0
+int add_topic(const char *topic_name, bool enable) {
+    if (!topic_name) {
+        return -1;
+    }
 
-#endif  // CFG_TOPICS_DYNAMIC == 0
+    Topic **t = _get_topic_begin();
+
+    // If the beginning is empty
+    if (!t) {
+        &t = _create_topic(0, topic_name, enable);
+        if (&t) {
+            return 0;
+        }
+        return -1;
+    }
+
+    // If the beginning is not empty
+    int current_id = 0;
+    while (t->next != NULL) {
+        t = t->next;
+        current_id++;
+    }
+    
+    t->next = _create_topic(current_id + 1, topic_name, enable);
+    if (t->next) {
+        return current_id + 1;
+    }
+    return -1;
+}
+
+#endif  // CFG_TOPICS_DINAMIC_ALLOC == 0
 
 static void print_topic(ulog_Event *ev, FILE *file) {
-    if (ev->topic >= 0 && ev->topic < CFG_TOPICS_NUM) {
-        fprintf(file, "%s - ", topics[ev->topic].name);
+    Topic *t = _get_topic_ptr(ev->topic);
+    if (t && t->name) {
+        fprintf(file, "%s - ", t->name);
     }
 }
 
@@ -276,22 +349,27 @@ int disable_topic(int topic) {
 }
 
 int get_topic_id(const char *topic_name) {
-    Topic *t = NULL;
-    for (int i = 0; i < CFG_TOPICS_NUM; i++) {
-        t = _get_topic_ptr(i);
-        if (t && t->name && strcmp(t->name, topic_name) == 0) {
-            return i;
+    for (Topic *t = _get_topic_begin(); t != NULL; t = _get_topic_next(t)) {
+        if (t->name && strcmp(t->name, topic_name) == 0) {
+            return t->id;
         }
     }
     return 0x7FFFFFFF;
 }
 
-
+/// @brief Checks if the topic is enabled
+/// @param topic - Topic ID or -1 if no topic
+/// @return true if enabled or no topic, false otherwise
 static bool is_topic_enabled(int topic) {
-    if (topic < 0) {
+    if (topic < 0) {  // no topic, always allowed
         return true;
     }
-    return topic < CFG_TOPICS_NUM && _get_topic_ptr(topic)->enabled;
+
+    Topic *t = _get_topic_ptr(topic);
+    if (t) {
+        return t->enabled;
+    }
+    return false;
 }
 
 

@@ -13,7 +13,9 @@ add_global_arguments('-DULOG_HAVE_TIME', language : 'c')
 # add_global_arguments('-DULOG_SHORT_LEVEL_STRINGS', language : 'c')
 # add_global_arguments('-DULOG_USE_EMOJI', language : 'c')
 add_global_arguments('-DULOG_EXTRA_DESTINATIONS=1', language : 'c')
-add_global_arguments('-DULOG_TOPICS_NUM=4', language : 'c')
+
+# add_global_arguments('-DULOG_TOPICS_NUM=-1', language : 'c')
+add_global_arguments('-DULOG_TOPICS_NUM=2', language : 'c')
 
 # To fix paths in the log messages
 add_project_arguments('-fmacro-prefix-map=../=',language: 'c')

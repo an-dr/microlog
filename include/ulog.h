@@ -243,6 +243,10 @@ int ulog_add_fp(FILE *fp, int level);
 #define logt_error(TOPIC_NAME,...) ulog_log(LOG_ERROR, __FILE__, __LINE__, get_topic_id(TOPIC_NAME), __VA_ARGS__)
 #define logt_fatal(TOPIC_NAME,...) ulog_log(LOG_FATAL, __FILE__, __LINE__, get_topic_id(TOPIC_NAME), __VA_ARGS__)
 
+/// @brief Adds a topic
+/// @param topic_name 
+/// @param enable 
+/// @return Topic ID if success, -1 if failed
 int add_topic(const char *topic_name, bool enable);
 int get_topic_id(const char *topic_name);
 int enable_topic(int topic);
