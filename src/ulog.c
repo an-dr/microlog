@@ -258,7 +258,7 @@ typedef struct {
     int id;
     const char *name;
     bool enabled;
-    void *next; // Pointer to the next topic pointer (Topic **)
+    void *next;  // Pointer to the next topic pointer (Topic **)
 } Topic;
 
 static Topic *topics = NULL;
@@ -302,11 +302,11 @@ int add_topic(const char *topic_name, bool enable) {
             return t->id;
         }
     }
-    
+
 
     // If the beginning is empty
     if (!topics) {
-        topics = (Topic *)_create_topic(0, topic_name, enable);
+        topics = (Topic *) _create_topic(0, topic_name, enable);
         if (topics) {
             return 0;
         }
@@ -315,12 +315,12 @@ int add_topic(const char *topic_name, bool enable) {
 
     // If the beginning is not empty
     int current_id = 0;
-    Topic *t = topics;
+    Topic *t       = topics;
     while (t->next != NULL) {
         t = t->next;
         current_id++;
     }
-    
+
     t->next = _create_topic(current_id + 1, topic_name, enable);
     if (t->next) {
         return current_id + 1;
@@ -361,7 +361,12 @@ int get_topic_id(const char *topic_name) {
             return t->id;
         }
     }
+
+#if CFG_TOPICS_DINAMIC_ALLOC == true
+    return add_topic(topic_name, true);
+#else
     return 0x7FFFFFFF;
+#endif
 }
 
 /// @brief Checks if the topic is enabled

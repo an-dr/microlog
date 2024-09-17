@@ -40,9 +40,12 @@ int main(int argc, char *argv[]) {
     log_fatal("Fatal message %s", "6");
     
 #if FEATURE_TOPICS
+    #if CFG_TOPICS_DINAMIC_ALLOC == false
     add_topic("Bluetooth", true);
     add_topic("Audio", false);
     add_topic("Subsystem 4", true);
+    #endif
+    
     enable_topic(get_topic_id("Audio"));
     
     logt_trace("Bluetooth", "Subsystem 1 message");

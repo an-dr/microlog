@@ -248,6 +248,10 @@ int ulog_add_fp(FILE *fp, int level);
 /// @param enable 
 /// @return Topic ID if success, -1 if failed
 int add_topic(const char *topic_name, bool enable);
+
+/// @brief Gets the topic ID
+/// @param topic_name 
+/// @return  Topic ID if success, -1 if failed, 0x7FFFFFFF if not found
 int get_topic_id(const char *topic_name);
 int enable_topic(int topic);
 int disable_topic(int topic);
