@@ -2,7 +2,18 @@
 
 ![version](https://img.shields.io/badge/version-6.0.0-green)
 
-A simple customizable logging library.
+A simple customizable logging library. Features:
+
+- **Log topics**
+    - To filter log messages by subsystems, e.g. "network", "storage", etc.
+- **Callbacks for custom output**
+    - E.g. files, serial ports, etc.
+- **Thread-safety**
+    - Via external locking injection
+- **Customizable log format**
+    - Color, custom dynamic data, emojis, etc.
+- **Support for embedded systems**
+    - Optional static memory allocation, optional color, no special dependencies
 
 In the default configuration it looks like this:
 
@@ -68,7 +79,7 @@ log_trace("Hello %s", "world")
 Resulting in a line with the given format printed to stderr:
 
 ```
-20:18:26 [TRACE] src/main.c:11: Hello world
+TRACE src/main.c:11: Hello world
 ```
 
 ### ulog_set_quiet(bool enable)
