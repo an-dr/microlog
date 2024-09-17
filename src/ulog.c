@@ -263,8 +263,8 @@ typedef struct {
 
 static Topic *topics = NULL;
 
-static Topic **_get_topic_begin(void) {
-    return &topics;
+static Topic *_get_topic_begin(void) {
+    return topics;
 }
 
 static Topic *_get_topic_next(Topic *t) {
@@ -296,12 +296,18 @@ int add_topic(const char *topic_name, bool enable) {
         return -1;
     }
 
-    Topic **t = _get_topic_begin();
+    //if exists
+    for (Topic *t = _get_topic_begin(); t != NULL; t = _get_topic_next(t)) {
+        if (t->name && strcmp(t->name, topic_name) == 0) {
+            return t->id;
+        }
+    }
+    
 
     // If the beginning is empty
-    if (!t) {
-        &t = _create_topic(0, topic_name, enable);
-        if (&t) {
+    if (!topics) {
+        topics = (Topic *)_create_topic(0, topic_name, enable);
+        if (topics) {
             return 0;
         }
         return -1;
@@ -309,6 +315,7 @@ int add_topic(const char *topic_name, bool enable) {
 
     // If the beginning is not empty
     int current_id = 0;
+    Topic *t = topics;
     while (t->next != NULL) {
         t = t->next;
         current_id++;
