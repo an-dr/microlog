@@ -15,22 +15,21 @@ void custom_callback(ulog_Event *ev, void *arg) {
 }
 
 int main(int argc, char *argv[]) {
+    
     printf("\n");
 
     ulog_set_level(LOG_TRACE);
+    
+    /* Extra Destinations =============================== */
 
-#if FEATURE_EXTRA_DESTS
-    printf("Extra destinations: %d\n", ULOG_EXTRA_DESTINATIONS);
     FILE *fp = fopen("example.log", "w");
     ulog_add_fp(fp, LOG_TRACE);
     ulog_add_callback(custom_callback, "     - Custom Callback: ", LOG_FATAL);
-#endif
 
-#if FEATURE_CUSTOM_PREFIX
+    /* Custom Prefix ==================================== */
     ulog_set_prefix_fn(update_prefix);
-#endif
 
-
+    /* Core Logging ===================================== */
     log_trace("Trace message %d", 1);
     log_debug("Debug message 0x%x", 2);
     log_info("Info message %f", 3.0);
@@ -38,23 +37,24 @@ int main(int argc, char *argv[]) {
     log_error("Error message %s", "Five");
     log_fatal("Fatal message %s", "6");
     
+    /* Topics =========================================== */
+    printf("\n");
     
     ulog_add_topic("Bluetooth", true);
     ulog_add_topic("Audio", false);
-    ulog_add_topic("Subsystem 4", true);
+    ulog_add_topic("Serial", false);
     
-    logt_warn("Subsystem 4", "Subsystem 4 message 0");
+    // logt_fatal("Serial", "Serial message 0");
     
     ulog_enable_all_topics();
+    logt_trace("Bluetooth", "Bluetooth message");
+    logt_debug("Indication", "Indication message");
+    logt_info("Audio", "Audio message");
+    logt_warn("Serial", "Serial message 1");
+    logt_error("Serial", "Serial message 2");
     
-    logt_trace("Bluetooth", "Subsystem 1 message");
-    logt_debug("Subsystem 2", "Subsystem 2 message (no topic created)");
-    logt_info("Audio", "Subsystem 3 message");
-    logt_warn("Subsystem 4", "Subsystem 4 message 1");
-    logt_warn("Subsystem 4", "Subsystem 4 message 2");
-    ulog_disable_topic("Subsystem 4");
-    logt_warn("Subsystem 4", "Subsystem 4 message 3 (disabled)");
+    ulog_disable_topic("Serial");
+    // logt_warn("Serial", "Serial message 3 (disabled)");
     
-
     return 0;
 }

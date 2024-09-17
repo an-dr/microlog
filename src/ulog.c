@@ -1,6 +1,6 @@
 // *************************************************************************
 //
-// ulog v5.2.0 - A simple customizable logging library.
+// ulog v6.0.0 - A simple customizable logging library.
 // https://github.com/an-dr/microlog
 //
 // *************************************************************************
@@ -211,7 +211,7 @@ typedef struct {
     int id;
     const char *name;
     bool enabled;
-    
+
 #if CFG_TOPICS_DINAMIC_ALLOC == true
     void *next;  // Pointer to the next topic pointer (Topic **)
 #endif
@@ -231,7 +231,7 @@ static bool new_topic_enabled = false;
 static void print_topic(ulog_Event *ev, FILE *file) {
     Topic *t = _get_topic_ptr(ev->topic);
     if (t && t->name) {
-        fprintf(file, "%s - ", t->name);
+        fprintf(file, "[%s] ", t->name);
     }
 }
 
@@ -344,7 +344,7 @@ int ulog_add_topic(const char *topic_name, bool enable) {
     }
     return -1;
 }
-# endif  // FEATURE_TOPICS && CFG_TOPICS_DINAMIC_ALLOC == false
+#endif  // FEATURE_TOPICS && CFG_TOPICS_DINAMIC_ALLOC == false
 
 
 /* ============================================================================
@@ -426,7 +426,6 @@ int ulog_add_topic(const char *topic_name, bool enable) {
 #if FEATURE_TOPICS
 
 
-
 #endif  // FEATURE_TOPICS
 
 /* ============================================================================
@@ -464,9 +463,9 @@ static const char *level_strings[] = {
 #if FEATURE_EMOJI_LEVELS
         "⚪", "🔵", "🟢", "🟡", "🔴", "💥"
 #elif FEATURE_SHORT_LEVELS
-        "[T]", "[D]", "[I]", "[W]", "[E]", "[F]"
+        "T", "D", "I", "W", "E", "F"
 #else
-        "[TRACE]", "[DEBUG]", "[INFO]", "[WARN]", "[ERROR]", "[FATAL]"
+        "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"
 #endif
 };
 
@@ -482,7 +481,9 @@ static void write_formatted_message(ulog_Event *ev, FILE *file, bool full_time, 
 
 #if FEATURE_TIME
     if (full_time) {
+#if FEATURE_EXTRA_DESTS
         print_time_full(ev, file);
+#endif
     } else {
         print_time_sec(ev, file);
     }
@@ -559,7 +560,7 @@ void ulog_log(int level, const char *file, int line, const char *topic, const ch
         if (topic_id == TOPIC_NOT_FOUND) {
 #if CFG_TOPICS_DINAMIC_ALLOC == false
             return;  // Topic not found
-#else  // CFG_TOPICS_DINAMIC_ALLOC == true
+#else
             // If no topic add a disabled one, so we can enable it later
             topic_id = ulog_add_topic(topic, new_topic_enabled);
 #endif

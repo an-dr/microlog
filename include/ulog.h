@@ -1,6 +1,6 @@
 // *************************************************************************
 //
-// ulog v5.2.0 - A simple customizable logging library.
+// ulog v6.0.0 - A simple customizable logging library.
 // https://github.com/an-dr/microlog
 //
 // *************************************************************************
@@ -62,6 +62,7 @@ extern "C" {
 #define CFG_CUSTOM_PREFIX_SIZE ULOG_CUSTOM_PREFIX_SIZE
 #else
 #define FEATURE_CUSTOM_PREFIX false
+#define CFG_CUSTOM_PREFIX_SIZE 0
 #endif
 
 
@@ -77,6 +78,7 @@ extern "C" {
 #define CFG_EXTRA_DESTS ULOG_EXTRA_DESTINATIONS
 #else
 #define FEATURE_EXTRA_DESTS false
+#define CFG_EXTRA_DESTS 0
 #endif
 
 
@@ -110,6 +112,7 @@ extern "C" {
 #elif ULOG_TOPICS_NUM == -1
 #define FEATURE_TOPICS true
 #define CFG_TOPICS_DINAMIC_ALLOC true
+#define CFG_TOPICS_NUM -1
 
 #else  // ULOG_TOPICS_NUM == 0
 #define FEATURE_TOPICS false
@@ -209,6 +212,10 @@ typedef void (*ulog_PrefixFn)(ulog_Event *ev, char *prefix, size_t prefix_size);
 /// @param function - Prefix function
 void ulog_set_prefix_fn(ulog_PrefixFn function);
 
+#else  // FEATURE_CUSTOM_PREFIX
+
+#define ulog_set_prefix_fn(...)
+
 #endif  // FEATURE_CUSTOM_PREFIX
 
 /* ============================================================================
@@ -229,6 +236,11 @@ int ulog_add_callback(ulog_LogFn function, void *arg, int level);
 /// @param level - Debug level
 /// @return 0 if success, -1 if failed
 int ulog_add_fp(FILE *fp, int level);
+
+#else  // FEATURE_EXTRA_DESTS
+
+#define ulog_add_callback(...)
+#define ulog_add_fp(...)
 
 #endif  // FEATURE_EXTRA_DESTS
 

@@ -1,20 +1,20 @@
 # microlog
 
-![version](https://img.shields.io/badge/version-5.2.0-green)
+![version](https://img.shields.io/badge/version-6.0.0-green)
 
 A simple customizable logging library.
 
 In the default configuration it looks like this:
 
-<img src="doc/demo0.png" height="100">
+<img src="doc/demo0.png" width="600">
 
 ...but in can be very minimalistic
 
-<img src="doc/demo1.png" height="100">
+<img src="doc/demo1.png" width="600">
 
 ... or feature-rich:
 
-<img src="doc/demo2.png" height="100">
+<img src="doc/demo2.png" width="600">
 
 The project is based on several core principles:
 
@@ -143,6 +143,7 @@ Sets a custom prefix function. The function is called with the log level and sho
 - `ULOG_HAVE_TIME` - Print the time in the log messages if the platform supports time.h.
 - `ULOG_EXTRA_DESTINATIONS` - The maximum number of extra logging destinations that can be added. Each extra destination requires some memory. When it is 0, the entire extra destination code is not compiled. Default is 0.
 - `ULOG_CUSTOM_PREFIX_SIZE` - The maximum size of the custom prefix. Default is 0. If set to 0, the custom prefix code is not compiled. If set to a value greater than 0, the custom prefix can be set with `ulog_set_custom_prefix(ulog_PrefixFn func)`.
+- `ULOG_TOPICS_NUM` - The maximum number of topics. Default is 0. If has a positive value, used a static array for topics. If set to -1, the topics are dynamic and can be added at runtime.
 
 You can use the defines in the compiler options, e.g. `-DULOG_NO_COLOR`.
 
