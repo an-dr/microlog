@@ -31,7 +31,6 @@ int main(int argc, char *argv[]) {
 #endif
 
 
-
     log_trace("Trace message %d", 1);
     log_debug("Debug message 0x%x", 2);
     log_info("Info message %f", 3.0);
@@ -39,28 +38,23 @@ int main(int argc, char *argv[]) {
     log_error("Error message %s", "Five");
     log_fatal("Fatal message %s", "6");
     
-#if FEATURE_TOPICS
-    #if CFG_TOPICS_DINAMIC_ALLOC == false
-    add_topic("Bluetooth", true);
-    add_topic("Audio", false);
-    add_topic("Subsystem 4", true);
-    #endif
+    
+    ulog_add_topic("Bluetooth", true);
+    ulog_add_topic("Audio", false);
+    ulog_add_topic("Subsystem 4", true);
     
     logt_warn("Subsystem 4", "Subsystem 4 message 0");
     
-    enable_topic("Audio");
-    enable_topic("Bluetooth");
-    enable_topic("Subsystem 4");
+    ulog_enable_all_topics();
     
     logt_trace("Bluetooth", "Subsystem 1 message");
     logt_debug("Subsystem 2", "Subsystem 2 message (no topic created)");
     logt_info("Audio", "Subsystem 3 message");
     logt_warn("Subsystem 4", "Subsystem 4 message 1");
     logt_warn("Subsystem 4", "Subsystem 4 message 2");
-    disable_topic("Subsystem 4");
+    ulog_disable_topic("Subsystem 4");
     logt_warn("Subsystem 4", "Subsystem 4 message 3 (disabled)");
     
-#endif
 
     return 0;
 }
