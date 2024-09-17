@@ -46,12 +46,20 @@ int main(int argc, char *argv[]) {
     add_topic("Subsystem 4", true);
     #endif
     
-    enable_topic(get_topic_id("Audio"));
+    logt_warn("Subsystem 4", "Subsystem 4 message 0");
+    
+    enable_topic("Audio");
+    enable_topic("Bluetooth");
+    enable_topic("Subsystem 4");
     
     logt_trace("Bluetooth", "Subsystem 1 message");
     logt_debug("Subsystem 2", "Subsystem 2 message (no topic created)");
     logt_info("Audio", "Subsystem 3 message");
-    logt_warn("Subsystem 4", "Subsystem 4 message");
+    logt_warn("Subsystem 4", "Subsystem 4 message 1");
+    logt_warn("Subsystem 4", "Subsystem 4 message 2");
+    disable_topic("Subsystem 4");
+    logt_warn("Subsystem 4", "Subsystem 4 message 3 (disabled)");
+    
 #endif
 
     return 0;

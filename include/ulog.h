@@ -132,12 +132,12 @@ enum { LOG_TRACE,
        LOG_ERROR,
        LOG_FATAL };
 
-#define log_trace(...) ulog_log(LOG_TRACE, __FILE__, __LINE__, -1, __VA_ARGS__)
-#define log_debug(...) ulog_log(LOG_DEBUG, __FILE__, __LINE__, -1, __VA_ARGS__)
-#define log_info(...) ulog_log(LOG_INFO, __FILE__, __LINE__, -1, __VA_ARGS__)
-#define log_warn(...) ulog_log(LOG_WARN, __FILE__, __LINE__, -1, __VA_ARGS__)
-#define log_error(...) ulog_log(LOG_ERROR, __FILE__, __LINE__, -1, __VA_ARGS__)
-#define log_fatal(...) ulog_log(LOG_FATAL, __FILE__, __LINE__, -1, __VA_ARGS__)
+#define log_trace(...) ulog_log(LOG_TRACE, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define log_debug(...) ulog_log(LOG_DEBUG, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define log_info(...) ulog_log(LOG_INFO, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define log_warn(...) ulog_log(LOG_WARN, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define log_error(...) ulog_log(LOG_ERROR, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define log_fatal(...) ulog_log(LOG_FATAL, __FILE__, __LINE__, NULL, __VA_ARGS__)
 
 
 /// @brief Event structure
@@ -182,9 +182,10 @@ int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size);
 /// @param level - Debug level
 /// @param file - File name
 /// @param line - Line number
+/// @param topic - Topic name
 /// @param message - Message format string
 /// @param ... - Format arguments
-void ulog_log(int level, const char *file, int line, int topic, const char *message, ...);
+void ulog_log(int level, const char *file, int line, const char * topic, const char *message, ...);
 
 /* ============================================================================
    Core Functionality: Thread Safety
@@ -236,25 +237,30 @@ int ulog_add_fp(FILE *fp, int level);
 ============================================================================ */
 #if FEATURE_TOPICS
 
-#define logt_trace(TOPIC_NAME, ...) ulog_log(LOG_TRACE, __FILE__, __LINE__, get_topic_id(TOPIC_NAME), __VA_ARGS__)
-#define logt_debug(TOPIC_NAME,...) ulog_log(LOG_DEBUG, __FILE__, __LINE__, get_topic_id(TOPIC_NAME), __VA_ARGS__)
-#define logt_info(TOPIC_NAME,...) ulog_log(LOG_INFO, __FILE__, __LINE__, get_topic_id(TOPIC_NAME), __VA_ARGS__)
-#define logt_warn(TOPIC_NAME,...) ulog_log(LOG_WARN, __FILE__, __LINE__, get_topic_id(TOPIC_NAME), __VA_ARGS__)
-#define logt_error(TOPIC_NAME,...) ulog_log(LOG_ERROR, __FILE__, __LINE__, get_topic_id(TOPIC_NAME), __VA_ARGS__)
-#define logt_fatal(TOPIC_NAME,...) ulog_log(LOG_FATAL, __FILE__, __LINE__, get_topic_id(TOPIC_NAME), __VA_ARGS__)
+#define TOPIC_NOT_FOUND 0x7FFFFFFF
 
+#define logt_trace(TOPIC_NAME, ...) ulog_log(LOG_TRACE, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_debug(TOPIC_NAME,...) ulog_log(LOG_DEBUG, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_info(TOPIC_NAME,...) ulog_log(LOG_INFO, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_warn(TOPIC_NAME,...) ulog_log(LOG_WARN, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_error(TOPIC_NAME,...) ulog_log(LOG_ERROR, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_fatal(TOPIC_NAME,...) ulog_log(LOG_FATAL, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+
+#if CFG_TOPICS_DINAMIC_ALLOC == false
 /// @brief Adds a topic
 /// @param topic_name 
 /// @param enable 
 /// @return Topic ID if success, -1 if failed
 int add_topic(const char *topic_name, bool enable);
+#endif // CFG_TOPICS_DINAMIC_ALLOC == false
 
 /// @brief Gets the topic ID
 /// @param topic_name 
-/// @return  Topic ID if success, -1 if failed, 0x7FFFFFFF if not found
+/// @return  Topic ID if success, -1 if failed, TOPIC_NOT_FOUND if not found
 int get_topic_id(const char *topic_name);
-int enable_topic(int topic);
-int disable_topic(int topic);
+
+int enable_topic(const char *topic_name);
+int disable_topic(const char *topic_name);
 
 
 #endif  // FEATURE_TOPICS

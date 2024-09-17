@@ -262,6 +262,7 @@ typedef struct {
 } Topic;
 
 static Topic *topics = NULL;
+static bool new_topic_enabled = false;
 
 static Topic *_get_topic_begin(void) {
     return topics;
@@ -337,7 +338,7 @@ static void print_topic(ulog_Event *ev, FILE *file) {
     }
 }
 
-int enable_topic(int topic) {
+static int _enable_topic(int topic) {
     Topic *t = _get_topic_ptr(topic);
     if (t) {
         t->enabled = true;
@@ -346,7 +347,7 @@ int enable_topic(int topic) {
     return -1;
 }
 
-int disable_topic(int topic) {
+static int _disable_topic(int topic) {
     Topic *t = _get_topic_ptr(topic);
     if (t) {
         t->enabled = false;
@@ -355,18 +356,23 @@ int disable_topic(int topic) {
     return -1;
 }
 
+int enable_topic(const char *topic_name) {
+    add_topic(topic_name, true);
+    return _enable_topic(get_topic_id(topic_name));
+}
+
+int disable_topic(const char *topic_name) {
+    add_topic(topic_name, false);
+    return _disable_topic(get_topic_id(topic_name));
+}
+
 int get_topic_id(const char *topic_name) {
     for (Topic *t = _get_topic_begin(); t != NULL; t = _get_topic_next(t)) {
         if (t->name && strcmp(t->name, topic_name) == 0) {
             return t->id;
         }
     }
-
-#if CFG_TOPICS_DINAMIC_ALLOC == true
-    return add_topic(topic_name, true);
-#else
-    return 0x7FFFFFFF;
-#endif
+    return TOPIC_NOT_FOUND;
 }
 
 /// @brief Checks if the topic is enabled
@@ -505,12 +511,28 @@ static void log_to_stdout(ulog_Event *ev) {
 }
 
 /// @brief Logs the message
-void ulog_log(int level, const char *file, int line, int topic, const char *message, ...) {
+void ulog_log(int level, const char *file, int line, const char *topic, const char *message, ...) {
 #if !FEATURE_TOPICS
     (void) topic;
 #else
-    if (!is_topic_enabled(topic)) {
-        return;
+    int topic_id = -1;
+    if (topic != NULL) {
+        //Working with topics
+
+        topic_id = get_topic_id(topic);
+        if (topic_id == TOPIC_NOT_FOUND) {
+#if CFG_TOPICS_DINAMIC_ALLOC == false
+            return;  // Topic not found
+#else  // CFG_TOPICS_DINAMIC_ALLOC == true
+            // If no topic add a disabled one, so we can enable it later
+            topic_id = add_topic(topic, new_topic_enabled);
+#endif
+        }
+
+        // If the topic is disabled, we do not log
+        if (!is_topic_enabled(topic_id)) {
+            return;
+        }
     }
 #endif
 
@@ -520,7 +542,7 @@ void ulog_log(int level, const char *file, int line, int topic, const char *mess
             .line    = line,
             .level   = level,
 #if FEATURE_TOPICS
-            .topic = topic,
+            .topic = topic_id,
 #endif
     };
 
