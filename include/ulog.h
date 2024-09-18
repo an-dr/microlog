@@ -38,7 +38,7 @@ extern "C" {
 | FEATURE_FILE_STRING   | ON              | ULOG_HIDE_FILE_STRING             |
 | FEATURE_SHORT_LEVELS  | OFF             | ULOG_SHORT_LEVEL_STRINGS          |
 | FEATURE_EMOJI_LEVELS  | OFF             | ULOG_USE_EMOJI                    |
-| FEATURE_EXTRA_DESTS   | OFF             | ULOG_EXTRA_DESTINATIONS           |
+| FEATURE_EXTRA_OUTPUTS | OFF             | ULOG_EXTRA_OUTPUTS                |
 | FEATURE_TOPICS        | OFF             | ULOG_TOPICS_NUM                   |
 
 ============================================================================ */
@@ -73,12 +73,12 @@ extern "C" {
 #endif
 
 
-#if ULOG_EXTRA_DESTINATIONS > 0
-#define FEATURE_EXTRA_DESTS true
-#define CFG_EXTRA_DESTS ULOG_EXTRA_DESTINATIONS
+#if ULOG_EXTRA_OUTPUTS > 0
+#define FEATURE_EXTRA_OUTPUTS true
+#define CFG_EXTRA_OUTPUTS ULOG_EXTRA_OUTPUTS
 #else
-#define FEATURE_EXTRA_DESTS false
-#define CFG_EXTRA_DESTS 0
+#define FEATURE_EXTRA_OUTPUTS false
+#define CFG_EXTRA_OUTPUTS 0
 #endif
 
 
@@ -219,9 +219,9 @@ void ulog_set_prefix_fn(ulog_PrefixFn function);
 #endif  // FEATURE_CUSTOM_PREFIX
 
 /* ============================================================================
-   Feature: Extra Destinations
+   Feature: Extra Outputs
 ============================================================================ */
-#if FEATURE_EXTRA_DESTS
+#if FEATURE_EXTRA_OUTPUTS
 
 /// @brief Adds a callback
 /// @param function - Callback function
@@ -237,12 +237,12 @@ int ulog_add_callback(ulog_LogFn function, void *arg, int level);
 /// @return 0 if success, -1 if failed
 int ulog_add_fp(FILE *fp, int level);
 
-#else  // FEATURE_EXTRA_DESTS
+#else  // FEATURE_EXTRA_OUTPUTS
 
 #define ulog_add_callback(...)
 #define ulog_add_fp(...)
 
-#endif  // FEATURE_EXTRA_DESTS
+#endif  // FEATURE_EXTRA_OUTPUTS
 
 /* ============================================================================
    Feature: Log Topics

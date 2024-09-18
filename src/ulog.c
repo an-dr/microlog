@@ -49,8 +49,8 @@ typedef struct {
     bool quiet;                 // Quiet mode
     Callback callback_stdout;   // to stdout
 
-#if FEATURE_EXTRA_DESTS
-    Callback callbacks[CFG_EXTRA_DESTS];  // Extra callbacks
+#if FEATURE_EXTRA_OUTPUTS
+    Callback callbacks[CFG_EXTRA_OUTPUTS];  // Extra callbacks
 #endif
 
 #if FEATURE_CUSTOM_PREFIX
@@ -69,7 +69,7 @@ static ulog_t ulog = {
         .callback_stdout = {0},
 
 
-#if FEATURE_EXTRA_DESTS
+#if FEATURE_EXTRA_OUTPUTS
         .callbacks = {{0}},
 #endif
 
@@ -125,16 +125,16 @@ static void print_color_end(ulog_Event *ev, FILE *file) {
 static void print_time_sec(ulog_Event *ev, FILE *file) {
     char buf[9];
     buf[strftime(buf, sizeof(buf), "%H:%M:%S", ev->time)] = '\0';
-    fprintf(file, "%s ", buf);
+    fprintf(file, "%s", buf);
 }
 
-#if FEATURE_EXTRA_DESTS
+#if FEATURE_EXTRA_OUTPUTS
 static void print_time_full(ulog_Event *ev, FILE *file) {
     char buf[64];
     buf[strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", ev->time)] = '\0';
-    fprintf(file, "%s ", buf);
+    fprintf(file, "%s", buf);
 }
-#endif  // FEATURE_EXTRA_DESTS
+#endif  // FEATURE_EXTRA_OUTPUTS
 
 #endif  // FEATURE_TIME
 
@@ -150,16 +150,16 @@ void ulog_set_prefix_fn(ulog_PrefixFn function) {
 static void print_prefix(ulog_Event *ev, FILE *file) {
     if (ulog.update_prefix_function) {
         ulog.update_prefix_function(ev, ulog.custom_prefix, CFG_CUSTOM_PREFIX_SIZE);
-        fprintf(file, "%s ", ulog.custom_prefix);
+        fprintf(file, "%s", ulog.custom_prefix);
     }
 }
 
 #endif  // FEATURE_CUSTOM_PREFIX
 
 /* ============================================================================
-   Feature: Extra Destinations
+   Feature: Extra Outputs
 ============================================================================ */
-#if FEATURE_EXTRA_DESTS
+#if FEATURE_EXTRA_OUTPUTS
 
 /// @brief Callback for file
 /// @param ev - Event
@@ -175,7 +175,7 @@ static void callback_file(ulog_Event *ev, void *arg) {
 ///              processed by the callback
 /// @param level - Debug level
 int ulog_add_callback(ulog_LogFn function, void *arg, int level) {
-    for (int i = 0; i < CFG_EXTRA_DESTS; i++) {
+    for (int i = 0; i < CFG_EXTRA_OUTPUTS; i++) {
         if (!ulog.callbacks[i].function) {
             ulog.callbacks[i] = (Callback){function, arg, level};
             return 0;
@@ -191,15 +191,15 @@ int ulog_add_fp(FILE *fp, int level) {
 
 /// @brief Processes the extra callbacks
 /// @param ev - Event
-static void log_to_extra_destinations(ulog_Event *ev) {
+static void log_to_extra_outputs(ulog_Event *ev) {
     // Processing the message for callbacks
-    for (int i = 0; i < CFG_EXTRA_DESTS && ulog.callbacks[i].function;
+    for (int i = 0; i < CFG_EXTRA_OUTPUTS && ulog.callbacks[i].function;
          i++) {
         process_callback(ev, &ulog.callbacks[i]);
     }
 }
 
-#endif  // FEATURE_EXTRA_DESTS
+#endif  // FEATURE_EXTRA_OUTPUTS
 
 
 /* ============================================================================
@@ -231,7 +231,7 @@ static bool new_topic_enabled = false;
 static void print_topic(ulog_Event *ev, FILE *file) {
     Topic *t = _get_topic_ptr(ev->topic);
     if (t && t->name) {
-        fprintf(file, "[%s] ", t->name);
+        fprintf(file, " [%s]", t->name);
     }
 }
 
@@ -481,7 +481,7 @@ static void write_formatted_message(ulog_Event *ev, FILE *file, bool full_time, 
 
 #if FEATURE_TIME
     if (full_time) {
-#if FEATURE_EXTRA_DESTS
+#if FEATURE_EXTRA_OUTPUTS
         print_time_full(ev, file);
 #endif
     } else {
@@ -593,8 +593,8 @@ void ulog_log(int level, const char *file, int line, const char *topic, const ch
 
     log_to_stdout(&ev);
 
-#if FEATURE_EXTRA_DESTS
-    log_to_extra_destinations(&ev);
+#if FEATURE_EXTRA_OUTPUTS
+    log_to_extra_outputs(&ev);
 #endif
 
     unlock();
@@ -603,7 +603,7 @@ void ulog_log(int level, const char *file, int line, const char *topic, const ch
 }
 
 static void print_level(ulog_Event *ev, FILE *file) {
-    fprintf(file, "%-1s ", level_strings[ev->level]);
+    fprintf(file, " %-1s", level_strings[ev->level]);
 }
 
 /// @brief Prints the message
@@ -612,7 +612,7 @@ static void print_level(ulog_Event *ev, FILE *file) {
 static void print_message(ulog_Event *ev, FILE *file) {
 
 #if FEATURE_FILE_STRING
-    fprintf(file, "%s:%d: ", ev->file, ev->line);  // file and line
+    fprintf(file, " %s:%d: ", ev->file, ev->line);  // file and line
 #endif
 
     vfprintf(file, ev->message, ev->message_format_args);  // message

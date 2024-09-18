@@ -4,7 +4,7 @@
 
 void update_prefix(ulog_Event *ev, char *prefix, size_t prefix_size) {
     static int count = 0;
-    snprintf(prefix, prefix_size, "> %d ms <", count++);
+    snprintf(prefix, prefix_size, ", %d ms", count++);
 }
 
 void custom_callback(ulog_Event *ev, void *arg) {
@@ -20,14 +20,15 @@ int main(int argc, char *argv[]) {
 
     ulog_set_level(LOG_TRACE);
     
-    /* Extra Destinations =============================== */
+    /* Extra Outputs =============================== */
 
     FILE *fp = fopen("example.log", "w");
-    ulog_add_fp(fp, LOG_TRACE);
-    ulog_add_callback(custom_callback, "     - Custom Callback: ", LOG_FATAL);
+    ulog_add_fp(fp, LOG_INFO);
+    ulog_add_callback(custom_callback, "     - Custom Callback: ", LOG_INFO);
 
     /* Custom Prefix ==================================== */
     ulog_set_prefix_fn(update_prefix);
+    // ulog_set_quiet(true);
 
     /* Core Logging ===================================== */
     log_trace("Trace message %d", 1);
