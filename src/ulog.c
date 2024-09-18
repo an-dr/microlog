@@ -549,6 +549,10 @@ static void log_to_stdout(ulog_Event *ev) {
 
 /// @brief Logs the message
 void ulog_log(int level, const char *file, int line, const char *topic, const char *message, ...) {
+    
+    if (level < ulog.level) {
+        return;
+    }
 #if !FEATURE_TOPICS
     (void) topic;
 #else
