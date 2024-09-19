@@ -44,8 +44,8 @@ The project is based on several core principles:
         - [Quite Mode](#quite-mode)
         - [Thread-safety](#thread-safety)
         - [Library Configuration](#library-configuration)
-    - [Feature Extra Outputs](#feature-extra-outputs)
-        - [Log Topics](#log-topics)
+    - [Feature: Log Topics](#log-topics)
+    - [Feature: Extra Outputs](#feature-extra-outputs)
         - [File output](#file-output)
         - [Custom output](#custom-output)
     - [Log Format Customization](#log-format-customization)
@@ -152,9 +152,7 @@ Note: You might want to adjust the compiler argument  `-fmacro-prefix-map=OLD_PA
 add_global_arguments('-fmacro-prefix-map=../=',language: 'c')
 ```
 
-## Feature Extra Outputs
-
-### Log Topics
+## Feature: Log Topics
 
 The feature is controlled by `ULOG_TOPICS_NUM`. It allows to filter log messages by subsystems, e.g. "network", "storage", etc.
 
@@ -204,6 +202,7 @@ logt_trace("network", "Disconnected from server");
 logt_fatal("video", "No signal");
 ```
 
+## Feature: Extra Outputs
 
 The feature is controlled by the following defines:
 
