@@ -44,7 +44,7 @@ The project is based on several core principles:
         - [Quite Mode](#quite-mode)
         - [Thread-safety](#thread-safety)
         - [Library Configuration](#library-configuration)
-    - [Feature: Log Topics](#log-topics)
+    - [Feature: Log Topics](#feature-log-topics)
     - [Feature: Extra Outputs](#feature-extra-outputs)
         - [File output](#file-output)
         - [Custom output](#custom-output)
