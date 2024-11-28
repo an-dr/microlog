@@ -100,7 +100,7 @@ const char *level = ulog_get_level_string(LOG_INFO);
 ptrintf("Level: %s\n", level);
 ```
 
-### Quite Mode
+### Quiet Mode
 
 Quiet-mode can be enabled by passing `true` to the `ulog_set_quiet()` function.
 While this mode is enabled the library will not output anything to `stderr`, but will continue to write to files and callbacks if any are set.
@@ -226,7 +226,7 @@ if (fp) {
 }
 ```
 
-### Custom output
+### Custom Output
 
 One or more callback functions which are called with the log data can be provided to the library by using the `ulog_add_callback()` function. Yo ucan use `ulog_event_to_cstr` to convert the `ulog_Event` structure to a string.
 
