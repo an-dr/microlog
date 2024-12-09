@@ -4,7 +4,7 @@
 
 void update_prefix(ulog_Event *ev, char *prefix, size_t prefix_size) {
     static int count = 0;
-    snprintf(prefix, prefix_size, ", %d ms", count++);
+    snprintf(prefix, prefix_size, ", %d ms ", count++);
 }
 
 void custom_callback(ulog_Event *ev, void *arg) {
