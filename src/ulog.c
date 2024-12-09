@@ -1,6 +1,6 @@
 // *************************************************************************
 //
-// ulog v6.0.0 - A simple customizable logging library.
+// ulog v6.0.1 - A simple customizable logging library.
 // https://github.com/an-dr/microlog
 //
 // *************************************************************************
@@ -231,7 +231,11 @@ static bool new_topic_enabled = false;
 static void print_topic(ulog_Event *ev, FILE *file) {
     Topic *t = _get_topic_ptr(ev->topic);
     if (t && t->name) {
-        fprintf(file, " [%s]", t->name);
+#if FEATURE_TIME & !FEATURE_CUSTOM_PREFIX
+        fprintf(file, " [%s] ", t->name);
+#else   // FEATURE_TIME || FEATURE_CUSTOM_PREFIX
+        fprintf(file, "[%s] ", t->name);
+#endif  // FEATURE_TIME || FEATURE_CUSTOM_PREFIX
     }
 }
 
@@ -549,7 +553,7 @@ static void log_to_stdout(ulog_Event *ev) {
 
 /// @brief Logs the message
 void ulog_log(int level, const char *file, int line, const char *topic, const char *message, ...) {
-    
+
     if (level < ulog.level) {
         return;
     }
@@ -603,7 +607,7 @@ void ulog_log(int level, const char *file, int line, const char *topic, const ch
 }
 
 static void print_level(ulog_Event *ev, FILE *file) {
-    fprintf(file, " %-1s", level_strings[ev->level]);
+    fprintf(file, "%-1s ", level_strings[ev->level]);
 }
 
 /// @brief Prints the message
@@ -612,7 +616,7 @@ static void print_level(ulog_Event *ev, FILE *file) {
 static void print_message(ulog_Event *ev, FILE *file) {
 
 #if FEATURE_FILE_STRING
-    fprintf(file, " %s:%d: ", ev->file, ev->line);  // file and line
+    fprintf(file, "%s:%d: ", ev->file, ev->line);  // file and line
 #endif
 
     vfprintf(file, ev->message, ev->message_format_args);  // message
