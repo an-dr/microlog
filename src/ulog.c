@@ -5,7 +5,7 @@
 //
 // *************************************************************************
 //
-// Original implementation by rxi: https://gitlab.com/rxi
+// Original implementation by rxi: https://github.com/rxi
 // Modified by Andrei Gramakov: https://agramakov.me, mail@agramakov.me
 //
 // Copyright (c) 2024 Andrei Gramakov. All rights reserved.
@@ -473,6 +473,23 @@ static const char *level_strings[] = {
 #endif
 };
 
+
+/// @brief Writes the formatted message
+/// @details The message is formatted as follows:
+///
+/// [Time][Prefix][Topic ]Level [File: ]Message
+/// or
+/// [Time][ Topic ]Level [File: ]Message
+/// or
+/// [Time] Level [File: ]Message
+///
+/// where [Entry] is an optional part
+///
+/// @param ev - Event
+/// @param file - File pointer
+/// @param full_time - Full time or short time
+/// @param color - Color or no color
+/// @param new_line - New line in the end or no new line
 static void write_formatted_message(ulog_Event *ev, FILE *file, bool full_time, bool color, bool new_line) {
 
 #if FEATURE_COLOR
