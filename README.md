@@ -1,6 +1,6 @@
 # microlog
 
-![version](https://img.shields.io/badge/version-6.0.0-green)
+![version](https://img.shields.io/badge/version-6.0.1-green)
 
 A simple customizable logging library. Features:
 

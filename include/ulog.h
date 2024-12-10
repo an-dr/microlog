@@ -1,11 +1,11 @@
 // *************************************************************************
 //
-// ulog v6.0.0 - A simple customizable logging library.
+// ulog v6.0.1 - A simple customizable logging library.
 // https://github.com/an-dr/microlog
 //
 // *************************************************************************
 //
-// Original implementation by rxi: https://gitlab.com/rxi
+// Original implementation by rxi: https://github.com/rxi
 // Modified by Andrei Gramakov: https://agramakov.me, mail@agramakov.me
 //
 // Copyright (c) 2024 Andrei Gramakov. All rights reserved.

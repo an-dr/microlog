@@ -1,11 +1,11 @@
 // *************************************************************************
 //
-// ulog v6.0.0 - A simple customizable logging library.
+// ulog v6.0.1 - A simple customizable logging library.
 // https://github.com/an-dr/microlog
 //
 // *************************************************************************
 //
-// Original implementation by rxi: https://gitlab.com/rxi
+// Original implementation by rxi: https://github.com/rxi
 // Modified by Andrei Gramakov: https://agramakov.me, mail@agramakov.me
 //
 // Copyright (c) 2024 Andrei Gramakov. All rights reserved.
@@ -123,15 +123,29 @@ static void print_color_end(ulog_Event *ev, FILE *file) {
 #if FEATURE_TIME
 
 static void print_time_sec(ulog_Event *ev, FILE *file) {
+
+#if FEATURE_CUSTOM_PREFIX
     char buf[9];
     buf[strftime(buf, sizeof(buf), "%H:%M:%S", ev->time)] = '\0';
+#else   // FEATURE_CUSTOM_PREFIX
+    char buf[10];
+    buf[strftime(buf, sizeof(buf), "%H:%M:%S ", ev->time)] = '\0';
+#endif  // FEATURE_CUSTOM_PREFIX
+
     fprintf(file, "%s", buf);
 }
 
 #if FEATURE_EXTRA_OUTPUTS
 static void print_time_full(ulog_Event *ev, FILE *file) {
+
+#if FEATURE_CUSTOM_PREFIX
     char buf[64];
     buf[strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", ev->time)] = '\0';
+#else   // FEATURE_CUSTOM_PREFIX
+    char buf[65];
+    buf[strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S ", ev->time)] = '\0';
+#endif  // FEATURE_CUSTOM_PREFIX
+
     fprintf(file, "%s", buf);
 }
 #endif  // FEATURE_EXTRA_OUTPUTS
@@ -231,7 +245,7 @@ static bool new_topic_enabled = false;
 static void print_topic(ulog_Event *ev, FILE *file) {
     Topic *t = _get_topic_ptr(ev->topic);
     if (t && t->name) {
-        fprintf(file, " [%s]", t->name);
+        fprintf(file, "[%s] ", t->name);
     }
 }
 
@@ -469,6 +483,21 @@ static const char *level_strings[] = {
 #endif
 };
 
+
+/// @brief Writes the formatted message
+/// @details The message is formatted as follows:
+///
+/// [Time][Prefix][Topic]Level [File: ]Message
+/// or
+/// [Time ][Topic ]Level [File: ]Message
+///
+/// where [Entry] is an optional part
+///
+/// @param ev - Event
+/// @param file - File pointer
+/// @param full_time - Full time or short time
+/// @param color - Color or no color
+/// @param new_line - New line in the end or no new line
 static void write_formatted_message(ulog_Event *ev, FILE *file, bool full_time, bool color, bool new_line) {
 
 #if FEATURE_COLOR
@@ -549,7 +578,7 @@ static void log_to_stdout(ulog_Event *ev) {
 
 /// @brief Logs the message
 void ulog_log(int level, const char *file, int line, const char *topic, const char *message, ...) {
-    
+
     if (level < ulog.level) {
         return;
     }
@@ -603,7 +632,7 @@ void ulog_log(int level, const char *file, int line, const char *topic, const ch
 }
 
 static void print_level(ulog_Event *ev, FILE *file) {
-    fprintf(file, " %-1s", level_strings[ev->level]);
+    fprintf(file, "%-1s ", level_strings[ev->level]);
 }
 
 /// @brief Prints the message
@@ -612,7 +641,7 @@ static void print_level(ulog_Event *ev, FILE *file) {
 static void print_message(ulog_Event *ev, FILE *file) {
 
 #if FEATURE_FILE_STRING
-    fprintf(file, " %s:%d: ", ev->file, ev->line);  // file and line
+    fprintf(file, "%s:%d: ", ev->file, ev->line);  // file and line
 #endif
 
     vfprintf(file, ev->message, ev->message_format_args);  // message
