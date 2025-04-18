@@ -1,6 +1,6 @@
 # microlog
 
-![version](https://img.shields.io/badge/version-6.0.1-green)
+![latest](https://img.shields.io/github/v/tag/an-dr/microlog?filter=v*&label=latest)
 
 A simple customizable logging library. Features:
 
@@ -41,13 +41,13 @@ The project is based on several core principles:
     - [Table of Contents](#table-of-contents)
     - [Core Features](#core-features)
         - [Logging Level](#logging-level)
-        - [Quite Mode](#quite-mode)
+        - [Quiet Mode](#quiet-mode)
         - [Thread-safety](#thread-safety)
         - [Library Configuration](#library-configuration)
     - [Feature: Log Topics](#feature-log-topics)
     - [Feature: Extra Outputs](#feature-extra-outputs)
         - [File output](#file-output)
-        - [Custom output](#custom-output)
+        - [Custom Output](#custom-output)
     - [Log Format Customization](#log-format-customization)
         - [Custom log prefix](#custom-log-prefix)
         - [Timestamp](#timestamp)
