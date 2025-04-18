@@ -52,6 +52,7 @@ The project is based on several core principles:
         - [Custom log prefix](#custom-log-prefix)
         - [Timestamp](#timestamp)
         - [Other Customization](#other-customization)
+    - [Contributing](#contributing)
     - [License](#license)
     - [Credits](#credits)
 
@@ -293,6 +294,10 @@ The following defines can be used to customize the library's output:
 - `ULOG_HIDE_FILE_STRING` - Hide the file name and line number.
 - `ULOG_SHORT_LEVEL_STRINGS` - Use short level strings, e.g. "T" for "TRACE", "I" for "INFO".
 - `ULOG_USE_EMOJI` - Use emojis for log levels (⚪, 🟢, 🔵, 🟡, 🟠, 🔴, 💥). Overrides `ULOG_SHORT_LEVEL_STRINGS`. WARNING: not all compilers and terminals support emojis.
+
+## Contributing
+
+Contributions are welcome! The library design is described in [design.md](doc/design.md).
 
 ## License
 
