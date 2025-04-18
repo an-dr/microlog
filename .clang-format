@@ -1,87 +1,42 @@
 # https://clang.llvm.org/docs/ClangFormatStyleOptions.html#
-BasedOnStyle: LLVM
-AccessModifierOffset: -4
+
+# *************************************************************************
+#
+# Copyright (c) 2024 Andrei Gramakov. All rights reserved.
+#
+# site:    https://agramakov.me
+# e-mail:  mail@agramakov.me
+#
+#
+# This file is a part of a template:
+# - https://github.com/an-dr/hello_world_cpp
+# 
+# Official reference: https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+# GUI configuration tool: https://clang-format-configurator.site
+# *************************************************************************
+
 AlignAfterOpenBracket: Align
-AlignTrailingComments: true
 AlignConsecutiveAssignments: true
 AlignOperands: true
-AllowAllArgumentsOnNextLine: false
-AllowAllConstructorInitializersOnNextLine: false
-AllowAllParametersOfDeclarationOnNextLine: false
-AllowShortBlocksOnASingleLine: Always
-AllowShortCaseLabelsOnASingleLine: false
-AllowShortFunctionsOnASingleLine: All
-AllowShortIfStatementsOnASingleLine: Always
-AllowShortLambdasOnASingleLine: All
-AllowShortLoopsOnASingleLine: true
-AlwaysBreakAfterReturnType: None
-AlwaysBreakTemplateDeclarations: Yes
-BreakBeforeBraces: Custom
-BraceWrapping:
-  AfterCaseLabel: false
-  AfterClass: false
-  AfterControlStatement: Never
-  AfterEnum: false
-  AfterFunction: false
-  AfterNamespace: false
-  AfterUnion: false
-  BeforeCatch: false
-  BeforeElse: false
-  IndentBraces: false
-  SplitEmptyFunction: false
-  SplitEmptyRecord: true
-BreakBeforeBinaryOperators: None
-BreakBeforeTernaryOperators: true
-BreakConstructorInitializers: BeforeColon
-BreakInheritanceList: BeforeColon
-ColumnLimit: 0
-CompactNamespaces: false
-ContinuationIndentWidth: 8
+AlignTrailingComments: true
+AllowShortFunctionsOnASingleLine: None
+BasedOnStyle: LLVM
+ColumnLimit: 80
 IncludeBlocks: Preserve
-IncludeCategories:
-  - Regex: '<[[:alnum:].]+>'
-    Priority: 0
-    SortPriority: 0
-  - Regex: '^"(llvm|llvm-c|clang|clang-c)/'
-    Priority: 1
-    SortPriority: 1
-  - Regex: '^(<|"(gtest|gmock|isl|json)/)'
-    Priority: 2
-    SortPriority: 2
-  - Regex: 'errno.*'
-    Priority: 2
-    SortPriority: 2
-  - Regex: 'common.h'
-    Priority: 3
-    SortPriority: 3
-  - Regex: '.*'
-    Priority: 4
-    SortPriority: 4
-IndentCaseLabels: true
-IndentPPDirectives: None
 IndentWidth: 4
-KeepEmptyLinesAtTheStartOfBlocks: true
-MaxEmptyLinesToKeep: 2
-NamespaceIndentation: All
-ObjCSpaceAfterProperty: false
-ObjCSpaceBeforeProtocolList: true
-PointerAlignment: Right
-ReflowComments: false
-SpaceAfterCStyleCast: true
-SpaceAfterLogicalNot: false
-SpaceAfterTemplateKeyword: false
-SpaceBeforeAssignmentOperators: true
-SpaceBeforeCpp11BracedList: false
-SpaceBeforeCtorInitializerColon: true
-SpaceBeforeInheritanceColon: true
-SpaceBeforeParens: ControlStatements
-SpaceBeforeRangeBasedForLoopColon: true
-SpaceInEmptyParentheses: false
+Language: Cpp
+SortIncludes: true
 SpacesBeforeTrailingComments: 2
-SpacesInAngles: false
-SpacesInCStyleCastParentheses: false
-SpacesInContainerLiterals: false
-SpacesInParentheses: false
-SpacesInSquareBrackets: false
-TabWidth: 4
-UseTab: Never
+IncludeCategories:
+  - Regex: '^<.*\.h>'
+    Priority: 2
+  - Regex: '^<.*\.hpp>'
+    Priority: 2
+  - Regex: '^<.*>'
+    Priority: 1
+  - Regex: '^".*\.h"'
+    Priority: 4
+  - Regex: '^".*"'
+    Priority: 4
+  - Regex: '.*'
+    Priority: 5

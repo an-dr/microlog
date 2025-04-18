@@ -1,0 +1,13 @@
+[binaries]
+c = 'cl'
+cpp = 'cl'
+ar = 'lib'
+link = 'link'
+windres = 'rc'
+rc = 'rc'
+
+[host_machine]
+system = 'windows'
+cpu_family = 'x86_64'
+cpu = 'x86_64'
+endian = 'little'
