@@ -223,7 +223,7 @@ void ulog_set_prefix_fn(ulog_PrefixFn function);
 ============================================================================ */
 #if FEATURE_EXTRA_OUTPUTS
 
-/// @brief Adds a callback
+/// @brief Adds a callback. WARNING: Do not log from the callback function!
 /// @param function - Callback function
 /// @param arg - Optional argument that will be added to the event to be
 ///              processed by the callback

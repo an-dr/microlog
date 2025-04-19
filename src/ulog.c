@@ -103,8 +103,10 @@ static void vprint(const log_target *tgt, const char *format, va_list args) {
     if (tgt->type == T_BUFFER) {
         char *buf   = tgt->dsc.buffer.data;
         size_t size = tgt->dsc.buffer.size;
-        if (size > 0) {
+        if (size > 1) {
             vsnprintf(buf, size, format, args);
+        } else if (size == 1) {
+            buf[0] = '\0';
         }
     } else if (tgt->type == T_STREAM) {
         FILE *stream = tgt->dsc.stream;
@@ -143,15 +145,19 @@ static const char *level_colors[] = {
     "\x1b[31m",  // ERROR : Red #f00
     "\x1b[35m"   // FATAL : Magenta #f0f
 };
+#define LEVEL_COLORS_SIZE (6U)
+#define COLOR_RESET "\x1b[0m"
 
 static void print_color_start(const log_target *tgt, ulog_Event *ev) {
-    (void)ev;
+    if (ev->level < 0 || ev->level >= LEVEL_COLORS_SIZE) {
+        ev->level = LOG_ERROR;
+    }
     print(tgt, "%s", level_colors[ev->level]);  // color start
 }
 
 static void print_color_end(const log_target *tgt, ulog_Event *ev) {
     (void)ev;
-    print(tgt, "\x1b[0m");  // color end
+    print(tgt, COLOR_RESET);  // color end
 }
 
 #endif  // FEATURE_COLOR
@@ -197,7 +203,9 @@ static void print_time_full(const log_target *tgt, ulog_Event *ev) {
 #if FEATURE_CUSTOM_PREFIX
 
 void ulog_set_prefix_fn(ulog_PrefixFn function) {
+    lock();
     ulog.update_prefix_function = function;
+    unlock();
 }
 
 static void print_prefix(const log_target *tgt, ulog_Event *ev) {
@@ -230,12 +238,15 @@ static void callback_file(ulog_Event *ev, void *arg) {
 ///              processed by the callback
 /// @param level - Debug level
 int ulog_add_callback(ulog_LogFn function, void *arg, int level) {
+    lock();
     for (int i = 0; i < CFG_EXTRA_OUTPUTS; i++) {
         if (!ulog.callbacks[i].function) {
             ulog.callbacks[i] = (Callback){function, arg, level};
+            unlock();
             return 0;
         }
     }
+    unlock();
     return -1;
 }
 
@@ -713,10 +724,14 @@ const char *ulog_get_level_string(int level) {
 
 /// @brief Sets the debug level
 void ulog_set_level(int level) {
+    lock();
     ulog.level = level;
+    unlock();
 }
 
 /// @brief Sets the quiet mode
 void ulog_set_quiet(bool enable) {
+    lock();
     ulog.quiet = enable;
+    unlock();
 }
