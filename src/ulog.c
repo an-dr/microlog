@@ -148,11 +148,10 @@ static const char *level_colors[] = {
 #define LEVEL_COLORS_SIZE (6U)
 #define COLOR_RESET "\x1b[0m"
 
-static void print_color_start(const log_target *tgt, ulog_Event *ev) {
-    if (ev->level < 0 || ev->level >= LEVEL_COLORS_SIZE) {
-        ev->level = LOG_ERROR;
-    }
-    print(tgt, "%s", level_colors[ev->level]);  // color start
+static inline void print_color_start(const log_target *tgt, ulog_Event *ev) {
+    print(tgt, level_colors[ev->level < 0 || ev->level >= LEVEL_COLORS_SIZE
+                                ? LOG_ERROR
+                                : ev->level]);
 }
 
 static void print_color_end(const log_target *tgt, ulog_Event *ev) {
