@@ -1,0 +1,42 @@
+name: Verify Version
+
+on:
+  push:
+    paths:
+      - version
+    branches:
+      - main
+  pull_request:
+    paths:
+      - version
+    branches:
+      - main
+
+jobs:
+  version-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Read version
+        id: get_version
+        run: echo "VERSION=v$(cat version)" >> "$GITHUB_ENV"
+
+      - name: Replace version in source files
+        run: |
+          echo "Replacing version with $VERSION"
+          find . -type f \( -name "*.c" -o -name "*.h" -o -name "*.cpp" -o -name "*.hpp" \) \
+            -exec sed -i -E "s/v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9._]+)?/$VERSION/g" {} +
+
+      - name: Check for uncommitted changes
+        run: |
+          if ! git diff --quiet; then
+            echo "❌ Source files do not contain the correct version ($VERSION)."
+            echo "Please update them manually before running this workflow."
+            git --no-pager diff
+            exit 1
+          else
+            echo "✅ All files already contain the correct version."
+          fi
