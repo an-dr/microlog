@@ -2,7 +2,7 @@ pushd $PSScriptRoot/..
 
 try {
     
-    cmake -G "Ninja" -B./build/cmake -DCMAKE_INSTALL_PREFIX=install/cmake
+    cmake -G "Ninja" -B./build/cmake -DCMAKE_INSTALL_PREFIX=install/cmake/microlog
     cmake --build ./build/cmake
     cmake --install ./build/cmake
     popd

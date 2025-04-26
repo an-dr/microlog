@@ -19,7 +19,7 @@ try {
 
     # Move the package to verify portability
     mkdir -p $PSScriptRoot/build/cmake/deps -ErrorAction Ignore
-    mv $PSScriptRoot/../../install/cmake $PSScriptRoot/build/cmake/deps/microlog
+    mv -Force $PSScriptRoot/../../install/cmake/microlog $PSScriptRoot/build/cmake/deps
 
 
     # Build the test package

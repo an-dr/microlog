@@ -2,7 +2,7 @@ pushd $PSScriptRoot/..
 
 try {
     
-    meson setup build --reconfigure --prefix=$PWD/install/meson
+    meson setup build --reconfigure --prefix=$PWD/install/meson/microlog
     meson compile -C build
     meson install -C build
     popd

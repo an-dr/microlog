@@ -19,8 +19,8 @@ try {
 
 
     # Move the package to verify portability
-    mkdir -p $PSScriptRoot/subprojects/microlog -ErrorAction Ignore
-    mv $PSScriptRoot/../../install/meson/* $PSScriptRoot/subprojects/microlog
+    mkdir -p $PSScriptRoot/subprojects -ErrorAction Ignore
+    mv -Force $PSScriptRoot/../../install/meson/microlog $PSScriptRoot/subprojects
 
     meson setup build/meson --reconfigure
 
