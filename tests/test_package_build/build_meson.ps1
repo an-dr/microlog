@@ -12,15 +12,27 @@
 
 pushd $PSScriptRoot
 
-# Build the main package
-pwsh -File ../../scripts/build_meson.ps1
+try {
+    
+    # Build the main package
+    pwsh -File ../../scripts/build_meson.ps1
 
 
-# Move the package to verify portability
-mkdir -p $PSScriptRoot/subprojects/microlog -ErrorAction Ignore
-mv $PSScriptRoot/../../install/meson/* $PSScriptRoot/subprojects/microlog
+    # Move the package to verify portability
+    mkdir -p $PSScriptRoot/subprojects/microlog -ErrorAction Ignore
+    mv $PSScriptRoot/../../install/meson/* $PSScriptRoot/subprojects/microlog
 
-meson setup build/meson --reconfigure
+    meson setup build/meson --reconfigure
 
-meson compile -C build/meson
+    meson compile -C build/meson
+    popd
+    
+} catch {
+    
+    Write-Host "An error occurred: $_"
+    popd
+    exit 1  # Exit the script with a non-zero code to indicate failure
+    
+}
+
 popd

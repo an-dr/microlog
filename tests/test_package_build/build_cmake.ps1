@@ -12,17 +12,28 @@
 
 pushd $PSScriptRoot
 
-# Build the main package
-pwsh -File ../../scripts/build_cmake.ps1
+try {
+    
+    # Build the main package
+    pwsh -File ../../scripts/build_cmake.ps1
 
-# Move the package to verify portability
-mkdir -p $PSScriptRoot/build/cmake/deps -ErrorAction Ignore
-mv $PSScriptRoot/../../install/cmake $PSScriptRoot/build/cmake/deps/microlog
+    # Move the package to verify portability
+    mkdir -p $PSScriptRoot/build/cmake/deps -ErrorAction Ignore
+    mv $PSScriptRoot/../../install/cmake $PSScriptRoot/build/cmake/deps/microlog
 
 
-# Build the test package
-cmake -B./build/cmake -DCMAKE_PREFIX_PATH="$PSScriptRoot/build/cmake/deps"
-# $env:microlog_DIR = "$PSScriptRoot/build/cmake/deps/microlog" # - another option to specify the path
-cmake --build ./build/cmake
+    # Build the test package
+    cmake -B./build/cmake -DCMAKE_PREFIX_PATH="$PSScriptRoot/build/cmake/deps"
+    # $env:microlog_DIR = "$PSScriptRoot/build/cmake/deps/microlog" # - another option to specify the path
+    cmake --build ./build/cmake
+    
+    popd
+    
+} catch {
+    
+    Write-Host "An error occurred: $_"
+    popd
+    exit 1  # Exit the script with a non-zero code to indicate failure
+    
+}
 
-popd
