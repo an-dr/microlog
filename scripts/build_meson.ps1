@@ -2,9 +2,9 @@ pushd $PSScriptRoot/..
 
 try {
     
-    meson setup build --reconfigure
+    meson setup build --reconfigure --prefix=$PWD/install/meson
     meson compile -C build
-    meson install -C build --destdir ../install/meson
+    meson install -C build
     popd
     
 } catch {
