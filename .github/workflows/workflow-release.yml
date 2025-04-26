@@ -1,0 +1,10 @@
+name: Release Workflow
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    uses: ./.github/workflows/release.yml
