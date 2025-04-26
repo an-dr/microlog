@@ -13,16 +13,14 @@
 pushd $PSScriptRoot
 
 # Build the main package
-pwsh -File ../../scripts/build_cmake.ps1
+pwsh -File ../../scripts/build_meson.ps1
+
 
 # Move the package to verify portability
-mkdir -p $PSScriptRoot/build/cmake/deps -ErrorAction Ignore
-mv $PSScriptRoot/../../install/cmake $PSScriptRoot/build/cmake/deps/microlog
+mkdir -p $PSScriptRoot/subprojects/microlog -ErrorAction Ignore
+mv $PSScriptRoot/../../install/meson/* $PSScriptRoot/subprojects/microlog
 
+meson setup build/meson --reconfigure
 
-# Build the test package
-cmake -B./build/cmake -DCMAKE_PREFIX_PATH="$PSScriptRoot/build/cmake/deps"
-# $env:microlog_DIR = "$PSScriptRoot/build/cmake/deps/microlog" # - another option to specify the path
-cmake --build ./build/cmake
-
+meson compile -C build/meson
 popd
