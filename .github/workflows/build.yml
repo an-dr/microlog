@@ -1,12 +1,7 @@
 name: CMake Package
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  workflow_call:
 
 jobs:
   build-cmake:

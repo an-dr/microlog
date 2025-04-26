@@ -1,15 +1,10 @@
 name: Create Tag
 
 on:
-  push:
-    paths:
-      - version
-    branches:
-      - main
+  workflow_call:
 
 jobs:
   create-tag:
-    needs: verify-version
     runs-on: ubuntu-latest
 
     steps:

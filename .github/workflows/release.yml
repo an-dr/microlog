@@ -1,21 +1,10 @@
 name: Release
 
 on:
-  push:
-    paths:
-      - version
-    branches:
-      - main
-  pull_request:
-    paths:
-    - version
-    branches:
-      - main
+  workflow_call:
 
 jobs:
   release:
-    # needs: [create-tag, build-cmake]
-    needs: [build-cmake]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
