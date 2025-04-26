@@ -6,11 +6,11 @@ on:
       - version
     branches:
       - main
-    pull_request:
-      paths:
-      - version
-      branches:
-        - main
+  pull_request:
+    paths:
+    - version
+    branches:
+      - main
 
 jobs:
   release:
