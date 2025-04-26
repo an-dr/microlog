@@ -28,11 +28,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        
-      - name: Set up Meson
-        uses: BSFishy/meson-build@v1.0.3
+      - name: Install Meson and Ninja
+        run: |
+          sudo apt update
+          sudo apt install -y meson ninja-build
         
       - name: Run build script
         run: pwsh -File ./scripts/build_meson.ps1
