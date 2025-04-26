@@ -1,0 +1,35 @@
+name: Release
+
+on:
+  push:
+    paths:
+      - version
+    branches:
+      - main
+    pull_request:
+      paths:
+      - version
+      branches:
+        - main
+
+jobs:
+  release:
+    # needs: [create-tag, build-cmake]
+    needs: [build-cmake]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Download CMake artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ./release-artifacts
+
+      - name: Create GitHub Release and Upload Artifact
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ./release-artifacts/**
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

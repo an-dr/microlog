@@ -8,8 +8,8 @@ on:
       - main
 
 jobs:
-  tag:
-    needs: version-check
+  create-tag:
+    needs: verify-version
     runs-on: ubuntu-latest
 
     steps:

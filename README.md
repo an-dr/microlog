@@ -1,6 +1,6 @@
 # microlog
 
-![latest](https://img.shields.io/github/v/tag/an-dr/microlog?filter=v*&label=latest)
+[![latest](https://img.shields.io/github/v/tag/an-dr/microlog?filter=v*&label=latest)](https://github.com/an-dr/microlog/tags)
 
 A simple customizable logging library. Features:
 
