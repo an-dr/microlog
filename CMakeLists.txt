@@ -51,16 +51,15 @@ install(FILES src/ulog.c DESTINATION ${CMAKE_INSTALL_PREFIX}/src)
 # ----------------------------------------------------------------------------
 include(CMakePackageConfigHelpers)
 
-# We have a custom Targets file below. Original is generated here:
+# We have a custom Targets file below. Original is generated like this:
 # install(
 #   EXPORT ${PROJECT_NAME}Targets
 #   NAMESPACE ${PROJECT_NAME}::
 #   DESTINATION ${CMAKE_INSTALL_PREFIX})
+
 install(FILES ${CMAKE_CURRENT_LIST_DIR}/cmake/micrologTargets.cmake
         DESTINATION ${CMAKE_INSTALL_PREFIX})
   
-# Overwrite the original with the custom one
-
 # Make a config file using targets based on the template
 configure_package_config_file(
   ${CMAKE_CURRENT_LIST_DIR}/cmake/${PROJECT_NAME}Config.cmake.in
@@ -77,4 +76,5 @@ write_basic_package_version_file(
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
               ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+              ${CMAKE_CURRENT_LIST_DIR}/LICENSE
         DESTINATION ${CMAKE_INSTALL_PREFIX})

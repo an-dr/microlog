@@ -14,10 +14,33 @@ jobs:
         run: pwsh -File ./scripts/build_cmake.ps1
 
       - name: Read version and set artifact name
-        run: echo "ARTIFACT_NAME=microlog-$(cat ./version)-cmake" >> $GITHUB_ENV
+        run: echo "ARTIFACT_CMAKE=microlog-$(cat ./version)-cmake" >> $GITHUB_ENV
 
       - name: Upload CMake package
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_NAME }}
+          name: ${{ env.ARTIFACT_CMAKE }}
           path: install/cmake
+          
+  build-meson:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Install Meson and Ninja
+        run: |
+          sudo apt update
+          sudo apt install -y meson ninja-build
+        
+      - name: Run build script
+        run: pwsh -File ./scripts/build_meson.ps1
+
+      - name: Read version and set artifact name
+        run: echo "ARTIFACT_MESON=microlog-$(cat ./version)-meson" >> $GITHUB_ENV
+
+      - name: Upload Meson package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_MESON }}
+          path: install/meson
