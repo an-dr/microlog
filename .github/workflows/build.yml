@@ -29,12 +29,13 @@ jobs:
         uses: actions/checkout@v3
         
       - name: Run build script
+        uses: BSFishy/meson-build@v1.0.3
         run: pwsh -File ./scripts/build_meson.ps1
 
       - name: Read version and set artifact name
         run: echo "ARTIFACT_MESON=microlog-$(cat ./version)-meson" >> $GITHUB_ENV
 
-      - name: Upload CMake package
+      - name: Upload Meson package
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ARTIFACT_MESON }}
