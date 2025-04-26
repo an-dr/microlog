@@ -15,12 +15,17 @@ jobs:
 
       - name: Read version and set artifact name
         run: echo "ARTIFACT_CMAKE=microlog-$(cat ./version)-cmake" >> $GITHUB_ENV
-
+        
+      - name: Create ZIP archive
+        run: |
+          cd install/cmake
+          zip -r ${{ env.ARTIFACT_CMAKE }}.zip .
+        
       - name: Upload CMake package
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ARTIFACT_CMAKE }}
-          path: install/cmake
+          path: install/cmake/${{ env.ARTIFACT_CMAKE }}.zip
           
   build-meson:
     runs-on: ubuntu-latest
@@ -38,9 +43,14 @@ jobs:
 
       - name: Read version and set artifact name
         run: echo "ARTIFACT_MESON=microlog-$(cat ./version)-meson" >> $GITHUB_ENV
+        
+      - name: Create ZIP archive
+        run: |
+          cd install/meson
+          zip -r ${{ env.ARTIFACT_MESON }}.zip .
 
       - name: Upload Meson package
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ARTIFACT_MESON }}
-          path: install/meson
+          path: install/meson/${{ env.ARTIFACT_MESON }}.zip
