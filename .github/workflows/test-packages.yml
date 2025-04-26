@@ -10,9 +10,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         
+      - name: Set up Meson
+        uses: BSFishy/meson-build@v1.0.3  
+      
       - name: Build and Consume CMake Package
         run: pwsh -File ./tests/test_package_build/build_cmake.ps1
         
       - name: Build and Consume Meson Package
-        uses: BSFishy/meson-build@v1.0.3
         run: pwsh -File ./tests/test_package_build/build_meson.ps1
