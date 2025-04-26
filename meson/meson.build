@@ -15,6 +15,7 @@ project(
     'c',
     version: files('version'),
     license: 'MIT',
+    license_files : ['LICENSE'],
     default_options: ['warning_level=3'],
 )
 

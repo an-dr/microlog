@@ -21,6 +21,7 @@ install_subdir(public_include, install_dir: '.')
 install_data(src, install_dir: 'src')
 install_data('meson/meson.build', install_dir: '.')
 install_data('version', install_dir: '.')
+install_data('LICENSE', install_dir: '.')
 
 # ========================
 # Dependency
