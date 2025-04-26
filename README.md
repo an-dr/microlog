@@ -63,7 +63,8 @@ The project is based on several core principles:
 
 **Option 1 - Sources**:
 
-- Copy **[ulog.c](src/ulog.c?raw=1)** and **[ulog.h](include/ulog.h?raw=1)** into your project and compiled along with it.
+- Download a Source Package from [Releases](https://github.com/an-dr/microlog/releases)
+- Add sources to your system manually
 
 **Option 2 - CMake Package**:
 

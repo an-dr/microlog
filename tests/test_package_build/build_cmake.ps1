@@ -18,7 +18,7 @@ try {
     pwsh -File ../../scripts/build_cmake.ps1
 
     # Move the package to verify portability
-    mkdir -p $PSScriptRoot/build/cmake/deps -ErrorAction Ignore
+    mkdir -p $PSScriptRoot/build/cmake/deps
     mv -Force $PSScriptRoot/../../install/cmake/microlog $PSScriptRoot/build/cmake/deps
 
 
