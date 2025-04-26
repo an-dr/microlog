@@ -1,0 +1,14 @@
+name: New Version Workflow
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+
+  release:
+    needs: build
+    uses: ./.github/workflows/release.yml

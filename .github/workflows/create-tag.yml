@@ -1,0 +1,34 @@
+name: Create Tag
+
+on:
+  workflow_call:
+
+jobs:
+  create-tag:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Read version
+        id: read_version
+        run: echo "VERSION=v$(cat version)" >> $GITHUB_OUTPUT
+
+      - name: Check if tag already exists
+        run: |
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "Tag $VERSION already exists. Exiting."
+            exit 0
+          fi
+        env:
+          VERSION: ${{ steps.read_version.outputs.VERSION }}
+
+      - name: Create tag
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git tag $VERSION
+          git push origin $VERSION
+        env:
+          VERSION: ${{ steps.read_version.outputs.VERSION }}

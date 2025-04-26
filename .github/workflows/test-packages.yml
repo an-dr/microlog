@@ -1,0 +1,13 @@
+name: CMake Package
+
+on:
+  workflow_call:
+
+jobs:
+  test-cmake:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Build and Consume Package
+        run: pwsh -File ./tests/test_package_build/build_cmake.ps1
