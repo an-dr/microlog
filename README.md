@@ -40,19 +40,17 @@ The project is based on several core principles:
 - [microlog](#microlog)
     - [Table of Contents](#table-of-contents)
     - [Quick Start](#quick-start)
-        - [A. Install](#a-install)
-        - [B. Use](#b-use)
-    - [Core Features](#core-features)
-        - [Logging Level](#logging-level)
-        - [Quiet Mode](#quiet-mode)
+        - [Install](#install)
+        - [Use](#use)
+    - [User Manual](#user-manual)
+        - [Basics](#basics)
+        - [Log Verbosity](#log-verbosity)
         - [Thread-safety](#thread-safety)
-        - [Library Configuration](#library-configuration)
-    - [Feature: Log Topics](#feature-log-topics)
-    - [Feature: Extra Outputs](#feature-extra-outputs)
-        - [File output](#file-output)
-        - [Custom Output](#custom-output)
-    - [Log Format Customization](#log-format-customization)
-        - [Custom log prefix](#custom-log-prefix)
+        - [Log Topics](#log-topics)
+        - [Extra Outputs](#extra-outputs)
+            - [File Output](#file-output)
+            - [Custom Output](#custom-output)
+        - [Custom Log Prefix](#custom-log-prefix)
         - [Timestamp](#timestamp)
         - [Other Customization](#other-customization)
     - [Contributing](#contributing)
@@ -61,16 +59,18 @@ The project is based on several core principles:
 
 ## Quick Start
 
-### A. Install
+### Install
 
-**Option 1 - Sources**. Copy **[ulog.c](src/ulog.c?raw=1)** and **[ulog.h](include/ulog.h?raw=1)** into your project and compiled along with it.
+**Option 1 - Sources**:
+
+- Copy **[ulog.c](src/ulog.c?raw=1)** and **[ulog.h](include/ulog.h?raw=1)** into your project and compiled along with it.
 
 **Option 2 - CMake Package**:
 
 - Download a CMake Package from Releases
 - Specify the install location:
     - Specify package storage `cmake -B./build -DCMAKE_PREFIX_PATH="~/MyCmakePackages"` or
-    - Set variable with path to the package `microlog_DIR=~/microlog-6.2.0-cmake`
+    - Set `microlog_DIR` variable with path to the package `microlog_DIR=~/microlog-6.2.0-cmake`
 - Use in your project:
 
 ```cmake
@@ -78,6 +78,8 @@ find_package(microlog 6.2.0 REQUIRED)
 
 add_executable(example_package example.cpp)
 target_link_libraries(example_package PRIVATE microlog::microlog)
+
+add_definitions(-DULOG_NO_COLOR) # configuration
 ```
 
 **Option 3 - Meson Package**:
@@ -86,6 +88,8 @@ target_link_libraries(example_package PRIVATE microlog::microlog)
 - Add to your dependencies:
 
 ```meson
+add_global_arguments('-DULOG_NO_COLOR', language: 'c') # configuration
+
 exe = executable(
     meson.project_name(),
     src,
@@ -94,7 +98,7 @@ exe = executable(
 )
 ```
 
-### B. Use
+### Use
 
 ```cpp
 #include "ulog.h"
@@ -105,8 +109,9 @@ int main() {
 }
 ```
 
+## User Manual
 
-## Core Features
+### Basics
 
 The library provides printf-like macros for logging:
 
@@ -122,16 +127,36 @@ log_fatal(const char *fmt, ...);
 Each function takes a printf format string followed by additional arguments:
 
 ```c
-log_trace("Hello %s", "world")
+log_info("Hello %s", "world")
 ```
 
-Resulting in a line with the given format printed to stderr:
+Resulting in a line with the given format printed to stdout:
 
 ```
-TRACE src/main.c:11: Hello world
+INFO src/main.c:11: Hello world
 ```
 
-### Logging Level
+Part of features are configured compile-time. You can use defines in the compiler options, e.g. `-DULOG_NO_COLOR`.
+
+For CMake projects, you can use the `add_definitions` function.
+
+```cmake
+add_definitions(-DULOG_NO_COLOR)
+```
+
+For Meson projects, you can use the `meson` command.
+
+```meson
+add_global_arguments('-DULOG_NO_COLOR', language: 'c')
+```
+
+Note: You might want to adjust the compiler argument  `-fmacro-prefix-map=OLD_PATH=NEW_PATH` to to get the right file paths, e.g. for meson:
+
+```meson
+add_global_arguments('-fmacro-prefix-map=../=',language: 'c')
+```
+
+### Log Verbosity
 
 The current logging level can be set by using the `ulog_set_level()` function.
 All logs below the given level will not be written to `stderr`. By default the
@@ -147,8 +172,6 @@ To get the name of the log level use `ulog_get_level_string`:
 const char *level = ulog_get_level_string(LOG_INFO);
 ptrintf("Level: %s\n", level);
 ```
-
-### Quiet Mode
 
 Quiet-mode can be enabled by passing `true` to the `ulog_set_quiet()` function.
 While this mode is enabled the library will not output anything to `stderr`, but will continue to write to files and callbacks if any are set.
@@ -178,29 +201,7 @@ pthread_mutex_t mutex;
 ulog_set_lock(lock_function, mutex);
 ```
 
-### Library Configuration
-
-You can use the defines in the compiler options, e.g. `-DULOG_NO_COLOR`.
-
-For CMake projects, you can use the `add_definitions` function.
-
-```cmake
-add_definitions(-DULOG_NO_COLOR)
-```
-
-For Meson projects, you can use the `meson` command.
-
-```meson
-add_global_arguments('-DULOG_NO_COLOR', language: 'c')
-```
-
-Note: You might want to adjust the compiler argument  `-fmacro-prefix-map=OLD_PATH=NEW_PATH` to to get the right file paths, e.g. for meson:
-
-```meson
-add_global_arguments('-fmacro-prefix-map=../=',language: 'c')
-```
-
-## Feature: Log Topics
+### Log Topics
 
 The feature is controlled by `ULOG_TOPICS_NUM`. It allows to filter log messages by subsystems, e.g. "network", "storage", etc.
 
@@ -250,17 +251,17 @@ logt_trace("network", "Disconnected from server");
 logt_fatal("video", "No signal");
 ```
 
-## Feature: Extra Outputs
+### Extra Outputs
 
 The feature is controlled by the following defines:
 
 - `ULOG_EXTRA_OUTPUTS` - The maximum number of extra logging outputs that can be added. Each extra output requires some memory. When it is 0, the entire extra output code is not compiled. Default is 0.
 
-### File output
+#### File Output
 
 One or more file pointers where the log will be written can be provided to the library by using the `ulog_add_fp()` function. The data written to the file output is of the following format (with the full time stamp):
 
-```
+```txt
 2047-03-11 20:18:26 TRACE src/main.c:11: Hello world
 ```
 
@@ -274,7 +275,7 @@ if (fp) {
 }
 ```
 
-### Custom Output
+#### Custom Output
 
 One or more callback functions which are called with the log data can be provided to the library by using the `ulog_add_callback()` function. Yo ucan use `ulog_event_to_cstr` to convert the `ulog_Event` structure to a string.
 
@@ -292,9 +293,7 @@ void arduino_callback(ulog_Event *ev, void *arg) {
 ulog_add_callback(arduino_callback, NULL, LOG_INFO);
 ```
 
-## Log Format Customization
-
-### Custom log prefix
+### Custom Log Prefix
 
 Sets a custom prefix function. The function is called with the log level and should return a string that will be printed right before the log level. It can be used to add custom data to the log messages, e.g. millisecond time.
 
@@ -345,6 +344,8 @@ The following defines can be used to customize the library's output:
 ## Contributing
 
 Contributions are welcome! The library design is described in [design.md](doc/design.md).
+
+If you want to contribute feel free to open an issue or create Pull Request with your changes.
 
 ## License
 
