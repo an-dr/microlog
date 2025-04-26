@@ -1,4 +1,4 @@
-name: Release Workflow
+name: New Version Workflow
 
 on:
   push:
@@ -6,5 +6,9 @@ on:
       - 'v*'
 
 jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+
   release:
+    needs: build
     uses: ./.github/workflows/release.yml

@@ -1,7 +1,7 @@
 name: PR Workflow
 
 on:
-  pull_request:
+  push:
     branches:
       - main
 
@@ -15,3 +15,7 @@ jobs:
   test:
     needs: build
     uses: ./.github/workflows/test-packages.yml
+
+  tag:
+    needs: [build, test, verify-version]
+    uses: ./.github/workflows/create-tag.yml

@@ -39,6 +39,9 @@ The project is based on several core principles:
 
 - [microlog](#microlog)
     - [Table of Contents](#table-of-contents)
+    - [Quick Start](#quick-start)
+        - [A. Install](#a-install)
+        - [B. Use](#b-use)
     - [Core Features](#core-features)
         - [Logging Level](#logging-level)
         - [Quiet Mode](#quiet-mode)
@@ -56,12 +59,56 @@ The project is based on several core principles:
     - [License](#license)
     - [Credits](#credits)
 
+## Quick Start
+
+### A. Install
+
+**Option 1 - Sources**. Copy **[ulog.c](src/ulog.c?raw=1)** and **[ulog.h](include/ulog.h?raw=1)** into your project and compiled along with it.
+
+**Option 2 - CMake Package**:
+
+- Download a CMake Package from Releases
+- Specify the install location:
+    - Specify package storage `cmake -B./build -DCMAKE_PREFIX_PATH="~/MyCmakePackages"` or
+    - Set variable with path to the package `microlog_DIR=~/microlog-6.2.0-cmake`
+- Use in your project:
+
+```cmake
+find_package(microlog 6.2.0 REQUIRED)
+
+add_executable(example_package example.cpp)
+target_link_libraries(example_package PRIVATE microlog::microlog)
+```
+
+**Option 3 - Meson Package**:
+
+- Copy (or add as a submodule) to `MyMesonProject/subprojects`
+- Add to your dependencies:
+
+```meson
+exe = executable(
+    meson.project_name(),
+    src,
+    include_directories: include,
+    dependencies: dependency('microlog'),
+)
+```
+
+### B. Use
+
+```cpp
+#include "ulog.h"
+
+int main() {
+    log_info("Test message from test package");
+    return 0;
+}
+```
+
+
 ## Core Features
 
-The library can be linked as a CMake project, Meson subproject or can be added manually:
-copy **[ulog.c](src/ulog.c?raw=1)** and **[ulog.h](include/ulog.h?raw=1)** into your project and compiled along with it.
-
-The library provides 6 function-like macros for logging:
+The library provides printf-like macros for logging:
 
 ```c
 log_trace(const char *fmt, ...);
