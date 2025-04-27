@@ -15,7 +15,7 @@ pushd $PSScriptRoot
 try {
     
     # Build the main package
-    pwsh -File ../../scripts/build_cmake.ps1
+    pwsh -File ../scripts/build_cmake.ps1
 
     # Move the package to verify portability
     mkdir -p $PSScriptRoot/build/cmake/deps
