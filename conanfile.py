@@ -53,4 +53,4 @@ class MicrologConan(ConanFile):
     def package_info(self):
         self.cpp_info.set_property("cmake_file_name", "microlog")
         self.cpp_info.set_property("cmake_target_name", "microlog::microlog")
-        self.cpp_info.builddirs.append("lib/cmake/microlog")
+        self.cpp_info.builddirs.append("cmake/microlog")

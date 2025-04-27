@@ -1,0 +1,9 @@
+{
+    "version": 4,
+    "vendor": {
+        "conan": {}
+    },
+    "include": [
+        "build\\msvc-194-x86_64-14-release\\generators\\CMakePresets.json"
+    ]
+}
