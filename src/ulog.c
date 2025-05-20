@@ -264,6 +264,7 @@ typedef struct {
     int id;
     const char *name;
     bool enabled;
+    int level;
 
 #if CFG_TOPICS_DINAMIC_ALLOC == true
     void *next;  // Pointer to the next topic pointer (Topic **)
@@ -272,6 +273,7 @@ typedef struct {
 } Topic;
 
 static bool is_topic_enabled(int topic);
+static int _ulog_set_topic_level(int topic, int level);
 static int _ulog_enable_topic(int topic);
 static int _ulog_disable_topic(int topic);
 static Topic *_get_topic_begin(void);
@@ -285,6 +287,23 @@ static void print_topic(const log_target *tgt, ulog_Event *ev) {
     if (t && t->name) {
         print(tgt, "[%s] ", t->name);
     }
+}
+
+static int _ulog_set_topic_level(int topic, int level) {
+    Topic *t = _get_topic_ptr(topic);
+    if (t) {
+        t->level = level;
+        return 0;
+    }
+    return -1;
+}
+
+static int _ulog_get_topic_level(int topic) {
+    Topic *t = _get_topic_ptr(topic);
+    if (t) {
+        return t->level;
+    }
+    return LOG_TRACE;
 }
 
 static int _ulog_enable_topic(int topic) {
@@ -301,6 +320,13 @@ static int _ulog_disable_topic(int topic) {
     if (t) {
         t->enabled = false;
         return 0;
+    }
+    return -1;
+}
+
+int ulog_set_topic_level(const char *topic_name, int level) {
+    if (ulog_add_topic(topic_name, true) != -1) {
+        return _ulog_set_topic_level(ulog_get_topic_id(topic_name), level);
     }
     return -1;
 }
@@ -388,6 +414,7 @@ int ulog_add_topic(const char *topic_name, bool enable) {
             topics[i].id      = i;
             topics[i].name    = topic_name;
             topics[i].enabled = enable;
+            topics[i].level   = LOG_TRACE;
             return i;
         }
     }
@@ -633,8 +660,9 @@ void ulog_log(int level, const char *file, int line, const char *topic,
 #endif
         }
 
-        // If the topic is disabled, we do not log
-        if (!is_topic_enabled(topic_id)) {
+        // If the topic is disabled or set to a lower logging level, do not log
+        if (!is_topic_enabled(topic_id) ||
+            (_ulog_get_topic_level(topic_id) < ulog.level)) {
             return;
         }
     }

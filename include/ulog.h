@@ -264,6 +264,12 @@ int ulog_add_fp(FILE *fp, int level);
 /// @return Topic ID if success, -1 if failed
 int ulog_add_topic(const char *topic_name, bool enable);
 
+/// @brief Sets the debug level of a given topic
+/// @param topic_name
+/// @param level
+/// @return 0 if success, -1 if failed
+int ulog_set_topic_level(const char *topic_name, int level);
+
 /// @brief Gets the topic ID
 /// @param topic_name
 /// @return  Topic ID if success, -1 if failed, TOPIC_NOT_FOUND if not found
@@ -288,6 +294,7 @@ int ulog_disable_all_topics(void);
 #else  // FEATURE_TOPICS
 
 #define ulog_add_topic(...)
+#define ulog_set_topic_level(...)
 #define ulog_get_topic_id(...)
 #define ulog_enable_topic(...)
 #define ulog_disable_topic(...)
