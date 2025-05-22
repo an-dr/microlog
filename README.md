@@ -253,6 +253,27 @@ logt_trace("network", "Disconnected from server");
 logt_fatal("video", "No signal");
 ```
 
+By default, the logging level of each topic is set to `LOG_TRACE`. It is possible to alter this behavior by calling `ulog_set_topic_level()`. All topics below the level set by `ulog_set_level()` (`LOG_TRACE` by default) will not generate log.
+
+For example:
+
+```c
+// By default, both topic logging levels are set to LOG_TRACE
+ulog_add_topic("network", true);
+ulog_add_topic("storage", true);
+
+// Both topics generate log as global logging level is set to LOG_TRACE
+logt_info("network", "Connected to server");
+logt_warn("storage", "No free space");
+
+ulog_set_level(LOG_INFO);
+ulog_set_topic_level("storage", LOG_WARN);
+
+// Only "storage" topic generates log
+logt_info("network", "Connected to server");
+logt_info("storage", "No free space");
+```
+
 ### Extra Outputs
 
 The feature is controlled by the following defines:
