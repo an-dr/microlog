@@ -48,14 +48,20 @@ int main(int argc, char *argv[]) {
     // logt_fatal("Serial", "Serial message 0");
     
     ulog_enable_all_topics();
-    logt_trace("Bluetooth", "Bluetooth message");
-    logt_debug("Indication", "Indication message");
+    logt_trace("Bluetooth", "Bluetooth message 1");
+    logt_debug("Indication", "Indication message 1");
     logt_info("Audio", "Audio message");
     logt_warn("Serial", "Serial message 1");
     logt_error("Serial", "Serial message 2");
     
     ulog_disable_topic("Serial");
     // logt_warn("Serial", "Serial message 3 (disabled)");
+
+    ulog_set_level(LOG_INFO);
+    ulog_set_topic_level("Bluetooth", LOG_WARN);
+    ulog_set_topic_level("Indication", LOG_DEBUG);
+    logt_info("Bluetooth", "Bluetooth message 2");
+    // logt_info("Indication", "Indication message 2 (topic logging level lower than global level)");
     
     return 0;
 }

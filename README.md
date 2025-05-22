@@ -71,11 +71,11 @@ The project is based on several core principles:
 - Download a CMake Package from [Releases](https://github.com/an-dr/microlog/releases)
 - Specify the install location:
     - Specify package storage `cmake -B./build -DCMAKE_PREFIX_PATH="~/MyCmakePackages"` or
-    - Set `microlog_DIR` variable with path to the package `microlog_DIR=~/microlog-6.2.1-cmake`
+    - Set `microlog_DIR` variable with path to the package `microlog_DIR=~/microlog-6.3.0-cmake`
 - Use in your project:
 
 ```cmake
-find_package(microlog 6.2.1 REQUIRED)
+find_package(microlog 6.3.0 REQUIRED)
 
 add_executable(example_package example.cpp)
 target_link_libraries(example_package PRIVATE microlog::microlog)
@@ -251,6 +251,27 @@ logt_error("storage", "No free space");
 ulog_enable_all_topics(); 
 logt_trace("network", "Disconnected from server");
 logt_fatal("video", "No signal");
+```
+
+By default, the logging level of each topic is set to `LOG_TRACE`. It is possible to alter this behavior by calling `ulog_set_topic_level()`. All topics below the level set by `ulog_set_level()` (`LOG_TRACE` by default) will not generate log.
+
+For example:
+
+```c
+// By default, both topic logging levels are set to LOG_TRACE
+ulog_add_topic("network", true);
+ulog_add_topic("storage", true);
+
+// Both topics generate log as global logging level is set to LOG_TRACE
+logt_info("network", "Connected to server");
+logt_warn("storage", "No free space");
+
+ulog_set_level(LOG_INFO);
+ulog_set_topic_level("storage", LOG_WARN);
+
+// Only "storage" topic generates log
+logt_info("network", "Connected to server");
+logt_info("storage", "No free space");
 ```
 
 ### Extra Outputs
