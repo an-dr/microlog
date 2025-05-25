@@ -1,0 +1,29 @@
+name: Unit Tests
+
+on:
+  push:
+    branches: [ main ] # Or your primary branch
+  pull_request:
+    branches: [ main ] # Or your primary branch
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest # Or other OS if needed, e.g., windows-latest, macos-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up CMake
+      uses: jwlawson/actions-setup-cmake@v1.13 # Or any other reliable setup-cmake action
+      with:
+        cmake-version: '3.20.x' # Specify a version, or let it pick latest
+
+    - name: Configure CMake
+      run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Debug # -S . specifies source is current dir
+
+    - name: Build
+      run: cmake --build build --config Debug
+
+    - name: Test
+      working-directory: build
+      run: ctest -C Debug --output-on-failure
