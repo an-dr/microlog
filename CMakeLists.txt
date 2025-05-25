@@ -33,6 +33,9 @@ target_include_directories(
                                                                  # building
             $<INSTALL_INTERFACE:include>) # when installed
 
+include(CTest)
+enable_testing()
+
 # ----------------------------------------------------------------------------
 # Testing
 # ----------------------------------------------------------------------------
@@ -54,7 +57,6 @@ install(FILES src/ulog.c DESTINATION ${CMAKE_INSTALL_PREFIX}/src)
 # ----------------------------------------------------------------------------
 # Packing
 # ----------------------------------------------------------------------------
-include(CTest)
 include(CMakePackageConfigHelpers)
 
 # We have a custom Targets file below. Original is generated like this:

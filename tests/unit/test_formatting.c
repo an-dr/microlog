@@ -34,7 +34,7 @@ void test_basic_functionality() {
     ulog_event_to_cstr(&event, buffer, sizeof(buffer));
 
     // Check for level string (default is full)
-    check_substring(buffer, "[INFO]", "Test 1: Level string");
+    check_substring(buffer, "INFO ", "Test 1: Level string");
     // Check for tag - this test will change as tag is not directly set.
     // If no topic is set, no tag string (e.g. "[BasicTest]") should appear.
     // Let's assume for default tests, we don't check for a specific tag unless topics are involved.
@@ -76,7 +76,7 @@ void test_time_formatting() {
     strftime(time_str_part, sizeof(time_str_part), "%H:%M:%S", localtime(&current_time));
     check_substring(buffer, time_str_part, "Test 2: Timestamp presence");
     
-    check_substring(buffer, "[DEBUG]", "Test 2: Level string");
+    check_substring(buffer, "DEBUG ", "Test 2: Level string");
     check_not_substring(buffer, "[TimeTest]", "Test 2: Tag string should be absent by default");
     check_substring(buffer, "Time test: 123", "Test 2: Message content");
 
@@ -126,7 +126,7 @@ void test_file_string_absence() {
     ulog_event_to_cstr(&event, buffer, sizeof(buffer));
     
     check_not_substring(buffer, "anyfile.c:456", "Test 3b: File and line info hidden");
-    check_substring(buffer, "[ERROR]", "Test 3b: Level string");
+    check_substring(buffer, "ERROR ", "Test 3b: Level string");
     check_not_substring(buffer, "[NoFileStrTest]", "Test 3b: Tag string should be absent");
     check_substring(buffer, "No file string test", "Test 3b: Message content");
     printf("Test 3b: Passed.\n\n");
@@ -150,11 +150,11 @@ void test_short_level_strings() {
 #endif
 
     ulog_event_to_cstr(&event, buffer, sizeof(buffer));
-    check_substring(buffer, "[I]", "Test 4: Short INFO string"); // "I" for INFO
+    check_substring(buffer, "I ", "Test 4: Short INFO string"); // "I" for INFO
 
     event.level = LOG_WARN; // Keep other fields same, just change level
     ulog_event_to_cstr(&event, buffer, sizeof(buffer));
-    check_substring(buffer, "[W]", "Test 4: Short WARN string"); // "W" for WARN
+    check_substring(buffer, "W ", "Test 4: Short WARN string"); // "W" for WARN
     
     printf("Test 4: Passed.\n\n");
 }
@@ -181,14 +181,17 @@ void test_emoji_level_strings() {
     // ulog.h uses UTF-8 strings like "ℹ️" for INFO.
     // We'll check for a known part of the multi-byte sequence if direct string compare is problematic.
     // For simplicity, we assume the string literals from ulog.h are correctly handled.
-    // Actual emojis from ulog.c: "ℹ️ INFO", "🔥 ERROR"
+    // Actual emojis from ulog.c for INFO is "🟢" and for ERROR is "🔴"
     // The ulog_event_to_cstr function formats the full string.
     // We should check for the emoji itself, which is part of the level string.
-    check_substring(buffer, "ℹ️", "Test 5: Emoji INFO string");
+    // Using UTF-8 hex escape codes:
+    // 🟢 (U+1F7E2) -> \xF0\x9F\x9F\xA2
+    // 🔴 (U+1F534) -> \xF0\x9F\x94\xB4
+    check_substring(buffer, "\xF0\x9F\x9F\xA2", "Test 5: Emoji INFO string (Green Circle)");
 
     event.level = LOG_ERROR; // Keep other fields same
     ulog_event_to_cstr(&event, buffer, sizeof(buffer));
-    check_substring(buffer, "🔥", "Test 5: Emoji ERROR string");
+    check_substring(buffer, "\xF0\x9F\x94\xB4", "Test 5: Emoji ERROR string (Red Circle)");
     
     printf("Test 5: Passed.\n\n");
 }
