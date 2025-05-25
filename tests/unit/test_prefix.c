@@ -24,14 +24,17 @@ int main() {
 
     ulog_Event event;
     char buffer[256]; // Buffer to hold the formatted log string
+    memset(&event.message_format_args, 0, sizeof(event.message_format_args)); // Initialize va_list member
 
     // Initialize the event structure (some fields are optional depending on ulog config)
-    event.fmt = "Test message with custom prefix: %s";
+    event.message = "Test message with custom prefix: data"; // Pre-formatted
     event.file = "test_prefix.c";
     event.level = LOG_INFO;
     event.line = __LINE__;
-    event.tag = "PrefixTest";
-    event.timestamp = 0; // Assuming ULOG_HAVE_TIME might not be set for this specific test
+    // event.tag = "PrefixTest"; // No 'tag' field in ulog_Event
+#ifdef ULOG_HAVE_TIME // test_prefix target does not define ULOG_HAVE_TIME
+    event.time = NULL; 
+#endif
 
     // Call ulog_event_to_cstr to format the event with the custom prefix
     // Note: ulog_event_to_cstr itself doesn't directly use ulog_set_prefix_fn.
@@ -75,7 +78,8 @@ int main() {
     my_prefix_fn(&event, custom_prefix_output, ULOG_CUSTOM_PREFIX_SIZE);
 
     char main_log_content[200];
-    ulog_event_to_cstr(main_log_content, sizeof(main_log_content), &event, "data");
+    // Corrected call to ulog_event_to_cstr
+    ulog_event_to_cstr(&event, main_log_content, sizeof(main_log_content));
     
     // Combine them for the final check
     snprintf(buffer, sizeof(buffer), "%s%s", custom_prefix_output, main_log_content);

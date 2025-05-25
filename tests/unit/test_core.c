@@ -5,20 +5,24 @@
 
 #include "ulog.h"
 
+// Forward declaration for the callback
+static void test_log_callback(ulog_Event *ev, void *arg);
+
 // Global state for testing callbacks
 static int processed_message_count = 0;
 static char last_message_buffer[256];
 
 // Custom log callback for tests
-void test_log_callback(void *userdata, log_level_t level, const char *fmt, va_list args) {
-    (void)userdata; // Unused
-    (void)level;    // Unused for now, but could be used for more specific checks
+void test_log_callback(ulog_Event *ev, void *arg) {
+    (void)arg; // Userdata is now 'arg', mark as unused if not used.
+    // (void)ev; // ev is used for level and message formatting.
     
     processed_message_count++;
     
     // Format the message into our static buffer to "capture" it
     // In a real scenario, be wary of buffer overflows if messages are long
-    vsnprintf(last_message_buffer, sizeof(last_message_buffer), fmt, args);
+    // Note: ulog_Event has 'message' (format string) and 'message_format_args' (va_list)
+    vsnprintf(last_message_buffer, sizeof(last_message_buffer), ev->message, ev->message_format_args);
 }
 
 void test_basic_logging_macros() {
@@ -36,7 +40,7 @@ void test_ulog_set_level() {
     printf("Running Test 2: ulog_set_level...\n");
     
     // Set a custom callback to monitor messages
-    ulog_set_callback(test_log_callback, NULL);
+    ulog_add_callback(test_log_callback, NULL, LOG_TRACE); // Assuming LOG_TRACE to capture all for this test setup
     processed_message_count = 0; // Reset counter
 
     ulog_set_level(LOG_INFO);
@@ -54,14 +58,25 @@ void test_ulog_set_level() {
     
     // Reset to default level and callback for other tests
     ulog_set_level(LOG_TRACE); 
-    ulog_set_callback(NULL, NULL); 
+    // To properly "remove" a callback, one would need a ulog_remove_callback function.
+    // For this test, we'll assume subsequent tests will re-register or that the callback
+    // being present doesn't harm other tests if not explicitly used by them.
+    // If ulog_add_callback returns an ID, one might use it to remove.
+    // Or, if ULOG_EXTRA_OUTPUTS is small, it might fill up.
+    // For now, we leave it, as microlog doesn't have a remove.
 }
 
 void test_ulog_set_quiet() {
     printf("Running Test 3: ulog_set_quiet...\n");
 
     // Set a custom callback to monitor messages
-    ulog_set_callback(test_log_callback, NULL);
+    // Note: This callback will persist from the previous test if not cleared.
+    // This is okay if test_log_callback is idempotent or its effects are reset (like processed_message_count).
+    // Adding it again might fill up slots if ULOG_EXTRA_OUTPUTS is small and no removal is done.
+    // Let's assume for test_core.c, one registration of test_log_callback is fine.
+    // If test_ulog_set_level already added it, this line is redundant or could fail if slots are full.
+    // For simplicity of this fix, let's assume the previous registration is sufficient.
+    // ulog_add_callback(test_log_callback, NULL, LOG_TRACE); // Potentially re-adding or redundant
     processed_message_count = 0; // Reset counter
 
     ulog_set_quiet(true);
@@ -74,11 +89,25 @@ void test_ulog_set_quiet() {
 
     printf("Test 3: Passed (ulog_set_quiet worked as expected).\n\n");
     
-    // Reset callback for other tests
-    ulog_set_callback(NULL, NULL);
+    // No ulog_remove_callback, so the callback stays registered.
 }
 
 int main() {
+    // Initialize microlog and set a default state if necessary
+    // ulog_init(); // If available and resets callbacks etc.
+    ulog_set_level(LOG_TRACE); // Global level
+
+    // Add the test callback ONCE for all tests in this file that need it.
+    // This assumes ULOG_EXTRA_OUTPUTS is at least 1.
+    // The third argument to ulog_add_callback is the threshold for this specific callback.
+    // Setting to LOG_TRACE means this callback will be called for all levels.
+    int callback_add_result = ulog_add_callback(test_log_callback, NULL, LOG_TRACE);
+    if (callback_add_result != 0) {
+        fprintf(stderr, "Failed to add the primary test callback. This may affect test results.\n");
+        // Depending on microlog's behavior, this could be due to no slots (ULOG_EXTRA_OUTPUTS too small)
+    }
+    assert(callback_add_result == 0 && "Failed to add test_log_callback for test_core.c");
+
     printf("Starting unit tests for microlog core features...\n\n");
 
     test_basic_logging_macros();

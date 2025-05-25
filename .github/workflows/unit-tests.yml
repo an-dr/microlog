@@ -19,7 +19,7 @@ jobs:
         cmake-version: '3.20.x' # Specify a version, or let it pick latest
 
     - name: Configure CMake
-      run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Debug # -S . specifies source is current dir
+      run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-Wall -Wextra -Werror"
 
     - name: Build
       run: cmake --build build --config Debug

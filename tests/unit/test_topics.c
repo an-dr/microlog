@@ -32,10 +32,10 @@ void test_basic_topic_logging_and_filtering() {
     printf("Running Test 1: Basic Topic Logging & Filtering...\n");
     reset_topic_test_state();
 
-    ulog_topic_id_t id1 = ulog_add_topic("TEST_TOPIC1", true);
+    int id1 = ulog_add_topic("TEST_TOPIC1", true);
     assert(id1 >= 0 && "Failed to add TEST_TOPIC1");
 
-    ulog_topic_id_t retrieved_id1 = ulog_get_topic_id("TEST_TOPIC1");
+    int retrieved_id1 = ulog_get_topic_id("TEST_TOPIC1");
     assert(retrieved_id1 == id1 && "Retrieved ID for TEST_TOPIC1 does not match");
 
     logt_info("TEST_TOPIC1", "Hello from TEST_TOPIC1");
@@ -51,7 +51,7 @@ void test_disabling_enabling_topics() {
     printf("Running Test 2: Disabling/Enabling Topics...\n");
     reset_topic_test_state();
 
-    ulog_topic_id_t id2 = ulog_add_topic("TEST_TOPIC2", true);
+    int id2 = ulog_add_topic("TEST_TOPIC2", true);
     assert(id2 >= 0 && "Failed to add TEST_TOPIC2");
 
     int disable_result = ulog_disable_topic("TEST_TOPIC2");
@@ -75,7 +75,7 @@ void test_topic_specific_log_levels() {
     // Assuming global log level is TRACE or DEBUG for this test to pass correctly for global logs.
     // ulog_set_level(LOG_TRACE); 
 
-    ulog_topic_id_t id3 = ulog_add_topic("TEST_TOPIC3", true);
+    int id3 = ulog_add_topic("TEST_TOPIC3", true);
     assert(id3 >= 0 && "Failed to add TEST_TOPIC3");
 
     int set_level_result = ulog_set_topic_level("TEST_TOPIC3", LOG_WARN);
@@ -100,8 +100,8 @@ void test_enable_disable_all_topics() {
     printf("Running Test 4: ulog_enable_all_topics / ulog_disable_all_topics...\n");
     reset_topic_test_state();
 
-    ulog_topic_id_t id_all1 = ulog_add_topic("T_ALL1", true); // Start enabled
-    ulog_topic_id_t id_all2 = ulog_add_topic("T_ALL2", true); // Start enabled
+    int id_all1 = ulog_add_topic("T_ALL1", true); // Start enabled
+    int id_all2 = ulog_add_topic("T_ALL2", true); // Start enabled
     assert(id_all1 >= 0 && "Failed to add T_ALL1");
     assert(id_all2 >= 0 && "Failed to add T_ALL2");
 
@@ -113,7 +113,7 @@ void test_enable_disable_all_topics() {
     logt_info("T_ALL2", "Log to T_ALL2 (should be disabled)");
     assert(g_topic_log_count == 0 && "Log count non-zero after T_ALL2 log (all disabled)");
 
-    ulog_enable_all_topics(true); // true = new topics also enabled by default
+    ulog_enable_all_topics(); // Corrected: takes no arguments
     printf("Enabled all topics.\n");
 
     logt_info("T_ALL1", "Log to T_ALL1 (should be re-enabled)");
@@ -143,14 +143,14 @@ void test_non_existent_topic() {
     // In dynamic mode, logging to a non-existent topic might add it.
     // The default enabled state of such auto-added topics depends on ulog_get_new_topic_enabled_by_default()
     // or the parameter to ulog_enable_all_topics(). Assume it's enabled for this test.
-    ulog_topic_id_t id_ne = ulog_get_topic_id(non_existent_topic_name);
+    int id_ne = ulog_get_topic_id(non_existent_topic_name);
     assert(id_ne >= 0 && "Non-existent topic was not dynamically added or ID not found.");
     assert(g_topic_log_count == 1 && "Log count incorrect for dynamically added topic.");
     printf("Non-existent topic was dynamically added and logged.\n");
 #else // Static allocation (ULOG_TOPICS_NUM > 0)
     printf("Static topic allocation (ULOG_TOPICS_NUM > 0)\n");
     // In static mode, logging to a non-existent topic should not work if it wasn't pre-added.
-    ulog_topic_id_t id_ne_static = ulog_get_topic_id(non_existent_topic_name);
+    int id_ne_static = ulog_get_topic_id(non_existent_topic_name);
     assert(id_ne_static == -1 && "Topic should not exist in static mode unless pre-added.");
     assert(g_topic_log_count == 0 && "Log count should be 0 for non-existent topic in static mode.");
     printf("Non-existent topic was (correctly) not logged in static mode.\n");
