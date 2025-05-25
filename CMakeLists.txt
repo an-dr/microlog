@@ -78,3 +78,9 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
               ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
               ${CMAKE_CURRENT_LIST_DIR}/LICENSE
         DESTINATION ${CMAKE_INSTALL_PREFIX})
+
+# ----------------------------------------------------------------------------
+# Testing
+# ----------------------------------------------------------------------------
+enable_testing()
+add_subdirectory(tests)

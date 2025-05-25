@@ -53,6 +53,7 @@ The project is based on several core principles:
         - [Custom Log Prefix](#custom-log-prefix)
         - [Timestamp](#timestamp)
         - [Other Customization](#other-customization)
+    - [Runtime Configuration](#runtime-configuration)
     - [Contributing](#contributing)
     - [License](#license)
     - [Credits](#credits)
@@ -138,9 +139,11 @@ Resulting in a line with the given format printed to stdout:
 INFO src/main.c:11: Hello world
 ```
 
-Part of features are configured compile-time. You can use defines in the compiler options, e.g. `-DULOG_NO_COLOR`.
+While some features depend on compile-time flags for their availability (e.g., `ULOG_HAVE_TIME` for timestamp functionality), most operational aspects of the logger are configured at runtime. See the [Runtime Configuration](#runtime-configuration) section for details.
 
-For CMake projects, you can use the `add_definitions` function.
+Compile-time flags are typically set via compiler options, e.g., `-DULOG_NO_COLOR`.
+
+For CMake projects, you can use the `add_definitions` function:
 
 ```cmake
 add_definitions(-DULOG_NO_COLOR)
@@ -182,6 +185,8 @@ While this mode is enabled the library will not output anything to `stderr`, but
 ulog_set_quiet(true);
 ```
 
+These functions, and others that modify the logger's behavior, interact with a global configuration structure. This structure is initialized automatically on the first logging call or can be set up explicitly.
+
 ### Thread-safety
 
 If the log will be written to from multiple threads a lock function can be set. To do this use the `ulog_set_lock()` function.
@@ -205,14 +210,12 @@ ulog_set_lock(lock_function, mutex);
 
 ### Log Topics
 
-The feature is controlled by `ULOG_TOPICS_NUM`. It allows to filter log messages by subsystems, e.g. "network", "storage", etc.
+The availability of the topic logging feature is controlled by the compile-time define `ULOG_TOPICS_NUM`.
+- If `ULOG_TOPICS_NUM` is defined as `0` or is not defined, topic logging is disabled.
+- If `ULOG_TOPICS_NUM > 0`, static allocation is used for up to `ULOG_TOPICS_NUM` topics.
+- If `ULOG_TOPICS_NUM == -1`, dynamic allocation is used for topics, allowing an unlimited number of topics (memory permitting).
 
-There are two mechanism of working with the topics:
-
-- `dynamic` - slower, but new topic will be added automatically
-- `static` - faster, but you need to define all topic using `ulog_add_topic`
-
-If you want to use dynamic topics, you need to define `ULOG_TOPICS_NUM` to be -1. Otherwise, you need to define the number of topics for static allocation.
+The runtime behavior (e.g., whether topics are actually used, how many can be added if dynamic) is further controlled by the `ulog_config_t` structure. See [Runtime Configuration](#runtime-configuration).
 
 Printing the log message with the topic is done by the set of function-like macros similar to log_xxx, but with the topic as the first argument:
 
@@ -276,9 +279,11 @@ logt_info("storage", "No free space");
 
 ### Extra Outputs
 
-The feature is controlled by the following defines:
+The maximum number of extra logging outputs is controlled by the compile-time define `ULOG_EXTRA_OUTPUTS`.
+- If `ULOG_EXTRA_OUTPUTS` is `0` or not defined, this feature is disabled.
+- If `ULOG_EXTRA_OUTPUTS > 0`, up to that many extra outputs (file pointers or callbacks) can be added.
 
-- `ULOG_EXTRA_OUTPUTS` - The maximum number of extra logging outputs that can be added. Each extra output requires some memory. When it is 0, the entire extra output code is not compiled. Default is 0.
+The actual number of active extra outputs is set at runtime via `ulog_config_t`. See [Runtime Configuration](#runtime-configuration).
 
 #### File Output
 
@@ -320,7 +325,11 @@ ulog_add_callback(arduino_callback, NULL, LOG_INFO);
 
 Sets a custom prefix function. The function is called with the log level and should return a string that will be printed right before the log level. It can be used to add custom data to the log messages, e.g. millisecond time.
 
-Requires `ULOG_CUSTOM_PREFIX_SIZE` to be more than 0.
+The maximum size of the custom prefix string is set by `ULOG_CUSTOM_PREFIX_SIZE` at compile-time.
+- If `ULOG_CUSTOM_PREFIX_SIZE` is `0` or not defined, this feature is disabled.
+- If `ULOG_CUSTOM_PREFIX_SIZE > 0`, a prefix of up to this size can be generated.
+
+Whether a custom prefix is used and its maximum runtime size (up to the compile-time limit) is configured via `ulog_config_t`. See [Runtime Configuration](#runtime-configuration).
 
 ```c
 void update_prefix(ulog_Event *ev, char *prefix, size_t prefix_size) {
@@ -341,7 +350,8 @@ The output will be:
 
 ### Timestamp
 
-The feature is controlled by `ULOG_HAVE_TIME`. You platform must support time.h.
+The availability of timestamping is controlled by the `ULOG_HAVE_TIME` compile-time flag. If not defined, timestamp functionality is compiled out.
+If defined, whether timestamps are actually included in log messages is controlled at runtime by `g_ulog_config.time_enabled`. See [Runtime Configuration](#runtime-configuration).
 
 The time to the file output will be written with the date, while time to the console will be written with the time only.
 
@@ -359,10 +369,106 @@ console:
 
 The following defines can be used to customize the library's output:
 
-- `ULOG_NO_COLOR` - Do not use ANSI color escape codes when printing to stdout.
-- `ULOG_HIDE_FILE_STRING` - Hide the file name and line number.
-- `ULOG_SHORT_LEVEL_STRINGS` - Use short level strings, e.g. "T" for "TRACE", "I" for "INFO".
-- `ULOG_USE_EMOJI` - Use emojis for log levels (⚪, 🟢, 🔵, 🟡, 🟠, 🔴, 💥). Overrides `ULOG_SHORT_LEVEL_STRINGS`. WARNING: not all compilers and terminals support emojis.
+- `ULOG_NO_COLOR`: If defined, ANSI color escape codes are completely compiled out. Otherwise, color can be enabled/disabled at runtime.
+- `ULOG_HIDE_FILE_STRING`: If defined, file/line information is completely compiled out. Otherwise, it can be enabled/disabled at runtime.
+- `ULOG_SHORT_LEVEL_STRINGS`: If defined, sets the default to use short level strings (e.g., "T", "I"). This can be changed at runtime.
+- `ULOG_USE_EMOJI`: If defined, sets the default to use emojis for log levels. This overrides `ULOG_SHORT_LEVEL_STRINGS` by default and can be changed at runtime. (Note: Requires terminal and font support for emojis).
+
+These compile-time flags primarily set the *default* behavior or *availability* of features. Most can be further configured at runtime.
+
+## Runtime Configuration
+
+microlog's behavior is primarily controlled at runtime through the `ulog_config_t` structure and the `ulog_init()` function.
+
+### `ulog_config_t` Structure
+
+This structure holds all runtime configurable options:
+
+```c
+typedef struct {
+    bool time_enabled;          // Enable/disable timestamps (if ULOG_HAVE_TIME is defined)
+    bool color_enabled;         // Enable/disable colored output (if ULOG_NO_COLOR is not defined)
+    int  custom_prefix_size;    // Max size for custom prefix (if ULOG_CUSTOM_PREFIX_SIZE > 0)
+    bool file_string_enabled;   // Enable/disable file:line prefix (if ULOG_HIDE_FILE_STRING is not defined)
+    bool short_level_strings;   // Use short "T" or long "TRACE" level strings
+    bool emoji_levels;          // Use emoji for levels (overrides short_level_strings if true)
+    int  extra_outputs;         // Number of active extra outputs (up to ULOG_EXTRA_OUTPUTS)
+    int  topics_num;            // Number of topics or -1 for dynamic (up to ULOG_TOPICS_NUM for static)
+    bool topics_dynamic_alloc;  // True if topics are dynamically allocated (ULOG_TOPICS_NUM = -1)
+    int  level;                 // Current global log verbosity level (LOG_TRACE, LOG_DEBUG, etc.)
+    bool quiet;                 // Suppress output to stdout/stderr
+} ulog_config_t;
+```
+
+### `ulog_init()` Function
+
+```c
+void ulog_init(const ulog_config_t *config);
+```
+
+- **Purpose**: Initializes the logger with a specific configuration. It's automatically called with `NULL` (default configuration) on the first logging attempt if not explicitly called by the user beforehand.
+- **Parameters**:
+    - `config`: A pointer to a `ulog_config_t` structure.
+        - If `NULL`, `g_ulog_config` is initialized with default values, which are then overridden by compile-time flags (e.g., `ULOG_HAVE_TIME` enables time, `ULOG_NO_COLOR` disables color).
+        - If not `NULL`, the provided configuration is copied to `g_ulog_config`. After copying, restrictive compile-time flags are re-applied (e.g., if `ULOG_NO_COLOR` is defined, `g_ulog_config.color_enabled` will be forced to `false` even if the user provided `true`). Similarly, sized features like `custom_prefix_size` cannot exceed their compile-time limits.
+
+### Interaction of Compile-Time Flags and Runtime Configuration
+
+1.  **Base Defaults**: The library has internal base default values for all settings (e.g., color enabled, time disabled, log level TRACE).
+2.  **Compile-Time Flags**: These modify the base defaults when `ulog_init(NULL)` is called (either automatically or by the user).
+    - Some flags *disable* a feature entirely (e.g., `ULOG_NO_COLOR` removes color code, `ULOG_HAVE_TIME` not being defined removes timestamp code). If a feature is compiled out, it cannot be enabled at runtime.
+    - Other flags set the *initial state* or *maximum capacity* (e.g., `ULOG_SHORT_LEVEL_STRINGS` sets the default level string format, `ULOG_EXTRA_OUTPUTS` sets the max number of callbacks).
+3.  **User-Supplied `ulog_config_t` (via `ulog_init`)**: If the user calls `ulog_init()` with their own configuration, these settings are applied. However, they are still constrained by compile-time flags (e.g., trying to enable color via `ulog_config_t` will have no effect if `ULOG_NO_COLOR` was defined).
+4.  **Setter Functions**: Functions like `ulog_set_level()`, `ulog_set_quiet()` can modify the active `g_ulog_config` *after* initialization. They also trigger default initialization if `ulog_init` hasn't been called yet.
+
+**Example of `ulog_init`:**
+
+```c
+#include "ulog.h"
+
+int main() {
+    // Option 1: Automatic default initialization (influenced by compile-time flags)
+    log_info("This uses default/compile-time settings.");
+
+    // Option 2: Explicit default initialization
+    ulog_init(NULL); 
+    log_info("Still default/compile-time settings.");
+
+    // Option 3: Custom initialization
+    ulog_config_t my_config;
+    my_config.level = LOG_DEBUG;
+    my_config.color_enabled = false; // Attempt to disable color
+#ifdef ULOG_HAVE_TIME
+    my_config.time_enabled = true;   // Attempt to enable time
+#else
+    my_config.time_enabled = false;
+#endif
+    // ... set other fields ...
+    my_config.custom_prefix_size = 0; // Disable custom prefix for this example
+    my_config.file_string_enabled = true;
+    my_config.short_level_strings = true;
+    my_config.emoji_levels = false;
+    my_config.extra_outputs = 0;
+#if defined(ULOG_TOPICS_NUM) && ULOG_TOPICS_NUM == -1 // If compiled for dynamic topics
+    my_config.topics_num = -1; 
+    my_config.topics_dynamic_alloc = true;
+#else // static or disabled
+    my_config.topics_num = 0;
+    my_config.topics_dynamic_alloc = false;
+#endif
+    my_config.quiet = false;
+
+    ulog_init(&my_config);
+
+    log_debug("This uses custom settings (DEBUG level, no color if not forced by ULOG_NO_COLOR, time if ULOG_HAVE_TIME).");
+
+    // Further changes with setters
+    ulog_set_level(LOG_INFO);
+    log_info("Log level changed to INFO.");
+
+    return 0;
+}
+```
 
 ## Contributing
 
