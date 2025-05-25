@@ -806,15 +806,25 @@ static void print_message(const log_target *tgt, ulog_Event *ev) {
 /// @param cb - Callback
 static void process_callback(ulog_Event *ev, Callback *cb) {
     if (ev->level >= cb->level) {
+        ulog_Event event_for_callback = *ev; // Make a shallow copy of the event structure.
 
 #if FEATURE_TIME
-        if (!ev->time) {
+        if (!event_for_callback.time) {
             time_t t = time(NULL);
-            ev->time = localtime(&t);
+            event_for_callback.time = localtime(&t);
         }
-#endif  // FEATURE_TIME
+#endif
 
-        cb->function(ev, cb->arg);
+        // Initialize the va_list in our copy ('event_for_callback.message_format_args')
+        // directly from the original event's va_list ('ev->message_format_args').
+        va_copy(event_for_callback.message_format_args, ev->message_format_args);
+
+        // Pass the modified copy (which includes the copied va_list) to the callback.
+        cb->function(&event_for_callback, cb->arg);
+
+        // Clean up the va_list that was initialized by va_copy in event_for_callback.message_format_args.
+        // This is crucial because va_copy might allocate resources for the copied va_list.
+        va_end(event_for_callback.message_format_args);
     }
 }
 

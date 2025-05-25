@@ -109,6 +109,14 @@ void test_file_string_presence() {
 
 #ifdef ULOG_HIDE_FILE_STRING
 void test_file_string_absence() {
+    // Diagnostic preprocessor checks
+    #ifndef FEATURE_FILE_STRING
+        #error "test_formatting.c: FATAL: FEATURE_FILE_STRING is not defined within test_file_string_absence. ULOG_HIDE_FILE_STRING may not be correctly processed."
+    #endif
+    #if FEATURE_FILE_STRING == true
+        #error "test_formatting.c: FATAL: FEATURE_FILE_STRING is true within test_file_string_absence. ULOG_HIDE_FILE_STRING is not having the expected effect."
+    #endif
+
     printf("Running Test 3b: File string absence (ULOG_HIDE_FILE_STRING)...\n");
     ulog_Event event;
     char buffer[256];
@@ -187,11 +195,12 @@ void test_emoji_level_strings() {
     // Using UTF-8 hex escape codes:
     // 🟢 (U+1F7E2) -> \xF0\x9F\x9F\xA2
     // 🔴 (U+1F534) -> \xF0\x9F\x94\xB4
-    check_substring(buffer, "\xF0\x9F\x9F\xA2", "Test 5: Emoji INFO string (Green Circle)");
+    // Adding trailing space as per new requirement for level strings
+    check_substring(buffer, "\xF0\x9F\x9F\xA2\x20", "Test 5: Emoji INFO string (Green Circle)");
 
     event.level = LOG_ERROR; // Keep other fields same
     ulog_event_to_cstr(&event, buffer, sizeof(buffer));
-    check_substring(buffer, "\xF0\x9F\x94\xB4", "Test 5: Emoji ERROR string (Red Circle)");
+    check_substring(buffer, "\xF0\x9F\x94\xB4\x20", "Test 5: Emoji ERROR string (Red Circle)");
     
     printf("Test 5: Passed.\n\n");
 }
