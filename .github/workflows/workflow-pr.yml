@@ -12,6 +12,9 @@ jobs:
   build:
     uses: ./.github/workflows/build.yml
 
-  test:
+  test-packages:
     needs: build
     uses: ./.github/workflows/test-packages.yml
+
+  test-unit:
+    uses: ./.github/workflows/test-unit.yml

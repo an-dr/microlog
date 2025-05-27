@@ -8,7 +8,6 @@
     "tasks": {
         "version": "2.0.0",
         "tasks": [
-            
             {
                 "label": "Clean",
                 "type": "shell",
@@ -67,6 +66,25 @@
                 "group": {
                     "kind": "test",
                     "isDefault": true
+                },
+                "problemMatcher": [],
+                "dependsOn": [
+                    "Build"
+                ]
+            },
+            {
+                "label": "Run Tests",
+                "type": "shell",
+                "command": "powershell",
+                "args": [
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    "${workspaceFolder}\\tests\\unit\\run_tests.ps1"
+                ],
+                "group": {
+                    "kind": "test",
+                    "isDefault": false
                 },
                 "problemMatcher": [],
                 "dependsOn": [
