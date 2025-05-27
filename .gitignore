@@ -3,3 +3,5 @@ install
 subprojects
 *.stackdump
 example.log
+build_local_tests/
+Testing
