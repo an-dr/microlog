@@ -75,10 +75,8 @@
             {
                 "label": "Run Tests",
                 "type": "shell",
-                "command": "powershell",
+                "command": "pwsh",
                 "args": [
-                    "-ExecutionPolicy",
-                    "Bypass",
                     "-File",
                     "${workspaceFolder}\\tests\\unit\\run_tests.ps1"
                 ],

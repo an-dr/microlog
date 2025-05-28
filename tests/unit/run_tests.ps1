@@ -17,7 +17,7 @@ $BUILD_DIR = "build_local_tests"
 pushd $REPO_DIR
 
 echo "Configuring CMake..."
-cmake -S . -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -G "Ninja"
+cmake -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_SKIP_INSTALL_ALL_DEPENDENCY=true -G "Ninja"
 
 echo "Building project..."
 cmake --build "${BUILD_DIR}" --config Debug
