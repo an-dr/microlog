@@ -1,4 +1,6 @@
-name: Verify
+# Checks if the version in source files matches the version in the `version` file.
+
+name: Verify Version
 
 on:
   workflow_call:

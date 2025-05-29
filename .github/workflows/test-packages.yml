@@ -1,4 +1,8 @@
-name: CMake Package
+# Tests packages:
+# - CMake
+# - Meson
+
+name: Test Packages
 
 on:
   workflow_call:

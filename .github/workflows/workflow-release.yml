@@ -1,0 +1,26 @@
+# Full test and create a relase
+
+name: New Version Workflow
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  verify-version:
+    uses: ./.github/workflows/verify-version.yml
+
+  unit-tests:
+    uses: ./.github/workflows/test-unit.yml
+
+  test-packages:
+    uses: ./.github/workflows/test-packages.yml
+
+  build:
+    needs: test-packages
+    uses: ./.github/workflows/build-packages.yml
+
+  release:
+    needs: build
+    uses: ./.github/workflows/create-release.yml

@@ -1,19 +1,23 @@
+# Executes unit tests using CMake and PowerShell
+
 name: Unit Tests
 
 on:
-  workflow_call:
+  pull_request:
+    branches:
+      - main
 
 jobs:
   unit-tests:
-    runs-on: ubuntu-latest # Or other OS if needed, e.g., windows-latest, macos-latest
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
 
       - name: Set up CMake
-        uses: jwlawson/actions-setup-cmake@v1.13 # Or any other reliable setup-cmake action
+        uses: jwlawson/actions-setup-cmake@v1.13
         with:
-          cmake-version: "3.20.x" # Specify a version, or let it pick latest
+          cmake-version: "3.20.x"
 
       - name: Test
         run: pwsh tests/unit/run_tests.ps1
