@@ -10,7 +10,7 @@
 #
 # *************************************************************************
 
-pushd $PSScriptRoot
+Push-Location $PSScriptRoot
 
 try {
     
@@ -18,8 +18,8 @@ try {
     pwsh -File ../../scripts/build_cmake.ps1
 
     # Move the package to verify portability
-    mkdir -p $PSScriptRoot/build/cmake/deps
-    mv -Force $PSScriptRoot/../../install/cmake/microlog $PSScriptRoot/build/cmake/deps
+    New-Item -ItemType Directory -Path $PSScriptRoot/build/cmake/deps -Force
+    Move-Item -Force $PSScriptRoot/../../install/cmake/microlog $PSScriptRoot/build/cmake/deps
 
 
     # Build the test package
@@ -27,12 +27,12 @@ try {
     # $env:microlog_DIR = "$PSScriptRoot/build/cmake/deps/microlog" # - another option to specify the path
     cmake --build ./build/cmake
     
-    popd
+    Pop-Location
     
 } catch {
     
     Write-Host "An error occurred: $_"
-    popd
+    Pop-Location
     exit 1  # Exit the script with a non-zero code to indicate failure
     
 }
