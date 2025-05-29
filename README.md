@@ -161,9 +161,14 @@ add_global_arguments('-fmacro-prefix-map=../=',language: 'c')
 
 ### Log Verbosity
 
-The current logging level can be set by using the `ulog_set_level()` function.
-All logs below the given level will not be written to `stderr`. By default the
-level is `LOG_TRACE`, such that nothing is ignored.
+The default log level is `LOG_TRACE`, such that nothing is ignored.
+
+There are two ways to modify it so that all logs below the given level will not be written to `stderr`:
+
+- at compile time by defining `ULOG_DEFAULT_LOG_LEVEL` - this is particularly useful when one wants to configure the log level according to a configuration (debug or release for instance) without modifying the source code,
+- at run time by using the `ulog_set_level()` function.
+
+The example below shows how to configure log level to `LOG_INFO`:
 
 ```c
 ulog_set_level(LOG_INFO);
