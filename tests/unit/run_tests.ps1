@@ -30,6 +30,10 @@ try {
 
     Write-Output "Running CTest..."
     ctest -C Debug --output-on-failure
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Tests failed with exit code $LASTEXITCODE"
+        exit $LASTEXITCODE
+    }
 
     Write-Output "Tests completed."
 
@@ -40,4 +44,5 @@ try {
     exit 1  # Exit the script with a non-zero code to indicate failure
 }
 
+Write-Host "`n[OK] Test completed successfully."
 Pop-Location

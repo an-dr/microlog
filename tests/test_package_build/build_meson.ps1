@@ -26,6 +26,10 @@ try {
     meson setup build/meson --reconfigure
 
     meson compile -C build/meson
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Tests failed with exit code $LASTEXITCODE"
+        exit $LASTEXITCODE
+    }
     Pop-Location
     
 } catch {
