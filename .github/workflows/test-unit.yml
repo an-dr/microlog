@@ -18,15 +18,16 @@ jobs:
 
       - name: Test
         run: pwsh tests/unit/run_tests.ps1
-        continue-on-error: true
         
       - name: Create archive
+        if: ${{ always() }}
         run: |
           cd build_tests
           zip -r build_tests.zip .
           
       - name: Upload test results
+        if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           name: build_tests
-          path: build_tests.zip
+          path: build_tests/build_tests.zip
