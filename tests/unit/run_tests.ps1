@@ -20,7 +20,7 @@ Push-Location $REPO_DIR
 try {
     
     Write-Output "Configuring CMake..."
-    cmake -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE=Debug
+    cmake -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc -DULOG_BUILD_TESTS=ON
 
     Write-Output "Building project..."
     cmake --build "${BUILD_DIR}" --config Debug

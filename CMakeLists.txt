@@ -40,7 +40,12 @@ enable_testing()
 # Testing
 # ----------------------------------------------------------------------------
 
-add_subdirectory(tests/unit)
+if(ULOG_BUILD_TESTS)
+  message(STATUS "Building tests")
+  add_subdirectory(tests/unit)
+else()
+  message(STATUS "Skipping tests")
+endif()
 
 # ----------------------------------------------------------------------------
 # Installing
@@ -60,11 +65,9 @@ install(FILES src/ulog.c DESTINATION ${CMAKE_INSTALL_PREFIX}/src)
 # ----------------------------------------------------------------------------
 include(CMakePackageConfigHelpers)
 
-# We have a custom Targets file below. Original is generated like this:
-# install(
-#   EXPORT ${PROJECT_NAME}Targets
-#   NAMESPACE ${PROJECT_NAME}::
-#   DESTINATION ${CMAKE_INSTALL_PREFIX})
+# We have a custom Targets file below. Original is generated like this: install(
+# EXPORT ${PROJECT_NAME}Targets NAMESPACE ${PROJECT_NAME}:: DESTINATION
+# ${CMAKE_INSTALL_PREFIX})
 
 install(FILES ${CMAKE_CURRENT_LIST_DIR}/cmake/micrologTargets.cmake
         DESTINATION ${CMAKE_INSTALL_PREFIX})
