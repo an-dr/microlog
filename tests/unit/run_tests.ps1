@@ -11,23 +11,38 @@
 #
 # *************************************************************************
 
+$ErrorActionPreference = "Stop"
 $REPO_DIR = "$PSScriptRoot/../.."
-$BUILD_DIR = "build_local_tests"
+$BUILD_DIR = "build_tests"
 
-pushd $REPO_DIR
+Push-Location $REPO_DIR
 
-echo "Configuring CMake..."
-cmake -S . -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -G "Ninja"
+try {
+    
+    Write-Output "Configuring CMake..."
+    cmake -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc -DULOG_BUILD_TESTS=ON
 
-echo "Building project..."
-cmake --build "${BUILD_DIR}" --config Debug
+    Write-Output "Building project..."
+    cmake --build "${BUILD_DIR}" --config Debug
 
-echo "Changing to build directory: ${BUILD_DIR}"
-cd "${BUILD_DIR}"
+    Write-Output "Changing to build directory: ${BUILD_DIR}"
+    Set-Location "${BUILD_DIR}"
 
-echo "Running CTest..."
-ctest -C Debug --output-on-failure
+    Write-Output "Running CTest..."
+    ctest -C Debug --output-on-failure
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Tests failed with exit code $LASTEXITCODE"
+        exit $LASTEXITCODE
+    }
 
-echo "Tests completed."
+    Write-Output "Tests completed."
 
-popd
+} catch {
+    
+    Write-Host "An error occurred: $_"
+    Pop-Location
+    exit 1  # Exit the script with a non-zero code to indicate failure
+}
+
+Write-Host "`n[OK] Test completed successfully."
+Pop-Location

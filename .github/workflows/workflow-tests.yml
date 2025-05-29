@@ -1,0 +1,22 @@
+# Executes UT and package tests
+
+name: Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    uses: ./.github/workflows/test-unit.yml
+  
+  test-packages:
+    name: Test Packages
+    uses: ./.github/workflows/test-packages.yml
+
+    

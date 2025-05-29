@@ -1,3 +1,4 @@
+# Executes unit tests using CMake and PowerShell
 name: Unit Tests
 
 on:
@@ -5,15 +6,30 @@ on:
 
 jobs:
   unit-tests:
-    runs-on: ubuntu-latest # Or other OS if needed, e.g., windows-latest, macos-latest
+    runs-on:
+      ubuntu-22.04 # TODO: strange segfaults on ubuntu-latest only. Local runs work fine.
+                   #       Cannot be reproduced locally with the failing artifact.
 
     steps:
       - uses: actions/checkout@v3
 
       - name: Set up CMake
-        uses: jwlawson/actions-setup-cmake@v1.13 # Or any other reliable setup-cmake action
+        uses: jwlawson/actions-setup-cmake@v1.13
         with:
-          cmake-version: "3.20.x" # Specify a version, or let it pick latest
+          cmake-version: "3.20.x"
 
       - name: Test
         run: pwsh tests/unit/run_tests.ps1
+
+      - name: Create archive of failed artifacts
+        if: failure()
+        run: |
+          cd build_tests
+          zip -r build_tests.zip .
+
+      - name: Upload failed test artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build_tests
+          path: build_tests/build_tests.zip

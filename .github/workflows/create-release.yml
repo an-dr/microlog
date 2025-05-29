@@ -1,3 +1,8 @@
+# Creates a GitHub Release and uploads artifacts from previous steps.
+# Require artifacts:
+# - env.ARTIFACT_CMAKE
+# - env.ARTIFACT_MESON
+
 name: Release
 
 on:
@@ -20,6 +25,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ env.ARTIFACT_MESON }}
+          path: ./release-artifacts
+
+      - name: Download Source artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_SRC }}
           path: ./release-artifacts
 
       - name: Create GitHub Release and Upload Artifact

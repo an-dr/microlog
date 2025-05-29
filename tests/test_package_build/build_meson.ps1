@@ -10,7 +10,8 @@
 #
 # *************************************************************************
 
-pushd $PSScriptRoot
+$ErrorActionPreference = "Stop"
+Push-Location $PSScriptRoot
 
 try {
     
@@ -19,20 +20,25 @@ try {
 
 
     # Move the package to verify portability
-    mkdir -p $PSScriptRoot/subprojects
-    mv -Force $PSScriptRoot/../../install/meson/microlog $PSScriptRoot/subprojects
+    New-Item -ItemType Directory -Path $PSScriptRoot/subprojects -Force
+    Move-Item -Force $PSScriptRoot/../../install/meson/microlog $PSScriptRoot/subprojects
 
     meson setup build/meson --reconfigure
 
     meson compile -C build/meson
-    popd
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Tests failed with exit code $LASTEXITCODE"
+        exit $LASTEXITCODE
+    }
+    Pop-Location
     
 } catch {
     
     Write-Host "An error occurred: $_"
-    popd
+    Pop-Location
     exit 1  # Exit the script with a non-zero code to indicate failure
     
 }
 
-popd
+Write-Host "`n[OK] Test completed successfully."
+Pop-Location
