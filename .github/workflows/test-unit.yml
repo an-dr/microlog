@@ -18,3 +18,14 @@ jobs:
 
       - name: Test
         run: pwsh tests/unit/run_tests.ps1
+        
+      - name: Create archive
+        run: |
+          cd build_tests
+          zip -r build_tests.zip .
+          
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: build_tests
+          path: build_tests.zip
