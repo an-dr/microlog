@@ -12,12 +12,12 @@
 # *************************************************************************
 
 $REPO_DIR = "$PSScriptRoot/../.."
-$BUILD_DIR = "build_local_tests"
+$BUILD_DIR = "build_tests"
 
 pushd $REPO_DIR
 
 echo "Configuring CMake..."
-cmake -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_SKIP_INSTALL_ALL_DEPENDENCY=true -G "Ninja"
+cmake -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE=Debug
 
 echo "Building project..."
 cmake --build "${BUILD_DIR}" --config Debug
