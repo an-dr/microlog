@@ -16,18 +16,27 @@ $BUILD_DIR = "build_tests"
 
 pushd $REPO_DIR
 
-echo "Configuring CMake..."
-cmake -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE=Debug
+try {
+    
+    echo "Configuring CMake..."
+    cmake -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE=Debug
 
-echo "Building project..."
-cmake --build "${BUILD_DIR}" --config Debug
+    echo "Building project..."
+    cmake --build "${BUILD_DIR}" --config Debug
 
-echo "Changing to build directory: ${BUILD_DIR}"
-cd "${BUILD_DIR}"
+    echo "Changing to build directory: ${BUILD_DIR}"
+    cd "${BUILD_DIR}"
 
-echo "Running CTest..."
-ctest -C Debug --output-on-failure
+    echo "Running CTest..."
+    ctest -C Debug --output-on-failure
 
-echo "Tests completed."
+    echo "Tests completed."
+
+} catch {
+    
+    Write-Host "An error occurred: $_"
+    popd
+    exit 1  # Exit the script with a non-zero code to indicate failure
+}
 
 popd
