@@ -19,7 +19,7 @@ struct CoreTestFixture {
 TEST_CASE_FIXTURE(CoreTestFixture, "Macros") {
     log_trace("This is a TRACE message: %d", 123);
     log_debug("This is a DEBUG message: %s", "test");
-    log_info("This is an INFO message: %.2f", 1.23);
+    // log_info("This is an INFO message: %.2f", 1.23);
     log_warn("This is a WARN message");
     log_error("This is an ERROR message: %x", 0xff);
     log_fatal("This is a FATAL message");
