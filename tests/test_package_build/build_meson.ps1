@@ -10,6 +10,7 @@
 #
 # *************************************************************************
 
+$ErrorActionPreference = "Stop"
 Push-Location $PSScriptRoot
 
 try {
@@ -35,4 +36,5 @@ try {
     
 }
 
+Write-Host "`n[OK] Test completed successfully."
 Pop-Location

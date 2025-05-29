@@ -10,6 +10,7 @@
 #
 # *************************************************************************
 
+$ErrorActionPreference = "Stop"
 Push-Location $PSScriptRoot
 
 try {
@@ -36,4 +37,7 @@ try {
     exit 1  # Exit the script with a non-zero code to indicate failure
     
 }
+
+Write-Host "`n[OK] Test completed successfully."
+Pop-Location
 

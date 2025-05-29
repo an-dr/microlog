@@ -13,30 +13,31 @@
 
 $REPO_DIR = "$PSScriptRoot/../.."
 $BUILD_DIR = "build_tests"
+$ErrorActionPreference = "Stop"
 
-pushd $REPO_DIR
+Push-Location $REPO_DIR
 
 try {
     
-    echo "Configuring CMake..."
+    Write-Output "Configuring CMake..."
     cmake -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE=Debug
 
-    echo "Building project..."
+    Write-Output "Building project..."
     cmake --build "${BUILD_DIR}" --config Debug
 
-    echo "Changing to build directory: ${BUILD_DIR}"
-    cd "${BUILD_DIR}"
+    Write-Output "Changing to build directory: ${BUILD_DIR}"
+    Set-Location "${BUILD_DIR}"
 
-    echo "Running CTest..."
+    Write-Output "Running CTest..."
     ctest -C Debug --output-on-failure
 
-    echo "Tests completed."
+    Write-Output "Tests completed."
 
 } catch {
     
     Write-Host "An error occurred: $_"
-    popd
+    Pop-Location
     exit 1  # Exit the script with a non-zero code to indicate failure
 }
 
-popd
+Pop-Location
