@@ -1,11 +1,8 @@
 # Executes unit tests using CMake and PowerShell
-
 name: Unit Tests
 
 on:
-  pull_request:
-    branches:
-      - main
+  workflow_call:
 
 jobs:
   unit-tests:
