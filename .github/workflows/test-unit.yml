@@ -6,7 +6,7 @@ on:
 
 jobs:
   unit-tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04 # TODO: strange segfaults on ubuntu-latest only. Local runs work fine.
 
     steps:
       - uses: actions/checkout@v3
