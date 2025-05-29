@@ -11,9 +11,9 @@
 #
 # *************************************************************************
 
+$ErrorActionPreference = "Stop"
 $REPO_DIR = "$PSScriptRoot/../.."
 $BUILD_DIR = "build_tests"
-$ErrorActionPreference = "Stop"
 
 Push-Location $REPO_DIR
 

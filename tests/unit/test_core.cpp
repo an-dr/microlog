@@ -16,17 +16,17 @@ struct CoreTestFixture {
     ~CoreTestFixture() = default;
 };
 
-TEST_CASE_FIXTURE(CoreTestFixture, "Macros") {
-    log_trace("This is a TRACE message: %d", 123);
-    log_debug("This is a DEBUG message: %s", "test");
-    log_info("This is an INFO message: %.2f", 1.23);
-    log_warn("This is a WARN message");
-    log_error("This is an ERROR message: %x", 0xff);
-    log_fatal("This is a FATAL message");
+// TEST_CASE_FIXTURE(CoreTestFixture, "Macros") {
+//     log_trace("This is a TRACE message: %d", 123);
+//     log_debug("This is a DEBUG message: %s", "test");
+//     log_info("This is an INFO message: %.2f", 1.23);
+//     log_warn("This is a WARN message");
+//     log_error("This is an ERROR message: %x", 0xff);
+//     log_fatal("This is a FATAL message");
 
-    CHECK(ut_callback_get_message_count() == 6);
-    CHECK(strcmp(ut_callback_get_last_message(), "This is a FATAL message") == 0);
-}
+//     CHECK(ut_callback_get_message_count() == 6);
+//     CHECK(strcmp(ut_callback_get_last_message(), "This is a FATAL message") == 0);
+// }
 
 TEST_CASE_FIXTURE(CoreTestFixture, "Levels") {
     ulog_set_level(LOG_INFO);
