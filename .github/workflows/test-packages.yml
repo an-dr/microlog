@@ -8,7 +8,7 @@ on:
   workflow_call:
 
 jobs:
-  test-pkgs:
+  test-packages:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code

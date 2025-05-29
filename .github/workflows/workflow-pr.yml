@@ -9,5 +9,6 @@ on:
 
 jobs:
   verify-version:
+    name: Verify Version
     uses: ./.github/workflows/verify-version.yml
 

@@ -6,7 +6,9 @@ on:
 
 jobs:
   unit-tests:
-    runs-on: ubuntu-22.04 # TODO: strange segfaults on ubuntu-latest only. Local runs work fine.
+    runs-on:
+      ubuntu-22.04 # TODO: strange segfaults on ubuntu-latest only. Local runs work fine.
+                   #       Cannot be reproduced locally with the failing artifact.
 
     steps:
       - uses: actions/checkout@v3
@@ -18,15 +20,15 @@ jobs:
 
       - name: Test
         run: pwsh tests/unit/run_tests.ps1
-        
-      - name: Create archive
-        if: ${{ always() }}
+
+      - name: Create archive of failed artifacts
+        if: failure()
         run: |
           cd build_tests
           zip -r build_tests.zip .
-          
-      - name: Upload test results
-        if: ${{ always() }}
+
+      - name: Upload failed test artifacts
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: build_tests
