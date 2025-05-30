@@ -11,4 +11,12 @@ target_sources(test_core PRIVATE ${MICROLOG_SRC} ut_callback.c
 target_include_directories(test_core PRIVATE ${MICROLOG_INCLUDE_DIR})
 target_compile_definitions(test_core PRIVATE "ULOG_EXTRA_OUTPUTS=1")
 
+# Add coverage flags if COVERAGE is ON
+# option(COVERAGE "Enable coverage reporting" OFF)
+# if(COVERAGE)
+    message(STATUS "Building with coverage flags")
+    target_compile_options(test_core PRIVATE --coverage)
+    target_link_libraries(test_core PRIVATE --coverage)
+# endif()
+
 add_test(NAME CoreTests COMMAND test_core)

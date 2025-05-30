@@ -32,3 +32,15 @@ jobs:
         with:
           name: build_tests
           path: build_tests/build_tests.zip
+
+      - name: Install lcov
+        run: sudo apt-get update && sudo apt-get install -y lcov
+
+      - name: Generate coverage report (PowerShell)
+        run: pwsh tests/unit/gen_coverage.ps1
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage_report/
