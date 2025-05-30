@@ -2,7 +2,7 @@ project('example', 'c', 'cpp')
   
 include = ['.']
 src = [ 
-    'src/main.c',
+    'src/main.cpp',
     ]
 
 # Cfg options. Uncomment to enable.
