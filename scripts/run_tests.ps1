@@ -1,4 +1,5 @@
 #!/usr/bin/env pwsh
+
 # *************************************************************************
 #
 # Copyright (c) 2025 Andrei Gramakov. All rights reserved.
@@ -16,7 +17,6 @@ $REPO_DIR = "$PSScriptRoot/.."
 $BUILD_DIR = "build_tests"
 
 
-Push-Location $REPO_DIR
 
 function Invoke-ProcessOrThrow {
     [CmdletBinding()]
@@ -30,44 +30,78 @@ function Invoke-ProcessOrThrow {
         [string[]]$Arguments
     )
 
-    # --- Invoke the process with all supplied arguments ---
+    # Invoke the process with all supplied arguments
     & $FilePath @Arguments
     $exitCode = $LASTEXITCODE
 
-    # --- If exit code is not zero, throw an exception with a clear message ---
+    # If exit code is not zero, throw an exception with a clear message
     if ($exitCode -ne 0) {
         throw [System.Exception]::new(
             "Process '$FilePath' failed with exit code $exitCode." 
         )
     }
-
-    # Optionally, you could return the exit code or $true to indicate success:
-    return $true
 }
 
-
-try {
+function Build-Tests($BUILD_DIR) {
     
-    Write-Output "Configuring CMake..."
+    Write-Output "[TESTS] Configuring CMake..."
     Invoke-ProcessOrThrow cmake -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc -DULOG_BUILD_TESTS=ON
 
-    Write-Output "Building project..."
+    Write-Output "[TESTS] Building project..."
     Invoke-ProcessOrThrow cmake --build "${BUILD_DIR}" --config Debug
 
-    Write-Output "Changing to build directory: ${BUILD_DIR}"
-    Set-Location "${BUILD_DIR}"
-
-    Write-Output "Running CTest..."
+    Write-Output "[TESTS] Running CTest..."
+    Push-Location "${BUILD_DIR}"
     Invoke-ProcessOrThrow ctest -C Debug --output-on-failure
+    Pop-Location
 
-    Write-Output "Tests completed."
+    Write-Output "[TESTS] Completed."
+}
+
+function Clean-CoverageData($BUILD_DIR) {
+    Write-Output "[COVERAGE] Cleaning previous coverage data..."
+    Get-ChildItem -Path $BUILD_DIR -Recurse -Include *.gcda,*.gcov -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+    Remove-Item -Recurse -Force "${BUILD_DIR}/coverage_report" -ErrorAction SilentlyContinue
+}
+
+function Generate-CoverageReport($BUILD_DIR) {
+    Write-Output "[COVERAGE] Generating coverage report..."
+
+    Write-Output "[COVERAGE] Capturing initial coverage data..."
+    Invoke-ProcessOrThrow lcov --directory $BUILD_DIR --capture --initial --output-file coverage.info --rc geninfo_unexecuted_blocks=1
+
+    Write-Output "[COVERAGE] Capturing coverage data..."
+    Invoke-ProcessOrThrow lcov --directory $BUILD_DIR --capture --output-file coverage.info --rc geninfo_unexecuted_blocks=1
+
+    Write-Output "[COVERAGE] Extracting coverage for specific files..."
+    Invoke-ProcessOrThrow lcov --extract coverage.info "*/src/ulog.c" "*/include/ulog.h" --output-file coverage.info
+
+    Write-Output "[COVERAGE] Creating coverage report directory..."
+    New-Item -ItemType Directory -Force -Path "${BUILD_DIR}/coverage_report" | Out-Null
+
+    Write-Output "[COVERAGE] Generating HTML coverage report..."
+    Invoke-ProcessOrThrow genhtml coverage.info --output-directory "${BUILD_DIR}/coverage_report"
+
+    Write-Output "[COVERAGE] Coverage report generated at ${BUILD_DIR}/coverage_report/index.html"
+}
+
+# Store the current directory to return later
+$CurrentDir = Get-Location
+
+# Change to the repository directory and run the tests
+Set-Location $REPO_DIR
+try {
+    
+    Clean-CoverageData $BUILD_DIR
+    Build-Tests $BUILD_DIR
+    Generate-CoverageReport $BUILD_DIR
 
 } catch {
     
     Write-Host "An error occurred: $_"
-    Pop-Location
+    Set-Location $CurrentDir
     exit 1  # Exit the script with a non-zero code to indicate failure
 }
 
+Set-Location $CurrentDir
 Write-Host "`n[OK] Test completed successfully."
-Pop-Location
