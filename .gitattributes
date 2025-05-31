@@ -1,0 +1,31 @@
+# .gitattributes - Enforce consistent end-of-line handling
+
+# Set default behavior to automatically normalize line endings
+* text=auto
+
+# Force LF for source code and scripts (Linux style)
+*.c     text eol=lf
+*.h     text eol=lf
+*.cpp   text eol=lf
+*.hpp   text eol=lf
+*.sh    text eol=lf
+*.py    text eol=lf
+*.md    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.ps1   text eol=lf
+
+# Force CRLF for Windows batch files
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+
+# Binary files (no EOL conversion)
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.pdf   binary
+*.zip   binary
+*.exe   binary
+*.dll   binary
