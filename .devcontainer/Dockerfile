@@ -14,7 +14,7 @@ RUN apt-get update && \
         gdb \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Optional: Install PowerShell (for running .ps1 scripts)
+# Install PowerShell (for running .ps1 scripts)
 RUN wget -q https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb && \
     dpkg -i packages-microsoft-prod.deb && \
     apt-get update && \

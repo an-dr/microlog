@@ -1,6 +1,6 @@
 // *************************************************************************
 //
-// ulog v6.3.0 - A simple customizable logging library.
+// ulog v6.3.1 - A simple customizable logging library.
 // https://github.com/an-dr/microlog
 //
 // *************************************************************************
@@ -723,19 +723,16 @@ static void process_callback(ulog_Event *ev, Callback *cb) {
         }
 #endif  // FEATURE_TIME
 
-        // Create event copy to avid va_list issues
+        // Create event copy to avoid va_list issues
         ulog_Event ev_copy = { 0 };
         memcpy(&ev_copy, ev, sizeof(ulog_Event));
         
         // Initialize the va_list for the copied event
         // Note: We use a copy of the va_list to avoid issues with passing it
-        // directly as implementation-defined behavior may occur and possibly
-        // lead to undefined behavior.
+        // directly as on some platforms using the same va_list multiple times
+        // can lead to undefined behavior.
         va_copy(ev_copy.message_format_args, ev->message_format_args);
-        
         cb->function(&ev_copy, cb->arg);
-
-        // Clean up the copied va_list
         va_end(ev_copy.message_format_args);
 
     }

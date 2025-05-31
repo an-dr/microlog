@@ -1,5 +1,5 @@
 {
-    "name": "Microlog Dev Container",
+    "name": "microlog Dev Container",
     "build": {
         "dockerfile": "Dockerfile"
     },
@@ -16,5 +16,5 @@
             ]
         }
     },
-    "postCreateCommand": "cmake --version && lcov --version",
+    "postCreateCommand": "cmake --version && lcov --version"
 }
