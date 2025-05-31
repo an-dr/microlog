@@ -15,25 +15,52 @@ $ErrorActionPreference = "Stop"
 $REPO_DIR = "$PSScriptRoot/../.."
 $BUILD_DIR = "build_tests"
 
+
 Push-Location $REPO_DIR
+
+function Invoke-ProcessOrThrow {
+    [CmdletBinding()]
+    param(
+        # Path (or name) of the executable to run. Can be a full path or anything in $Env:PATH.
+        [Parameter(Mandatory = $true, Position = 0)]
+        [string]$FilePath,
+
+        # Any number of arguments to pass to the executable.
+        [Parameter(ValueFromRemainingArguments = $true)]
+        [string[]]$Arguments
+    )
+
+    # --- Invoke the process with all supplied arguments ---
+    & $FilePath @Arguments
+    $exitCode = $LASTEXITCODE
+
+    # --- If exit code is not zero, throw an exception with a clear message ---
+    if ($exitCode -ne 0) {
+        throw [System.Exception]::new(
+            "Process '$FilePath' failed with exit code $exitCode." 
+        )
+    }
+
+    # Optionally, you could return the exit code or $true to indicate success:
+    return $true
+}
+
+
+
 
 try {
     
     Write-Output "Configuring CMake..."
-    cmake -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc -DULOG_BUILD_TESTS=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+    Invoke-ProcessOrThrow cmake -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc -DULOG_BUILD_TESTS=ON
 
     Write-Output "Building project..."
-    cmake --build "${BUILD_DIR}" --config Debug
+    Invoke-ProcessOrThrow cmake --build "${BUILD_DIR}" --config Debug
 
     Write-Output "Changing to build directory: ${BUILD_DIR}"
     Set-Location "${BUILD_DIR}"
 
     Write-Output "Running CTest..."
-    ctest -C Debug --output-on-failure
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "Tests failed with exit code $LASTEXITCODE"
-        exit $LASTEXITCODE
-    }
+    Invoke-ProcessOrThrow ctest -C Debug --output-on-failure
 
     Write-Output "Tests completed."
 

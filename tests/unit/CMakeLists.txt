@@ -4,7 +4,7 @@
 set(ULOG_SRC ../../src/ulog.c)
 set(ULOG_INCLUDE_DIR ../../include)
 
-# Minimal optimization flags
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Configs
 set(ULOG_CONFIG_BASE_LIST "-DULOG_EXTRA_OUTPUTS=8" 
@@ -15,13 +15,11 @@ set(ULOG_CONFIG_BASE_LIST "-DULOG_EXTRA_OUTPUTS=8"
 
                      
 # --- Core Tests ---
-# Add force_link_all.c to ensure all ulog.c functions are linked for coverage
 add_executable(test_core)
-add_definitions(${ULOG_CONFIG_BASE_LIST})
 target_sources(test_core PRIVATE ${ULOG_SRC} ut_callback.c
                                  test_core.cpp)
 target_include_directories(test_core PRIVATE ${ULOG_INCLUDE_DIR})
-# target_compile_definitions(test_core PRIVATE ${ULOG_CONFIG_BASE_LIST})
+target_compile_definitions(test_core PRIVATE ${ULOG_CONFIG_BASE_LIST})
 
 # Add coverage flags if COVERAGE is ON
 # option(COVERAGE "Enable coverage reporting" OFF)
