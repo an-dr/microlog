@@ -12,7 +12,7 @@
 # *************************************************************************
 
 $ErrorActionPreference = "Stop"
-$REPO_DIR = "$PSScriptRoot/../.."
+$REPO_DIR = "$PSScriptRoot/.."
 $BUILD_DIR = "build_tests"
 
 
@@ -44,8 +44,6 @@ function Invoke-ProcessOrThrow {
     # Optionally, you could return the exit code or $true to indicate success:
     return $true
 }
-
-
 
 
 try {

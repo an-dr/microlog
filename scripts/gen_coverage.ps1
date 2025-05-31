@@ -1,7 +1,7 @@
 #!/usr/bin/env pwsh
 
 $ErrorActionPreference = "Stop"
-$REPO_DIR = "$PSScriptRoot/../.."
+$REPO_DIR = "$PSScriptRoot/.."
 $BUILD_DIR = "build_tests"
 $REPORT_DIR = "$BUILD_DIR/coverage_report"
 
@@ -13,7 +13,7 @@ Remove-Item -Recurse -Force $REPORT_DIR -ErrorAction SilentlyContinue
 
 # Build with coverage flags
 Write-Output "Configuring CMake with coverage flags..."
-cmake -B $BUILD_DIR -G "Ninja" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc -DULOG_BUILD_TESTS=ON -DCMAKE_C_FLAGS="--coverage" -DCMAKE_CXX_FLAGS="--coverage"
+cmake -B $BUILD_DIR -G "Ninja" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc -DULOG_BUILD_TESTS=ON
 
 cmake --build $BUILD_DIR --config Debug
 
