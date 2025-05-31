@@ -3,7 +3,7 @@
 $ErrorActionPreference = "Stop"
 $REPO_DIR = "$PSScriptRoot/../.."
 $BUILD_DIR = "build_tests"
-$REPORT_DIR = "coverage_report"
+$REPORT_DIR = "$BUILD_DIR/coverage_report"
 
 Push-Location $REPO_DIR
 
