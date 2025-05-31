@@ -68,13 +68,13 @@ function Generate-CoverageReport($BUILD_DIR) {
     Write-Output "[COVERAGE] Generating coverage report..."
 
     Write-Output "[COVERAGE] Capturing initial coverage data..."
-    Invoke-ProcessOrThrow lcov --directory $BUILD_DIR --capture --initial --output-file coverage.info --rc geninfo_unexecuted_blocks=1
+    Invoke-ProcessOrThrow lcov --directory $BUILD_DIR --capture --initial --output-file coverage.info --rc geninfo_unexecuted_blocks=1 --ignore-errors mismatch 2>$null
 
     Write-Output "[COVERAGE] Capturing coverage data..."
-    Invoke-ProcessOrThrow lcov --directory $BUILD_DIR --capture --output-file coverage.info --rc geninfo_unexecuted_blocks=1
+    Invoke-ProcessOrThrow lcov --directory $BUILD_DIR --capture --output-file coverage.info --rc geninfo_unexecuted_blocks=1 --ignore-errors mismatch 2>$null
 
     Write-Output "[COVERAGE] Extracting coverage for specific files..."
-    Invoke-ProcessOrThrow lcov --extract coverage.info "*/src/ulog.c" "*/include/ulog.h" --output-file coverage.info
+    Invoke-ProcessOrThrow lcov --extract coverage.info "*/src/ulog.c" --output-file coverage.info
 
     Write-Output "[COVERAGE] Creating coverage report directory..."
     New-Item -ItemType Directory -Force -Path "${BUILD_DIR}/coverage_report" | Out-Null
@@ -82,6 +82,9 @@ function Generate-CoverageReport($BUILD_DIR) {
     Write-Output "[COVERAGE] Generating HTML coverage report..."
     Invoke-ProcessOrThrow genhtml coverage.info --output-directory "${BUILD_DIR}/coverage_report"
 
+    Write-Output "[COVERAGE] Move coverage.info to coverage_report directory..."
+    Move-Item -Path "coverage.info" -Destination "${BUILD_DIR}/coverage_report/coverage.info" -Force
+    
     Write-Output "[COVERAGE] Coverage report generated at ${BUILD_DIR}/coverage_report/index.html"
 }
 

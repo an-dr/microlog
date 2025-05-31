@@ -1,5 +1,5 @@
 # VS Code Dev Container with Ubuntu, CMake, and lcov
-FROM mcr.microsoft.com/devcontainers/base:ubuntu-22.04
+FROM ubuntu:latest
 
 # Install CMake, Ninja, lcov, and other build essentials
 RUN apt-get update && \
