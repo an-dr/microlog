@@ -1,8 +1,11 @@
-# Generate coverage report for CMake build (GCC)
-# PowerShell version
+#!/usr/bin/env pwsh
+
 $ErrorActionPreference = "Stop"
+$REPO_DIR = "$PSScriptRoot/../.."
 $BUILD_DIR = "build_tests"
 $REPORT_DIR = "coverage_report"
+
+Push-Location $REPO_DIR
 
 # Clean previous coverage data
 Get-ChildItem -Path $BUILD_DIR -Recurse -Include *.gcda,*.gcov -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
@@ -20,15 +23,19 @@ ctest -C Debug --output-on-failure
 Pop-Location
 
 # Generate lcov report
+lcov --directory $BUILD_DIR --capture --initial --output-file coverage.info --rc geninfo_unexecuted_blocks=1
 lcov --directory $BUILD_DIR --capture --output-file coverage.info --rc geninfo_unexecuted_blocks=1
 
-# Remove unwanted files from the coverage report
-lcov --remove coverage.info '/usr/*' --output-file coverage.info
+# Only include src/ulog.c in the coverage report
+lcov --extract coverage.info "*/src/ulog.c" "*/include/ulog.h" --output-file coverage.info
 
 # Create the report directory if it doesn't exist
 New-Item -ItemType Directory -Force -Path $REPORT_DIR | Out-Null
 
 # Generate the HTML report, ignoring mismatched end line errors
-genhtml coverage.info --output-directory $REPORT_DIR --ignore-errors mismatch
+genhtml coverage.info --output-directory $REPORT_DIR
 
 Write-Output "Coverage report generated at $REPORT_DIR/index.html"
+
+Pop-Location
+Write-Host "`n[OK] Coverage report generated successfully."
