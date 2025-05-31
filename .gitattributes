@@ -1,4 +1,13 @@
-# .gitattributes - Enforce consistent end-of-line handling
+# ==========================
+# Linguist Overrides
+# ==========================
+doc/* linguist-vendored
+example/* linguist-vendored
+tests/* linguist-vendored
+
+# ==========================
+# EOL
+# ==========================
 
 # Set default behavior to automatically normalize line endings
 * text=auto
