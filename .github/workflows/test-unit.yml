@@ -7,8 +7,7 @@ on:
 jobs:
   unit-tests:
     runs-on:
-      ubuntu-22.04 # TODO: strange segfaults on ubuntu-latest only. Local runs work fine.
-                   #       Cannot be reproduced locally with the failing artifact.
+      ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
