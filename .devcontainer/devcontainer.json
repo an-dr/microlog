@@ -1,0 +1,20 @@
+{
+    "name": "microlog Dev Container",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "terminal.integrated.shell.linux": "/usr/bin/pwsh"
+            },
+            "extensions": [
+                "ms-vscode.cpptools",
+                "ms-vscode.cmake-tools",
+                "twxs.cmake",
+                "ms-vscode.powershell"
+            ]
+        }
+    },
+    "postCreateCommand": "cmake --version && lcov --version"
+}

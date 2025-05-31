@@ -14,14 +14,11 @@ void ut_callback(ulog_Event *ev, void *arg) {
         return;
     }
 
-    va_list args_copy;
-    va_copy(args_copy, ev->message_format_args);
     // Clear the last message buffer before writing a new message
     memset(last_message_buffer, 0, sizeof(last_message_buffer));
     vsnprintf(last_message_buffer, sizeof(last_message_buffer), ev->message,
-              args_copy);
+              ev->message_format_args);
 
-    va_end(args_copy);
 
     processed_message_count++;
 }

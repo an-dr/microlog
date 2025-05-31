@@ -1,6 +1,6 @@
 // *************************************************************************
 //
-// ulog v6.3.0 - A simple customizable logging library.
+// ulog v6.3.1 - A simple customizable logging library.
 // https://github.com/an-dr/microlog
 //
 // *************************************************************************
@@ -15,11 +15,8 @@
 //
 // *************************************************************************
 
-#include "ulog.h"
-
-#if FEATURE_TOPICS
 #include <string.h>
-#endif
+#include "ulog.h"
 
 #define ULOG_NEW_LINE_ON true
 #define ULOG_NEW_LINE_OFF false
@@ -726,7 +723,18 @@ static void process_callback(ulog_Event *ev, Callback *cb) {
         }
 #endif  // FEATURE_TIME
 
-        cb->function(ev, cb->arg);
+        // Create event copy to avoid va_list issues
+        ulog_Event ev_copy = { 0 };
+        memcpy(&ev_copy, ev, sizeof(ulog_Event));
+        
+        // Initialize the va_list for the copied event
+        // Note: We use a copy of the va_list to avoid issues with passing it
+        // directly as on some platforms using the same va_list multiple times
+        // can lead to undefined behavior.
+        va_copy(ev_copy.message_format_args, ev->message_format_args);
+        cb->function(&ev_copy, cb->arg);
+        va_end(ev_copy.message_format_args);
+
     }
 }
 
