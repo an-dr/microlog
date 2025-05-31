@@ -16,9 +16,12 @@ jobs:
         uses: jwlawson/actions-setup-cmake@v1.13
         with:
           cmake-version: "3.20.x"
-
+          
+      - name: Install lcov
+        run: sudo apt-get update && sudo apt-get install -y lcov
+        
       - name: Test
-        run: pwsh tests/unit/run_tests.ps1
+        run: pwsh scripts/run_tests.ps1
 
       - name: Create archive of failed artifacts
         if: failure()
@@ -32,3 +35,9 @@ jobs:
         with:
           name: build_tests
           path: build_tests/build_tests.zip
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: build_tests/coverage_report/

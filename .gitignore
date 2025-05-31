@@ -1,6 +1,14 @@
+# IDE files
+.vscode/
+
+# Build artifacts
 build
-build_tests
 install
 subprojects
+
+# Logs and dump files
 *.stackdump
 example.log
+
+# Tests
+build_tests

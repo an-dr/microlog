@@ -5,18 +5,27 @@
 #include "ut_callback.h"
 
 struct CoreTestFixture {
+public:
+    static bool callback_is_set;
+    
     CoreTestFixture() {
         // Per-test setup
+        if (!callback_is_set) {
+            ulog_add_callback(ut_callback, nullptr, LOG_TRACE);
+            callback_is_set = true;
+        }
         ulog_set_level(LOG_TRACE);
         ulog_set_quiet(false);
-        ulog_add_callback(ut_callback, nullptr, LOG_TRACE);
         ut_callback_reset();
     }
 
     ~CoreTestFixture() = default;
 };
 
-TEST_CASE_FIXTURE(CoreTestFixture, "Macros") {
+bool CoreTestFixture::callback_is_set = false;
+
+
+TEST_CASE_FIXTURE(CoreTestFixture, "Base") {
     log_trace("This is a TRACE message: %d", 123);
     log_debug("This is a DEBUG message: %s", "test");
     log_info("This is an INFO message: %.2f", 1.23);
