@@ -4,11 +4,11 @@
 #include "ulog.h"
 #include "ut_callback.h"
 
-struct CoreTestFixture {
+struct TestFixture {
 public:
     static bool callback_is_set;
     
-    CoreTestFixture() {
+    TestFixture() {
         // Per-test setup
         if (!callback_is_set) {
             ulog_add_callback(ut_callback, nullptr, LOG_TRACE);
@@ -19,13 +19,13 @@ public:
         ut_callback_reset();
     }
 
-    ~CoreTestFixture() = default;
+    ~TestFixture() = default;
 };
 
-bool CoreTestFixture::callback_is_set = false;
+bool TestFixture::callback_is_set = false;
 
 
-TEST_CASE_FIXTURE(CoreTestFixture, "Base") {
+TEST_CASE_FIXTURE(TestFixture, "Base") {
     log_trace("This is a TRACE message: %d", 123);
     log_debug("This is a DEBUG message: %s", "test");
     log_info("This is an INFO message: %.2f", 1.23);
@@ -34,10 +34,10 @@ TEST_CASE_FIXTURE(CoreTestFixture, "Base") {
     log_fatal("This is a FATAL message");
 
     CHECK(ut_callback_get_message_count() == 6);
-    CHECK(strcmp(ut_callback_get_last_message(), "This is a FATAL message") == 0);
+    CHECK(strstr(ut_callback_get_last_message(), "This is a FATAL message") != nullptr);
 }
 
-TEST_CASE_FIXTURE(CoreTestFixture, "Levels") {
+TEST_CASE_FIXTURE(TestFixture, "Levels") {
     ulog_set_level(LOG_INFO);
 
     log_trace("This TRACE should not be processed.");
@@ -54,7 +54,7 @@ TEST_CASE_FIXTURE(CoreTestFixture, "Levels") {
     CHECK(ut_callback_get_message_count() == 4);
 }
 
-TEST_CASE_FIXTURE(CoreTestFixture, "Quiet Mode") {
+TEST_CASE_FIXTURE(TestFixture, "Quiet Mode") {
     ulog_set_quiet(true);
     log_info("This message will trigger extra callbacks, stdout should be quiet.");
     CHECK(ut_callback_get_message_count() == 1);
@@ -62,4 +62,24 @@ TEST_CASE_FIXTURE(CoreTestFixture, "Quiet Mode") {
     ulog_set_quiet(false);
     log_info("This message will trigger extra callbacks, stdout is not quiet.");
     CHECK(ut_callback_get_message_count() == 2);
+}
+
+TEST_CASE_FIXTURE(TestFixture, "File Output") {
+    const char *filename = "test_output.log";
+    FILE *fp = fopen(filename, "w");
+    REQUIRE(fp != nullptr);
+    ulog_add_fp(fp, LOG_INFO);
+
+    log_info("This is an INFO message to file.");
+    fclose(fp);
+
+    // Check if the file was created and contains the expected message
+    fp = fopen(filename, "r");
+    REQUIRE(fp != nullptr);
+    
+    char buffer[256];
+    fgets(buffer, sizeof(buffer), fp);
+    fclose(fp);
+    
+    CHECK(strstr(buffer, "This is an INFO message to file.") != nullptr);
 }

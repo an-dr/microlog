@@ -8,6 +8,7 @@ RUN apt-get update && \
         ninja-build \
         build-essential \
         lcov \
+        meson \
         git \
         curl \
         wget \

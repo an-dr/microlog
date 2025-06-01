@@ -78,7 +78,7 @@
                 "command": "pwsh",
                 "args": [
                     "-File",
-                    "${workspaceFolder}/tests/unit/run_tests.ps1"
+                    "${workspaceFolder}/scripts/run_tests.ps1"
                 ],
                 "group": {
                     "kind": "test",

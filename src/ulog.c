@@ -1,6 +1,6 @@
 // *************************************************************************
 //
-// ulog v6.3.1 - A simple customizable logging library.
+// ulog v6.3.3 - A simple customizable logging library.
 // https://github.com/an-dr/microlog
 //
 // *************************************************************************
@@ -81,11 +81,12 @@ static ulog_t ulog = {
 
 typedef struct {
     char *data;
+    unsigned int curr_pos;
     size_t size;
-} span;
+} buffer_descriptor;
 
 typedef union {
-    span buffer;
+    buffer_descriptor buffer;
     FILE *stream;
 } log_target_descriptor;
 
@@ -96,12 +97,12 @@ typedef struct {
     log_target_descriptor dsc;
 } log_target;
 
-static void vprint(const log_target *tgt, const char *format, va_list args) {
+static void vprint(log_target *tgt, const char *format, va_list args) {
     if (tgt->type == T_BUFFER) {
-        char *buf   = tgt->dsc.buffer.data;
-        size_t size = tgt->dsc.buffer.size;
+        char *buf   = tgt->dsc.buffer.data + tgt->dsc.buffer.curr_pos;
+        size_t size = tgt->dsc.buffer.size - tgt->dsc.buffer.curr_pos;
         if (size > 0) {
-            vsnprintf(buf, size, format, args);
+            tgt->dsc.buffer.curr_pos += vsnprintf(buf, size, format, args);
         }
     } else if (tgt->type == T_STREAM) {
         FILE *stream = tgt->dsc.stream;
@@ -109,7 +110,7 @@ static void vprint(const log_target *tgt, const char *format, va_list args) {
     }
 }
 
-static void print(const log_target *tgt, const char *format, ...) {
+static void print(log_target *tgt, const char *format, ...) {
     va_list args;
     va_start(args, format);
     vprint(tgt, format, args);
@@ -120,10 +121,10 @@ static void print(const log_target *tgt, const char *format, ...) {
    Prototypes
 ============================================================================ */
 
-static void print_level(const log_target *tgt, ulog_Event *ev);
-static void print_message(const log_target *tgt, ulog_Event *ev);
+static void print_level(log_target *tgt, ulog_Event *ev);
+static void print_message(log_target *tgt, ulog_Event *ev);
 static void process_callback(ulog_Event *ev, Callback *cb);
-static void write_formatted_message(const log_target *tgt, ulog_Event *ev,
+static void write_formatted_message(log_target *tgt, ulog_Event *ev,
                                     bool full_time, bool color, bool new_line);
 
 /* ============================================================================
@@ -141,12 +142,12 @@ static const char *level_colors[] = {
     "\x1b[35m"   // FATAL : Magenta #f0f
 };
 
-static void print_color_start(const log_target *tgt, ulog_Event *ev) {
+static void print_color_start(log_target *tgt, ulog_Event *ev) {
     (void)ev;
     print(tgt, "%s", level_colors[ev->level]);  // color start
 }
 
-static void print_color_end(const log_target *tgt, ulog_Event *ev) {
+static void print_color_end(log_target *tgt, ulog_Event *ev) {
     (void)ev;
     print(tgt, "\x1b[0m");  // color end
 }
@@ -158,7 +159,7 @@ static void print_color_end(const log_target *tgt, ulog_Event *ev) {
 ============================================================================ */
 #if FEATURE_TIME
 
-static void print_time_sec(const log_target *tgt, ulog_Event *ev) {
+static void print_time_sec(log_target *tgt, ulog_Event *ev) {
 
 #if FEATURE_CUSTOM_PREFIX
     char buf[9];
@@ -172,7 +173,7 @@ static void print_time_sec(const log_target *tgt, ulog_Event *ev) {
 }
 
 #if FEATURE_EXTRA_OUTPUTS
-static void print_time_full(const log_target *tgt, ulog_Event *ev) {
+static void print_time_full(log_target *tgt, ulog_Event *ev) {
 
 #if FEATURE_CUSTOM_PREFIX
     char buf[64];
@@ -197,7 +198,7 @@ void ulog_set_prefix_fn(ulog_PrefixFn function) {
     ulog.update_prefix_function = function;
 }
 
-static void print_prefix(const log_target *tgt, ulog_Event *ev) {
+static void print_prefix(log_target *tgt, ulog_Event *ev) {
     if (ulog.update_prefix_function) {
         ulog.update_prefix_function(ev, ulog.custom_prefix,
                                     CFG_CUSTOM_PREFIX_SIZE);
@@ -279,7 +280,7 @@ static Topic *_get_topic_ptr(int topic);
 
 static bool new_topic_enabled = false;
 
-static void print_topic(const log_target *tgt, ulog_Event *ev) {
+static void print_topic(log_target *tgt, ulog_Event *ev) {
     Topic *t = _get_topic_ptr(ev->topic);
     if (t && t->name) {
         print(tgt, "[%s] ", t->name);
@@ -555,7 +556,7 @@ static const char *level_strings[] = {
 /// @param full_time - Full time or short time
 /// @param color - Color or no color
 /// @param new_line - New line in the end or no new line
-static void write_formatted_message(const log_target *tgt, ulog_Event *ev,
+static void write_formatted_message(log_target *tgt, ulog_Event *ev,
                                     bool full_time, bool color, bool new_line) {
 
 #if FEATURE_COLOR
@@ -613,7 +614,7 @@ int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size) {
     if (!out || out_size == 0) {
         return -1;
     }
-    log_target tgt = {.type = T_BUFFER, .dsc.buffer = {out, out_size}};
+    log_target tgt = {.type = T_BUFFER, .dsc.buffer = {out, 0, out_size}};
     write_formatted_message(&tgt, ev, ULOG_TIME_SHORT, ULOG_COLOR_OFF,
                             ULOG_NEW_LINE_OFF);
     return 0;
@@ -659,7 +660,7 @@ void ulog_log(int level, const char *file, int line, const char *topic,
 
         // If the topic is disabled or set to a lower logging level, do not log
         if (!is_topic_enabled(topic_id) ||
-            (_ulog_get_topic_level(topic_id) < ulog.level)) {
+            (level < _ulog_get_topic_level(topic_id))) {
             return;
         }
     }
@@ -690,14 +691,14 @@ void ulog_log(int level, const char *file, int line, const char *topic,
     va_end(ev.message_format_args);
 }
 
-static void print_level(const log_target *tgt, ulog_Event *ev) {
+static void print_level(log_target *tgt, ulog_Event *ev) {
     print(tgt, "%-1s ", level_strings[ev->level]);
 }
 
 /// @brief Prints the message
 /// @param tgt - Target
 /// @param ev - Event
-static void print_message(const log_target *tgt, ulog_Event *ev) {
+static void print_message(log_target *tgt, ulog_Event *ev) {
 
 #if FEATURE_FILE_STRING
     print(tgt, "%s:%d: ", ev->file, ev->line);  // file and line
