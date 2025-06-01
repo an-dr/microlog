@@ -45,3 +45,12 @@ target_sources(test_custom_prefix PRIVATE ${ULOG_SRC}
 target_include_directories(test_custom_prefix PRIVATE ${ULOG_INCLUDE_DIR})
 target_compile_definitions(test_custom_prefix PRIVATE ${ULOG_CONFIG_BASE})
 add_test(NAME CustomPrefixTest COMMAND test_custom_prefix)
+
+# --- Topics Test ---
+add_executable(test_topics)
+target_sources(test_topics PRIVATE ${ULOG_SRC} 
+                                   ut_callback.c 
+                                   test_topics.cpp)
+target_include_directories(test_topics PRIVATE ${ULOG_INCLUDE_DIR})
+target_compile_definitions(test_topics PRIVATE ${ULOG_CONFIG_BASE})
+add_test(NAME TopicsTest COMMAND test_topics)
