@@ -14,7 +14,7 @@ add_link_options(--coverage -fprofile-arcs -ftest-coverage)
 set(ULOG_CONFIG_BASE "-DULOG_EXTRA_OUTPUTS=8" 
                      "-DULOG_HAVE_TIME"
                      "-DULOG_TOPICS_NUM=8"
-                     "-DULOG_CUSTOM_PREFIX_SIZE=8"
+                     "-DULOG_CUSTOM_PREFIX_SIZE=16"
                      )
 
                      
@@ -26,3 +26,22 @@ target_sources(test_core PRIVATE ${ULOG_SRC}
 target_include_directories(test_core PRIVATE ${ULOG_INCLUDE_DIR})
 target_compile_definitions(test_core PRIVATE ${ULOG_CONFIG_BASE})
 add_test(NAME CoreTests COMMAND test_core)
+
+
+# --- Locking Test ---
+add_executable(test_locking)
+target_sources(test_locking PRIVATE ${ULOG_SRC} 
+                                    ut_callback.c 
+                                    test_locking.cpp)
+target_include_directories(test_locking PRIVATE ${ULOG_INCLUDE_DIR})
+target_compile_definitions(test_locking PRIVATE ${ULOG_CONFIG_BASE})
+add_test(NAME LockingTest COMMAND test_locking)
+
+# --- Custom Prefix Test ---
+add_executable(test_custom_prefix)
+target_sources(test_custom_prefix PRIVATE ${ULOG_SRC} 
+                                          ut_callback.c 
+                                          test_custom_prefix.cpp)
+target_include_directories(test_custom_prefix PRIVATE ${ULOG_INCLUDE_DIR})
+target_compile_definitions(test_custom_prefix PRIVATE ${ULOG_CONFIG_BASE})
+add_test(NAME CustomPrefixTest COMMAND test_custom_prefix)

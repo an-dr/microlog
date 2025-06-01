@@ -16,9 +16,8 @@ void ut_callback(ulog_Event *ev, void *arg) {
 
     // Clear the last message buffer before writing a new message
     memset(last_message_buffer, 0, sizeof(last_message_buffer));
-    vsnprintf(last_message_buffer, sizeof(last_message_buffer), ev->message,
-              ev->message_format_args);
-
+    
+    ulog_event_to_cstr(ev, last_message_buffer, sizeof(last_message_buffer));
 
     processed_message_count++;
 }

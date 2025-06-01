@@ -63,3 +63,23 @@ TEST_CASE_FIXTURE(CoreTestFixture, "Quiet Mode") {
     log_info("This message will trigger extra callbacks, stdout is not quiet.");
     CHECK(ut_callback_get_message_count() == 2);
 }
+
+TEST_CASE_FIXTURE(CoreTestFixture, "File Output") {
+    const char *filename = "test_output.log";
+    FILE *fp = fopen(filename, "w");
+    REQUIRE(fp != nullptr);
+    ulog_add_fp(fp, LOG_INFO);
+
+    log_info("This is an INFO message to file.");
+    fclose(fp);
+
+    // Check if the file was created and contains the expected message
+    fp = fopen(filename, "r");
+    REQUIRE(fp != nullptr);
+    
+    char buffer[256];
+    fgets(buffer, sizeof(buffer), fp);
+    fclose(fp);
+    
+    CHECK(strstr(buffer, "This is an INFO message to file.") != nullptr);
+}
