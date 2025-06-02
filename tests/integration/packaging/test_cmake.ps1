@@ -16,11 +16,11 @@ Push-Location $PSScriptRoot
 try {
     
     # Build the main package
-    pwsh -File ../../scripts/build_cmake.ps1
+    pwsh -File ../../../scripts/build_cmake.ps1
 
     # Move the package to verify portability
     New-Item -ItemType Directory -Path $PSScriptRoot/build/cmake/deps -Force
-    Move-Item -Force $PSScriptRoot/../../install/cmake/microlog $PSScriptRoot/build/cmake/deps
+    Move-Item -Force $PSScriptRoot/../../../install/cmake/microlog $PSScriptRoot/build/cmake/deps
 
 
     # Build the test package
