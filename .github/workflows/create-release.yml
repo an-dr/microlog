@@ -11,6 +11,10 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    needs:
+      - build-cmake
+      - build-meson
+      - build-src
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -18,24 +22,24 @@ jobs:
       - name: Download CMake artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_CMAKE }}
+          name: ${{ needs.build-cmake.outputs.artifact-cmake }}
           path: ./release-artifacts
 
       - name: Download Meson artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_MESON }}
+          name: ${{ needs.build-meson.outputs.artifact-meson }}
           path: ./release-artifacts
 
       - name: Download Source artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_SRC }}
+          name: ${{ needs.build-src.outputs.artifact-src }}
           path: ./release-artifacts
 
-      - name: Create GitHub Release and Upload Artifact
-        uses: softprops/action-gh-release@v2
-        with:
-          files: ./release-artifacts/**
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Create GitHub Release and Upload Artifact
+      #   uses: softprops/action-gh-release@v2
+      #   with:
+      #     files: ./release-artifacts/**
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
