@@ -12,12 +12,12 @@ jobs:
     name: Verify Version
     uses: ./.github/workflows/verify-version.yml
 
-  test-packages:
-    name: Test Packages
-    uses: ./.github/workflows/test-packages.yml
+  test-integration:
+    name: Integration Tests
+    uses: ./.github/workflows/test-integration.yml
 
   build:
-    needs: test-packages
+    needs: test-integration
     name: Build Packages
     uses: ./.github/workflows/build-packages.yml
 
