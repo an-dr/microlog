@@ -16,7 +16,7 @@ Push-Location $PSScriptRoot
 try {
     
     # Build the main package
-    pwsh -File ../../scripts/build_meson.ps1
+    pwsh -File ../../../scripts/build_meson.ps1
 
 
     # Move the package to verify portability
