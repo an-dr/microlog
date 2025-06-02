@@ -11,10 +11,6 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-    needs:
-      - build-cmake
-      - build-meson
-      - build-src
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
