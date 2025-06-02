@@ -15,8 +15,8 @@ jobs:
     name: Unit Tests
     uses: ./.github/workflows/test-unit.yml
   
-  test-packages:
-    name: Test Packages
-    uses: ./.github/workflows/test-packages.yml
+  integration-tests:
+    name: Integration Tests
+    uses: ./.github/workflows/test-integration.yml
 
     
