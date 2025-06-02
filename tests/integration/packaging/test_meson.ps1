@@ -21,7 +21,7 @@ try {
 
     # Move the package to verify portability
     New-Item -ItemType Directory -Path $PSScriptRoot/subprojects -Force
-    Move-Item -Force $PSScriptRoot/../../install/meson/microlog $PSScriptRoot/subprojects
+    Move-Item -Force $PSScriptRoot/../../../install/meson/microlog $PSScriptRoot/subprojects
 
     meson setup build/meson --reconfigure
 
