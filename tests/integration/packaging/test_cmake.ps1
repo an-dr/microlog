@@ -20,7 +20,7 @@ try {
 
     # Move the package to verify portability
     New-Item -ItemType Directory -Path $PSScriptRoot/build/cmake/deps -Force
-    Move-Item -Force $PSScriptRoot/../../install/cmake/microlog $PSScriptRoot/build/cmake/deps
+    Move-Item -Force $PSScriptRoot/../../../install/cmake/microlog $PSScriptRoot/build/cmake/deps
 
 
     # Build the test package
