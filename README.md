@@ -72,11 +72,11 @@ The project is based on several core principles:
 - Download a CMake Package from [Releases](https://github.com/an-dr/microlog/releases)
 - Specify the install location:
     - Specify package storage `cmake -B./build -DCMAKE_PREFIX_PATH="~/MyCmakePackages"` or
-    - Set `microlog_DIR` variable with path to the package `microlog_DIR=~/microlog-6.3.3-cmake`
+    - Set `microlog_DIR` variable with path to the package `microlog_DIR=~/microlog-6.4.0-cmake`
 - Use in your project:
 
 ```cmake
-find_package(microlog 6.3.3 REQUIRED)
+find_package(microlog 6.4.0 REQUIRED)
 
 add_executable(example_package example.cpp)
 target_link_libraries(example_package PRIVATE microlog::microlog)
