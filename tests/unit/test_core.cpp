@@ -14,7 +14,6 @@ public:
             ulog_add_callback(ut_callback, nullptr, LOG_TRACE);
             callback_is_set = true;
         }
-        ulog_set_level(LOG_TRACE);
         ulog_set_quiet(false);
         ut_callback_reset();
     }
@@ -25,7 +24,24 @@ public:
 bool TestFixture::callback_is_set = false;
 
 
+TEST_CASE_FIXTURE(TestFixture, "Default level") {
+    log_trace("This TRACE should not be processed.");
+    CHECK(ut_callback_get_message_count() == 0);
+    log_debug("This DEBUG should be processed.");
+    CHECK(ut_callback_get_message_count() == 1);
+    log_info("This INFO should be processed.");
+    CHECK(ut_callback_get_message_count() == 2);
+    log_warn("This WARN should be processed.");
+    CHECK(ut_callback_get_message_count() == 3);
+    log_error("This ERROR should be processed.");
+    CHECK(ut_callback_get_message_count() == 4);
+    log_fatal("This FATAL should be processed.");
+    CHECK(ut_callback_get_message_count() == 5);
+}
+
 TEST_CASE_FIXTURE(TestFixture, "Base") {
+    ulog_set_level(LOG_TRACE);
+
     log_trace("This is a TRACE message: %d", 123);
     log_debug("This is a DEBUG message: %s", "test");
     log_info("This is an INFO message: %.2f", 1.23);

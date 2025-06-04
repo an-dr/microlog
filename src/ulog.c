@@ -1,6 +1,6 @@
 // *************************************************************************
 //
-// ulog v6.3.3 - A simple customizable logging library.
+// ulog v6.4.0 - A simple customizable logging library.
 // https://github.com/an-dr/microlog
 //
 // *************************************************************************
@@ -24,6 +24,10 @@
 #define ULOG_COLOR_OFF false
 #define ULOG_TIME_FULL true
 #define ULOG_TIME_SHORT false
+
+#ifndef ULOG_DEFAULT_LOG_LEVEL
+#define ULOG_DEFAULT_LOG_LEVEL LOG_TRACE
+#endif
 
 /* ============================================================================
    Main logger object
@@ -60,7 +64,7 @@ typedef struct {
 static ulog_t ulog = {
     .lock_function   = NULL,
     .lock_arg        = NULL,
-    .level           = LOG_TRACE,
+    .level           = ULOG_DEFAULT_LOG_LEVEL,
     .quiet           = false,
     .callback_stdout = {0},
 
@@ -412,7 +416,7 @@ int ulog_add_topic(const char *topic_name, bool enable) {
             topics[i].id      = i;
             topics[i].name    = topic_name;
             topics[i].enabled = enable;
-            topics[i].level   = LOG_TRACE;
+            topics[i].level   = ULOG_DEFAULT_LOG_LEVEL;
             return i;
         }
     }

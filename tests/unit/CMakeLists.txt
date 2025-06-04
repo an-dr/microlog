@@ -17,6 +17,13 @@ set(ULOG_CONFIG_BASE "-DULOG_EXTRA_OUTPUTS=8"
                      "-DULOG_CUSTOM_PREFIX_SIZE=16"
                      )
 
+set(ULOG_CONFIG_TEST_CORE ${ULOG_CONFIG_BASE}
+                          "-DULOG_DEFAULT_LOG_LEVEL=LOG_DEBUG"
+                          )
+
+set(ULOG_CONFIG_TEST_TOPICS ${ULOG_CONFIG_BASE}
+                            "-DULOG_DEFAULT_LOG_LEVEL=LOG_WARN"
+                            )
                      
 # --- Core Tests ---
 add_executable(test_core)
@@ -24,7 +31,7 @@ target_sources(test_core PRIVATE ${ULOG_SRC}
                                  ut_callback.c
                                  test_core.cpp)
 target_include_directories(test_core PRIVATE ${ULOG_INCLUDE_DIR})
-target_compile_definitions(test_core PRIVATE ${ULOG_CONFIG_BASE})
+target_compile_definitions(test_core PRIVATE ${ULOG_CONFIG_TEST_CORE})
 add_test(NAME CoreTests COMMAND test_core)
 
 
@@ -52,5 +59,5 @@ target_sources(test_topics PRIVATE ${ULOG_SRC}
                                    ut_callback.c 
                                    test_topics.cpp)
 target_include_directories(test_topics PRIVATE ${ULOG_INCLUDE_DIR})
-target_compile_definitions(test_topics PRIVATE ${ULOG_CONFIG_BASE})
+target_compile_definitions(test_topics PRIVATE ${ULOG_CONFIG_TEST_TOPICS})
 add_test(NAME TopicsTest COMMAND test_topics)

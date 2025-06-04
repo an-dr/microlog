@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 project(example_package)
 
-find_package(microlog 6.3.3 REQUIRED)
+find_package(microlog 6.4.0 REQUIRED)
 
 add_executable(example_package example.cpp)
 target_link_libraries(example_package PRIVATE microlog::microlog)
