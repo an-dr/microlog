@@ -1,9 +1,5 @@
 # CMakeLists.txt for microlog unit tests
 
-cmake_minimum_required(VERSION 3.20)
-
-project(microlog_unittests)
-
 # Common sources and include directories
 # TODO: Use find_package to locate microlog library?
 set(ULOG_SRC ../../src/ulog.c)
