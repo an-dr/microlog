@@ -3,9 +3,9 @@
 name: New Version Workflow
 
 on:
-  pull_request:
-    branches:
-      - main
+  push:
+    tags:
+      - "v*"
 
 jobs:
   verify-version:

@@ -119,9 +119,9 @@ jobs:
           name: ${{ needs.build-src.outputs.package-name }}
           path: ./release-artifacts
 
-      # - name: Create GitHub Release and Upload Artifact
-      #   uses: softprops/action-gh-release@v2
-      #   with:
-      #     files: ./release-artifacts/**
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create GitHub Release and Upload Artifact
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./release-artifacts/**
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
