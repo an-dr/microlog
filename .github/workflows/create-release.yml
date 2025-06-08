@@ -9,8 +9,94 @@ on:
   workflow_call:
 
 jobs:
+  build-cmake:
+    runs-on: ubuntu-latest
+    outputs:
+      package-name: ${{ steps.set-package-name.outputs.package_name }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set Package Name
+        id: set-package-name
+        run: echo "package_name=microlog-$(cat ./version)-cmake" >> $GITHUB_OUTPUT
+
+      - name: Run build script
+        run: pwsh -File ./scripts/build_cmake.ps1
+
+      - name: Create ZIP archive
+        env:
+          ARTIFACT_CMAKE: ${{ steps.set-package-name.outputs.package_name }}
+        run: |
+          cd install/cmake
+          zip -r ${{ env.ARTIFACT_CMAKE }}.zip .
+
+      - name: Upload CMake package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.set-package-name.outputs.package_name }}
+          path: install/cmake/${{ steps.set-package-name.outputs.package_name }}.zip
+
+  build-meson:
+    runs-on: ubuntu-latest
+    outputs:
+      package-name: ${{ steps.set-package-name.outputs.package_name }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set package name
+        id: set-package-name
+        run: echo "package_name=microlog-$(cat ./version)-meson" >> $GITHUB_OUTPUT
+
+      - name: Install Meson and Ninja
+        run: |
+          sudo apt update
+          sudo apt install -y meson ninja-build
+
+      - name: Run build script
+        run: pwsh -File ./scripts/build_meson.ps1
+
+      - name: Create ZIP archive
+        run: |
+          cd install/meson
+          zip -r ${{ steps.set-package-name.outputs.package_name }}.zip .
+
+      - name: Upload Meson package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.set-package-name.outputs.package_name }}
+          path: install/meson/${{ steps.set-package-name.outputs.package_name }}.zip
+
+  build-src:
+    runs-on: ubuntu-latest
+    outputs:
+      package-name: ${{ steps.set-package-name.outputs.package_name }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set package name
+        id: set-package-name
+        run: echo "package_name=microlog-$(cat ./version)-src" >> $GITHUB_OUTPUT
+
+      - name: Run build script
+        run: pwsh -File ./scripts/build_src.ps1
+
+      - name: Create ZIP archive
+        run: |
+          cd install/src
+          zip -r ${{ steps.set-package-name.outputs.package_name }}.zip .
+
+      - name: Upload Source package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.set-package-name.outputs.package_name }}
+          path: install/src/${{ steps.set-package-name.outputs.package_name }}.zip
+
   release:
     runs-on: ubuntu-latest
+    needs: [build-cmake, build-meson, build-src]
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -18,19 +104,19 @@ jobs:
       - name: Download CMake artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_CMAKE }}
+          name: ${{ needs.build-cmake.outputs.package-name }}
           path: ./release-artifacts
 
       - name: Download Meson artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_MESON }}
+          name: ${{ needs.build-meson.outputs.package-name }}
           path: ./release-artifacts
 
       - name: Download Source artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_SRC }}
+          name: ${{ needs.build-src.outputs.package-name }}
           path: ./release-artifacts
 
       - name: Create GitHub Release and Upload Artifact

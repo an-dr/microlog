@@ -2,13 +2,13 @@
 # - CMake
 # - Meson
 
-name: Test Packages
+name: Integration Tests
 
 on:
   workflow_call:
 
 jobs:
-  test-packages:
+  test-packaging:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -19,10 +19,8 @@ jobs:
           sudo apt update
           sudo apt install -y meson ninja-build
 
-      - name: Build and Consume CMake Package
-        run: pwsh -File ./tests/test_package_build/build_cmake.ps1
+      - name: Test CMake Package
+        run: pwsh -File ./tests/integration/packaging/test_cmake.ps1
 
-      - name: Build and Consume Meson Package
-        run: pwsh -File ./tests/test_package_build/build_meson.ps1
-        
-    
+      - name: Test Meson Package
+        run: pwsh -File ./tests/integration/packaging/test_meson.ps1

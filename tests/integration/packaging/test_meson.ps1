@@ -16,12 +16,12 @@ Push-Location $PSScriptRoot
 try {
     
     # Build the main package
-    pwsh -File ../../scripts/build_meson.ps1
+    pwsh -File ../../../scripts/build_meson.ps1
 
 
     # Move the package to verify portability
     New-Item -ItemType Directory -Path $PSScriptRoot/subprojects -Force
-    Move-Item -Force $PSScriptRoot/../../install/meson/microlog $PSScriptRoot/subprojects
+    Move-Item -Force $PSScriptRoot/../../../install/meson/microlog $PSScriptRoot/subprojects
 
     meson setup build/meson --reconfigure
 
