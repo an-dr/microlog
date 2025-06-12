@@ -239,7 +239,10 @@ int ulog_add_fp(FILE *fp, int level);
    Feature: Log Topics
 ============================================================================ */
 
-#define TOPIC_NOT_FOUND 0x7FFFFFFF
+#if FEATURE_TOPICS
+#include "ulog_topics.h"
+#endif // FEATURE_TOPICS
+
 #define logt_trace(TOPIC_NAME, ...) ulog_log(LOG_TRACE, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
 #define logt_debug(TOPIC_NAME, ...) ulog_log(LOG_DEBUG, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
 #define logt_info(TOPIC_NAME, ...) ulog_log(LOG_INFO, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
@@ -247,42 +250,7 @@ int ulog_add_fp(FILE *fp, int level);
 #define logt_error(TOPIC_NAME, ...) ulog_log(LOG_ERROR, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
 #define logt_fatal(TOPIC_NAME, ...) ulog_log(LOG_FATAL, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
 
-#if FEATURE_TOPICS
-
-/// @brief Adds a topic
-/// @param topic_name
-/// @param enable
-/// @return Topic ID if success, -1 if failed
-int ulog_add_topic(const char *topic_name, bool enable);
-
-/// @brief Sets the debug level of a given topic
-/// @param topic_name
-/// @param level
-/// @return 0 if success, -1 if failed
-int ulog_set_topic_level(const char *topic_name, int level);
-
-/// @brief Gets the topic ID
-/// @param topic_name
-/// @return  Topic ID if success, -1 if failed, TOPIC_NOT_FOUND if not found
-int ulog_get_topic_id(const char *topic_name);
-
-/// @brief Enables the topic
-/// @param topic_name - Topic name
-/// @return 0 if success, -1 if failed
-int ulog_enable_topic(const char *topic_name);
-
-/// @brief Disables the topic
-/// @param topic_name - Topic name
-/// @return 0 if success, -1 if failed
-int ulog_disable_topic(const char *topic_name);
-
-/// @brief Enables all topics
-int ulog_enable_all_topics(void);
-
-/// @brief Disables all topics
-int ulog_disable_all_topics(void);
-
-#endif  // FEATURE_TOPICS
+// Topic related function declarations have been moved to ulog_topics.h
 
 #ifdef __cplusplus
 }

@@ -20,12 +20,26 @@ project(microlog VERSION ${PROJECT_VERSION})
 # Building
 # ----------------------------------------------------------------------------
 
+file(GLOB_RECURSE MICROLOG_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
+set(AMALGAMATED_C_FILE "${CMAKE_CURRENT_BINARY_DIR}/microlog_amalgamated.c")
+
+add_custom_command(
+    OUTPUT ${AMALGAMATED_C_FILE}
+    COMMAND ${CMAKE_COMMAND} -E cat ${MICROLOG_SOURCES} > ${AMALGAMATED_C_FILE}
+    DEPENDS ${MICROLOG_SOURCES}
+    COMMENT "Amalgamating C sources: ${MICROLOG_SOURCES} into ${AMALGAMATED_C_FILE}"
+    VERBATIM
+)
+
+# This target ensures the custom command is triggered as part of the default build.
+add_custom_target(MicrologAmalgamate ALL DEPENDS ${AMALGAMATED_C_FILE})
+
 add_library(${PROJECT_NAME} INTERFACE)
 target_sources(
-  microlog
-  INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/ulog.c>
+  ${PROJECT_NAME}
+  INTERFACE $<BUILD_INTERFACE:${AMALGAMATED_C_FILE}>
             $<INSTALL_INTERFACE:src/ulog.c> # installed version will assume
-                                            # relative to install prefix
+                                            # relative to install prefix, named ulog.c
 )
 target_include_directories(
   ${PROJECT_NAME}
@@ -58,7 +72,13 @@ install(
 
 # Headers (they are sources, not artifacts so copy them explicitly)
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
-install(FILES src/ulog.c DESTINATION ${CMAKE_INSTALL_PREFIX}/src)
+
+# Install the amalgamated source file, renaming it to ulog.c
+install(
+    FILES ${AMALGAMATED_C_FILE}
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/src
+    RENAME ulog.c
+)
 
 # ----------------------------------------------------------------------------
 # Packing

@@ -36,6 +36,10 @@ The project is based on several core principles:
 - No dependencies
 - Two files
 
+### Source Code Structure and Distribution
+
+While `microlog` is distributed as two main files for easy integration (`include/ulog.h` and `src/ulog.c`), the source code is organized into multiple files within the `src/` and `include/` directories. This modular structure, separating core logic from features like 'Topics' (`ulog_topics.c`), enhances maintainability and improves navigation in IDEs. The build system (CMake or Meson) automatically amalgamates all relevant source files into the single `src/ulog.c` for distribution and use.
+
 ## Table of Contents
 
 - [microlog](#microlog)

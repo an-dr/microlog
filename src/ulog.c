@@ -260,249 +260,10 @@ static void log_to_extra_outputs(ulog_Event *ev) {
 /* ============================================================================
    Feature: Log Topics
 ============================================================================ */
-#if FEATURE_TOPICS
-
-typedef struct {
-    int id;
-    const char *name;
-    bool enabled;
-    int level;
-
-#if CFG_TOPICS_DINAMIC_ALLOC == true
-    void *next;  // Pointer to the next topic pointer (Topic **)
-#endif
-
-} Topic;
-
-static bool is_topic_enabled(int topic);
-static int _ulog_set_topic_level(int topic, int level);
-static int _ulog_enable_topic(int topic);
-static int _ulog_disable_topic(int topic);
-static Topic *_get_topic_begin(void);
-static Topic *_get_topic_next(Topic *t);
-static Topic *_get_topic_ptr(int topic);
-
-static bool new_topic_enabled = false;
-
-static void print_topic(log_target *tgt, ulog_Event *ev) {
-    Topic *t = _get_topic_ptr(ev->topic);
-    if (t && t->name) {
-        print(tgt, "[%s] ", t->name);
-    }
-}
-
-static int _ulog_set_topic_level(int topic, int level) {
-    Topic *t = _get_topic_ptr(topic);
-    if (t) {
-        t->level = level;
-        return 0;
-    }
-    return -1;
-}
-
-static int _ulog_get_topic_level(int topic) {
-    Topic *t = _get_topic_ptr(topic);
-    if (t) {
-        return t->level;
-    }
-    return LOG_TRACE;
-}
-
-static int _ulog_enable_topic(int topic) {
-    Topic *t = _get_topic_ptr(topic);
-    if (t) {
-        t->enabled = true;
-        return 0;
-    }
-    return -1;
-}
-
-static int _ulog_disable_topic(int topic) {
-    Topic *t = _get_topic_ptr(topic);
-    if (t) {
-        t->enabled = false;
-        return 0;
-    }
-    return -1;
-}
-
-int ulog_set_topic_level(const char *topic_name, int level) {
-    if (ulog_add_topic(topic_name, true) != -1) {
-        return _ulog_set_topic_level(ulog_get_topic_id(topic_name), level);
-    }
-    return -1;
-}
-
-int ulog_enable_topic(const char *topic_name) {
-    ulog_add_topic(topic_name, true);
-    return _ulog_enable_topic(ulog_get_topic_id(topic_name));
-}
-
-int ulog_disable_topic(const char *topic_name) {
-    ulog_add_topic(topic_name, false);
-    return _ulog_disable_topic(ulog_get_topic_id(topic_name));
-}
-
-int ulog_enable_all_topics(void) {
-    new_topic_enabled = true;
-    for (Topic *t = _get_topic_begin(); t != NULL; t = _get_topic_next(t)) {
-        t->enabled = true;
-    }
-    return 0;
-}
-
-int ulog_disable_all_topics(void) {
-    new_topic_enabled = false;
-    for (Topic *t = _get_topic_begin(); t != NULL; t = _get_topic_next(t)) {
-        t->enabled = false;
-    }
-    return 0;
-}
-
-int ulog_get_topic_id(const char *topic_name) {
-    for (Topic *t = _get_topic_begin(); t != NULL; t = _get_topic_next(t)) {
-        if (t->name && strcmp(t->name, topic_name) == 0) {
-            return t->id;
-        }
-    }
-    return TOPIC_NOT_FOUND;
-}
-
-/// @brief Checks if the topic is enabled
-/// @param topic - Topic ID or -1 if no topic
-/// @return true if enabled or no topic, false otherwise
-static bool is_topic_enabled(int topic) {
-    if (topic < 0) {  // no topic, always allowed
-        return true;
-    }
-
-    Topic *t = _get_topic_ptr(topic);
-    if (t) {
-        return t->enabled;
-    }
-    return false;
-}
-
-#endif  // FEATURE_TOPICS
-
-/* ============================================================================
-   Feature: Log Topics - Static Allocation
-============================================================================ */
-#if FEATURE_TOPICS && CFG_TOPICS_DINAMIC_ALLOC == false
-
-static Topic topics[CFG_TOPICS_NUM] = {{0}};
-
-static Topic *_get_topic_begin(void) {
-    return topics;
-}
-
-static Topic *_get_topic_next(Topic *t) {
-    if ((t >= topics) && (t < topics + CFG_TOPICS_NUM - 1)) {
-        return t + 1;
-    }
-    return NULL;
-}
-
-static Topic *_get_topic_ptr(int topic) {
-    if (topic < CFG_TOPICS_NUM) {
-        return &topics[topic];
-    }
-    return NULL;
-}
-
-int ulog_add_topic(const char *topic_name, bool enable) {
-    for (int i = 0; i < CFG_TOPICS_NUM; i++) {
-        if (!topics[i].name) {
-            topics[i].id      = i;
-            topics[i].name    = topic_name;
-            topics[i].enabled = enable;
-            topics[i].level   = ULOG_DEFAULT_LOG_LEVEL;
-            return i;
-        }
-    }
-    return -1;
-}
-#endif  // FEATURE_TOPICS && CFG_TOPICS_DINAMIC_ALLOC == false
-
-/* ============================================================================
-   Feature: Log Topics - Dynamic Allocation
-============================================================================ */
-
-#if FEATURE_TOPICS && CFG_TOPICS_DINAMIC_ALLOC == true
-
-#include <stdlib.h>
-
-static Topic *topics = NULL;
-
-static Topic *_get_topic_begin(void) {
-    return topics;
-}
-
-static Topic *_get_topic_next(Topic *t) {
-    return t->next;
-}
-
-static Topic *_get_topic_ptr(int topic) {
-    for (Topic *t = _get_topic_begin(); t != NULL; t = _get_topic_next(t)) {
-        if (t->id == topic) {
-            return t;
-        }
-    }
-    return NULL;
-}
-
-static void *_create_topic(int id, const char *topic_name, bool enable) {
-    Topic *t = malloc(sizeof(Topic));
-    if (t) {
-        t->id      = id;
-        t->name    = topic_name;
-        t->enabled = enable;
-        t->next    = NULL;
-    }
-    return t;
-}
-
-int ulog_add_topic(const char *topic_name, bool enable) {
-    if (!topic_name) {
-        return -1;
-    }
-
-    // if exists
-    for (Topic *t = _get_topic_begin(); t != NULL; t = _get_topic_next(t)) {
-        if (t->name && strcmp(t->name, topic_name) == 0) {
-            return t->id;
-        }
-    }
-
-    // If the beginning is empty
-    if (!topics) {
-        topics = (Topic *)_create_topic(0, topic_name, enable);
-        if (topics) {
-            return 0;
-        }
-        return -1;
-    }
-
-    // If the beginning is not empty
-    int current_id = 0;
-    Topic *t       = topics;
-    while (t->next != NULL) {
-        t = t->next;
-        current_id++;
-    }
-
-    t->next = _create_topic(current_id + 1, topic_name, enable);
-    if (t->next) {
-        return current_id + 1;
-    }
-    return -1;
-}
-
-#endif  // FEATURE_TOPICS && CFG_TOPICS_DINAMIC_ALLOC == true
-
-#if FEATURE_TOPICS
-
-#endif  // FEATURE_TOPICS
+// All topic-specific function definitions and static variables have been moved to ulog_topics.c
+// Declarations are in ulog_topics.h, included via ulog.h if FEATURE_TOPICS is enabled.
+// Calls to topic functions (ulog_get_topic_id, is_topic_enabled, _ulog_get_topic_level, print_topic)
+// in ulog_log() and write_formatted_message() will now use the declarations from ulog_topics.h.
 
 /* ============================================================================
    Core Functionality: Thread Safety
@@ -648,21 +409,20 @@ void ulog_log(int level, const char *file, int line, const char *topic,
 #if !FEATURE_TOPICS
     (void)topic;
 #else
-    int topic_id = -1;
+    int topic_id = TOPIC_NOT_FOUND; // TOPIC_NOT_FOUND is -1 as per ulog_topics.h
     if (topic != NULL) {
         // Working with topics
+        topic_id = ulog_get_topic_id(topic); // Now calls function from ulog_topics.c
 
-        topic_id = ulog_get_topic_id(topic);
         if (topic_id == TOPIC_NOT_FOUND) {
-#if CFG_TOPICS_DINAMIC_ALLOC == false
-            return;  // Topic not found
-#else
-            // If no topic add a disabled one, so we can enable it later
-            topic_id = ulog_add_topic(topic, new_topic_enabled);
-#endif
+            // If topic is not found (and not auto-created by ulog_get_topic_id),
+            // then we don't log this message.
+            // This applies to both static and dynamic allocation if auto-creation is off or fails.
+            return;
         }
 
         // If the topic is disabled or set to a lower logging level, do not log
+        // These functions are now declared in ulog_topics.h and defined in ulog_topics.c
         if (!is_topic_enabled(topic_id) ||
             (level < _ulog_get_topic_level(topic_id))) {
             return;
