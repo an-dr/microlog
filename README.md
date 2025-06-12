@@ -112,6 +112,131 @@ int main() {
 }
 ```
 
+## Arduino Support
+
+Microlog now officially supports Arduino platforms, making it easy to integrate flexible logging into your sketches.
+
+### Installation for Arduino
+
+1.  **Using the Arduino Library Manager (Recommended):**
+    *   Once Microlog is published to the Arduino Library List, open the Arduino IDE.
+    *   Go to `Sketch` -> `Include Library` -> `Manage Libraries...`.
+    *   Search for "Microlog" and click "Install".
+    *   (Currently, you'll need to use one of the methods below until it's in the Library Manager).
+
+2.  **Installing from .zip:**
+    *   Go to the [Microlog GitHub Releases](https://github.com/an-dr/microlog/releases) page.
+    *   Download the latest release .zip file (e.g., `microlog-X.Y.Z.zip`).
+    *   In the Arduino IDE, go to `Sketch` -> `Include Library` -> `Add .ZIP Library...`.
+    *   Select the downloaded .zip file.
+
+3.  **Manual Installation (from Git):**
+    *   Navigate to your Arduino libraries directory (usually `<Documents>/Arduino/libraries/`).
+    *   Clone this repository into that directory:
+        ```bash
+        git clone https://github.com/an-dr/microlog.git Microlog
+        ```
+    *   Alternatively, download the repository as a .zip, extract it, and rename the extracted folder to `Microlog`, then move it to your Arduino libraries directory.
+
+### Basic Arduino Usage
+
+Here's a minimal example to get you started:
+
+```cpp
+#include <ulog_arduino.h> // Use this header for Arduino
+
+void setup() {
+  Serial.begin(115200);
+  while (!Serial) {
+    ; // Wait for Serial port to connect (needed for some boards)
+  }
+
+  // Initialize Microlog for Arduino. This uses Serial by default.
+  ulog_arduino_init();
+
+  // Set the global log level. Messages below this level will be ignored.
+  // LOG_TRACE shows all messages.
+  ulog_set_level(LOG_TRACE);
+
+  log_arduino_info("Hello from Microlog on Arduino!");
+  log_arduino_debug("Microlog setup complete.");
+}
+
+void loop() {
+  log_arduino_trace("This is a TRACE message from loop(). Millis: %lu", millis());
+  delay(5000);
+}
+```
+
+Microlog provides Arduino-specific logging macros:
+- `log_arduino_trace(...)`
+- `log_arduino_debug(...)`
+- `log_arduino_info(...)`
+- `log_arduino_warn(...)`
+- `log_arduino_error(...)`
+- `log_arduino_fatal(...)`
+
+And for topic-based logging (see Configuration for enabling topics):
+- `logt_arduino_trace("MyTopic", ...)`
+- `logt_arduino_debug("MyTopic", ...)`
+- etc.
+
+### Arduino Configuration
+
+For Arduino, Microlog uses a set of conservative default configurations to save program space and RAM. These are defined within an `#ifdef ARDUINO` block in the library's `ulog.h` file:
+
+*   `ULOG_NO_COLOR`: ANSI colors are **disabled** by default.
+*   `ULOG_HIDE_FILE_STRING`: File name and line number information is **hidden** by default to save string space.
+*   `ULOG_EXTRA_OUTPUTS = 0`: The ability to add extra output destinations (like files) is **disabled**.
+*   `ULOG_TOPICS_NUM = 0`: Log topics are **disabled** by default. This means `logt_arduino_xxx` macros will compile, but topic filtering won't occur unless enabled.
+*   `time.h` based timestamps (e.g., `2023-10-27 10:30:00`) are **disabled** by default. Log messages will not have a timestamp prefix from the core library unless you implement custom time handling.
+
+#### Enabling Features for Arduino
+
+You can override some of these defaults, typically by defining macros before including Microlog headers, usually via your `platformio.ini` build flags or, less ideally, by modifying `ulog.h`.
+
+*   **Enabling Log Topics:**
+    To use log topics, you need to define `ULOG_TOPICS_NUM` to a non-zero value *before* `ulog_arduino.h` (or `ulog.h`) is included.
+    *   Set `ULOG_TOPICS_NUM` to a positive integer for a fixed number of statically allocated topics (e.g., `5` allows up to 5 unique topic names).
+    *   Set `ULOG_TOPICS_NUM` to `-1` for dynamically allocated topics (use with caution on microcontrollers due to limited heap memory).
+
+    Example for `platformio.ini`:
+    ```ini
+    build_flags = -DULOG_TOPICS_NUM=3
+    ```
+    Or, if you must define it in your main `.ino` file (ensure it's before any Microlog includes, which might be tricky depending on how Arduino builds):
+    ```cpp
+    // #define ULOG_TOPICS_NUM 3 // Define before #include <ulog_arduino.h>
+    // #include <ulog_arduino.h>
+    ```
+    Refer to the `LogTopics.ino` example.
+
+*   **Showing File/Line Info:**
+    File and line number information is hidden by default with `ULOG_HIDE_FILE_STRING`. To show it:
+    *   The most direct way is to comment out or change the `#define ULOG_HIDE_FILE_STRING` line within the `#ifdef ARDUINO` block in the library's `ulog.h` file.
+    *   Alternatively, using build flags if the `ulog.h` definition is structured like `#ifndef ULOG_SHOW_FILE_STRING \n #define ULOG_HIDE_FILE_STRING \n #endif`, you could add `-DULOG_SHOW_FILE_STRING` to your build flags. (Currently, it's a direct define, so modification or a more complex undefine flag is needed).
+    *   For now, the simplest is: "File/line info is hidden by default. To enable it, you would need to modify the `ULOG_HIDE_FILE_STRING` definition in the library's `ulog.h` or manage it via custom build flags that undefine it."
+
+*   **Timestamps on Arduino:**
+    Standard `time.h` based timestamps are disabled. The `ulog_arduino.cpp` does not add its own timestamps (like `millis()`) by default to keep it simple. If you need timestamps, you would typically:
+    *   Modify `ulog_arduino.cpp` to add `millis()` or a similar prefix to the log string.
+    *   Enable `FEATURE_TIME` and `ULOG_ARDUINO_USE_TIME` and provide a compatible `struct tm` and `strftime`-like functionality if you have an external time source (e.g., RTC, NTP). This is an advanced use case.
+
+### Arduino Examples
+
+The library includes several examples in the `examples` directory to help you get started:
+*   `examples/BasicLogging/BasicLogging.ino`: Simple demonstration of logging various levels.
+*   `examples/LogLevels/LogLevels.ino`: Shows how to change and test different log filter levels.
+*   `examples/LogTopics/LogTopics.ino`: Demonstrates how to enable and use topic-based logging.
+
+### Key Differences from Standard C Version on Arduino
+
+*   **Output:** Log output is directed to an Arduino `Print` object (defaulting to `Serial`), not `stdout` or `stderr`.
+*   **Initialization:** Use `ulog_arduino_init()` instead of manual setup for basic Serial logging.
+*   **Macros:** Arduino-specific macros `log_arduino_xxx()` and `logt_arduino_xxx()` are provided.
+*   **Default Configuration:** More conservative to save resources (no color, no file/line info, no topics by default).
+*   **Disabled Features:** Certain features like direct file logging (`ulog_add_fp`) and standard `time.h` support are disabled by default to fit microcontroller constraints.
+
 ## User Manual
 
 ### Basics

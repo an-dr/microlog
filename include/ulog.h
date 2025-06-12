@@ -17,6 +17,23 @@
 
 #pragma once
 
+#ifdef ARDUINO
+// Arduino-specific configurations
+#define ULOG_NO_COLOR // Typically, Arduino serial monitor doesn't support ANSI colors
+#define ULOG_HIDE_FILE_STRING // Optional: to save space, can be overridden by user
+// #define ULOG_HAVE_TIME 0 // Disable time.h related features if not fully supported or to save space
+                                 // Alternatively, provide a simple millis()-based time.
+#ifndef ULOG_EXTRA_OUTPUTS // Allow user to define if needed, but default to 0 for Arduino
+#define ULOG_EXTRA_OUTPUTS 0
+#endif
+#ifndef ULOG_TOPICS_NUM // Default to a small number of static topics or disable if not commonly used
+#define ULOG_TOPICS_NUM 0 // Set to 0 to disable topics by default to save space, or a small number like 5
+#endif
+// For Arduino, stdio.h is available, but file operations (fopen, fprintf to files) are not.
+// The existing FEATURE_EXTRA_OUTPUTS and ulog_add_fp rely on FILE*.
+// These will be problematic if not guarded.
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -124,7 +141,9 @@ extern "C" {
    Core Functionality
 ============================================================================ */
 
-#if FEATURE_TIME
+#if FEATURE_TIME && !defined(ARDUINO)
+#include <time.h>
+#elif defined(ARDUINO) && defined(ULOG_ARDUINO_USE_TIME) // If user wants time on Arduino (e.g. with custom time func)
 #include <time.h>
 #endif
 
@@ -152,8 +171,10 @@ typedef struct {
     int topic;
 #endif
 
-#if FEATURE_TIME
+#if FEATURE_TIME && !defined(ARDUINO)
     struct tm *time;
+#elif defined(ARDUINO) && defined(ULOG_ARDUINO_USE_TIME)
+    struct tm *time; // Allow if Arduino user explicitly enables and provides time mechanisms
 #endif
 
     const char *file;  // Event file name
@@ -231,7 +252,9 @@ int ulog_add_callback(ulog_LogFn function, void *arg, int level);
 /// @param fp - File pointer
 /// @param level - Debug level
 /// @return 0 if success, -1 if failed
+#if !defined(ARDUINO)
 int ulog_add_fp(FILE *fp, int level);
+#endif // !defined(ARDUINO)
 
 #endif  // FEATURE_EXTRA_OUTPUTS
 

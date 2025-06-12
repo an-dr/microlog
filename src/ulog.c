@@ -161,7 +161,7 @@ static void print_color_end(log_target *tgt, ulog_Event *ev) {
 /* ============================================================================
    Feature: Time
 ============================================================================ */
-#if FEATURE_TIME
+#if FEATURE_TIME && !defined(ARDUINO)
 
 static void print_time_sec(log_target *tgt, ulog_Event *ev) {
 
@@ -191,7 +191,29 @@ static void print_time_full(log_target *tgt, ulog_Event *ev) {
 }
 #endif  // FEATURE_EXTRA_OUTPUTS
 
-#endif  // FEATURE_TIME
+#elif defined(ARDUINO) && defined(ULOG_ARDUINO_USE_TIME)
+// Arduino-specific time printing (if ULOG_ARDUINO_USE_TIME is defined by user)
+// User would need to provide implementations or ensure ev->time is compatible
+static void print_time_sec(log_target *tgt, ulog_Event *ev) {
+    // Example placeholder: print millis if ev->time could be adapted or is unused by this func
+    // Or, if ev->time is a struct tm populated by an Arduino time library:
+    // char buf[10];
+    // snprintf(buf, sizeof(buf), "%02d:%02d:%02d ", ev->time->tm_hour, ev->time->tm_min, ev->time->tm_sec);
+    // print(tgt, "%s", buf);
+    (void)tgt; (void)ev; // Placeholder if not implemented
+}
+#if FEATURE_EXTRA_OUTPUTS // This implies ULOG_EXTRA_OUTPUTS > 0, less likely for Arduino default
+static void print_time_full(log_target *tgt, ulog_Event *ev) {
+    // Example placeholder
+    // char buf[65];
+    // snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d ",
+    //          ev->time->tm_year + 1900, ev->time->tm_mon + 1, ev->time->tm_mday,
+    //          ev->time->tm_hour, ev->time->tm_min, ev->time->tm_sec);
+    // print(tgt, "%s", buf);
+    (void)tgt; (void)ev; // Placeholder if not implemented
+}
+#endif // FEATURE_EXTRA_OUTPUTS
+#endif  // FEATURE_TIME (&& !defined(ARDUINO)) / (defined(ARDUINO) && defined(ULOG_ARDUINO_USE_TIME))
 
 /* ============================================================================
    Feature: Custom Prefix
@@ -721,12 +743,17 @@ static void print_message(log_target *tgt, ulog_Event *ev) {
 static void process_callback(ulog_Event *ev, Callback *cb) {
     if (ev->level >= cb->level) {
 
-#if FEATURE_TIME
+#if FEATURE_TIME && !defined(ARDUINO)
         if (!ev->time) {
             time_t t = time(NULL);
             ev->time = localtime(&t);
         }
-#endif  // FEATURE_TIME
+#elif defined(ARDUINO) && defined(ULOG_ARDUINO_USE_TIME)
+        // If Arduino time is enabled, user is responsible for populating ev->time
+        // or providing a mechanism. For example, it could be set in ulog_arduino
+        // before calling ulog_event_to_cstr, or ulog_event_to_cstr could handle it.
+        // If ev->time is not populated, time functions (print_time_sec/full) should handle it.
+#endif  // FEATURE_TIME && !defined(ARDUINO)
 
         // Create event copy to avoid va_list issues
         ulog_Event ev_copy = { 0 };
