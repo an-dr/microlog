@@ -30,8 +30,17 @@ extern "C" {
    Configuration options
 ===============================================================================
 
+// Define FEATURE_RUNTIME_CONFIG to enable runtime configuration of microlog.
+// When enabled, a ulog_config_t structure can be used to set most logger
+// behaviors at runtime via ulog_init_config().
+// When not defined, microlog uses compile-time configuration macros as before.
+// #define FEATURE_RUNTIME_CONFIG // Example: uncomment or define via compiler flag
+
+/*
+===============================================================================
+
 | Feature               | Feature Default | Controlling Options               |
-|-----------------------|-----------------|-----------------------------------|
+// |-----------------------|-----------------|-----------------------------------|
 | FEATURE_TIME          | OFF             | ULOG_HAVE_TIME                    |
 | FEATURE_COLOR         | ON              | ULOG_NO_COLOR                     |
 | FEATURE_CUSTOM_PREFIX | OFF             | ULOG_CUSTOM_PREFIX_SIZE           |
@@ -119,6 +128,22 @@ extern "C" {
 
 #endif  // ULOG_TOPICS_NUM
 
+/* ============================================================================
+   Structures
+============================================================================ */
+
+typedef struct {
+    bool enable_time;
+    bool enable_color;
+    int custom_prefix_size;
+    bool enable_file_string;
+    bool short_level_strings;
+    bool use_emoji_levels;
+    int extra_outputs_num; // Max number of extra outputs
+    int topics_num;          // Max number of topics, or -1 for dynamic
+    int default_log_level; // Default log level
+} ulog_config_t;
+
 
 /* ============================================================================
    Core Functionality
@@ -148,11 +173,11 @@ typedef struct {
     const char *message;          // Message format string
     va_list message_format_args;  // Format arguments
 
-#if FEATURE_TOPICS
+#if defined(FEATURE_RUNTIME_CONFIG) || FEATURE_TOPICS
     int topic;
 #endif
 
-#if FEATURE_TIME
+#if defined(FEATURE_RUNTIME_CONFIG) || FEATURE_TIME
     struct tm *time;
 #endif
 
@@ -201,10 +226,19 @@ typedef void (*ulog_LockFn)(bool lock, void *lock_arg);
 /// @param lock_arg - User data
 void ulog_set_lock(ulog_LockFn function, void *lock_arg);
 
+#ifdef FEATURE_RUNTIME_CONFIG
+/// @brief Initializes the logger with runtime configuration.
+/// @param config Pointer to the configuration structure.
+///               The pointed-to structure's lifetime must be managed by the caller.
+///               Its values are copied into the logger's internal state.
+/// @return 0 on success, -1 if config is NULL.
+int ulog_init_config(const ulog_config_t *config);
+#endif
+
 /* ============================================================================
    Feature: Custom Prefix
 ============================================================================ */
-#if FEATURE_CUSTOM_PREFIX
+#if defined(FEATURE_RUNTIME_CONFIG) || FEATURE_CUSTOM_PREFIX
 
 typedef void (*ulog_PrefixFn)(ulog_Event *ev, char *prefix, size_t prefix_size);
 
@@ -212,12 +246,12 @@ typedef void (*ulog_PrefixFn)(ulog_Event *ev, char *prefix, size_t prefix_size);
 /// @param function - Prefix function
 void ulog_set_prefix_fn(ulog_PrefixFn function);
 
-#endif  // FEATURE_CUSTOM_PREFIX
+#endif  // defined(FEATURE_RUNTIME_CONFIG) || FEATURE_CUSTOM_PREFIX
 
 /* ============================================================================
    Feature: Extra Outputs
 ============================================================================ */
-#if FEATURE_EXTRA_OUTPUTS
+#if defined(FEATURE_RUNTIME_CONFIG) || FEATURE_EXTRA_OUTPUTS
 
 /// @brief Adds a callback
 /// @param function - Callback function
@@ -233,7 +267,7 @@ int ulog_add_callback(ulog_LogFn function, void *arg, int level);
 /// @return 0 if success, -1 if failed
 int ulog_add_fp(FILE *fp, int level);
 
-#endif  // FEATURE_EXTRA_OUTPUTS
+#endif  // defined(FEATURE_RUNTIME_CONFIG) || FEATURE_EXTRA_OUTPUTS
 
 /* ============================================================================
    Feature: Log Topics
@@ -247,7 +281,7 @@ int ulog_add_fp(FILE *fp, int level);
 #define logt_error(TOPIC_NAME, ...) ulog_log(LOG_ERROR, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
 #define logt_fatal(TOPIC_NAME, ...) ulog_log(LOG_FATAL, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
 
-#if FEATURE_TOPICS
+#if defined(FEATURE_RUNTIME_CONFIG) || FEATURE_TOPICS
 
 /// @brief Adds a topic
 /// @param topic_name
@@ -282,7 +316,7 @@ int ulog_enable_all_topics(void);
 /// @brief Disables all topics
 int ulog_disable_all_topics(void);
 
-#endif  // FEATURE_TOPICS
+#endif  // defined(FEATURE_RUNTIME_CONFIG) || FEATURE_TOPICS
 
 #ifdef __cplusplus
 }

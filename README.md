@@ -159,6 +159,95 @@ Note: You might want to adjust the compiler argument  `-fmacro-prefix-map=OLD_PA
 add_global_arguments('-fmacro-prefix-map=../=',language: 'c')
 ```
 
+## Runtime Configuration
+
+Microlog also supports runtime configuration for many of its features. This provides greater flexibility by allowing logger behavior to be determined at program startup rather than solely at compile time.
+
+To enable runtime configuration, define the `FEATURE_RUNTIME_CONFIG` macro when compiling the library and your application (e.g., `gcc -DFEATURE_RUNTIME_CONFIG ...`). If this macro is not defined, microlog defaults to its traditional compile-time configuration using macros like `ULOG_HAVE_TIME`, `ULOG_NO_COLOR`, etc.
+
+### `ulog_config_t` Structure
+
+When runtime configuration is enabled, you control logger settings using the `ulog_config_t` structure, which is defined in `include/ulog.h`.
+
+**Example Initialization:**
+```c
+#include "ulog.h"
+
+// ...
+
+#ifdef FEATURE_RUNTIME_CONFIG
+    ulog_config_t logger_config;
+    logger_config.enable_time = true;
+    logger_config.enable_color = true;
+    logger_config.default_log_level = LOG_INFO;
+    logger_config.custom_prefix_size = 0;       // Disable custom prefix feature via size
+    logger_config.enable_file_string = true;
+    logger_config.short_level_strings = false;
+    logger_config.use_emoji_levels = false;
+    logger_config.extra_outputs_num = 0;        // No runtime-configured extra outputs initially
+    logger_config.topics_num = -1;              // Enable dynamic topics by default with runtime config
+                                                // Set to 0 to disable topics, or >0 for a max number of static topics.
+#endif
+```
+
+**Members of `ulog_config_t`:**
+*   `enable_time` (bool): Enables or disables timestamp logging. Corresponds to `ULOG_HAVE_TIME`.
+*   `enable_color` (bool): Enables or disables colored output for `stdout`. Corresponds to `ULOG_NO_COLOR` (note inversion).
+*   `custom_prefix_size` (int): If > 0, enables the custom prefix feature. The actual buffer for the prefix is still sized by the compile-time `ULOG_CUSTOM_PREFIX_SIZE`. This runtime setting indicates if the feature is active and the intended length of the prefix string.
+*   `enable_file_string` (bool): Enables or disables logging of `file:line`. Corresponds to `ULOG_HIDE_FILE_STRING` (note inversion).
+*   `short_level_strings` (bool): Uses short level strings (e.g., "T", "D", "I"). Corresponds to `ULOG_SHORT_LEVEL_STRINGS`.
+*   `use_emoji_levels` (bool): Uses emoji for log levels (e.g., "⚪", "🔵"). Overrides `short_level_strings` if both are true. Corresponds to `ULOG_USE_EMOJI`.
+*   `extra_outputs_num` (int): Sets the number of active callback/file outputs. The maximum number of available output slots is still defined by the compile-time `ULOG_EXTRA_OUTPUTS` (`CFG_EXTRA_OUTPUTS` internally). This runtime value should not exceed `CFG_EXTRA_OUTPUTS`.
+*   `topics_num` (int): Configures topic behavior:
+    *   `0`: Disables topics entirely.
+    *   `-1`: Enables fully dynamic topics (new topics can be added on-the-fly).
+    *   `>0`: Enables static topics, with this value specifying the maximum number of topics. This count should not exceed the compile-time `ULOG_TOPICS_NUM` (`CFG_TOPICS_NUM` internally) if static topics were also defined at compile time with a fixed array.
+*   `default_log_level` (int): Sets the global log level (e.g., `LOG_TRACE`, `LOG_INFO`, `LOG_DEBUG`). Corresponds to `ULOG_DEFAULT_LOG_LEVEL`.
+
+### `ulog_init_config()` Function
+
+To apply your desired runtime configuration, use the `ulog_init_config(const ulog_config_t *config)` function. This function is only available if `FEATURE_RUNTIME_CONFIG` is defined.
+
+**Usage Example:**
+```c
+#include "ulog.h"
+
+int main() {
+#ifdef FEATURE_RUNTIME_CONFIG
+    ulog_config_t cfg;
+    // Initialize cfg members according to your needs:
+    cfg.enable_time = true;
+    cfg.enable_color = true; // Use colors on supported terminals
+    cfg.default_log_level = LOG_DEBUG;
+    cfg.custom_prefix_size = 0; // No custom prefix
+    cfg.enable_file_string = true;
+    cfg.short_level_strings = false;
+    cfg.use_emoji_levels = false;
+    cfg.extra_outputs_num = 0;
+    cfg.topics_num = -1; // Dynamic topics
+
+    if (ulog_init_config(&cfg) != 0) {
+        // This would typically mean cfg was NULL, handle error if necessary.
+        fprintf(stderr, "Error initializing ulog with custom config.\n");
+    }
+#endif
+
+    log_info("Logger initialized.");
+    log_debug("This is a debug message."); // Will print if default_log_level is LOG_DEBUG or lower
+
+    // ... rest of your application ...
+    return 0;
+}
+```
+It is highly recommended to call `ulog_init_config()` very early in your application's startup sequence, before any log messages are generated, to ensure all logs use the desired configuration.
+
+### Interaction with Compile-Time Settings
+
+When `FEATURE_RUNTIME_CONFIG` is enabled:
+*   The values provided via `ulog_init_config()` generally override the default behaviors that were previously only controllable by compile-time macros (like `ULOG_HAVE_TIME`, `ULOG_NO_COLOR`, etc.).
+*   Compile-time macros such as `ULOG_CUSTOM_PREFIX_SIZE`, `ULOG_EXTRA_OUTPUTS`, and `ULOG_TOPICS_NUM` (when not -1 for dynamic topics) still define the **maximum capacity** for fixed-size buffers or arrays (e.g., the custom prefix string buffer, the array for extra output callbacks, and the array for static topics).
+*   The corresponding runtime configuration members (`custom_prefix_size`, `extra_outputs_num`, `topics_num`) then control whether these features are active and, for outputs and static topics, how many of the available slots are actively used or the maximum number of static topics allowed. For example, even if `ULOG_EXTRA_OUTPUTS` is 5, if `logger_config.extra_outputs_num` is set to 2, only the first two added callbacks will be active.
+
 ### Log Verbosity
 
 The default log level is `LOG_TRACE`, such that nothing is ignored.
