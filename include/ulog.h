@@ -1,6 +1,6 @@
 // *************************************************************************
 //
-// ulog v6.4.0 - A simple customizable logging library.
+// ulog v6.4.1 - A simple customizable logging library.
 // https://github.com/an-dr/microlog
 //
 // *************************************************************************
@@ -212,10 +212,6 @@ typedef void (*ulog_PrefixFn)(ulog_Event *ev, char *prefix, size_t prefix_size);
 /// @param function - Prefix function
 void ulog_set_prefix_fn(ulog_PrefixFn function);
 
-#else  // FEATURE_CUSTOM_PREFIX
-
-#define ulog_set_prefix_fn(...)
-
 #endif  // FEATURE_CUSTOM_PREFIX
 
 /* ============================================================================
@@ -236,11 +232,6 @@ int ulog_add_callback(ulog_LogFn function, void *arg, int level);
 /// @param level - Debug level
 /// @return 0 if success, -1 if failed
 int ulog_add_fp(FILE *fp, int level);
-
-#else  // FEATURE_EXTRA_OUTPUTS
-
-#define ulog_add_callback(...)
-#define ulog_add_fp(...)
 
 #endif  // FEATURE_EXTRA_OUTPUTS
 
@@ -290,16 +281,6 @@ int ulog_enable_all_topics(void);
 
 /// @brief Disables all topics
 int ulog_disable_all_topics(void);
-
-#else  // FEATURE_TOPICS
-
-#define ulog_add_topic(...)
-#define ulog_set_topic_level(...)
-#define ulog_get_topic_id(...)
-#define ulog_enable_topic(...)
-#define ulog_disable_topic(...)
-#define ulog_enable_all_topics(...)
-#define ulog_disable_all_topics(...)
 
 #endif  // FEATURE_TOPICS
 
