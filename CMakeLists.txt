@@ -20,11 +20,17 @@ project(microlog VERSION ${PROJECT_VERSION})
 # Building
 # ----------------------------------------------------------------------------
 
-add_library(${PROJECT_NAME} INTERFACE)
-target_sources(
-  microlog
-  INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/ulog.c>
-            $<INSTALL_INTERFACE:src/ulog.c> # installed version will assume
+add_library(${PROJECT_NAME}
+  INTERFACE
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/ulog_core.c>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/ulog_output.c>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/ulog_topics.c>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/ulog_time.c>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/ulog_color.c>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/ulog_prefix.c>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/ulog_thread.c>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/ulog.c>
+  INTERFACE $<INSTALL_INTERFACE:src/ulog.c> # installed version will assume
                                             # relative to install prefix
 )
 target_include_directories(

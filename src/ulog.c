@@ -17,6 +17,13 @@
 
 #include <string.h>
 #include "ulog.h"
+#include "ulog_core.h"
+#include "ulog_output.h"
+#include "ulog_topics.h"
+#include "ulog_time.h"
+#include "ulog_color.h"
+#include "ulog_prefix.h"
+#include "ulog_thread.h"
 
 #define ULOG_NEW_LINE_ON true
 #define ULOG_NEW_LINE_OFF false
