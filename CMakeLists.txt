@@ -20,19 +20,25 @@ project(microlog VERSION ${PROJECT_VERSION})
 # Building
 # ----------------------------------------------------------------------------
 
-add_library(${PROJECT_NAME}
+add_library(
+  ${PROJECT_NAME}
   INTERFACE
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/ulog_core.c>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/ulog_output.c>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/ulog_topics.c>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/ulog_time.c>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/ulog_color.c>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/ulog_prefix.c>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/ulog_thread.c>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/ulog.c>
-  INTERFACE $<INSTALL_INTERFACE:src/ulog.c> # installed version will assume
-                                            # relative to install prefix
-)
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/color.c>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/core.c>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/output.c>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/prefix.c>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/thread.c>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/time.c>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/topics.c>
+  INTERFACE
+  $<INSTALL_INTERFACE:src/color.c>
+  $<INSTALL_INTERFACE:src/core.c>
+  $<INSTALL_INTERFACE:src/output.c>
+  $<INSTALL_INTERFACE:src/prefix.c>
+  $<INSTALL_INTERFACE:src/thread.c>
+  $<INSTALL_INTERFACE:src/time.c>
+  $<INSTALL_INTERFACE:src/topics.c>)
+
 target_include_directories(
   ${PROJECT_NAME}
   INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include> # while

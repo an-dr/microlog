@@ -11,7 +11,17 @@ project(
 # ========================
 
 public_include = ['include']
-src = ['src/ulog.c']
+src = [
+    'src/color.c',
+    'src/core.c',
+    'src/output.c',
+    'src/prefix.c',
+    'src/thread.c',
+    'src/time.c',
+    'src/print.c',
+    'src/topics.c',
+    'src/ulog_object.c',
+]
 
 # ========================
 # Packaging
