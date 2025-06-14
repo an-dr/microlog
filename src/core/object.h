@@ -11,9 +11,6 @@
 
 #include "ulog.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /// @brief Callback structure
 ///
@@ -42,6 +39,5 @@ typedef struct {
 
 } ulog_t;
 
-#ifdef __cplusplus
-}
-#endif
+/// @brief Main logger object himself
+extern ulog_t ulog;

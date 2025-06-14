@@ -11,10 +11,6 @@
 
 #include "ulog.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef struct {
     char *data;
     unsigned int curr_pos;
@@ -53,6 +49,3 @@ void print_formatted_message(log_target *tgt, ulog_Event *ev, bool full_time,
 void vprint(log_target *tgt, const char *format, va_list args);
 void print(log_target *tgt, const char *format, ...);
 
-#ifdef __cplusplus
-}
-#endif

@@ -33,7 +33,7 @@ void print(log_target *tgt, const char *format, ...) {
 /// @param tgt - Target
 /// @param ev - Event
 static void print_level(log_target *tgt, ulog_Event *ev) {
-    print(tgt, "%-1s ", level_strings[ev->level]);
+    print(tgt, "%-1s ", ulog_get_level_string(ev->level));
 }
 
 /// @brief Prints the message
@@ -52,20 +52,6 @@ static void print_message(log_target *tgt, ulog_Event *ev) {
     }
 }
 
-/// @brief Writes a formatted message
-/// @details The message is formatted as follows:
-///
-/// [Time][Prefix][Topic]Level [File: ]Message
-/// or
-/// [Time ][Topic ]Level [File: ]Message
-///
-/// where [Entry] is an optional part
-///
-/// @param tgt - Target
-/// @param ev - Event
-/// @param full_time - Full time or short time
-/// @param color - Color or no color
-/// @param new_line - New line in the end or no new line
 void print_formatted_message(log_target *tgt, ulog_Event *ev, bool full_time,
                              bool color, bool new_line) {
 
@@ -110,4 +96,13 @@ void print_formatted_message(log_target *tgt, ulog_Event *ev, bool full_time,
     if (new_line) {
         print(tgt, "\n");
     }
+}
+
+int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size) {
+    if (!out || out_size == 0) {
+        return -1;
+    }
+    log_target tgt = {.type = T_BUFFER, .dsc.buffer = {out, 0, out_size}};
+    print_formatted_message(&tgt, ev, false, false, false);
+    return 0;
 }

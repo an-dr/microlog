@@ -8,7 +8,7 @@
 // *************************************************************************
 
 #include "ulog.h"
-#include "ulog_t.h"
+#include "object.h"
 
 #ifndef ULOG_DEFAULT_LOG_LEVEL
 #define ULOG_DEFAULT_LOG_LEVEL LOG_TRACE

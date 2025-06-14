@@ -13,14 +13,16 @@ project(
 public_include = ['include']
 src = [
     'src/color.c',
-    'src/core.c',
+    'src/core/levels.c',
+    'src/core/lock.c',
+    'src/core/log.c',
+    'src/core/object.c',
+    'src/core/print.c',
     'src/output.c',
     'src/prefix.c',
     'src/thread.c',
     'src/time.c',
-    'src/print.c',
     'src/topics.c',
-    'src/ulog_object.c',
 ]
 
 # ========================

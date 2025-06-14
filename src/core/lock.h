@@ -9,14 +9,10 @@
 
 #pragma once
 
-#include "ulog_t.h"
+#include "ulog.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+/// @brief Locks if the function provided
+void lock(void);
 
-extern ulog_t ulog;
-
-#ifdef __cplusplus
-}
-#endif
+/// @brief Unlocks if the function provided
+void unlock(void);
