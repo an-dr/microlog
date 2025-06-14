@@ -19,5 +19,15 @@ project(
     default_options: ['warning_level=3'],
 )
 
-microlog_dep = declare_dependency(include_directories: ['include'], sources: ['src/ulog.c'])
+microlog_lib = library(
+    meson.project_name(),
+    'src/ulog.c',
+    include_directories: include_directories('include'),
+    install: true,
+    install_dir: join_paths(get_option('libdir'), meson.project_name()),
+)
+
+microlog_dep = declare_dependency(include_directories: ['include'],
+                                  link_with: microlog_lib,
+                                  version: meson.project_version())
 meson.override_dependency(meson.project_name(), microlog_dep)
