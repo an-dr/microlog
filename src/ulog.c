@@ -18,13 +18,6 @@
 #include <string.h>
 #include "ulog.h"
 
-#define ULOG_NEW_LINE_ON true
-#define ULOG_NEW_LINE_OFF false
-#define ULOG_COLOR_ON true
-#define ULOG_COLOR_OFF false
-#define ULOG_TIME_FULL true
-#define ULOG_TIME_SHORT false
-
 #ifndef ULOG_DEFAULT_LOG_LEVEL
 #define ULOG_DEFAULT_LOG_LEVEL LOG_TRACE
 #endif
@@ -145,6 +138,7 @@ static const char *level_colors[] = {
     "\x1b[31m",  // ERROR : Red #f00
     "\x1b[35m"   // FATAL : Magenta #f0f
 };
+#define COLOR_TERMINATOR "\x1b[0m"  // Reset color
 
 static void print_color_start(log_target *tgt, ulog_Event *ev) {
     (void)ev;
@@ -153,7 +147,7 @@ static void print_color_start(log_target *tgt, ulog_Event *ev) {
 
 static void print_color_end(log_target *tgt, ulog_Event *ev) {
     (void)ev;
-    print(tgt, "\x1b[0m");  // color end
+    print(tgt, "%s", COLOR_TERMINATOR);  // color end
 }
 
 #endif  // FEATURE_COLOR
@@ -222,8 +216,7 @@ static void print_prefix(log_target *tgt, ulog_Event *ev) {
 /// @param arg - File pointer
 static void callback_file(ulog_Event *ev, void *arg) {
     log_target tgt = {.type = T_STREAM, .dsc.stream = (FILE *)arg};
-    print_formatted_message(&tgt, ev, ULOG_TIME_FULL, ULOG_COLOR_OFF,
-                            ULOG_NEW_LINE_ON);
+    print_formatted_message(&tgt, ev, true, false, true);
 }
 
 /// @brief Adds a callback
@@ -610,8 +603,7 @@ static void print_formatted_message(log_target *tgt, ulog_Event *ev,
 /// @param ev
 static void callback_stdout(ulog_Event *ev, void *arg) {
     log_target tgt = {.type = T_STREAM, .dsc.stream = (FILE *)arg};
-    print_formatted_message(&tgt, ev, ULOG_TIME_SHORT, ULOG_COLOR_ON,
-                            ULOG_NEW_LINE_ON);
+    print_formatted_message(&tgt, ev, false, true, true);
 }
 
 int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size) {
@@ -619,8 +611,7 @@ int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size) {
         return -1;
     }
     log_target tgt = {.type = T_BUFFER, .dsc.buffer = {out, 0, out_size}};
-    print_formatted_message(&tgt, ev, ULOG_TIME_SHORT, ULOG_COLOR_OFF,
-                            ULOG_NEW_LINE_OFF);
+    print_formatted_message(&tgt, ev, false, false, false);
     return 0;
 }
 
