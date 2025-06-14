@@ -33,6 +33,8 @@ target_include_directories(
                                                                  # building
             $<INSTALL_INTERFACE:include>) # when installed
 
+
+            
 # ----------------------------------------------------------------------------
 # Testing
 # ----------------------------------------------------------------------------
@@ -80,6 +82,7 @@ configure_package_config_file(
 # Make a version file
 write_basic_package_version_file(
   "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+  VERSION ${PROJECT_VERSION}
   COMPATIBILITY SameMajorVersion)
 
 # install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake

@@ -57,17 +57,25 @@ unset(_cmake_targets_defined)
 unset(_cmake_targets_not_defined)
 unset(_cmake_expected_targets)
 
+# ******************************************************************************
+# Manually written CMake configuration for Microlog
+# ******************************************************************************
 
 # The installation prefix configured by this project.
 get_filename_component(_IMPORT_PREFIX "${CMAKE_CURRENT_LIST_DIR}" ABSOLUTE)
 
-# Create imported target microlog::microlog
-add_library(microlog::microlog INTERFACE IMPORTED)
+if(NOT TARGET microlog)
+    add_library(microlog STATIC)
 
-set_target_properties(microlog::microlog PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
-  INTERFACE_SOURCES "${_IMPORT_PREFIX}/src/ulog.c"
-)
+    target_sources(microlog PRIVATE "${PACKAGE_PREFIX_DIR}/src/ulog.c" )
+    target_include_directories(microlog PUBLIC "${PACKAGE_PREFIX_DIR}/include" )
+    
+    add_library(microlog::microlog ALIAS microlog)
+endif()
+
+# ***************************************************************************
+# End of manually written CMake configuration for Microlog
+# ***************************************************************************
 
 if(CMAKE_VERSION VERSION_LESS 3.1.0)
   message(FATAL_ERROR "This file relies on consumers using CMake 3.1.0 or greater.")
