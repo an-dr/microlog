@@ -1,6 +1,6 @@
 // *************************************************************************
 //
-// ulog v6.4.1 - A simple customizable logging library.
+// ulog v@{ULOG_VERSION}@ - A simple customizable logging library.
 // https://github.com/an-dr/microlog
 //
 // *************************************************************************

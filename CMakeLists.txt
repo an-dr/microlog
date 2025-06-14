@@ -33,14 +33,13 @@ target_include_directories(
                                                                  # building
             $<INSTALL_INTERFACE:include>) # when installed
 
-include(CTest)
-enable_testing()
-
 # ----------------------------------------------------------------------------
 # Testing
 # ----------------------------------------------------------------------------
 
 if(ULOG_BUILD_TESTS)
+  include(CTest)
+  enable_testing()
   message(STATUS "Building tests")
   add_subdirectory(tests/unit)
 else()
