@@ -67,7 +67,7 @@ The project is based on several core principles:
 - Download a Source Package from [Releases](https://github.com/an-dr/microlog/releases)
 - Add sources to your system manually
 
-**Option 2 - CMake Package**:
+**Option 2 - CMake Package (recommended CMake > 3.15.0)**:
 
 - Download a CMake Package from [Releases](https://github.com/an-dr/microlog/releases)
 - Specify the install location:
@@ -81,7 +81,7 @@ find_package(microlog 1.2.3 REQUIRED)
 add_executable(example_package example.cpp)
 target_link_libraries(example_package PRIVATE microlog::microlog)
 
-add_definitions(-DULOG_NO_COLOR) # configuration
+add_compile_definitions(ULOG_NO_COLOR) # configuration
 ```
 
 **Option 3 - Meson Package**:
@@ -141,10 +141,10 @@ INFO src/main.c:11: Hello world
 
 Part of features are configured compile-time. You can use defines in the compiler options, e.g. `-DULOG_NO_COLOR`.
 
-For CMake projects, you can use the `add_definitions` function.
+For CMake projects, you can use the `add_compile_definitions` function.
 
 ```cmake
-add_definitions(-DULOG_NO_COLOR)
+add_compile_definitions(ULOG_NO_COLOR)
 ```
 
 For Meson projects, you can use the `meson` command.
