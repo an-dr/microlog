@@ -1,6 +1,6 @@
 // *************************************************************************
 //
-// ulog v6.4.1 - A simple customizable logging library.
+// ulog v@{ULOG_VERSION}@ - A simple customizable logging library.
 // https://github.com/an-dr/microlog
 //
 // *************************************************************************
@@ -17,13 +17,6 @@
 
 #include <string.h>
 #include "ulog.h"
-
-#define ULOG_NEW_LINE_ON true
-#define ULOG_NEW_LINE_OFF false
-#define ULOG_COLOR_ON true
-#define ULOG_COLOR_OFF false
-#define ULOG_TIME_FULL true
-#define ULOG_TIME_SHORT false
 
 #ifndef ULOG_DEFAULT_LOG_LEVEL
 #define ULOG_DEFAULT_LOG_LEVEL LOG_TRACE
@@ -128,7 +121,7 @@ static void print(log_target *tgt, const char *format, ...) {
 static void print_level(log_target *tgt, ulog_Event *ev);
 static void print_message(log_target *tgt, ulog_Event *ev);
 static void process_callback(ulog_Event *ev, Callback *cb);
-static void write_formatted_message(log_target *tgt, ulog_Event *ev,
+static void print_formatted_message(log_target *tgt, ulog_Event *ev,
                                     bool full_time, bool color, bool new_line);
 
 /* ============================================================================
@@ -145,6 +138,7 @@ static const char *level_colors[] = {
     "\x1b[31m",  // ERROR : Red #f00
     "\x1b[35m"   // FATAL : Magenta #f0f
 };
+#define COLOR_TERMINATOR "\x1b[0m"  // Reset color
 
 static void print_color_start(log_target *tgt, ulog_Event *ev) {
     (void)ev;
@@ -153,7 +147,7 @@ static void print_color_start(log_target *tgt, ulog_Event *ev) {
 
 static void print_color_end(log_target *tgt, ulog_Event *ev) {
     (void)ev;
-    print(tgt, "\x1b[0m");  // color end
+    print(tgt, "%s", COLOR_TERMINATOR);  // color end
 }
 
 #endif  // FEATURE_COLOR
@@ -222,8 +216,7 @@ static void print_prefix(log_target *tgt, ulog_Event *ev) {
 /// @param arg - File pointer
 static void callback_file(ulog_Event *ev, void *arg) {
     log_target tgt = {.type = T_STREAM, .dsc.stream = (FILE *)arg};
-    write_formatted_message(&tgt, ev, ULOG_TIME_FULL, ULOG_COLOR_OFF,
-                            ULOG_NEW_LINE_ON);
+    print_formatted_message(&tgt, ev, true, false, true);
 }
 
 /// @brief Adds a callback
@@ -560,7 +553,7 @@ static const char *level_strings[] = {
 /// @param full_time - Full time or short time
 /// @param color - Color or no color
 /// @param new_line - New line in the end or no new line
-static void write_formatted_message(log_target *tgt, ulog_Event *ev,
+static void print_formatted_message(log_target *tgt, ulog_Event *ev,
                                     bool full_time, bool color, bool new_line) {
 
 #if FEATURE_COLOR
@@ -610,8 +603,7 @@ static void write_formatted_message(log_target *tgt, ulog_Event *ev,
 /// @param ev
 static void callback_stdout(ulog_Event *ev, void *arg) {
     log_target tgt = {.type = T_STREAM, .dsc.stream = (FILE *)arg};
-    write_formatted_message(&tgt, ev, ULOG_TIME_SHORT, ULOG_COLOR_ON,
-                            ULOG_NEW_LINE_ON);
+    print_formatted_message(&tgt, ev, false, true, true);
 }
 
 int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size) {
@@ -619,8 +611,7 @@ int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size) {
         return -1;
     }
     log_target tgt = {.type = T_BUFFER, .dsc.buffer = {out, 0, out_size}};
-    write_formatted_message(&tgt, ev, ULOG_TIME_SHORT, ULOG_COLOR_OFF,
-                            ULOG_NEW_LINE_OFF);
+    print_formatted_message(&tgt, ev, false, false, false);
     return 0;
 }
 
@@ -648,6 +639,7 @@ void ulog_log(int level, const char *file, int line, const char *topic,
 #if !FEATURE_TOPICS
     (void)topic;
 #else
+    // TODO: Move topic handling to a separate function
     int topic_id = -1;
     if (topic != NULL) {
         // Working with topics
@@ -749,11 +741,18 @@ static void process_callback(ulog_Event *ev, Callback *cb) {
 
 /// @brief Returns the string representation of the level
 const char *ulog_get_level_string(int level) {
+    if (level < 0 ||
+        level >= sizeof(level_strings) / sizeof(level_strings[0])) {
+        return "?";  // Return a default string for invalid levels
+    }
     return level_strings[level];
 }
 
 /// @brief Sets the debug level
 void ulog_set_level(int level) {
+    if (level < LOG_TRACE || level > LOG_FATAL) {
+        return;  // Invalid level, do nothing
+    }
     ulog.level = level;
 }
 
