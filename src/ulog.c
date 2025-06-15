@@ -742,7 +742,7 @@ static void process_callback(ulog_Event *ev, Callback *cb) {
 /// @brief Returns the string representation of the level
 const char *ulog_get_level_string(int level) {
     if (level < 0 ||
-        level >= sizeof(level_strings) / sizeof(level_strings[0])) {
+        level >= (int)(sizeof(level_strings) / sizeof(level_strings[0]))) {
         return "?";  // Return a default string for invalid levels
     }
     return level_strings[level];
