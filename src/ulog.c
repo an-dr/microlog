@@ -58,9 +58,6 @@ typedef struct {
 #if FEATURE_SHORT_LEVELS
     bool use_short_levels;
 #endif
-#if FEATURE_EMOJI_LEVELS
-    bool use_emoji_levels;
-#endif 
 } Config;
 
 /// @brief Logger object
@@ -108,9 +105,6 @@ static ulog_t ulog = {
 #endif
 #if FEATURE_SHORT_LEVELS
         .use_short_levels     = true,
-#endif
-#if FEATURE_EMOJI_LEVELS
-        .use_emoji_levels     = false,
 #endif
     },
     .callback_stdout = {0},
@@ -172,8 +166,6 @@ static void print(log_target *tgt, const char *format, ...) {
    Prototypes
 ============================================================================ */
 
-static void print_level(log_target *tgt, ulog_Event *ev);
-static void print_message(log_target *tgt, ulog_Event *ev);
 static void process_callback(ulog_Event *ev, Callback *cb);
 static void print_formatted_message(log_target *tgt, ulog_Event *ev,
                                     bool full_time, bool color, bool new_line);
@@ -585,22 +577,62 @@ void ulog_set_lock(ulog_LockFn function, void *lock_arg) {
 }
 
 /* ============================================================================
-   Core Functionality
+   Core Functionality: Debug Levels
 ============================================================================ */
 
-/// @brief Level strings
-
 // clang-format off
-static const char *level_strings[] = {
+
+#define ULOG_LEVELS_LONG  0
+#define ULOG_LEVELS_SHORT 1
+#define ULOG_LEVELS_NUM   6
+
+/// @brief Level strings
+static const char *level_strings[][ULOG_LEVELS_NUM] = {
+     {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"}
 #if FEATURE_EMOJI_LEVELS
-    "⚪", "🔵", "🟢", "🟡", "🔴", "💥"
-#elif FEATURE_SHORT_LEVELS
-    "T", "D", "I", "W", "E", "F"
-#else
-    "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"
+    ,{"⚪", "🔵", "🟢", "🟡", "🔴", "💥"}
+#endif
+#if !FEATURE_EMOJI_LEVELS && FEATURE_SHORT_LEVELS
+    ,{"T", "D", "I", "W", "E", "F"}
 #endif
 };
 // clang-format on
+
+static void print_level(log_target *tgt, ulog_Event *ev) {
+#if FEATURE_SHORT_LEVELS || FEATURE_EMOJI_LEVELS
+    if (ulog.config.use_short_levels) {
+        print(tgt, "%-1s ", level_strings[ULOG_LEVELS_SHORT][ev->level]);
+    } else {
+        print(tgt, "%-5s ", level_strings[ULOG_LEVELS_LONG][ev->level]);
+    }
+#else  // FEATURE_SHORT_LEVELS || FEATURE_EMOJI_LEVELS
+    print(tgt, "%-1s ", level_strings[ULOG_LEVELS_LONG][ev->level]);
+#endif  // FEATURE_SHORT_LEVELS || FEATURE_EMOJI_LEVELS
+}
+
+/* ============================================================================
+   Core Functionality
+============================================================================ */
+
+
+/// @brief Prints the message
+/// @param tgt - Target
+/// @param ev - Event
+static void print_message(log_target *tgt, ulog_Event *ev) {
+
+#if FEATURE_FILE_STRING
+    if (ulog.config.show_file_string) {
+        print(tgt, "%s:%d: ", ev->file, ev->line);  // file and line
+    }
+#endif
+
+    if (ev->message) {
+        vprint(tgt, ev->message, ev->message_format_args);  // message
+    } else {
+        print(tgt, "NULL");  // message
+    }
+}
+
 
 /// @brief Writes the formatted message
 /// @details The message is formatted as follows:
@@ -759,27 +791,7 @@ void ulog_log(int level, const char *file, int line, const char *topic,
     va_end(ev.message_format_args);
 }
 
-static void print_level(log_target *tgt, ulog_Event *ev) {
-    print(tgt, "%-1s ", level_strings[ev->level]);
-}
 
-/// @brief Prints the message
-/// @param tgt - Target
-/// @param ev - Event
-static void print_message(log_target *tgt, ulog_Event *ev) {
-
-#if FEATURE_FILE_STRING
-    if (ulog.config.show_file_string) {
-        print(tgt, "%s:%d: ", ev->file, ev->line);  // file and line
-    }
-#endif
-
-    if (ev->message) {
-        vprint(tgt, ev->message, ev->message_format_args);  // message
-    } else {
-        print(tgt, "NULL");  // message
-    }
-}
 
 /// @brief Processes the callback with the event
 /// @param ev - Event
@@ -815,11 +827,10 @@ static void process_callback(ulog_Event *ev, Callback *cb) {
 
 /// @brief Returns the string representation of the level
 const char *ulog_get_level_string(int level) {
-    if (level < 0 ||
-        level >= (int)(sizeof(level_strings) / sizeof(level_strings[0]))) {
+    if (level < 0 || level >= ULOG_LEVELS_NUM) {
         return "?";  // Return a default string for invalid levels
     }
-    return level_strings[level];
+    return level_strings[ULOG_LEVELS_LONG][level];
 }
 
 /// @brief Sets the debug level
