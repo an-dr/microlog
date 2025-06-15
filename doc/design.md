@@ -21,3 +21,26 @@ All logging is happening via `ulog_log` function. `logt_*` and `log_*` macros ar
 The proces is shown in the diagram below:
 
 ![design](design.drawio.svg)
+
+## Code organization
+
+The code is organized into two files. The source files contsists of sections
+
+- Core Functionality
+- Core Functionality: Debug Levels
+- Core Functionality: Logger configuration
+- Core Functionality: Thread Safety
+- Feature: Color
+- Feature: Custom Prefix
+- Feature: Extra Outputs
+- Feature: Log Topics
+- Feature: Log Topics - Dynamic Allocation
+- Feature: Log Topics - Static Allocation
+- Feature: Time
+- Main Logger Object
+- Output Printing
+- Prototypes
+
+Here is a diagrams shows section dependencies
+
+![sections](sections.drawio.svg)
