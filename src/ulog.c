@@ -610,6 +610,15 @@ static void print_level(log_target *tgt, ulog_Event *ev) {
 #endif  // FEATURE_SHORT_LEVELS || FEATURE_EMOJI_LEVELS
 }
 
+
+/// @brief Returns the string representation of the level
+const char *ulog_get_level_string(int level) {
+    if (level < 0 || level >= ULOG_LEVELS_NUM) {
+        return "?";  // Return a default string for invalid levels
+    }
+    return level_strings[ULOG_LEVELS_LONG][level];
+}
+
 /* ============================================================================
    Core Functionality
 ============================================================================ */
@@ -825,13 +834,6 @@ static void process_callback(ulog_Event *ev, Callback *cb) {
 // Core Functionality: Logger configuration
 //==================================================================
 
-/// @brief Returns the string representation of the level
-const char *ulog_get_level_string(int level) {
-    if (level < 0 || level >= ULOG_LEVELS_NUM) {
-        return "?";  // Return a default string for invalid levels
-    }
-    return level_strings[ULOG_LEVELS_LONG][level];
-}
 
 /// @brief Sets the debug level
 void ulog_set_level(int level) {
