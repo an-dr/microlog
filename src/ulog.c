@@ -15,8 +15,8 @@
 //
 // *************************************************************************
 
-#include <string.h>
 #include "ulog.h"
+#include <string.h>
 
 #ifndef ULOG_DEFAULT_LOG_LEVEL
 #define ULOG_DEFAULT_LOG_LEVEL LOG_TRACE
@@ -34,12 +34,40 @@ typedef struct {
     int level;            // Debug level
 } Callback;
 
+typedef struct {
+    int level;
+    bool quiet_mode;
+#if FEATURE_TIME
+    bool show_time;
+#endif
+#if FEATURE_COLOR
+    bool show_color;
+#endif
+#if FEATURE_CUSTOM_PREFIX
+    bool show_prefix;
+#endif
+#if FEATURE_FILE_STRING
+    bool show_file_string;
+#endif
+#if FEATURE_TOPICS
+    bool show_topic;
+#endif
+#if FEATURE_EXTRA_OUTPUTS
+    bool print_to_extra_outputs;
+#endif
+#if FEATURE_SHORT_LEVELS
+    bool use_short_levels;
+#endif
+#if FEATURE_EMOJI_LEVELS
+    bool use_emoji_levels;
+#endif 
+} Config;
+
 /// @brief Logger object
 typedef struct {
     ulog_LockFn lock_function;  // Mutex function
     void *lock_arg;             // Mutex argument
-    int level;                  // Debug level
-    bool quiet;                 // Quiet mode
+    Config config;              // Configuration settings
     Callback callback_stdout;   // to stdout
 
 #if FEATURE_EXTRA_OUTPUTS
@@ -57,8 +85,34 @@ typedef struct {
 static ulog_t ulog = {
     .lock_function   = NULL,
     .lock_arg        = NULL,
-    .level           = ULOG_DEFAULT_LOG_LEVEL,
-    .quiet           = false,
+    .config = {
+        .level                = ULOG_DEFAULT_LOG_LEVEL,
+        .quiet_mode           = false,
+#if FEATURE_TIME
+        .show_time            = true,
+#endif
+#if FEATURE_COLOR
+        .show_color           = true,
+#endif
+#if FEATURE_CUSTOM_PREFIX
+        .show_prefix          = true,
+#endif
+#if FEATURE_FILE_STRING
+        .show_file_string     = true,
+#endif
+#if FEATURE_TOPICS
+        .show_topic           = true,
+#endif
+#if FEATURE_EXTRA_OUTPUTS
+        .print_to_extra_outputs = true,
+#endif
+#if FEATURE_SHORT_LEVELS
+        .use_short_levels     = true,
+#endif
+#if FEATURE_EMOJI_LEVELS
+        .use_emoji_levels     = false,
+#endif
+    },
     .callback_stdout = {0},
 
 #if FEATURE_EXTRA_OUTPUTS
@@ -566,7 +620,7 @@ static void print_formatted_message(log_target *tgt, ulog_Event *ev,
                                     bool full_time, bool color, bool new_line) {
 
 #if FEATURE_COLOR
-    if (color) {
+    if (color && ulog.config.show_color) {
         print_color_start(tgt, ev);
     }
 #else
@@ -574,23 +628,29 @@ static void print_formatted_message(log_target *tgt, ulog_Event *ev,
 #endif  // FEATURE_COLOR
 
 #if FEATURE_TIME
-    if (full_time) {
+    if (ulog.config.show_time) {
+        if (full_time) {
 #if FEATURE_EXTRA_OUTPUTS
-        print_time_full(tgt, ev);
+            print_time_full(tgt, ev);
 #endif
-    } else {
-        print_time_sec(tgt, ev);
+        } else {
+            print_time_sec(tgt, ev);
+        } 
     }
 #else
     (void)full_time;
 #endif  // FEATURE_TIME
 
 #if FEATURE_CUSTOM_PREFIX
-    print_prefix(tgt, ev);
+    if (ulog.config.show_prefix) {
+        print_prefix(tgt, ev);
+    }
 #endif
 
 #if FEATURE_TOPICS
-    print_topic(tgt, ev);
+    if (ulog.config.show_topic) {
+        print_topic(tgt, ev);
+    }
 #endif
 
     print_level(tgt, ev);
@@ -598,7 +658,7 @@ static void print_formatted_message(log_target *tgt, ulog_Event *ev,
     print_message(tgt, ev);
 
 #if FEATURE_COLOR
-    if (color) {
+    if (color && ulog.config.show_color) {
         print_color_end(tgt, ev);
     }
 #endif
@@ -627,7 +687,7 @@ int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size) {
 /// @brief Processes the stdout callback
 /// @param ev - Event
 static void log_to_stdout(ulog_Event *ev) {
-    if (!ulog.quiet) {
+    if (!ulog.config.quiet_mode) {
         // Initializing the stdout callback if not set
         if (!ulog.callback_stdout.function) {
             ulog.callback_stdout = (Callback){callback_stdout,
@@ -642,7 +702,7 @@ static void log_to_stdout(ulog_Event *ev) {
 void ulog_log(int level, const char *file, int line, const char *topic,
               const char *message, ...) {
 
-    if (level < ulog.level) {
+    if (level < ulog.config.level) {
         return;
     }
 #if !FEATURE_TOPICS
@@ -688,7 +748,10 @@ void ulog_log(int level, const char *file, int line, const char *topic,
     log_to_stdout(&ev);
 
 #if FEATURE_EXTRA_OUTPUTS
-    log_to_extra_outputs(&ev);
+    if (ulog.config.print_to_extra_outputs) {
+        // Process extra outputs
+        log_to_extra_outputs(&ev);
+    }
 #endif
 
     unlock();
@@ -706,7 +769,9 @@ static void print_level(log_target *tgt, ulog_Event *ev) {
 static void print_message(log_target *tgt, ulog_Event *ev) {
 
 #if FEATURE_FILE_STRING
-    print(tgt, "%s:%d: ", ev->file, ev->line);  // file and line
+    if (ulog.config.show_file_string) {
+        print(tgt, "%s:%d: ", ev->file, ev->line);  // file and line
+    }
 #endif
 
     if (ev->message) {
@@ -762,10 +827,10 @@ void ulog_set_level(int level) {
     if (level < LOG_TRACE || level > LOG_FATAL) {
         return;  // Invalid level, do nothing
     }
-    ulog.level = level;
+    ulog.config.level = level;
 }
 
 /// @brief Sets the quiet mode
 void ulog_set_quiet(bool enable) {
-    ulog.quiet = enable;
+    ulog.config.quiet_mode = enable;
 }
