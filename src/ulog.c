@@ -18,43 +18,12 @@
 #include "ulog.h"
 #include <string.h>
 
-#ifndef ULOG_DEFAULT_LOG_LEVEL
-#define ULOG_DEFAULT_LOG_LEVEL LOG_TRACE
-#endif
-
-/* ============================================================================
-   Main Logger Object
-============================================================================ */
-
-/// @brief Callback structure
-///
-typedef struct {
-    ulog_LogFn function;  // Callback function
-    void *arg;            // Any argument that will be passed to the event
-    int level;            // Debug level
-} Callback;
-
-/// @brief Logger object
-typedef struct {
-    ulog_LockFn lock_function;  // Mutex function
-    void *lock_arg;             // Mutex argument
-    int level;                  // Debug level
-    bool quiet_mode;            // Quiet mode, no output to stdout
-    Callback callback_stdout;   // to stdout
-} ulog_t;
-
-/// @brief Main logger object himself
-static ulog_t ulog = {
-    .lock_function   = NULL,
-    .lock_arg        = NULL,
-    .level           = ULOG_DEFAULT_LOG_LEVEL,
-    .quiet_mode      = false,
-    .callback_stdout = {0},
-};
-
 /* ============================================================================
    Core: Output Printing
 ============================================================================ */
+
+//  Private
+// ================
 
 typedef struct {
     char *data;
@@ -98,7 +67,6 @@ static void print(log_target *tgt, const char *format, ...) {
    Prototypes
 ============================================================================ */
 
-static void process_callback(ulog_Event *ev, Callback *cb);
 static void print_formatted_message(log_target *tgt, ulog_Event *ev,
                                     bool full_time, bool color, bool new_line);
 
@@ -129,7 +97,7 @@ static const char *level_colors[] = {
 };
 #define COLOR_TERMINATOR "\x1b[0m"  // Reset color
 
-static void print_color_start(log_target *tgt) {
+static void print_color_start(log_target *tgt, ulog_Event *ev) {
     if (feature_color.enabled) {
         print(tgt, "%s", level_colors[ev->level]);  // color start
     }
@@ -151,7 +119,7 @@ void ulog_enable_color(bool enable) {
 // Disabled Private
 // ================
 #else  // FEATURE_COLOR
-#define print_color_start(tgt) (void)(tgt)
+#define print_color_start(tgt) (void)(tgt), (void)(ev)
 #define print_color_end(tgt) (void)(tgt)
 #endif  // FEATURE_COLOR
 
@@ -258,7 +226,87 @@ void ulog_enable_prefix(bool enable) {
 #endif  // FEATURE_CUSTOM_PREFIX
 
 /* ============================================================================
-   Feature: Extra Outputs
+   Core: Callback
+============================================================================ */
+
+//  Private
+// ================
+
+static void callback_stdout(ulog_Event *ev, void *arg);
+
+/// @brief Callback structure
+typedef struct {
+    ulog_LogFn function;  // Callback function
+    void *arg;            // Any argument that will be passed to the event
+    int level;            // Debug level
+} Callback;
+
+/// @brief Logger object
+typedef struct {
+    bool quiet_mode;    // Is the quiet mode enabled
+    Callback callback;  // to stdout
+} feature_callback_t;
+
+/// @brief Main logger object himself
+static feature_callback_t feature_callback = {
+    .quiet_mode = false,             // Default is not quiet
+    .callback   = {callback_stdout,  // Default callback to stdout
+                   stdout,           // Default stream is stdout
+                   LOG_TRACE},       // Default level is LOG_TRACE
+};
+
+/// @brief Callback for stdout
+/// @param ev
+static void callback_stdout(ulog_Event *ev, void *arg) {
+    log_target tgt = {.type = T_STREAM, .dsc.stream = (FILE *)arg};
+    print_formatted_message(&tgt, ev, false, true, true);
+}
+
+/// @brief Processes the callback with the event
+/// @param ev - Event
+/// @param cb - Callback
+static void process_callback(ulog_Event *ev, Callback *cb) {
+    if (ev->level >= cb->level) {
+
+#if FEATURE_TIME
+        if (!ev->time) {
+            time_t t = time(NULL);
+            ev->time = localtime(&t);
+        }
+#endif  // FEATURE_TIME
+
+        // Create event copy to avoid va_list issues
+        ulog_Event ev_copy = {0};
+        memcpy(&ev_copy, ev, sizeof(ulog_Event));
+
+        // Initialize the va_list for the copied event
+        // Note: We use a copy of the va_list to avoid issues with passing it
+        // directly as on some platforms using the same va_list multiple times
+        // can lead to undefined behavior.
+        va_copy(ev_copy.message_format_args, ev->message_format_args);
+        cb->function(&ev_copy, cb->arg);
+        va_end(ev_copy.message_format_args);
+    }
+}
+
+/// @brief Processes the stdout callback
+/// @param ev - Event
+static void log_to_stdout(ulog_Event *ev) {
+    if (!feature_callback.quiet_mode) {
+        process_callback(ev, &feature_callback.callback);
+    }
+}
+
+// Public
+// ================
+
+/// @brief Sets the quiet mode
+void ulog_set_quiet(bool enable) {
+    feature_callback.quiet_mode = enable;
+}
+
+/* ============================================================================
+   Feature: Extra Outputs (Needs Callbacks)
 ============================================================================ */
 #if FEATURE_EXTRA_OUTPUTS
 
@@ -266,9 +314,14 @@ void ulog_enable_prefix(bool enable) {
 // ================
 
 typedef struct {
-    bool enabled;  // Is the feature enabled
+    bool enabled;                           // Is the feature enabled
     Callback callbacks[CFG_EXTRA_OUTPUTS];  // Array of callbacks
 } feature_extra_outputs_t;
+
+static feature_extra_outputs_t feature_extra_outputs = {
+    .enabled   = true,  // Default is enabled
+    .callbacks = {0},   // Initialize all callbacks to zero
+};
 
 /// @brief Callback for file
 /// @param ev - Event
@@ -281,9 +334,14 @@ static void callback_file(ulog_Event *ev, void *arg) {
 /// @brief Processes the extra callbacks
 /// @param ev - Event
 static void log_to_extra_outputs(ulog_Event *ev) {
+    if (!feature_extra_outputs.enabled) {
+        return;  // Feature is disabled
+    }
     // Processing the message for callbacks
-    for (int i = 0; i < CFG_EXTRA_OUTPUTS && feature_extra_outputs.callbacks[i].function; i++) {
-        process_callback(ev, &ulog.callbacks[i]);
+    for (int i = 0;
+         i < CFG_EXTRA_OUTPUTS && feature_extra_outputs.callbacks[i].function;
+         i++) {
+        process_callback(ev, &feature_extra_outputs.callbacks[i]);
     }
 }
 
@@ -297,8 +355,9 @@ static void log_to_extra_outputs(ulog_Event *ev) {
 /// @param level - Debug level
 int ulog_add_callback(ulog_LogFn function, void *arg, int level) {
     for (int i = 0; i < CFG_EXTRA_OUTPUTS; i++) {
-        if (!ulog.callbacks[i].function) {
-            ulog.callbacks[i] = (Callback){function, arg, level};
+        if (!feature_extra_outputs.callbacks[i].function) {
+            feature_extra_outputs.callbacks[i] =
+                (Callback){function, arg, level};
             return 0;
         }
     }
@@ -321,6 +380,9 @@ int ulog_add_fp(FILE *fp, int level) {
    Feature: Log Topics
 ============================================================================ */
 #if FEATURE_TOPICS
+
+// Private
+// ================
 
 typedef struct {
     int id;
@@ -386,6 +448,24 @@ static int _ulog_disable_topic(int topic) {
     return -1;
 }
 
+/// @brief Checks if the topic is enabled
+/// @param topic - Topic ID or -1 if no topic
+/// @return true if enabled or no topic, false otherwise
+static bool is_topic_enabled(int topic) {
+    if (topic < 0) {  // no topic, always allowed
+        return true;
+    }
+
+    Topic *t = _get_topic_ptr(topic);
+    if (t) {
+        return t->enabled;
+    }
+    return false;
+}
+
+// Public
+// ================
+
 int ulog_set_topic_level(const char *topic_name, int level) {
     if (ulog_add_topic(topic_name, true) != -1) {
         return _ulog_set_topic_level(ulog_get_topic_id(topic_name), level);
@@ -428,27 +508,15 @@ int ulog_get_topic_id(const char *topic_name) {
     return TOPIC_NOT_FOUND;
 }
 
-/// @brief Checks if the topic is enabled
-/// @param topic - Topic ID or -1 if no topic
-/// @return true if enabled or no topic, false otherwise
-static bool is_topic_enabled(int topic) {
-    if (topic < 0) {  // no topic, always allowed
-        return true;
-    }
-
-    Topic *t = _get_topic_ptr(topic);
-    if (t) {
-        return t->enabled;
-    }
-    return false;
-}
-
 #endif  // FEATURE_TOPICS
 
 /* ============================================================================
    Feature: Log Topics - Static Allocation
 ============================================================================ */
 #if FEATURE_TOPICS && CFG_TOPICS_DINAMIC_ALLOC == false
+
+// Private
+// ================
 
 static Topic topics[CFG_TOPICS_NUM] = {{0}};
 
@@ -469,6 +537,9 @@ static Topic *_get_topic_ptr(int topic) {
     }
     return NULL;
 }
+
+// Public
+// ================
 
 int ulog_add_topic(const char *topic_name, bool enable) {
     if (topic_name == NULL) {
@@ -499,7 +570,8 @@ int ulog_add_topic(const char *topic_name, bool enable) {
 
 #if FEATURE_TOPICS && CFG_TOPICS_DINAMIC_ALLOC == true
 
-#include <stdlib.h>
+// Private
+// ================
 
 static Topic *topics = NULL;
 
@@ -530,6 +602,9 @@ static void *_create_topic(int id, const char *topic_name, bool enable) {
     }
     return t;
 }
+
+// Public
+// ================
 
 int ulog_add_topic(const char *topic_name, bool enable) {
     if (topic_name == NULL) {
@@ -569,59 +644,87 @@ int ulog_add_topic(const char *topic_name, bool enable) {
 
 #endif  // FEATURE_TOPICS && CFG_TOPICS_DINAMIC_ALLOC == true
 
-#if FEATURE_TOPICS
-
-#endif  // FEATURE_TOPICS
-
 /* ============================================================================
    Core Functionality: Thread Safety
 ============================================================================ */
 
+// Private
+// ================
+
+typedef struct {
+    ulog_LockFn lock_function;  // Lock function
+    void *lock_arg;             // Argument for the lock function
+} feature_lock_t;
+
+static feature_lock_t feature_lock = {
+    .lock_function = NULL,  // No lock function by default
+    .lock_arg      = NULL,  // No lock argument by default
+};
+
 /// @brief Locks if the function provided
 static void lock(void) {
-    if (ulog.lock_function) {
-        ulog.lock_function(true, ulog.lock_arg);
+    if (feature_lock.lock_function) {
+        feature_lock.lock_function(true, feature_lock.lock_arg);
     }
 }
 
 /// @brief Unlocks if the function provided
 static void unlock(void) {
-    if (ulog.lock_function) {
-        ulog.lock_function(false, ulog.lock_arg);
+    if (feature_lock.lock_function) {
+        feature_lock.lock_function(false, feature_lock.lock_arg);
     }
 }
 
+// Public
+// ================
+
 /// @brief  Sets the lock function and user data
 void ulog_set_lock(ulog_LockFn function, void *lock_arg) {
-    ulog.lock_function = function;
-    ulog.lock_arg      = lock_arg;
+    feature_lock.lock_function = function;
+    feature_lock.lock_arg      = lock_arg;
 }
 
 /* ============================================================================
-   Core: Debug Levels
+   Core: Log Levels
 ============================================================================ */
 
-// clang-format off
+// Private
+// ================
 
+#ifndef ULOG_DEFAULT_LOG_LEVEL
+#define ULOG_DEFAULT_LOG_LEVEL LOG_TRACE
+#endif
+
+typedef struct {
+    int level;          // Debug level
+    bool short_levels;  // Use short levels
+} feature_log_level_t;
+
+static feature_log_level_t feature_log_level = {
+    .level        = ULOG_DEFAULT_LOG_LEVEL,
+    .short_levels = false,  // Default is long levels
+};
+
+// clang-format off
 #define ULOG_LEVELS_LONG  0
 #define ULOG_LEVELS_SHORT 1
 #define ULOG_LEVELS_NUM   6
 
 /// @brief Level strings
 static const char *level_strings[][ULOG_LEVELS_NUM] = {
-     {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"}
+     {"TRACE",  "DEBUG",    "INFO",     "WARN",     "ERROR",    "FATAL"}
 #if FEATURE_EMOJI_LEVELS
-    ,{"⚪", "🔵", "🟢", "🟡", "🔴", "💥"}
+    ,{"⚪",     "🔵",       "🟢",       "🟡",       "🔴",       "💥"}
 #endif
 #if !FEATURE_EMOJI_LEVELS && FEATURE_SHORT_LEVELS
-    ,{"T", "D", "I", "W", "E", "F"}
+    ,{"T",      "D",        "I",        "W",        "E",        "F"}
 #endif
 };
 // clang-format on
 
 static void print_level(log_target *tgt, ulog_Event *ev) {
 #if FEATURE_SHORT_LEVELS || FEATURE_EMOJI_LEVELS
-    if (ulog.config.use_short_levels) {
+    if (feature_log_level.short_levels) {
         print(tgt, "%-1s ", level_strings[ULOG_LEVELS_SHORT][ev->level]);
     } else {
         print(tgt, "%-5s ", level_strings[ULOG_LEVELS_LONG][ev->level]);
@@ -631,6 +734,9 @@ static void print_level(log_target *tgt, ulog_Event *ev) {
 #endif  // FEATURE_SHORT_LEVELS || FEATURE_EMOJI_LEVELS
 }
 
+// Public
+// ================
+
 /// @brief Returns the string representation of the level
 const char *ulog_get_level_string(int level) {
     if (level < 0 || level >= ULOG_LEVELS_NUM) {
@@ -639,9 +745,22 @@ const char *ulog_get_level_string(int level) {
     return level_strings[ULOG_LEVELS_LONG][level];
 }
 
+/// @brief Sets the debug level
+void ulog_set_level(int level) {
+    if (level < LOG_TRACE || level > LOG_FATAL) {
+        return;  // Invalid level, do nothing
+    }
+    feature_log_level.level = level;
+}
+
 /* ============================================================================
-   Core
+   Core: Logging
 ============================================================================ */
+
+bool show_file_string = false;  // Show file and line in the log message
+
+// Private
+// ================
 
 /// @brief Prints the message
 /// @param tgt - Target
@@ -649,7 +768,7 @@ const char *ulog_get_level_string(int level) {
 static void print_message(log_target *tgt, ulog_Event *ev) {
 
 #if FEATURE_FILE_STRING
-    if (ulog.config.show_file_string) {
+    if (show_file_string) {
         print(tgt, "%s:%d: ", ev->file, ev->line);  // file and line
     }
 #endif
@@ -678,31 +797,21 @@ static void print_message(log_target *tgt, ulog_Event *ev) {
 static void print_formatted_message(log_target *tgt, ulog_Event *ev,
                                     bool full_time, bool color, bool new_line) {
 
-    if (color) {
-        print_color_start(tgt, ev);
-    }
+    color ? print_color_start(tgt, ev) : (void)0;
 
-    if (full_time) {
-        print_time_full(tgt, ev);
-    } else {
-        print_time_sec(tgt, ev);
-    }
+    full_time ? print_time_full(tgt, ev) : print_time_sec(tgt, ev);
 
     print_prefix(tgt, ev);
     print_topic(tgt, ev);
     print_level(tgt, ev);
     print_message(tgt, ev);
 
-    color ? print_color_end(tgt, ev) : (void)0;  // Print color end if needed
-    new_line ? print(tgt, "\n") : (void)0;       // Print new line if needed
+    color ? print_color_end(tgt) : (void)0;
+    new_line ? print(tgt, "\n") : (void)0;
 }
 
-/// @brief Callback for stdout
-/// @param ev
-static void callback_stdout(ulog_Event *ev, void *arg) {
-    log_target tgt = {.type = T_STREAM, .dsc.stream = (FILE *)arg};
-    print_formatted_message(&tgt, ev, false, true, true);
-}
+// Public
+// ================
 
 int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size) {
     if (!out || out_size == 0) {
@@ -713,25 +822,10 @@ int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size) {
     return 0;
 }
 
-/// @brief Processes the stdout callback
-/// @param ev - Event
-static void log_to_stdout(ulog_Event *ev) {
-    if (!ulog.config.quiet_mode) {
-        // Initializing the stdout callback if not set
-        if (!ulog.callback_stdout.function) {
-            ulog.callback_stdout = (Callback){callback_stdout,
-                                              stdout,  // pass stream
-                                              LOG_TRACE};
-        }
-        process_callback(ev, &ulog.callback_stdout);
-    }
-}
-
-/// @brief Logs the message
 void ulog_log(int level, const char *file, int line, const char *topic,
               const char *message, ...) {
 
-    if (level < ulog.config.level) {
+    if (level < feature_log_level.level) {
         return;
     }
 #if !FEATURE_TOPICS
@@ -780,48 +874,4 @@ void ulog_log(int level, const char *file, int line, const char *topic,
     unlock();
 
     va_end(ev.message_format_args);
-}
-
-/// @brief Processes the callback with the event
-/// @param ev - Event
-/// @param cb - Callback
-static void process_callback(ulog_Event *ev, Callback *cb) {
-    if (ev->level >= cb->level) {
-
-#if FEATURE_TIME
-        if (!ev->time) {
-            time_t t = time(NULL);
-            ev->time = localtime(&t);
-        }
-#endif  // FEATURE_TIME
-
-        // Create event copy to avoid va_list issues
-        ulog_Event ev_copy = {0};
-        memcpy(&ev_copy, ev, sizeof(ulog_Event));
-
-        // Initialize the va_list for the copied event
-        // Note: We use a copy of the va_list to avoid issues with passing it
-        // directly as on some platforms using the same va_list multiple times
-        // can lead to undefined behavior.
-        va_copy(ev_copy.message_format_args, ev->message_format_args);
-        cb->function(&ev_copy, cb->arg);
-        va_end(ev_copy.message_format_args);
-    }
-}
-
-//==================================================================
-// Core Functionality: Logger configuration
-//==================================================================
-
-/// @brief Sets the debug level
-void ulog_set_level(int level) {
-    if (level < LOG_TRACE || level > LOG_FATAL) {
-        return;  // Invalid level, do nothing
-    }
-    ulog.config.level = level;
-}
-
-/// @brief Sets the quiet mode
-void ulog_set_quiet(bool enable) {
-    ulog.config.quiet_mode = enable;
 }
