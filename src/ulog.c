@@ -17,6 +17,7 @@
 
 #include "ulog.h"
 #include <string.h>
+#include <stdlib.h>
 
 /* ============================================================================
    Core: Output Printing
@@ -226,6 +227,75 @@ void ulog_enable_prefix(bool enable) {
 #endif  // FEATURE_CUSTOM_PREFIX
 
 /* ============================================================================
+   Core: Log Levels
+============================================================================ */
+
+// Private
+// ================
+
+#ifndef ULOG_DEFAULT_LOG_LEVEL
+#define ULOG_DEFAULT_LOG_LEVEL LOG_TRACE
+#endif
+
+typedef struct {
+    int level;          // Debug level
+    bool short_levels;  // Use short levels
+} feature_log_level_t;
+
+static feature_log_level_t feature_log_level = {
+    .level        = ULOG_DEFAULT_LOG_LEVEL,
+    .short_levels = false,  // Default is long levels
+};
+
+// clang-format off
+#define ULOG_LEVELS_LONG  0
+#define ULOG_LEVELS_SHORT 1
+#define ULOG_LEVELS_NUM   6
+
+/// @brief Level strings
+static const char *level_strings[][ULOG_LEVELS_NUM] = {
+     {"TRACE",  "DEBUG",    "INFO",     "WARN",     "ERROR",    "FATAL"}
+#if FEATURE_EMOJI_LEVELS
+    ,{"⚪",     "🔵",       "🟢",       "🟡",       "🔴",       "💥"}
+#endif
+#if !FEATURE_EMOJI_LEVELS && FEATURE_SHORT_LEVELS
+    ,{"T",      "D",        "I",        "W",        "E",        "F"}
+#endif
+};
+// clang-format on
+
+static void print_level(log_target *tgt, ulog_Event *ev) {
+#if FEATURE_SHORT_LEVELS || FEATURE_EMOJI_LEVELS
+    if (feature_log_level.short_levels) {
+        print(tgt, "%-1s ", level_strings[ULOG_LEVELS_SHORT][ev->level]);
+    } else {
+        print(tgt, "%-5s ", level_strings[ULOG_LEVELS_LONG][ev->level]);
+    }
+#else   // FEATURE_SHORT_LEVELS || FEATURE_EMOJI_LEVELS
+    print(tgt, "%-1s ", level_strings[ULOG_LEVELS_LONG][ev->level]);
+#endif  // FEATURE_SHORT_LEVELS || FEATURE_EMOJI_LEVELS
+}
+
+// Public
+// ================
+
+/// @brief Returns the string representation of the level
+const char *ulog_get_level_string(int level) {
+    if (level < 0 || level >= ULOG_LEVELS_NUM) {
+        return "?";  // Return a default string for invalid levels
+    }
+    return level_strings[ULOG_LEVELS_LONG][level];
+}
+
+/// @brief Sets the debug level
+void ulog_set_level(int level) {
+    if (level < LOG_TRACE || level > LOG_FATAL) {
+        return;  // Invalid level, do nothing
+    }
+    feature_log_level.level = level;
+}
+
+/* ============================================================================
    Core: Callback
 ============================================================================ */
 
@@ -324,7 +394,7 @@ typedef struct {
 
 static feature_extra_outputs_t feature_extra_outputs = {
     .enabled   = true,  // Default is enabled
-    .callbacks = {0},   // Initialize all callbacks to zero
+    .callbacks = {{0}}  // Initialize all callbacks to zero (double braces)
 };
 
 /// @brief Callback for file
@@ -686,75 +756,6 @@ static void unlock(void) {
 void ulog_set_lock(ulog_LockFn function, void *lock_arg) {
     feature_lock.lock_function = function;
     feature_lock.lock_arg      = lock_arg;
-}
-
-/* ============================================================================
-   Core: Log Levels
-============================================================================ */
-
-// Private
-// ================
-
-#ifndef ULOG_DEFAULT_LOG_LEVEL
-#define ULOG_DEFAULT_LOG_LEVEL LOG_TRACE
-#endif
-
-typedef struct {
-    int level;          // Debug level
-    bool short_levels;  // Use short levels
-} feature_log_level_t;
-
-static feature_log_level_t feature_log_level = {
-    .level        = ULOG_DEFAULT_LOG_LEVEL,
-    .short_levels = false,  // Default is long levels
-};
-
-// clang-format off
-#define ULOG_LEVELS_LONG  0
-#define ULOG_LEVELS_SHORT 1
-#define ULOG_LEVELS_NUM   6
-
-/// @brief Level strings
-static const char *level_strings[][ULOG_LEVELS_NUM] = {
-     {"TRACE",  "DEBUG",    "INFO",     "WARN",     "ERROR",    "FATAL"}
-#if FEATURE_EMOJI_LEVELS
-    ,{"⚪",     "🔵",       "🟢",       "🟡",       "🔴",       "💥"}
-#endif
-#if !FEATURE_EMOJI_LEVELS && FEATURE_SHORT_LEVELS
-    ,{"T",      "D",        "I",        "W",        "E",        "F"}
-#endif
-};
-// clang-format on
-
-static void print_level(log_target *tgt, ulog_Event *ev) {
-#if FEATURE_SHORT_LEVELS || FEATURE_EMOJI_LEVELS
-    if (feature_log_level.short_levels) {
-        print(tgt, "%-1s ", level_strings[ULOG_LEVELS_SHORT][ev->level]);
-    } else {
-        print(tgt, "%-5s ", level_strings[ULOG_LEVELS_LONG][ev->level]);
-    }
-#else   // FEATURE_SHORT_LEVELS || FEATURE_EMOJI_LEVELS
-    print(tgt, "%-1s ", level_strings[ULOG_LEVELS_LONG][ev->level]);
-#endif  // FEATURE_SHORT_LEVELS || FEATURE_EMOJI_LEVELS
-}
-
-// Public
-// ================
-
-/// @brief Returns the string representation of the level
-const char *ulog_get_level_string(int level) {
-    if (level < 0 || level >= ULOG_LEVELS_NUM) {
-        return "?";  // Return a default string for invalid levels
-    }
-    return level_strings[ULOG_LEVELS_LONG][level];
-}
-
-/// @brief Sets the debug level
-void ulog_set_level(int level) {
-    if (level < LOG_TRACE || level > LOG_FATAL) {
-        return;  // Invalid level, do nothing
-    }
-    feature_log_level.level = level;
 }
 
 /* ============================================================================
