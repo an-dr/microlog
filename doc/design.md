@@ -20,7 +20,7 @@ All logging is happening via `ulog_log` function. `logt_*` and `log_*` macros ar
 
 The proces is shown in the diagram below:
 
-![design](design.drawio.svg)
+![design](design/design.drawio.svg)
 
 ## Code organization
 
@@ -43,4 +43,4 @@ The code is organized into two files. The source files contsists of sections
 
 Here is a diagrams shows section dependencies
 
-![sections](sections.drawio.svg)
+![sections](design/sections.drawio.svg)
