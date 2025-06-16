@@ -250,9 +250,7 @@ typedef struct {
 /// @brief Main logger object himself
 static feature_callback_t feature_callback = {
     .quiet_mode = false,             // Default is not quiet
-    .callback   = {callback_stdout,  // Default callback to stdout
-                   stdout,           // Default stream is stdout
-                   LOG_TRACE},       // Default level is LOG_TRACE
+    .callback   = {0},       // Default level is LOG_TRACE
 };
 
 /// @brief Callback for stdout
@@ -293,6 +291,12 @@ static void process_callback(ulog_Event *ev, Callback *cb) {
 /// @param ev - Event
 static void log_to_stdout(ulog_Event *ev) {
     if (!feature_callback.quiet_mode) {
+        // Initializing the stdout callback if not set
+        if (!feature_callback.callback.function) {
+            feature_callback.callback = (Callback){callback_stdout,
+                                                    stdout,  // pass stream
+                                                    LOG_TRACE};
+        }
         process_callback(ev, &feature_callback.callback);
     }
 }
