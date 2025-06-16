@@ -61,3 +61,12 @@ target_sources(test_topics PRIVATE ${ULOG_SRC}
 target_include_directories(test_topics PRIVATE ${ULOG_INCLUDE_DIR})
 target_compile_definitions(test_topics PRIVATE ${ULOG_CONFIG_TEST_TOPICS})
 add_test(NAME TopicsTest COMMAND test_topics)
+
+# --- Time Test ---
+add_executable(test_time)
+target_sources(test_time PRIVATE ${ULOG_SRC} 
+                                   ut_callback.c 
+                                   test_time.cpp)
+target_include_directories(test_time PRIVATE ${ULOG_INCLUDE_DIR})
+target_compile_definitions(test_time PRIVATE ${ULOG_CONFIG_BASE})
+add_test(NAME TimeTest COMMAND test_time)
