@@ -25,7 +25,6 @@ extern "C" {
 #include <stdbool.h>
 #include <stdio.h>
 
-
 /* ============================================================================
    Configuration options
 ===============================================================================
@@ -49,13 +48,11 @@ extern "C" {
 #define FEATURE_TIME false
 #endif
 
-
 #ifndef ULOG_NO_COLOR
 #define FEATURE_COLOR true
 #else
 #define FEATURE_COLOR false
 #endif
-
 
 #if ULOG_CUSTOM_PREFIX_SIZE > 0
 #define FEATURE_CUSTOM_PREFIX true
@@ -65,13 +62,11 @@ extern "C" {
 #define CFG_CUSTOM_PREFIX_SIZE 0
 #endif
 
-
 #ifndef ULOG_HIDE_FILE_STRING
 #define FEATURE_FILE_STRING true
 #else
 #define FEATURE_FILE_STRING false
 #endif
-
 
 #if ULOG_EXTRA_OUTPUTS > 0
 #define FEATURE_EXTRA_OUTPUTS true
@@ -81,13 +76,11 @@ extern "C" {
 #define CFG_EXTRA_OUTPUTS 0
 #endif
 
-
 #ifdef ULOG_SHORT_LEVEL_STRINGS
 #define FEATURE_SHORT_LEVELS true
 #else
 #define FEATURE_SHORT_LEVELS false
 #endif
-
 
 #ifdef ULOG_USE_EMOJI
 
@@ -95,7 +88,8 @@ extern "C" {
 
 #if FEATURE_SHORT_LEVELS
 #define FEATURE_SHORT_LEVELS false
-#warning "ULOG_USE_EMOJI overrides ULOG_SHORT_LEVEL_STRINGS! Disable ULOG_SHORT_LEVEL_STRINGS"
+#warning                                                                       \
+    "ULOG_USE_EMOJI overrides ULOG_SHORT_LEVEL_STRINGS! Disable ULOG_SHORT_LEVEL_STRINGS"
 #endif  // FEATURE_SHORT_LEVELS
 
 #else  // ULOG_USE_EMOJI
@@ -119,7 +113,6 @@ extern "C" {
 
 #endif  // ULOG_TOPICS_NUM
 
-
 /* ============================================================================
    Core Functionality
 ============================================================================ */
@@ -128,20 +121,18 @@ extern "C" {
 #include <time.h>
 #endif
 
-enum { LOG_TRACE,
-       LOG_DEBUG,
-       LOG_INFO,
-       LOG_WARN,
-       LOG_ERROR,
-       LOG_FATAL };
+enum { LOG_TRACE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
 
-#define log_trace(...) ulog_log(LOG_TRACE, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define log_debug(...) ulog_log(LOG_DEBUG, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define log_trace(...)                                                         \
+    ulog_log(LOG_TRACE, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define log_debug(...)                                                         \
+    ulog_log(LOG_DEBUG, __FILE__, __LINE__, NULL, __VA_ARGS__)
 #define log_info(...) ulog_log(LOG_INFO, __FILE__, __LINE__, NULL, __VA_ARGS__)
 #define log_warn(...) ulog_log(LOG_WARN, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define log_error(...) ulog_log(LOG_ERROR, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define log_fatal(...) ulog_log(LOG_FATAL, __FILE__, __LINE__, NULL, __VA_ARGS__)
-
+#define log_error(...)                                                         \
+    ulog_log(LOG_ERROR, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define log_fatal(...)                                                         \
+    ulog_log(LOG_FATAL, __FILE__, __LINE__, NULL, __VA_ARGS__)
 
 /// @brief Event structure
 typedef struct {
@@ -188,7 +179,8 @@ int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size);
 /// @param topic - Topic name
 /// @param message - Message format string
 /// @param ... - Format arguments
-void ulog_log(int level, const char *file, int line, const char *topic, const char *message, ...);
+void ulog_log(int level, const char *file, int line, const char *topic,
+              const char *message, ...);
 
 /* ============================================================================
    Core Functionality: Thread Safety
@@ -202,6 +194,26 @@ typedef void (*ulog_LockFn)(bool lock, void *lock_arg);
 void ulog_set_lock(ulog_LockFn function, void *lock_arg);
 
 /* ============================================================================
+   Feature: Color
+============================================================================ */
+#if FEATURE_COLOR
+
+/// @brief Enable the color mode
+/// @param enable - Enable or disable color
+void ulog_enable_color(bool enable);
+
+#endif  // FEATURE_COLOR
+/* ============================================================================
+   Feature: Time
+============================================================================ */
+#if FEATURE_TIME
+
+/// @brief Toggle the time mode
+/// @param enable - Enable or disable time
+void ulog_enable_time(bool enable);
+
+#endif  // FEATURE_TIME
+/* ============================================================================
    Feature: Custom Prefix
 ============================================================================ */
 #if FEATURE_CUSTOM_PREFIX
@@ -212,8 +224,11 @@ typedef void (*ulog_PrefixFn)(ulog_Event *ev, char *prefix, size_t prefix_size);
 /// @param function - Prefix function
 void ulog_set_prefix_fn(ulog_PrefixFn function);
 
-#endif  // FEATURE_CUSTOM_PREFIX
+/// @brief Toggle the custom prefix feature
+/// @param enable - Enable or disable custom prefix
+void ulog_enable_prefix(bool enable);
 
+#endif  // FEATURE_CUSTOM_PREFIX
 /* ============================================================================
    Feature: Extra Outputs
 ============================================================================ */
@@ -240,12 +255,18 @@ int ulog_add_fp(FILE *fp, int level);
 ============================================================================ */
 
 #define TOPIC_NOT_FOUND 0x7FFFFFFF
-#define logt_trace(TOPIC_NAME, ...) ulog_log(LOG_TRACE, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_debug(TOPIC_NAME, ...) ulog_log(LOG_DEBUG, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_info(TOPIC_NAME, ...) ulog_log(LOG_INFO, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_warn(TOPIC_NAME, ...) ulog_log(LOG_WARN, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_error(TOPIC_NAME, ...) ulog_log(LOG_ERROR, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_fatal(TOPIC_NAME, ...) ulog_log(LOG_FATAL, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_trace(TOPIC_NAME, ...)                                            \
+    ulog_log(LOG_TRACE, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_debug(TOPIC_NAME, ...)                                            \
+    ulog_log(LOG_DEBUG, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_info(TOPIC_NAME, ...)                                             \
+    ulog_log(LOG_INFO, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_warn(TOPIC_NAME, ...)                                             \
+    ulog_log(LOG_WARN, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_error(TOPIC_NAME, ...)                                            \
+    ulog_log(LOG_ERROR, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_fatal(TOPIC_NAME, ...)                                            \
+    ulog_log(LOG_FATAL, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
 
 #if FEATURE_TOPICS
 

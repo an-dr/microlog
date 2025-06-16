@@ -34,94 +34,26 @@ typedef struct {
     int level;            // Debug level
 } Callback;
 
-typedef struct {
-    int level;
-    bool quiet_mode;
-#if FEATURE_TIME
-    bool show_time;
-#endif
-#if FEATURE_COLOR
-    bool show_color;
-#endif
-#if FEATURE_CUSTOM_PREFIX
-    bool show_prefix;
-#endif
-#if FEATURE_FILE_STRING
-    bool show_file_string;
-#endif
-#if FEATURE_TOPICS
-    bool show_topic;
-#endif
-#if FEATURE_EXTRA_OUTPUTS
-    bool print_to_extra_outputs;
-#endif
-#if FEATURE_SHORT_LEVELS
-    bool use_short_levels;
-#endif
-} Config;
-
 /// @brief Logger object
 typedef struct {
     ulog_LockFn lock_function;  // Mutex function
     void *lock_arg;             // Mutex argument
-    Config config;              // Configuration settings
+    int level;                  // Debug level
+    bool quiet_mode;            // Quiet mode, no output to stdout
     Callback callback_stdout;   // to stdout
-
-#if FEATURE_EXTRA_OUTPUTS
-    Callback callbacks[CFG_EXTRA_OUTPUTS];  // Extra callbacks
-#endif
-
-#if FEATURE_CUSTOM_PREFIX
-    ulog_PrefixFn update_prefix_function;        // Custom prefix function
-    char custom_prefix[CFG_CUSTOM_PREFIX_SIZE];  // Custom prefix
-#endif
-
 } ulog_t;
 
 /// @brief Main logger object himself
 static ulog_t ulog = {
     .lock_function   = NULL,
     .lock_arg        = NULL,
-    .config = {
-        .level                = ULOG_DEFAULT_LOG_LEVEL,
-        .quiet_mode           = false,
-#if FEATURE_TIME
-        .show_time            = true,
-#endif
-#if FEATURE_COLOR
-        .show_color           = true,
-#endif
-#if FEATURE_CUSTOM_PREFIX
-        .show_prefix          = true,
-#endif
-#if FEATURE_FILE_STRING
-        .show_file_string     = true,
-#endif
-#if FEATURE_TOPICS
-        .show_topic           = true,
-#endif
-#if FEATURE_EXTRA_OUTPUTS
-        .print_to_extra_outputs = true,
-#endif
-#if FEATURE_SHORT_LEVELS
-        .use_short_levels     = true,
-#endif
-    },
+    .level           = ULOG_DEFAULT_LOG_LEVEL,
+    .quiet_mode      = false,
     .callback_stdout = {0},
-
-#if FEATURE_EXTRA_OUTPUTS
-    .callbacks = {{0}},
-#endif
-
-#if FEATURE_CUSTOM_PREFIX
-    .update_prefix_function = NULL,
-    .custom_prefix          = {0},
-#endif
-
 };
 
 /* ============================================================================
-   Output Printing
+   Core: Output Printing
 ============================================================================ */
 
 typedef struct {
@@ -175,6 +107,17 @@ static void print_formatted_message(log_target *tgt, ulog_Event *ev,
 ============================================================================ */
 #if FEATURE_COLOR
 
+//  Private
+// ================
+
+typedef struct {
+    bool enabled;  // Is the color feature enabled
+} feature_color_t;
+
+static feature_color_t feature_color = {
+    .enabled = true,  // Default is enabled
+};
+
 /// @brief Level colors
 static const char *level_colors[] = {
     "\x1b[37m",  // TRACE : White #000
@@ -186,16 +129,30 @@ static const char *level_colors[] = {
 };
 #define COLOR_TERMINATOR "\x1b[0m"  // Reset color
 
-static void print_color_start(log_target *tgt, ulog_Event *ev) {
-    (void)ev;
-    print(tgt, "%s", level_colors[ev->level]);  // color start
+static void print_color_start(log_target *tgt) {
+    if (feature_color.enabled) {
+        print(tgt, "%s", level_colors[ev->level]);  // color start
+    }
 }
 
-static void print_color_end(log_target *tgt, ulog_Event *ev) {
-    (void)ev;
-    print(tgt, "%s", COLOR_TERMINATOR);  // color end
+static void print_color_end(log_target *tgt) {
+    if (feature_color.enabled) {
+        print(tgt, "%s", COLOR_TERMINATOR);  // color end
+    }
 }
 
+// Public
+// ================
+
+void ulog_enable_color(bool enable) {
+    feature_color.enabled = enable;
+}
+
+// Disabled Private
+// ================
+#else  // FEATURE_COLOR
+#define print_color_start(tgt) (void)(tgt)
+#define print_color_end(tgt) (void)(tgt)
 #endif  // FEATURE_COLOR
 
 /* ============================================================================
@@ -203,7 +160,20 @@ static void print_color_end(log_target *tgt, ulog_Event *ev) {
 ============================================================================ */
 #if FEATURE_TIME
 
+// Private
+// ================
+
+typedef struct {
+    bool enabled;  // Is the time feature enabled
+} feature_time_t;
+static feature_time_t feature_time = {
+    .enabled = true,  // Default is enabled
+};
+
 static void print_time_sec(log_target *tgt, ulog_Event *ev) {
+    if (feature_time.enabled == false) {
+        return;  // Time feature is disabled
+    }
 
 #if FEATURE_CUSTOM_PREFIX
     char buf[9];
@@ -216,7 +186,6 @@ static void print_time_sec(log_target *tgt, ulog_Event *ev) {
     print(tgt, "%s", buf);
 }
 
-#if FEATURE_EXTRA_OUTPUTS
 static void print_time_full(log_target *tgt, ulog_Event *ev) {
 
 #if FEATURE_CUSTOM_PREFIX
@@ -226,11 +195,21 @@ static void print_time_full(log_target *tgt, ulog_Event *ev) {
     char buf[65];
     buf[strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S ", ev->time)] = '\0';
 #endif  // FEATURE_CUSTOM_PREFIX
-
     print(tgt, "%s", buf);
 }
-#endif  // FEATURE_EXTRA_OUTPUTS
 
+// Public
+// ================
+
+void ulog_enable_time(bool enable) {
+    feature_time.enabled = enable;
+}
+
+// Disabled Private
+// ================
+#else  // FEATURE_TIME
+#define print_time_sec(tgt, ev) (void)(tgt), (void)(ev)
+#define print_time_full(tgt, ev) (void)(tgt), (void)(ev)
 #endif  // FEATURE_TIME
 
 /* ============================================================================
@@ -238,24 +217,58 @@ static void print_time_full(log_target *tgt, ulog_Event *ev) {
 ============================================================================ */
 #if FEATURE_CUSTOM_PREFIX
 
-void ulog_set_prefix_fn(ulog_PrefixFn function) {
-    ulog.update_prefix_function = function;
-}
+// Private
+// ================
+
+typedef struct {
+    bool enabled;                                // Is the custom prefix enabled
+    ulog_PrefixFn function;                      // Custom prefix function
+    char custom_prefix[CFG_CUSTOM_PREFIX_SIZE];  // Custom prefix
+} feature_custom_prefix_t;
+
+static feature_custom_prefix_t feature_custom_prefix = {
+    .enabled       = true,
+    .function      = NULL,
+    .custom_prefix = {0},
+};
 
 static void print_prefix(log_target *tgt, ulog_Event *ev) {
-    if (ulog.update_prefix_function) {
-        ulog.update_prefix_function(ev, ulog.custom_prefix,
-                                    CFG_CUSTOM_PREFIX_SIZE);
-        print(tgt, "%s", ulog.custom_prefix);
+    if (feature_custom_prefix.function && feature_custom_prefix.enabled) {
+        feature_custom_prefix.function(ev, feature_custom_prefix.custom_prefix,
+                                       CFG_CUSTOM_PREFIX_SIZE);
+        print(tgt, "%s", feature_custom_prefix.custom_prefix);
     }
 }
 
+// Public
+// ================
+
+void ulog_set_prefix_fn(ulog_PrefixFn function) {
+    feature_custom_prefix.function = function;
+}
+
+void ulog_enable_prefix(bool enable) {
+    feature_custom_prefix.enabled = enable;
+}
+
+// Disabled Private
+// ================
+#else  // FEATURE_CUSTOM_PREFIX
+#define print_prefix(tgt, ev) (void)(tgt), (void)(ev)
 #endif  // FEATURE_CUSTOM_PREFIX
 
 /* ============================================================================
    Feature: Extra Outputs
 ============================================================================ */
 #if FEATURE_EXTRA_OUTPUTS
+
+// Private
+// ================
+
+typedef struct {
+    bool enabled;  // Is the feature enabled
+    Callback callbacks[CFG_EXTRA_OUTPUTS];  // Array of callbacks
+} feature_extra_outputs_t;
 
 /// @brief Callback for file
 /// @param ev - Event
@@ -264,6 +277,18 @@ static void callback_file(ulog_Event *ev, void *arg) {
     log_target tgt = {.type = T_STREAM, .dsc.stream = (FILE *)arg};
     print_formatted_message(&tgt, ev, true, false, true);
 }
+
+/// @brief Processes the extra callbacks
+/// @param ev - Event
+static void log_to_extra_outputs(ulog_Event *ev) {
+    // Processing the message for callbacks
+    for (int i = 0; i < CFG_EXTRA_OUTPUTS && feature_extra_outputs.callbacks[i].function; i++) {
+        process_callback(ev, &ulog.callbacks[i]);
+    }
+}
+
+// Public
+// ================
 
 /// @brief Adds a callback
 /// @param function - Callback function
@@ -285,15 +310,11 @@ int ulog_add_fp(FILE *fp, int level) {
     return ulog_add_callback(callback_file, fp, level);
 }
 
-/// @brief Processes the extra callbacks
-/// @param ev - Event
-static void log_to_extra_outputs(ulog_Event *ev) {
-    // Processing the message for callbacks
-    for (int i = 0; i < CFG_EXTRA_OUTPUTS && ulog.callbacks[i].function; i++) {
-        process_callback(ev, &ulog.callbacks[i]);
-    }
-}
-
+// Disabled Private
+// ================
+#else  // FEATURE_EXTRA_OUTPUTS
+#define callback_file(ev, arg) (void)(ev), (void)(arg)
+#define log_to_extra_outputs(ev) (void)(ev)
 #endif  // FEATURE_EXTRA_OUTPUTS
 
 /* ============================================================================
@@ -577,7 +598,7 @@ void ulog_set_lock(ulog_LockFn function, void *lock_arg) {
 }
 
 /* ============================================================================
-   Core Functionality: Debug Levels
+   Core: Debug Levels
 ============================================================================ */
 
 // clang-format off
@@ -605,11 +626,10 @@ static void print_level(log_target *tgt, ulog_Event *ev) {
     } else {
         print(tgt, "%-5s ", level_strings[ULOG_LEVELS_LONG][ev->level]);
     }
-#else  // FEATURE_SHORT_LEVELS || FEATURE_EMOJI_LEVELS
+#else   // FEATURE_SHORT_LEVELS || FEATURE_EMOJI_LEVELS
     print(tgt, "%-1s ", level_strings[ULOG_LEVELS_LONG][ev->level]);
 #endif  // FEATURE_SHORT_LEVELS || FEATURE_EMOJI_LEVELS
 }
-
 
 /// @brief Returns the string representation of the level
 const char *ulog_get_level_string(int level) {
@@ -620,9 +640,8 @@ const char *ulog_get_level_string(int level) {
 }
 
 /* ============================================================================
-   Core Functionality
+   Core
 ============================================================================ */
-
 
 /// @brief Prints the message
 /// @param tgt - Target
@@ -642,7 +661,6 @@ static void print_message(log_target *tgt, ulog_Event *ev) {
     }
 }
 
-
 /// @brief Writes the formatted message
 /// @details The message is formatted as follows:
 ///
@@ -660,53 +678,23 @@ static void print_message(log_target *tgt, ulog_Event *ev) {
 static void print_formatted_message(log_target *tgt, ulog_Event *ev,
                                     bool full_time, bool color, bool new_line) {
 
-#if FEATURE_COLOR
-    if (color && ulog.config.show_color) {
+    if (color) {
         print_color_start(tgt, ev);
     }
-#else
-    (void)color;
-#endif  // FEATURE_COLOR
 
-#if FEATURE_TIME
-    if (ulog.config.show_time) {
-        if (full_time) {
-#if FEATURE_EXTRA_OUTPUTS
-            print_time_full(tgt, ev);
-#endif
-        } else {
-            print_time_sec(tgt, ev);
-        } 
+    if (full_time) {
+        print_time_full(tgt, ev);
+    } else {
+        print_time_sec(tgt, ev);
     }
-#else
-    (void)full_time;
-#endif  // FEATURE_TIME
 
-#if FEATURE_CUSTOM_PREFIX
-    if (ulog.config.show_prefix) {
-        print_prefix(tgt, ev);
-    }
-#endif
-
-#if FEATURE_TOPICS
-    if (ulog.config.show_topic) {
-        print_topic(tgt, ev);
-    }
-#endif
-
+    print_prefix(tgt, ev);
+    print_topic(tgt, ev);
     print_level(tgt, ev);
-
     print_message(tgt, ev);
 
-#if FEATURE_COLOR
-    if (color && ulog.config.show_color) {
-        print_color_end(tgt, ev);
-    }
-#endif
-
-    if (new_line) {
-        print(tgt, "\n");
-    }
+    color ? print_color_end(tgt, ev) : (void)0;  // Print color end if needed
+    new_line ? print(tgt, "\n") : (void)0;       // Print new line if needed
 }
 
 /// @brief Callback for stdout
@@ -787,20 +775,12 @@ void ulog_log(int level, const char *file, int line, const char *topic,
     lock();
 
     log_to_stdout(&ev);
-
-#if FEATURE_EXTRA_OUTPUTS
-    if (ulog.config.print_to_extra_outputs) {
-        // Process extra outputs
-        log_to_extra_outputs(&ev);
-    }
-#endif
+    log_to_extra_outputs(&ev);
 
     unlock();
 
     va_end(ev.message_format_args);
 }
-
-
 
 /// @brief Processes the callback with the event
 /// @param ev - Event
@@ -816,9 +796,9 @@ static void process_callback(ulog_Event *ev, Callback *cb) {
 #endif  // FEATURE_TIME
 
         // Create event copy to avoid va_list issues
-        ulog_Event ev_copy = { 0 };
+        ulog_Event ev_copy = {0};
         memcpy(&ev_copy, ev, sizeof(ulog_Event));
-        
+
         // Initialize the va_list for the copied event
         // Note: We use a copy of the va_list to avoid issues with passing it
         // directly as on some platforms using the same va_list multiple times
@@ -826,14 +806,12 @@ static void process_callback(ulog_Event *ev, Callback *cb) {
         va_copy(ev_copy.message_format_args, ev->message_format_args);
         cb->function(&ev_copy, cb->arg);
         va_end(ev_copy.message_format_args);
-
     }
 }
 
 //==================================================================
 // Core Functionality: Logger configuration
 //==================================================================
-
 
 /// @brief Sets the debug level
 void ulog_set_level(int level) {
