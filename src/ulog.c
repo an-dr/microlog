@@ -120,7 +120,7 @@ void ulog_enable_color(bool enable) {
 // Disabled Private
 // ================
 #else  // FEATURE_COLOR
-#define print_color_start(tgt) (void)(tgt), (void)(ev)
+#define print_color_start(tgt, ev) (void)(tgt), (void)(ev)
 #define print_color_end(tgt) (void)(tgt)
 #endif  // FEATURE_COLOR
 
@@ -581,6 +581,11 @@ int ulog_get_topic_id(const char *topic_name) {
     }
     return TOPIC_NOT_FOUND;
 }
+
+#else
+
+#define print_topic(tgt, ev) (void)(tgt), (void)(ev)
+#define is_topic_enabled(topic) (void)(topic), true
 
 #endif  // FEATURE_TOPICS
 
