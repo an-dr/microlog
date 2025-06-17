@@ -70,3 +70,29 @@ TEST_CASE_FIXTURE(TestFixture, "Topics: Enable/Disable and Levels") {
     logt_info("testtopic", "Should appear after enabling all topics");
     CHECK(ut_callback_get_message_count() == 7);
 }
+
+TEST_CASE_FIXTURE(TestFixture, "Topics: Cannot create duplicate") {
+    int res;
+
+    res = ulog_add_topic("testtopic", true);
+    CHECK(res == 0);
+    logt_info("testtopic", "Should appear because the topic already exists and level set to INFO");
+    CHECK(ut_callback_get_message_count() == 1);
+
+    res = ulog_add_topic("testtopic_2", true);
+    CHECK(res == 1);
+    logt_error("testtopic_2", "Should appear because there is still one free slot");
+    CHECK(ut_callback_get_message_count() == 2);
+
+    res = ulog_add_topic("testtopic_3", true);
+    CHECK(res == -1);
+    logt_trace("testtopic_3", "Should not appear because static allocation is set to 2 slots");
+    CHECK(ut_callback_get_message_count() == 2);
+}
+
+TEST_CASE_FIXTURE(TestFixture, "Topics: Cannot create topic with empty name") {
+    int res;
+
+    res = ulog_add_topic(NULL, true);
+    CHECK(res == -1);
+}

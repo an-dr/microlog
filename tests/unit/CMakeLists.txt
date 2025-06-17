@@ -13,7 +13,6 @@ add_link_options(--coverage -fprofile-arcs -ftest-coverage)
 # Microlog configs
 set(ULOG_CONFIG_BASE "-DULOG_EXTRA_OUTPUTS=8" 
                      "-DULOG_HAVE_TIME"
-                     "-DULOG_TOPICS_NUM=8"
                      "-DULOG_CUSTOM_PREFIX_SIZE=16"
                      )
 
@@ -23,6 +22,7 @@ set(ULOG_CONFIG_TEST_CORE ${ULOG_CONFIG_BASE}
 
 set(ULOG_CONFIG_TEST_TOPICS ${ULOG_CONFIG_BASE}
                             "-DULOG_DEFAULT_LOG_LEVEL=LOG_WARN"
+                            "-DULOG_TOPICS_NUM=2"
                             )
                      
 # --- Core Tests ---
