@@ -404,12 +404,21 @@ static Topic *_get_topic_ptr(int topic) {
 }
 
 int ulog_add_topic(const char *topic_name, bool enable) {
+    if (topic_name == NULL) {
+        return -1;
+    }
+
     for (int i = 0; i < CFG_TOPICS_NUM; i++) {
+        // If there is an empty slot
         if (!topics[i].name) {
             topics[i].id      = i;
             topics[i].name    = topic_name;
             topics[i].enabled = enable;
             topics[i].level   = ULOG_DEFAULT_LOG_LEVEL;
+            return i;
+        }
+        // If the topic already exists
+        else if(strcmp(topics[i].name, topic_name) == 0) {
             return i;
         }
     }
@@ -456,7 +465,7 @@ static void *_create_topic(int id, const char *topic_name, bool enable) {
 }
 
 int ulog_add_topic(const char *topic_name, bool enable) {
-    if (!topic_name) {
+    if (topic_name == NULL) {
         return -1;
     }
 
