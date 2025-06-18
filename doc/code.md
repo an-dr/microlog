@@ -61,3 +61,5 @@ void ulog_enable_prefix(bool enable) {
 #endif  // FEATURE_CUSTOM_PREFIX
 
 ```
+
+For code style and naming conventions, see [style.md](style.md).

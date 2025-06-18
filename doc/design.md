@@ -24,23 +24,4 @@ The proces is shown in the diagram below:
 
 ## Code organization
 
-The code is organized into two files. The source files contsists of sections
-
-- Core Functionality
-- Core Functionality: Debug Levels
-- Core Functionality: Logger configuration
-- Core Functionality: Thread Safety
-- Feature: Color
-- Feature: Custom Prefix
-- Feature: Extra Outputs
-- Feature: Log Topics
-- Feature: Log Topics - Dynamic Allocation
-- Feature: Log Topics - Static Allocation
-- Feature: Time
-- Main Logger Object
-- Output Printing
-- Prototypes
-
-Here is a diagrams shows section dependencies
-
-![sections](design/sections.drawio.svg)
+The code is organized into two files. The source file consists of sections. Each section might rely on functionality of a previous section. Sections are meant to be encapsulated and not to rely on each other or some shared data - if possible. See [code.md](code.md) for more details.

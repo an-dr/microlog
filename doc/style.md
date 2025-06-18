@@ -41,19 +41,3 @@
 
 - **Function Parameters:** `snake_case`.
     - Example: `int level`, `const char *topic_name`
-
-### Files
-
-- **Source Files:** `snake_case.c`
-- **Header Files:** `snake_case.h`
-
-## Miscellaneous
-
-- **Boolean Flags:** Use `bool` type, names like `enabled`, `quiet_mode`.
-- **Struct Initialization:** Use designated initializers and double braces for arrays: `= {{0}}`
-- **Pointer Checks:** Always check for `NULL` before dereferencing.
-- **Error Codes:** Return `0` for success, `-1` for failure, or specific error codes as needed.
-
----
-
-This style ensures consistency, readability, and maintainability across the microlog codebase.
