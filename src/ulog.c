@@ -404,7 +404,7 @@ static Topic *_get_topic_ptr(int topic) {
 }
 
 int ulog_add_topic(const char *topic_name, bool enable) {
-    if (!topic_name) {
+    if (topic_name == NULL) {
         return -1;
     }
 
@@ -465,7 +465,7 @@ static void *_create_topic(int id, const char *topic_name, bool enable) {
 }
 
 int ulog_add_topic(const char *topic_name, bool enable) {
-    if (!topic_name) {
+    if (topic_name == NULL) {
         return -1;
     }
 
