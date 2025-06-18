@@ -250,7 +250,7 @@ typedef struct {
 
 static feature_log_level_t feature_log_level = {
     .level        = ULOG_DEFAULT_LOG_LEVEL,
-    .short_levels = false,
+    .short_levels = true,
 };
 
 // clang-format off
@@ -455,8 +455,8 @@ typedef struct {
 
 static bool _is_topic_enabled(int topic);
 static int __set_topic_level(int topic, int level);
-static int _enable_topic(int topic);
-static int _disable_topic(int topic);
+static int __enable_topic(int topic);
+static int __disable_topic(int topic);
 static topic_t *_get_topic_begin(void);
 static topic_t *_get_topic_next(topic_t *t);
 static topic_t *_get_topic_ptr(int topic);
@@ -465,14 +465,14 @@ static bool new_topic_enabled = false;
 
 static void _print_topic(log_target *tgt, ulog_Event *ev) {
     topic_t *t = _get_topic_ptr(ev->topic);
-    if (t && t->name) {
+    if (t != NULL && t->name) {
         _print(tgt, "[%s] ", t->name);
     }
 }
 
 static int __set_topic_level(int topic, int level) {
     topic_t *t = _get_topic_ptr(topic);
-    if (t) {
+    if (t != NULL) {
         t->level = level;
         return 0;
     }
@@ -481,7 +481,7 @@ static int __set_topic_level(int topic, int level) {
 
 static int _get_topic_level(int topic) {
     topic_t *t = _get_topic_ptr(topic);
-    if (t) {
+    if (t != NULL) {
         return t->level;
     }
     return LOG_TRACE;
@@ -489,7 +489,7 @@ static int _get_topic_level(int topic) {
 
 static int __enable_topic(int topic) {
     topic_t *t = _get_topic_ptr(topic);
-    if (t) {
+    if (t != NULL) {
         t->enabled = true;
         return 0;
     }
@@ -498,7 +498,7 @@ static int __enable_topic(int topic) {
 
 static int __disable_topic(int topic) {
     topic_t *t = _get_topic_ptr(topic);
-    if (t) {
+    if (t != NULL) {
         t->enabled = false;
         return 0;
     }
@@ -602,7 +602,7 @@ static topic_t *_get_topic_ptr(int topic) {
 // ================
 
 int ulog_add_topic(const char *topic_name, bool enable) {
-    if (topic_name == NULL) {
+    if (topic_name == NULL || strlen(topic_name) == 0) {
         return -1;
     }
 
@@ -652,7 +652,7 @@ static topic_t *_get_topic_ptr(int topic) {
 
 static void *_create_topic(int id, const char *topic_name, bool enable) {
     topic_t *t = malloc(sizeof(topic_t));
-    if (t) {
+    if (t != NULL) {
         t->id      = id;
         t->name    = topic_name;
         t->enabled = enable;
@@ -665,7 +665,7 @@ static void *_create_topic(int id, const char *topic_name, bool enable) {
 // ================
 
 int ulog_add_topic(const char *topic_name, bool enable) {
-    if (topic_name == NULL) {
+    if (topic_name == NULL || strlen(topic_name) == 0) {
         return -1;
     }
 

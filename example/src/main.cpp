@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
 
     printf("\n");
 
-    ulog_set_level(LOG_TRACE);
+    // ulog_set_level(LOG_TRACE);
 
     /* Extra Outputs =============================== */
 
