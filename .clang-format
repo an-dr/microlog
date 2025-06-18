@@ -21,7 +21,7 @@ AlignOperands: true
 AlignTrailingComments: true
 AllowShortFunctionsOnASingleLine: None
 BasedOnStyle: LLVM
-ColumnLimit: 80
+ColumnLimit: 110
 IncludeBlocks: Preserve
 IndentWidth: 4
 Language: Cpp
