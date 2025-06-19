@@ -1,14 +1,18 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <cstring>
+#include <time.h>
 #include "doctest/doctest.h"
 #include "ulog.h"
 #include "ut_callback.h"
-#include <cstring>
-#include <time.h>
 
+constexpr static size_t TIME_STAMP_SIZE = 8;  // HH:MM:SS
+
+#if FEATURE_CUSTOM_PREFIX
 static void test_prefix(ulog_Event *ev, char *prefix, size_t prefix_size) {
     (void)ev;
     snprintf(prefix, prefix_size, "[PREFIX]");
 }
+#endif  // FEATURE_CUSTOM_PREFIX
 
 struct TimeTestFixture {
   public:
@@ -18,8 +22,8 @@ struct TimeTestFixture {
         // Per-test setup
         if (!callback_is_set) {
             ulog_add_callback(ut_callback, nullptr, LOG_TRACE);
+            callback_is_set = true;
         }
-        ulog_set_quiet(false);
         ut_callback_reset();
     }
     ~TimeTestFixture() = default;
@@ -75,12 +79,13 @@ void _check_console_time() {
     REQUIRE(sscanf(ut_callback_get_last_message(), "%d:%d:%d ", &hh, &mm,
                    &ss) == 3);
 
-#ifdef FEATURE_CUSTOM_PREFIX
+    printf("Last message: %s\n", ut_callback_get_last_message());
+#if FEATURE_CUSTOM_PREFIX
     // Should be no space after time
-    REQUIRE(ut_callback_get_last_message()[9] != ' ');
+    REQUIRE(ut_callback_get_last_message()[TIME_STAMP_SIZE] != ' ');
 #else   // FEATURE_CUSTOM_PREFIX
     // If no custom prefix, there should be a space after the time
-    REQUIRE(ut_callback_get_last_message()[9] == ' ');
+    REQUIRE(ut_callback_get_last_message()[TIME_STAMP_SIZE] == ' ');
 #endif  // FEATURE_CUSTOM_PREFIX
 
     _check_time_fields(hh, mm, ss, before, after);
@@ -88,7 +93,7 @@ void _check_console_time() {
 
 void _check_file_time() {
     const char *filename = "test_output.log";
-    FILE *fp = fopen(filename, "w");
+    FILE *fp             = fopen(filename, "w");
     REQUIRE(fp != nullptr);
     ulog_add_fp(fp, LOG_INFO);
 
@@ -118,7 +123,8 @@ TEST_CASE_FIXTURE(TimeTestFixture, "Check time without prefix") {
     _check_console_time();
     _check_file_time();
 }
-#ifdef FEATURE_CUSTOM_PREFIX
+
+#if FEATURE_CUSTOM_PREFIX
 TEST_CASE_FIXTURE(TimeTestFixture, "Check time with prefix") {
     ulog_set_prefix_fn(test_prefix);
 
