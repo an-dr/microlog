@@ -16,6 +16,11 @@ set(ULOG_CONFIG_BASE "-DULOG_EXTRA_OUTPUTS=8"
                      "-DULOG_CUSTOM_PREFIX_SIZE=16"
                      )
 
+set(ULOG_CONFIG_NO_PREFIX "-DULOG_EXTRA_OUTPUTS=8" 
+                                "-DULOG_HAVE_TIME"
+                                "-DULOG_TOPICS_NUM=8"
+                                )
+
 set(ULOG_CONFIG_TEST_CORE ${ULOG_CONFIG_BASE}
                           "-DULOG_DEFAULT_LOG_LEVEL=LOG_DEBUG"
                           )
@@ -61,3 +66,21 @@ target_sources(test_topics PRIVATE ${ULOG_SRC}
 target_include_directories(test_topics PRIVATE ${ULOG_INCLUDE_DIR})
 target_compile_definitions(test_topics PRIVATE ${ULOG_CONFIG_TEST_TOPICS})
 add_test(NAME TopicsTest COMMAND test_topics)
+
+# --- Time Test - With Prefix ---
+add_executable(test_time)
+target_sources(test_time PRIVATE ${ULOG_SRC} 
+                                 ut_callback.c 
+                                 test_time.cpp)
+target_include_directories(test_time PRIVATE ${ULOG_INCLUDE_DIR})
+target_compile_definitions(test_time PRIVATE ${ULOG_CONFIG_BASE})
+add_test(NAME TimeTest COMMAND test_time)
+
+# --- Time Test - No Prefix ---
+add_executable(test_time_np)
+target_sources(test_time_np PRIVATE ${ULOG_SRC}     
+                                    ut_callback.c 
+                                    test_time.cpp)
+target_include_directories(test_time_np PRIVATE ${ULOG_INCLUDE_DIR})
+target_compile_definitions(test_time_np PRIVATE ${ULOG_CONFIG_NO_PREFIX})
+add_test(NAME TimeTestNoPrefix COMMAND test_time_np)
