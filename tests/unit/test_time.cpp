@@ -5,11 +5,14 @@
 #include "ulog.h"
 #include "ut_callback.h"
 
-constexpr static size_t TIME_STAMP_SIZE = 8;  // HH:MM:SS
+constexpr static size_t TIME_STAMP_SIZE      = 8;   // HH:MM:SS
+constexpr static size_t FULL_TIME_STAMP_SIZE = 19;  // YYYY-MM-DD HH:MM:SS
 
 #if FEATURE_CUSTOM_PREFIX
 static void test_prefix(ulog_Event *ev, char *prefix, size_t prefix_size) {
     (void)ev;
+
+    // NOTE: Test cases expect the first character to be non-whitespace
     snprintf(prefix, prefix_size, "[PREFIX]");
 }
 #endif  // FEATURE_CUSTOM_PREFIX
@@ -67,7 +70,7 @@ static void _check_date_time_fields(int yr, int mo, int d, int hh, int mm,
     CHECK_LE(d, after_tm->tm_mday);
 }
 
-void _check_console_time() {
+void _check_console_time(bool prefix = false) {
     time_t before, after;
     _get_time_bounds(before, after);
 
@@ -79,10 +82,14 @@ void _check_console_time() {
     REQUIRE(sscanf(ut_callback_get_last_message(), "%d:%d:%d ", &hh, &mm,
                    &ss) == 3);
 
-    printf("Last message: %s\n", ut_callback_get_last_message());
 #if FEATURE_CUSTOM_PREFIX
-    // Should be no space after time
-    REQUIRE(ut_callback_get_last_message()[TIME_STAMP_SIZE] != ' ');
+    if (prefix) {
+        // Should be no space after time
+        REQUIRE(ut_callback_get_last_message()[TIME_STAMP_SIZE] != ' ');
+    } else {
+        // If no custom prefix, there should be a space after the time
+        REQUIRE(ut_callback_get_last_message()[TIME_STAMP_SIZE] == ' ');
+    }
 #else   // FEATURE_CUSTOM_PREFIX
     // If no custom prefix, there should be a space after the time
     REQUIRE(ut_callback_get_last_message()[TIME_STAMP_SIZE] == ' ');
@@ -91,9 +98,14 @@ void _check_console_time() {
     _check_time_fields(hh, mm, ss, before, after);
 }
 
-void _check_file_time() {
-    const char *filename = "test_output.log";
-    FILE *fp             = fopen(filename, "w");
+void _check_file_time(bool prefix = false) {
+    std::string filename;
+    if (prefix)
+        filename = "test_output_prefix.log";
+    else
+        filename = "test_output_no_prefix.log";
+
+    FILE *fp = fopen(filename.c_str(), "w");
     REQUIRE(fp != nullptr);
     ulog_add_fp(fp, LOG_INFO);
 
@@ -103,7 +115,7 @@ void _check_file_time() {
     fclose(fp);
 
     // Check if the file was created
-    fp = fopen(filename, "r");
+    fp = fopen(filename.c_str(), "r");
     REQUIRE(fp != nullptr);
 
     // Read entry
@@ -115,6 +127,19 @@ void _check_file_time() {
     int yr, mo, d, hh, mm, ss;
     REQUIRE(sscanf(buffer, "%d-%d-%d %d:%d:%d ", &yr, &mo, &d, &hh, &mm, &ss) ==
             6);
+
+#if FEATURE_CUSTOM_PREFIX
+    if (prefix) {
+        // Should be no space after time
+        REQUIRE(buffer[FULL_TIME_STAMP_SIZE] != ' ');
+    } else {
+        // If no custom prefix, there should be a space after the time
+        REQUIRE(buffer[FULL_TIME_STAMP_SIZE] == ' ');
+    }
+#else   // FEATURE_CUSTOM_PREFIX
+    // If no custom prefix, there should be a space after the time
+    REQUIRE(buffer[FULL_TIME_STAMP_SIZE] == ' ');
+#endif  // FEATURE_CUSTOM_PREFIX
 
     _check_date_time_fields(yr, mo, d, hh, mm, ss, before, after);
 }
@@ -128,7 +153,7 @@ TEST_CASE_FIXTURE(TimeTestFixture, "Check time without prefix") {
 TEST_CASE_FIXTURE(TimeTestFixture, "Check time with prefix") {
     ulog_set_prefix_fn(test_prefix);
 
-    _check_console_time();
-    _check_file_time();
+    _check_console_time(true);
+    _check_file_time(true);
 }
 #endif  // FEATURE_CUSTOM_PREFIX
