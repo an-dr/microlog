@@ -32,7 +32,7 @@
 #endif
 
 /* ============================================================================
-   Core Feature: Printing (Depends on: - )
+   Core Feature: Print (Depends on: - )
 ============================================================================ */
 
 //  Private
@@ -42,21 +42,21 @@ typedef struct {
     char *data;
     unsigned int curr_pos;
     size_t size;
-} buffer_descriptor;
+} print_buffer;
 
 typedef union {
-    buffer_descriptor buffer;
+    print_buffer buffer;
     FILE *stream;
-} log_target_descriptor;
+} print_target_descriptor;
 
 typedef enum { T_BUFFER, T_STREAM } log_target_type;
 
 typedef struct {
     log_target_type type;
-    log_target_descriptor dsc;
-} log_target;
+    print_target_descriptor dsc;
+} print_target;
 
-static void _vprint(log_target *tgt, const char *format, va_list args) {
+static void print_args(print_target *tgt, const char *format, va_list args) {
     if (tgt->type == T_BUFFER) {
         char *buf   = tgt->dsc.buffer.data + tgt->dsc.buffer.curr_pos;
         size_t size = tgt->dsc.buffer.size - tgt->dsc.buffer.curr_pos;
@@ -69,10 +69,10 @@ static void _vprint(log_target *tgt, const char *format, va_list args) {
     }
 }
 
-static void _print(log_target *tgt, const char *format, ...) {
+static void print(print_target *tgt, const char *format, ...) {
     va_list args;
     va_start(args, format);
-    _vprint(tgt, format, args);
+    print_args(tgt, format, args);
     va_end(args);
 }
 
@@ -80,17 +80,17 @@ static void _print(log_target *tgt, const char *format, ...) {
    Prototypes
 ============================================================================ */
 
-static void _print_formatted_message(log_target *tgt, ulog_Event *ev,
+static void _print_formatted_message(print_target *tgt, ulog_Event *ev,
                                      bool full_time, bool color, bool new_line);
 
 /* ============================================================================
-   Feature: Color (Depends on: Printing)
+   Feature: Color (Depends on: Print)
 ============================================================================ */
 #if FEATURE_COLOR
 
 //  Private
 // ================
-static const char *level_colors[] = {
+static const char *color_levels[] = {
     "\x1b[37m",  // TRACE : White #000
     "\x1b[36m",  // DEBUG : Cyan #0ff
     "\x1b[32m",  // INFO : Green #0f0
@@ -100,82 +100,84 @@ static const char *level_colors[] = {
 };
 #define COLOR_TERMINATOR "\x1b[0m"
 
-static void _print_color_start(log_target *tgt, ulog_Event *ev) {
-    _print(tgt, "%s", level_colors[ev->level]);  // color start
+static void color_print_start(print_target *tgt, ulog_Event *ev) {
+    print(tgt, "%s", color_levels[ev->level]);  // color start
 }
 
-static void _print_color_end(log_target *tgt) {
-    _print(tgt, "%s", COLOR_TERMINATOR);  // color end
+static void color_print_end(print_target *tgt) {
+    print(tgt, "%s", COLOR_TERMINATOR);  // color end
 }
 
 // Disabled Private
 // ================
 #else  // FEATURE_COLOR
-#define _print_color_start(tgt, ev) (void)(tgt), (void)(ev)
-#define _print_color_end(tgt) (void)(tgt)
+#define color_print_start(tgt, ev) (void)(tgt), (void)(ev)
+#define color_print_end(tgt) (void)(tgt)
 #endif  // FEATURE_COLOR
 
 /* ============================================================================
-   Feature: Time (Depends on: Printing)
+   Feature: Time (Depends on: Print)
 ============================================================================ */
 #if FEATURE_TIME
 
-#define TIME_STAMP_BUF_SIZE 10  // HH:MM:SS(8) + 1 space + null terminator
-#define FULL_TIME_STAMP_BUF_SIZE                                               \
-    21  // YYYY-MM-DD HH:MM:SS(19) + 1 space + null terminator
+// HH:MM:SS(8) + 1 space + null terminator
+#define TIME_SHORT_BUF_SIZE 10
+
+// YYYY-MM-DD HH:MM:SS(19) + 1 space + null terminator
+#define TIME_FULL_BUF_SIZE 21
 
 typedef struct {
-    char sort_buf[TIME_STAMP_BUF_SIZE];
+    char sort_buf[TIME_SHORT_BUF_SIZE];
 
 #if FEATURE_EXTRA_OUTPUTS  // Used for file for example
-    char full_buf[FULL_TIME_STAMP_BUF_SIZE];
+    char full_buf[TIME_FULL_BUF_SIZE];
 #endif
 
-} feature_time_t;
-static feature_time_t time_stamp_buf = {0};
+} time_data_t;
+static time_data_t time_data_buf = {0};
 
 // Private
 // ================
-static void _print_time_sec(log_target *tgt, ulog_Event *ev,
-                            bool leading_space) {
+static void time_print_short(print_target *tgt, ulog_Event *ev,
+                             bool leading_space) {
 
-    char *buf = time_stamp_buf.sort_buf;
+    char *buf = time_data_buf.sort_buf;
     if (leading_space) {
-        buf[strftime(buf, TIME_STAMP_BUF_SIZE, "%H:%M:%S ", ev->time)] = '\0';
+        buf[strftime(buf, TIME_SHORT_BUF_SIZE, "%H:%M:%S ", ev->time)] = '\0';
     } else {
-        buf[strftime(buf, TIME_STAMP_BUF_SIZE - 1, "%H:%M:%S", ev->time)] =
+        buf[strftime(buf, TIME_SHORT_BUF_SIZE - 1, "%H:%M:%S", ev->time)] =
             '\0';
     }
-    _print(tgt, "%s", buf);
+    print(tgt, "%s", buf);
 }
 
 #if FEATURE_EXTRA_OUTPUTS
-static void _print_time_full(log_target *tgt, ulog_Event *ev,
-                             bool append_space) {
+static void time_print_full(print_target *tgt, ulog_Event *ev,
+                            bool append_space) {
 
-    char *buf = time_stamp_buf.full_buf;
+    char *buf = time_data_buf.full_buf;
     if (append_space) {
-        buf[strftime(buf, FULL_TIME_STAMP_BUF_SIZE, "%Y-%m-%d %H:%M:%S ",
-                     ev->time)] = '\0';
+        buf[strftime(buf, TIME_FULL_BUF_SIZE, "%Y-%m-%d %H:%M:%S ", ev->time)] =
+            '\0';
     } else {
-        buf[strftime(buf, FULL_TIME_STAMP_BUF_SIZE - 1, "%Y-%m-%d %H:%M:%S",
+        buf[strftime(buf, TIME_FULL_BUF_SIZE - 1, "%Y-%m-%d %H:%M:%S",
                      ev->time)] = '\0';
     }
-    _print(tgt, "%s", buf);
+    print(tgt, "%s", buf);
 }
 #endif  // FEATURE_EXTRA_OUTPUTS
 
 // Disabled Private
 // ================
 #else  // FEATURE_TIME
-#define _print_time_sec(tgt, ev, append_space)                                 \
+#define time_print_short(tgt, ev, append_space)                                \
     (void)(tgt), (void)(ev), (void)(append_space)
-#define _print_time_full(tgt, ev, append_space)                                \
+#define time_print_full(tgt, ev, append_space)                                 \
     (void)(tgt), (void)(ev), (void)(append_space)
 #endif  // FEATURE_TIME
 
 /* ============================================================================
-   Feature: Custom Prefix (Depends on: Printing)
+   Feature: Prefix (Depends on: Print)
 ============================================================================ */
 #if FEATURE_CUSTOM_PREFIX
 
@@ -184,18 +186,17 @@ static void _print_time_full(log_target *tgt, ulog_Event *ev,
 typedef struct {
     ulog_PrefixFn function;
     char prefix[CFG_CUSTOM_PREFIX_SIZE];
-} feature_custom_prefix_t;
+} prefix_data_t;
 
-static feature_custom_prefix_t feature_custom_prefix = {
-    .function      = NULL,
-    .prefix = {0},
+static prefix_data_t prefix_data = {
+    .function = NULL,
+    .prefix   = {0},
 };
 
-static void _print_prefix(log_target *tgt, ulog_Event *ev) {
-    if (feature_custom_prefix.function) {
-        feature_custom_prefix.function(ev, feature_custom_prefix.prefix,
-                                       CFG_CUSTOM_PREFIX_SIZE);
-        _print(tgt, "%s", feature_custom_prefix.prefix);
+static void prefix_print(print_target *tgt, ulog_Event *ev) {
+    if (prefix_data.function) {
+        prefix_data.function(ev, prefix_data.prefix, CFG_CUSTOM_PREFIX_SIZE);
+        print(tgt, "%s", prefix_data.prefix);
     }
 }
 
@@ -203,17 +204,17 @@ static void _print_prefix(log_target *tgt, ulog_Event *ev) {
 // ================
 
 void ulog_set_prefix_fn(ulog_PrefixFn function) {
-    feature_custom_prefix.function = function;
+    prefix_data.function = function;
 }
 
 // Disabled Private
 // ================
 #else  // FEATURE_CUSTOM_PREFIX
-#define _print_prefix(tgt, ev) (void)(tgt), (void)(ev)
+#define prefix_print(tgt, ev) (void)(tgt), (void)(ev)
 #endif  // FEATURE_CUSTOM_PREFIX
 
 /* ============================================================================
-   Core Feature: Levels (Depends on: Printing)
+   Core Feature: Levels (Depends on: Print)
 ============================================================================ */
 
 // Private
@@ -225,20 +226,20 @@ void ulog_set_prefix_fn(ulog_PrefixFn function) {
 typedef struct {
     int level;
     bool short_levels;
-} feature_log_level_t;
+} levels_data_t;
 
-static feature_log_level_t feature_log_level = {
+static levels_data_t levels_data = {
     .level        = ULOG_DEFAULT_LOG_LEVEL,
     .short_levels = FEATURE_SHORT_LEVELS || FEATURE_EMOJI_LEVELS,
 };
 
 // clang-format off
-#define ULOG_LEVELS_LONG  0
-#define ULOG_LEVELS_SHORT 1
-#define ULOG_LEVELS_NUM   6
+#define LEVELS_USE_LONG     0
+#define LEVELS_USE_SHORT    1
+#define LEVELS_TOTAL        6
 
 /// @brief Level strings
-static const char *level_strings[][ULOG_LEVELS_NUM] = {
+static const char *levels_strings[][LEVELS_TOTAL] = {
      {"TRACE",  "DEBUG",    "INFO",     "WARN",     "ERROR",    "FATAL"}
 #if FEATURE_EMOJI_LEVELS
     ,{"⚪",     "🔵",       "🟢",       "🟡",       "🔴",       "💥"}
@@ -249,15 +250,15 @@ static const char *level_strings[][ULOG_LEVELS_NUM] = {
 };
 // clang-format on
 
-static void _print_level(log_target *tgt, ulog_Event *ev) {
+static void levels_print(print_target *tgt, ulog_Event *ev) {
 #if FEATURE_SHORT_LEVELS || FEATURE_EMOJI_LEVELS
-    if (feature_log_level.short_levels) {
-        _print(tgt, "%-1s ", level_strings[ULOG_LEVELS_SHORT][ev->level]);
+    if (levels_data.short_levels) {
+        print(tgt, "%-1s ", levels_strings[LEVELS_USE_SHORT][ev->level]);
     } else {
-        _print(tgt, "%-5s ", level_strings[ULOG_LEVELS_LONG][ev->level]);
+        print(tgt, "%-5s ", levels_strings[LEVELS_USE_LONG][ev->level]);
     }
 #else
-    _print(tgt, "%-1s ", level_strings[ULOG_LEVELS_LONG][ev->level]);
+    print(tgt, "%-1s ", levels_strings[LEVELS_USE_LONG][ev->level]);
 #endif  // FEATURE_SHORT_LEVELS || FEATURE_EMOJI_LEVELS
 }
 
@@ -266,10 +267,10 @@ static void _print_level(log_target *tgt, ulog_Event *ev) {
 
 /// @brief Returns the string representation of the level
 const char *ulog_get_level_string(int level) {
-    if (level < 0 || level >= ULOG_LEVELS_NUM) {
+    if (level < 0 || level >= LEVELS_TOTAL) {
         return "?";  // Return a default string for invalid levels
     }
-    return level_strings[ULOG_LEVELS_LONG][level];
+    return levels_strings[LEVELS_USE_LONG][level];
 }
 
 /// @brief Sets the debug level
@@ -277,7 +278,7 @@ void ulog_set_level(int level) {
     if (level < LOG_TRACE || level > LOG_FATAL) {
         return;  // Invalid level, do nothing
     }
-    feature_log_level.level = level;
+    levels_data.level = level;
 }
 
 /* ============================================================================
@@ -306,7 +307,7 @@ static feature_callback_t feature_callback = {
 };
 
 static void __callback_stdout(ulog_Event *ev, void *arg) {
-    log_target tgt = {.type = T_STREAM, .dsc.stream = (FILE *)arg};
+    print_target tgt = {.type = T_STREAM, .dsc.stream = (FILE *)arg};
     _print_formatted_message(&tgt, ev, false, true, true);
 }
 
@@ -366,7 +367,7 @@ typedef struct {
 static feature_extra_outputs_t feature_extra_outputs = {.callbacks = {{0}}};
 
 static void __callback_file(ulog_Event *ev, void *arg) {
-    log_target tgt = {.type = T_STREAM, .dsc.stream = (FILE *)arg};
+    print_target tgt = {.type = T_STREAM, .dsc.stream = (FILE *)arg};
     _print_formatted_message(&tgt, ev, true, false, true);
 }
 
@@ -410,7 +411,7 @@ int ulog_add_fp(FILE *fp, int level) {
 #endif  // FEATURE_EXTRA_OUTPUTS
 
 /* ============================================================================
-   Feature: Topics (Depends on: Printing)
+   Feature: Topics (Depends on: Print)
 ============================================================================ */
 #if FEATURE_TOPICS
 // Private
@@ -437,10 +438,10 @@ static topic_t *_get_topic_ptr(int topic);
 
 static bool new_topic_enabled = false;
 
-static void _print_topic(log_target *tgt, ulog_Event *ev) {
+static void _print_topic(print_target *tgt, ulog_Event *ev) {
     topic_t *t = _get_topic_ptr(ev->topic);
     if (t != NULL && t->name) {
-        _print(tgt, "[%s] ", t->name);
+        print(tgt, "[%s] ", t->name);
     }
 }
 
@@ -714,7 +715,7 @@ void ulog_set_lock(ulog_LockFn function, void *lock_arg) {
 }
 
 /* ============================================================================
-   Core Feature: Logging (Depends on: Printing, Levels, Callback, Extra Outputs,
+   Core Feature: Logging (Depends on: Print, Levels, Callback, Extra Outputs,
                           Custom Prefix, Topics, Time, Color, Locking)
 ============================================================================ */
 
@@ -726,18 +727,18 @@ bool show_file_string = false;  // Show file and line in the log message
 /// @brief Prints the message
 /// @param tgt - Target
 /// @param ev - Event
-static void __print_message(log_target *tgt, ulog_Event *ev) {
+static void __print_message(print_target *tgt, ulog_Event *ev) {
 
 #if FEATURE_FILE_STRING
     if (show_file_string) {
-        _print(tgt, "%s:%d: ", ev->file, ev->line);  // file and line
+        print(tgt, "%s:%d: ", ev->file, ev->line);  // file and line
     }
 #endif
 
     if (ev->message) {
-        _vprint(tgt, ev->message, ev->message_format_args);  // message
+        print_args(tgt, ev->message, ev->message_format_args);  // message
     } else {
-        _print(tgt, "NULL");  // message
+        print(tgt, "NULL");  // message
     }
 }
 
@@ -755,29 +756,29 @@ static void __print_message(log_target *tgt, ulog_Event *ev) {
 /// @param full_time - Full time or short time
 /// @param color - Color or no color
 /// @param new_line - New line in the end or no new line
-static void _print_formatted_message(log_target *tgt, ulog_Event *ev,
+static void _print_formatted_message(print_target *tgt, ulog_Event *ev,
                                      bool full_time, bool color,
                                      bool new_line) {
 
-    color ? _print_color_start(tgt, ev) : (void)0;
+    color ? color_print_start(tgt, ev) : (void)0;
 
     bool append_space = true;
 #if FEATURE_CUSTOM_PREFIX
-    if (feature_custom_prefix.function) {
+    if (prefix_data.function) {
         append_space = false;  // Custom prefix does not need leading space
     }
 #endif
 
-    full_time ? _print_time_full(tgt, ev, append_space)
-              : _print_time_sec(tgt, ev, append_space);
+    full_time ? time_print_full(tgt, ev, append_space)
+              : time_print_short(tgt, ev, append_space);
 
-    _print_prefix(tgt, ev);
+    prefix_print(tgt, ev);
     _print_topic(tgt, ev);
-    _print_level(tgt, ev);
+    levels_print(tgt, ev);
     __print_message(tgt, ev);
 
-    color ? _print_color_end(tgt) : (void)0;
-    new_line ? _print(tgt, "\n") : (void)0;
+    color ? color_print_end(tgt) : (void)0;
+    new_line ? print(tgt, "\n") : (void)0;
 }
 
 // Public
@@ -787,7 +788,7 @@ int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size) {
     if (!out || out_size == 0) {
         return -1;
     }
-    log_target tgt = {.type = T_BUFFER, .dsc.buffer = {out, 0, out_size}};
+    print_target tgt = {.type = T_BUFFER, .dsc.buffer = {out, 0, out_size}};
     _print_formatted_message(&tgt, ev, false, false, false);
     return 0;
 }
@@ -795,7 +796,7 @@ int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size) {
 void ulog_log(int level, const char *file, int line, const char *topic,
               const char *message, ...) {
 
-    if (level < feature_log_level.level) {
+    if (level < levels_data.level) {
         return;
     }
 #if !FEATURE_TOPICS
