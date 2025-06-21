@@ -1,9 +1,8 @@
 # ==========================
-# Linguist Overrides
+# Linguist
 # ==========================
-doc/* linguist-vendored
-example/* linguist-vendored
-tests/* linguist-vendored
+doc/** linguist-documentation
+tests/** linguist-language=ignore
 
 # ==========================
 # EOL
