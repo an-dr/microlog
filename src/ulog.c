@@ -282,13 +282,11 @@ void ulog_set_level(int level) {
 }
 
 /* ============================================================================
-   Core Feature: Callback (Depends on: Logging)
+   Core Feature: Callbacks (Depends on: Logging)
 ============================================================================ */
 
 //  Private
 // ================
-
-static void __callback_stdout(ulog_Event *ev, void *arg);
 
 typedef struct {
     ulog_LogFn function;
@@ -299,19 +297,19 @@ typedef struct {
 typedef struct {
     bool quiet_mode;
     callback_t callback;
-} feature_callback_t;
+} callbacks_data_t;
 
-static feature_callback_t feature_callback = {
-    .quiet_mode = false,
-    .callback   = {0},
+static callbacks_data_t callbacks_data = {
+    .quiet_mode      = false,
+    .stdout_callback = {0},
 };
 
-static void __callback_stdout(ulog_Event *ev, void *arg) {
+static void callbacks_to_stdout(ulog_Event *ev, void *arg) {
     print_target tgt = {.type = T_STREAM, .dsc.stream = (FILE *)arg};
     _print_formatted_message(&tgt, ev, false, true, true);
 }
 
-static void _process_callback(ulog_Event *ev, callback_t *cb) {
+static void callbacks_execute(ulog_Event *ev, callback_t *cb) {
     if (ev->level >= cb->level) {
 #if FEATURE_TIME
         if (!ev->time) {
@@ -334,15 +332,16 @@ static void _process_callback(ulog_Event *ev, callback_t *cb) {
     }
 }
 
-static void _log_to_stdout(ulog_Event *ev) {
-    if (!feature_callback.quiet_mode) {
+static void callbacks_send_to_stdout(ulog_Event *ev) {
+    if (!callbacks_data.quiet_mode) {
         // Initializing the stdout callback if not set
-        if (!feature_callback.callback.function) {
-            feature_callback.callback = (callback_t){__callback_stdout,
-                                                     stdout,  // pass stream
-                                                     LOG_TRACE};
+        if (!callbacks_data.stdout_callback.function) {
+            callbacks_data.stdout_callback =
+                (callback_t){callbacks_to_stdout,
+                             stdout,  // pass stream
+                             LOG_TRACE};
         }
-        _process_callback(ev, &feature_callback.callback);
+        callbacks_execute(ev, &callbacks_data.stdout_callback);
     }
 }
 
@@ -351,11 +350,11 @@ static void _log_to_stdout(ulog_Event *ev) {
 
 /// @brief Sets the quiet mode
 void ulog_set_quiet(bool enable) {
-    feature_callback.quiet_mode = enable;
+    callbacks_data.quiet_mode = enable;
 }
 
 /* ============================================================================
-   Feature: Extra Outputs (Depends on: Callback)
+   Feature: Callbacks Extra (Depends on: Callbacks)
 ============================================================================ */
 #if FEATURE_EXTRA_OUTPUTS
 // Private
@@ -376,7 +375,7 @@ static void _log_to_extra_outputs(ulog_Event *ev) {
     for (int i = 0;
          i < CFG_EXTRA_OUTPUTS && feature_extra_outputs.callbacks[i].function;
          i++) {
-        _process_callback(ev, &feature_extra_outputs.callbacks[i]);
+        callbacks_execute(ev, &feature_extra_outputs.callbacks[i]);
     }
 }
 
@@ -384,7 +383,7 @@ static void _log_to_extra_outputs(ulog_Event *ev) {
 // ================
 
 /// @brief Adds a callback
-/// @param function - Callback function
+/// @param function - Callbacks function
 /// @param arg - Optional argument that will be added to the event to be
 ///              processed by the callback
 /// @param level - Debug level
@@ -678,30 +677,30 @@ int ulog_add_topic(const char *topic_name, bool enable) {
 #endif  // FEATURE_TOPICS && CFG_TOPICS_DINAMIC_ALLOC == true
 
 /* ============================================================================
-   Core Functionality: Thread Safety (Depends on: - )
+   Core Functionality: Lock (Depends on: - )
 ============================================================================ */
 
 // Private
 // ================
 typedef struct {
-    ulog_LockFn lock_function;  // Lock function
-    void *lock_arg;             // Argument for the lock function
-} feature_lock_t;
+    ulog_LockFn function;  // Lock function
+    void *args;            // Argument for the lock function
+} lock_data_t;
 
-static feature_lock_t feature_lock = {
-    .lock_function = NULL,  // No lock function by default
-    .lock_arg      = NULL,  // No lock argument by default
+static lock_data_t lock_data = {
+    .function = NULL,  // No lock function by default
+    .args     = NULL,  // No lock argument by default
 };
 
-static void _lock(void) {
-    if (feature_lock.lock_function) {
-        feature_lock.lock_function(true, feature_lock.lock_arg);
+static void lock_lock(void) {
+    if (lock_data.function) {
+        lock_data.function(true, lock_data.args);
     }
 }
 
-static void _unlock(void) {
-    if (feature_lock.lock_function) {
-        feature_lock.lock_function(false, feature_lock.lock_arg);
+static void lock_unlock(void) {
+    if (lock_data.function) {
+        lock_data.function(false, lock_data.args);
     }
 }
 
@@ -710,12 +709,12 @@ static void _unlock(void) {
 
 /// @brief  Sets the lock function and user data
 void ulog_set_lock(ulog_LockFn function, void *lock_arg) {
-    feature_lock.lock_function = function;
-    feature_lock.lock_arg      = lock_arg;
+    lock_data.function = function;
+    lock_data.args     = lock_arg;
 }
 
 /* ============================================================================
-   Core Feature: Logging (Depends on: Print, Levels, Callback, Extra Outputs,
+   Core Feature: Logging (Depends on: Print, Levels, Callbacks, Extra Outputs,
                           Custom Prefix, Topics, Time, Color, Locking)
 ============================================================================ */
 
@@ -838,12 +837,12 @@ void ulog_log(int level, const char *file, int line, const char *topic,
 
     va_start(ev.message_format_args, message);
 
-    _lock();
+    lock_lock();
 
-    _log_to_stdout(&ev);
+    callbacks_send_to_stdout(&ev);
     _log_to_extra_outputs(&ev);
 
-    _unlock();
+    lock_unlock();
 
     va_end(ev.message_format_args);
 }
