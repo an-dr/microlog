@@ -159,11 +159,15 @@ static void print_color_end(log_target *tgt, ulog_Event *ev) {
 
 static void print_time_sec(log_target *tgt, ulog_Event *ev) {
 
-#if FEATURE_CUSTOM_PREFIX
-    char buf[9];
-    buf[strftime(buf, sizeof(buf), "%H:%M:%S", ev->time)] = '\0';
-#else   // FEATURE_CUSTOM_PREFIX
     char buf[10];
+#if FEATURE_CUSTOM_PREFIX
+    // If the custom prefix function is not set, add a space after the time
+    if(!ulog.update_prefix_function) {
+        buf[strftime(buf, sizeof(buf), "%H:%M:%S ", ev->time)] = '\0';
+    } else {
+        buf[strftime(buf, sizeof(buf)-1, "%H:%M:%S", ev->time)] = '\0';
+    }
+#else   // FEATURE_CUSTOM_PREFIX
     buf[strftime(buf, sizeof(buf), "%H:%M:%S ", ev->time)] = '\0';
 #endif  // FEATURE_CUSTOM_PREFIX
 
@@ -172,12 +176,16 @@ static void print_time_sec(log_target *tgt, ulog_Event *ev) {
 
 #if FEATURE_EXTRA_OUTPUTS
 static void print_time_full(log_target *tgt, ulog_Event *ev) {
-
+    
+    char buf[21];
 #if FEATURE_CUSTOM_PREFIX
-    char buf[64];
-    buf[strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", ev->time)] = '\0';
+    // If the custom prefix function is not set, add a space after the time
+    if(!ulog.update_prefix_function) {
+        buf[strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S ", ev->time)] = '\0';
+    } else {
+        buf[strftime(buf, sizeof(buf)-1, "%Y-%m-%d %H:%M:%S", ev->time)] = '\0';
+    }
 #else   // FEATURE_CUSTOM_PREFIX
-    char buf[65];
     buf[strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S ", ev->time)] = '\0';
 #endif  // FEATURE_CUSTOM_PREFIX
 
