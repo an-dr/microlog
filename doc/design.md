@@ -20,4 +20,8 @@ All logging is happening via `ulog_log` function. `logt_*` and `log_*` macros ar
 
 The proces is shown in the diagram below:
 
-![design](design.drawio.svg)
+![design](design/design.drawio.svg)
+
+## Code organization
+
+The code is organized into two files. The source file consists of sections. Each section might rely on functionality of a previous section. Sections are meant to be encapsulated and not to rely on each other or some shared data - if possible. See [code.md](code.md) for more details.
