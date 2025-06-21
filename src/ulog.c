@@ -156,10 +156,13 @@ static void print_color_end(log_target *tgt, ulog_Event *ev) {
    Feature: Time
 ============================================================================ */
 #if FEATURE_TIME
+#define TIME_STAMP_BUF_SIZE 10
+#define FULL_TIME_STAMP_BUF_SIZE 21
+
 
 static void print_time_sec(log_target *tgt, ulog_Event *ev) {
 
-    char buf[10];
+    char buf[TIME_STAMP_BUF_SIZE];
 #if FEATURE_CUSTOM_PREFIX
     // If the custom prefix function is not set, add a space after the time
     if(!ulog.update_prefix_function) {
@@ -177,7 +180,7 @@ static void print_time_sec(log_target *tgt, ulog_Event *ev) {
 #if FEATURE_EXTRA_OUTPUTS
 static void print_time_full(log_target *tgt, ulog_Event *ev) {
     
-    char buf[21];
+    char buf[FULL_TIME_STAMP_BUF_SIZE];
 #if FEATURE_CUSTOM_PREFIX
     // If the custom prefix function is not set, add a space after the time
     if(!ulog.update_prefix_function) {

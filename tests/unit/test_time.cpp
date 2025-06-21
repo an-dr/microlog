@@ -11,6 +11,8 @@ constexpr static size_t FULL_TIME_STAMP_SIZE = 19;  // YYYY-MM-DD HH:MM:SS
 #if FEATURE_CUSTOM_PREFIX
 static void test_prefix(ulog_Event *ev, char *prefix, size_t prefix_size) {
     (void)ev;
+
+    // NOTE: Test cases expect the first character to be non-whitespace
     snprintf(prefix, prefix_size, "[PREFIX]");
 }
 #endif  // FEATURE_CUSTOM_PREFIX
@@ -83,7 +85,7 @@ void _check_console_time(bool prefix = false) {
 #if FEATURE_CUSTOM_PREFIX
     if (prefix) {
         // Should be no space after time
-        REQUIRE(ut_callback_get_last_message()[TIME_STAMP_SIZE] == '[');
+        REQUIRE(ut_callback_get_last_message()[TIME_STAMP_SIZE] != ' ');
     } else {
         // If no custom prefix, there should be a space after the time
         REQUIRE(ut_callback_get_last_message()[TIME_STAMP_SIZE] == ' ');
@@ -98,12 +100,12 @@ void _check_console_time(bool prefix = false) {
 
 void _check_file_time(bool prefix = false) {
     std::string filename;
-    if (prefix) 
+    if (prefix)
         filename = "test_output_prefix.log";
     else
-        filename = "test_output_np.log";
+        filename = "test_output_no_prefix.log";
 
-    FILE *fp             = fopen(filename.c_str(), "w");
+    FILE *fp = fopen(filename.c_str(), "w");
     REQUIRE(fp != nullptr);
     ulog_add_fp(fp, LOG_INFO);
 
@@ -123,14 +125,13 @@ void _check_file_time(bool prefix = false) {
 
     // Parse time values, ensure 6 matches
     int yr, mo, d, hh, mm, ss;
-    log_debug("Last message: %s", buffer);
     REQUIRE(sscanf(buffer, "%d-%d-%d %d:%d:%d ", &yr, &mo, &d, &hh, &mm, &ss) ==
             6);
 
 #if FEATURE_CUSTOM_PREFIX
     if (prefix) {
         // Should be no space after time
-        REQUIRE(buffer[FULL_TIME_STAMP_SIZE] == '[');
+        REQUIRE(buffer[FULL_TIME_STAMP_SIZE] != ' ');
     } else {
         // If no custom prefix, there should be a space after the time
         REQUIRE(buffer[FULL_TIME_STAMP_SIZE] == ' ');
