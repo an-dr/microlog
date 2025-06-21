@@ -8,7 +8,7 @@ src = [
 # Cfg options. Uncomment to enable.
 add_global_arguments('-DULOG_HAVE_TIME', language : ['cpp', 'c'])
 # add_global_arguments('-DULOG_NO_COLOR', language : ['cpp', 'c'])
-# add_global_arguments('-DULOG_CUSTOM_PREFIX_SIZE=16', language : ['cpp', 'c'])
+add_global_arguments('-DULOG_CUSTOM_PREFIX_SIZE=16', language : ['cpp', 'c'])
 # add_global_arguments('-DULOG_HIDE_FILE_STRING', language : ['cpp', 'c'])
 # add_global_arguments('-DULOG_DEFAULT_LOG_LEVEL=LOG_WARN', language : ['cpp', 'c'])
 # add_global_arguments('-DULOG_SHORT_LEVEL_STRINGS', language : ['cpp', 'c'])
