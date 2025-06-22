@@ -122,56 +122,6 @@ static void color_print_end(print_target *tgt) {
 #endif  // FEATURE_COLOR
 
 /* ============================================================================
-   Feature: Time (`time_*`, depends on: Print)
-============================================================================ */
-#if FEATURE_TIME
-
-#define TIME_SHORT_BUF_SIZE 10  // HH:MM:SS(8) + 1 space + null terminator
-#define TIME_FULL_BUF_SIZE 21   // YYYY-MM-DD HH:MM:SS(19) + 1 space + null
-
-typedef struct {
-    char short_buf[TIME_SHORT_BUF_SIZE];
-
-#if FEATURE_EXTRA_OUTPUTS  // Used for file for example
-    char full_buf[TIME_FULL_BUF_SIZE];
-#endif
-
-} time_data_t;
-static time_data_t time_data_buf = {0};
-
-// Private
-// ================
-static void time_print_short(print_target *tgt, ulog_Event *ev,
-                             bool append_space) {
-    char *buf          = time_data_buf.short_buf;
-    const char *format = append_space ? "%H:%M:%S " : "%H:%M:%S";
-
-    size_t len = strftime(buf, TIME_SHORT_BUF_SIZE, format, ev->time);
-    buf[len]   = '\0';  // Ensure null termination
-    print_to_target(tgt, "%s", buf);
-}
-
-#if FEATURE_EXTRA_OUTPUTS
-static void time_print_full(print_target *tgt, ulog_Event *ev,
-                            bool append_space) {
-    char *buf = time_data_buf.full_buf;
-    const char *format =
-        append_space ? "%Y-%m-%d %H:%M:%S " : "%Y-%m-%d %H:%M:%S";
-
-    size_t len = strftime(buf, TIME_FULL_BUF_SIZE, format, ev->time);
-    buf[len]   = '\0';  // Ensure null termination
-    print_to_target(tgt, "%s", buf);
-}
-#endif  // FEATURE_EXTRA_OUTPUTS
-
-// Disabled Private
-// ================
-#else  // FEATURE_TIME
-#define time_print_short(tgt, ev, append_space) (void)(0)
-#define time_print_full(tgt, ev, append_space) (void)(0)
-#endif  // FEATURE_TIME
-
-/* ============================================================================
    Feature: Prefix (`prefix_*`, depends on: Print)
 ============================================================================ */
 #if FEATURE_CUSTOM_PREFIX
@@ -207,6 +157,61 @@ void ulog_set_prefix_fn(ulog_PrefixFn function) {
 #else  // FEATURE_CUSTOM_PREFIX
 #define prefix_print(tgt, ev) (void)(tgt), (void)(ev)
 #endif  // FEATURE_CUSTOM_PREFIX
+
+/* ============================================================================
+   Feature: Time (`time_*`, depends on: Print)
+============================================================================ */
+#if FEATURE_TIME
+
+#define TIME_SHORT_BUF_SIZE 10  // HH:MM:SS(8) + 1 space + null terminator
+#define TIME_FULL_BUF_SIZE 21   // YYYY-MM-DD HH:MM:SS(19) + 1 space + null
+
+// Private
+// ================
+static void time_print_short(print_target *tgt, ulog_Event *ev) {
+
+    char buf[TIME_SHORT_BUF_SIZE];
+#if FEATURE_CUSTOM_PREFIX
+    // If the custom prefix function is not set, add a space after the time
+    if(prefix_data.function == NULL) {
+        buf[strftime(buf, sizeof(buf), "%H:%M:%S ", ev->time)] = '\0';
+    } else {
+        buf[strftime(buf, sizeof(buf)-1, "%H:%M:%S", ev->time)] = '\0';
+    }
+#else   // FEATURE_CUSTOM_PREFIX
+    buf[strftime(buf, sizeof(buf), "%H:%M:%S ", ev->time)] = '\0';
+#endif  // FEATURE_CUSTOM_PREFIX
+
+    print_to_target(tgt, "%s", buf);
+}
+
+#if FEATURE_EXTRA_OUTPUTS
+static void time_print_full(print_target *tgt, ulog_Event *ev) {
+    
+    char buf[TIME_FULL_BUF_SIZE];
+#if FEATURE_CUSTOM_PREFIX
+    // If the custom prefix function is not set, add a space after the time
+    if(prefix_data.function == NULL) {
+        buf[strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S ", ev->time)] = '\0';
+    } else {
+        buf[strftime(buf, sizeof(buf)-1, "%Y-%m-%d %H:%M:%S", ev->time)] = '\0';
+    }
+#else   // FEATURE_CUSTOM_PREFIX
+    buf[strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S ", ev->time)] = '\0';
+#endif  // FEATURE_CUSTOM_PREFIX
+
+    print_to_target(tgt, "%s", buf);
+}
+#endif  // FEATURE_EXTRA_OUTPUTS
+
+// Disabled Private
+// ================
+#else  // FEATURE_TIME
+#define time_print_short(tgt, ev) (void)(0)
+#define time_print_full(tgt, ev) (void)(0)
+#endif  // FEATURE_TIME
+
+
 
 /* ============================================================================
    Core Feature: Levels  (`levels_*`, depends on: Print)
@@ -792,14 +797,19 @@ static void log_log(print_target *tgt, ulog_Event *ev, bool full_time,
 
     bool append_space = true;
     (void)append_space; // May be unused if no prefix or time
-#if FEATURE_CUSTOM_PREFIX
-    if (prefix_data.function != NULL) {
-        append_space = false;  // Custom prefix does not need leading space
-    }
-#endif
 
-    full_time ? time_print_full(tgt, ev, append_space)
-              : time_print_short(tgt, ev, append_space);
+
+#if FEATURE_TIME
+    if (full_time) {
+#if FEATURE_EXTRA_OUTPUTS
+        time_print_full(tgt, ev);
+#endif
+    } else {
+        time_print_short(tgt, ev);
+    }
+#else
+    (void)full_time;
+#endif  // FEATURE_TIME
 
     prefix_print(tgt, ev);
     topic_print(tgt, ev);
