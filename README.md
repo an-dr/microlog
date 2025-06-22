@@ -18,15 +18,15 @@ A simple customizable logging library. Features:
 
 In the default configuration it looks like this:
 
-<img src="doc/demo0.png" width="600">
+<img src="doc/README/demo0.png" width="600">
 
 ...but in can be very minimalistic
 
-<img src="doc/demo1.png" width="600">
+<img src="doc/README/demo1.png" width="600">
 
 ... or feature-rich:
 
-<img src="doc/demo2.png" width="600">
+<img src="doc/README/demo2.png" width="600">
 
 The project is based on several core principles:
 
@@ -405,9 +405,7 @@ The following defines can be used to customize the library's output:
 
 ## Contributing
 
-Contributions are welcome! The library design is described in [design.md](doc/design.md).
-
-If you want to contribute feel free to open an issue or create Pull Request with your changes.
+Contributions are welcome! Please read the [CONTRIBUTING.md](CONTRIBUTING.md) for details, I tried to keep it simple.
 
 ## License
 

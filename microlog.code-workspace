@@ -4,7 +4,9 @@
             "path": "."
         }
     ],
-    "settings": {},
+    "settings": {
+        "C_Cpp.default.compileCommands": "${workspaceFolder}/example/build/compile_commands.json",
+    },
     "tasks": {
         "version": "2.0.0",
         "tasks": [
