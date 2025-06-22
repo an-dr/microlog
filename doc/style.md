@@ -49,3 +49,11 @@ typedef union {
 
 - **Function Parameters:** `snake_case`.
     - Example: `int level`, `const char *topic_name`
+
+### Other Conventions and Recommendations
+
+- Avoid implicit type conversions, as they can cause unexpected behavior.
+- Use `if (something)` for boolean checks.
+- Use explicit comparisons like `if (something < 0)` when needed.
+- Write conditions clearly to show your intent.
+- Use auto formatting tools like `clang-format` to maintain consistency.
