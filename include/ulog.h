@@ -250,29 +250,29 @@ int ulog_add_fp(FILE *fp, int level);
 #if FEATURE_TOPICS
 
 /// @brief Adds a topic
-/// @param topic_name
+/// @param topic_name - Topic name. "" and NULL are not valid
 /// @param enable
 /// @return Topic ID if success, -1 if failed
 int ulog_add_topic(const char *topic_name, bool enable);
 
 /// @brief Sets the debug level of a given topic
-/// @param topic_name
-/// @param level
+/// @param topic_name - Topic name. "" and NULL are not valid
+/// @param level - Debug level
 /// @return 0 if success, -1 if failed
 int ulog_set_topic_level(const char *topic_name, int level);
 
 /// @brief Gets the topic ID
-/// @param topic_name
+/// @param topic_name - Topic name. "" and NULL are not valid
 /// @return  Topic ID if success, -1 if failed, TOPIC_NOT_FOUND if not found
 int ulog_get_topic_id(const char *topic_name);
 
 /// @brief Enables the topic
-/// @param topic_name - Topic name
+/// @param topic_name - Topic name. "" and NULL are not valid
 /// @return 0 if success, -1 if failed
 int ulog_enable_topic(const char *topic_name);
 
 /// @brief Disables the topic
-/// @param topic_name - Topic name
+/// @param topic_name - Topic name. "" and NULL are not valid
 /// @return 0 if success, -1 if failed
 int ulog_disable_topic(const char *topic_name);
 

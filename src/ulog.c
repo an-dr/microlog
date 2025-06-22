@@ -20,7 +20,7 @@
 #include <string.h>
 
 /* ============================================================================
-   Testing
+   Tools
 ============================================================================ */
 
 // If testing is enabled, we define NOT_SO_STATIC as empty to allow
@@ -30,6 +30,11 @@
 #else
 #define NOT_VERY_STATIC static
 #endif
+
+// Check if the string is empty or not provided
+static inline bool is_str_empty(const char *str) {
+    return (str == NULL) || (str[0] == '\0');
+}
 
 /* ============================================================================
    Core Feature: Print (`print_*`, depends on: - )
@@ -186,7 +191,7 @@ static prefix_data_t prefix_data = {
 };
 
 static void prefix_print(print_target *tgt, ulog_Event *ev) {
-    if (prefix_data.function) {
+    if (prefix_data.function != NULL) {
         prefix_data.function(ev, prefix_data.prefix, CFG_CUSTOM_PREFIX_SIZE);
         print_to_target(tgt, "%s", prefix_data.prefix);
     }
@@ -306,7 +311,7 @@ static void cb_stdout(ulog_Event *ev, void *arg) {
 static void cb_execute(ulog_Event *ev, cb_t *cb) {
     if (ev->level >= cb->level) {
 #if FEATURE_TIME
-        if (!ev->time) {
+        if (ev->time == NULL) {
             time_t t = time(NULL);
             ev->time = localtime(&t);
         }
@@ -381,7 +386,7 @@ static void cb_user_execute_all(ulog_Event *ev) {
 /// @param level - Debug level
 int ulog_add_callback(ulog_LogFn function, void *arg, int level) {
     for (int i = 0; i < CFG_EXTRA_OUTPUTS; i++) {
-        if (!cb_user_data.callbacks[i].function) {
+        if (cb_user_data.callbacks[i].function == NULL) {
             cb_user_data.callbacks[i] = (cb_t){function, arg, level};
             return 0;
         }
@@ -403,6 +408,8 @@ int ulog_add_fp(FILE *fp, int level) {
 /* ============================================================================
    Feature: Topics (Depends on: Print)
 ============================================================================ */
+#define TOPIC_ID_NO_TOPIC -1
+
 #if FEATURE_TOPICS
 // Private
 // ================
@@ -430,7 +437,7 @@ static bool new_topic_enabled = false;
 
 static void topic_print(print_target *tgt, ulog_Event *ev) {
     topic_t *t = topic_get(ev->topic);
-    if (t != NULL && t->name) {
+    if (t != NULL && is_str_empty(t->name)) {
         print_to_target(tgt, "[%s] ", t->name);
     }
 }
@@ -479,13 +486,11 @@ static bool topic_is_enabled(int topic) {
     }
 
     topic_t *t = topic_get(topic);
-    if (t) {
+    if (t != NULL) {
         return t->enabled;
     }
     return false;
 }
-
-#define TOPIC_ID_NO_TOPIC -1
 
 /// @brief Processes the topic
 /// @param topic - Topic name
@@ -552,7 +557,7 @@ int ulog_disable_all_topics(void) {
 
 int ulog_get_topic_id(const char *topic_name) {
     for (topic_t *t = topic_get_first(); t != NULL; t = topic_get_next(t)) {
-        if (t->name && strcmp(t->name, topic_name) == 0) {
+        if (!is_str_empty(t->name) && strcmp(t->name, topic_name) == 0) {
             return t->id;
         }
     }
@@ -562,9 +567,7 @@ int ulog_get_topic_id(const char *topic_name) {
 #else
 
 #define topic_print(tgt, ev) (void)(tgt), (void)(ev)
-#define topic_is_enabled(topic) (void)(topic), true
-#define topic_process(topic, level, out_topic_id)                              \
-    (void)(topic), (void)(level), (void)(out_topic_id), true
+#define topic_process(topic, level, out_topic_id) true
 
 #endif  // FEATURE_TOPICS
 
@@ -598,13 +601,13 @@ static topic_t *topic_get(int topic) {
 // ================
 
 int ulog_add_topic(const char *topic_name, bool enable) {
-    if (topic_name == NULL || strlen(topic_name) == 0) {
+    if (is_str_empty(topic_name)) {
         return -1;
     }
 
     for (int i = 0; i < CFG_TOPICS_NUM; i++) {
         // If there is an empty slot
-        if (!topics[i].name) {
+        if (is_str_empty(topics[i].name)) {
             topics[i].id      = i;
             topics[i].name    = topic_name;
             topics[i].enabled = enable;
@@ -661,21 +664,21 @@ static void *topic_create(int id, const char *topic_name, bool enable) {
 // ================
 
 int ulog_add_topic(const char *topic_name, bool enable) {
-    if (topic_name == NULL || strlen(topic_name) == 0) {
-        return -1;
+    if (is_str_empty(topic_name)) {
+        return -1; // TODO: Add error code for empty topic name
     }
 
     // if exists
     for (topic_t *t = topic_get_first(); t != NULL; t = topic_get_next(t)) {
-        if (t->name && strcmp(t->name, topic_name) == 0) {
+        if (!is_str_empty(t->name) && strcmp(t->name, topic_name) == 0) {
             return t->id;
         }
     }
 
     // If the beginning is empty
-    if (!topics) {
+    if (topics == NULL) {
         topics = (topic_t *)topic_create(0, topic_name, enable);
-        if (topics) {
+        if (topics != NULL) {
             return 0;
         }
         return -1;
@@ -715,13 +718,13 @@ static lock_data_t lock_data = {
 };
 
 static void lock_lock(void) {
-    if (lock_data.function) {
+    if (lock_data.function != NULL) {
         lock_data.function(true, lock_data.args);
     }
 }
 
 static void lock_unlock(void) {
-    if (lock_data.function) {
+    if (lock_data.function != NULL) {
         lock_data.function(false, lock_data.args);
     }
 }
@@ -741,7 +744,13 @@ void ulog_set_lock(ulog_LockFn function, void *lock_arg) {
                       Locking)
 ============================================================================ */
 
-bool show_file_string = false;  // Show file and line in the log message
+typedef struct {
+    bool show_file_string;  // Show file and line in the log message
+} log_data_t;
+
+static log_data_t log_data = {
+    .show_file_string = FEATURE_FILE_STRING,
+};
 
 // Private
 // ================
@@ -751,13 +760,11 @@ bool show_file_string = false;  // Show file and line in the log message
 /// @param ev - Event
 static void log_print_message(print_target *tgt, ulog_Event *ev) {
 
-#if FEATURE_FILE_STRING
-    if (show_file_string) {
+    if (log_data.show_file_string) {
         print_to_target(tgt, "%s:%d: ", ev->file, ev->line);  // file and line
     }
-#endif
 
-    if (ev->message) {
+    if (ev->message != NULL && ev->message[0] != '\0') {
         print_to_target_valist(tgt, ev->message,
                                ev->message_format_args);  // message
     } else {
@@ -786,7 +793,7 @@ static void log_log(print_target *tgt, ulog_Event *ev, bool full_time,
 
     bool append_space = true;
 #if FEATURE_CUSTOM_PREFIX
-    if (prefix_data.function) {
+    if (prefix_data.function != NULL) {
         append_space = false;  // Custom prefix does not need leading space
     }
 #endif
@@ -807,7 +814,7 @@ static void log_log(print_target *tgt, ulog_Event *ev, bool full_time,
 // ================
 
 int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size) {
-    if (!out || out_size == 0) {
+    if (is_str_empty(out) || out_size == 0) {
         return -1;
     }
     print_target tgt = {.type = T_BUFFER, .dsc.buffer = {out, 0, out_size}};
@@ -824,6 +831,7 @@ void ulog_log(int level, const char *file, int line, const char *topic,
     }
 
     int topic_id = TOPIC_ID_NO_TOPIC;
+    (void)topic_id;
     // Skip if topic processing does not allow the log
     if (!topic_process(topic, level, &topic_id)) {
         return;
