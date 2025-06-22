@@ -4,36 +4,44 @@
 
 - **Indentation:** 4 spaces, no tabs.
 - **Braces:** K&R style (`if (cond) { ... }`).
-- **Line Length:** 100 characters max.
-- **Comments:** Use `//` for single-line, `/* ... */` for block comments. Doxygen-style for public APIs.
+- **Line Length:** 80 characters max.
+- **Comments:** Use `//` for single-line, `/* ... */` for block comments. Doxygen-style for public APIs (in the header). Doxygen-style for private functions (in the source).
 - **Whitespace:** No trailing whitespace. One blank line between functions.
 
 ## Naming Conventions
 
 ### Types
 
-- **Structs, Enums, Typedefs:** `snake_case` with `_t` suffix for typedefs.
-    - Example: `typedef struct { ... } feature_color_t;`
+- **Structs, Enums, Unions, Typedefs:** Always a typedef - `snake_case` with prefix `feature_name_` and the `_t` suffix. Example:
+
+```c
+typedef struct {
+    char *data;
+    unsigned int curr_pos;
+    size_t size;
+} print_buffer;
+
+typedef union {
+    print_buffer buffer;
+    FILE *stream;
+} print_target_descriptor;
+```
+
 - **Enum Constants:** `ALL_CAPS` with prefix.
-    - Example: `LOG_TRACE`, `FEATURE_COLOR`
+    - Example: `typedef enum { LOG_TARGET_BUFFER, LOG_TARGET_STREAM } log_target_t;`
 
 ### Functions
 
 - **Public Functions:** `ulog_` prefix, `snake_case`.
     - Example: `ulog_set_level`, `ulog_log`
-- **Private (static) Functions:** `snake_case`, with prefix `_`.
-    - Example: `_print_message`, `_set_topic_level`
-- **Private (static) Functions within a section:** `snake_case` with `__` prefix.
-    - Example: `__print_message`, `__set_topic_level`
-- **Callback Functions:** `callback_` prefix.
-    - Example: `callback_stdout`, `callback_file`
+- **Private (static) Functions:** `snake_case`, with prefix `feature_name_`.
+    - Example: `color_print_start`, `color_print_end`, `levels_print`
 
 ### Variables
 
-- **Global/Static Variables:** `snake_case`, descriptive.
-    - Example: `feature_color`, `topics`
-- **Local Variables:** `snake_case`, short but meaningful.
-    - Example: `tgt`, `ev`, `buf`
+- **Global/Static Variables:** NOT ALLOWED. Create a structure to hold state if needed.
+- **Local Variables:** `snake_case`, short is widely used or very tiny scope, otherwise full meaningful words.
+    - Example: `tgt`, `ev`, `buf`, `format`, `out_topic_id`
 - **Constants/Macros:** `ALL_CAPS` with underscores.
     - Example: `ULOG_DEFAULT_LOG_LEVEL`, `CFG_TOPICS_NUM`
 

@@ -54,22 +54,22 @@ typedef union {
     FILE *stream;
 } print_target_descriptor;
 
-typedef enum { T_BUFFER, T_STREAM } log_target_type;
+typedef enum { LOG_TARGET_BUFFER, LOG_TARGET_STREAM } log_target_t;
 
 typedef struct {
-    log_target_type type;
+    log_target_t type;
     print_target_descriptor dsc;
 } print_target;
 
 static void print_to_target_valist(print_target *tgt, const char *format,
                                    va_list args) {
-    if (tgt->type == T_BUFFER) {
+    if (tgt->type == LOG_TARGET_BUFFER) {
         char *buf   = tgt->dsc.buffer.data + tgt->dsc.buffer.curr_pos;
         size_t size = tgt->dsc.buffer.size - tgt->dsc.buffer.curr_pos;
         if (size > 0) {
             tgt->dsc.buffer.curr_pos += vsnprintf(buf, size, format, args);
         }
-    } else if (tgt->type == T_STREAM) {
+    } else if (tgt->type == LOG_TARGET_STREAM) {
         FILE *stream = tgt->dsc.stream;
         vfprintf(stream, format, args);
     }
@@ -304,7 +304,7 @@ static cb_data_t cb_data = {
 };
 
 static void cb_stdout(ulog_Event *ev, void *arg) {
-    print_target tgt = {.type = T_STREAM, .dsc.stream = (FILE *)arg};
+    print_target tgt = {.type = LOG_TARGET_STREAM, .dsc.stream = (FILE *)arg};
     log_log(&tgt, ev, false, true, true);
 }
 
@@ -364,7 +364,7 @@ typedef struct {
 static cb_user_data_t cb_user_data = {.callbacks = {{0}}};
 
 static void cb_user_file(ulog_Event *ev, void *arg) {
-    print_target tgt = {.type = T_STREAM, .dsc.stream = (FILE *)arg};
+    print_target tgt = {.type = LOG_TARGET_STREAM, .dsc.stream = (FILE *)arg};
     log_log(&tgt, ev, true, false, true);
 }
 
@@ -818,7 +818,8 @@ int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size) {
     if (out == NULL || out_size == 0) {
         return -1;
     }
-    print_target tgt = {.type = T_BUFFER, .dsc.buffer = {out, 0, out_size}};
+    print_target tgt = {.type       = LOG_TARGET_BUFFER,
+                        .dsc.buffer = {out, 0, out_size}};
     log_log(&tgt, ev, false, false, false);
     return 0;
 }
