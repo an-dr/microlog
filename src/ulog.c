@@ -764,7 +764,7 @@ static void log_print_message(print_target *tgt, ulog_Event *ev) {
         print_to_target(tgt, "%s:%d: ", ev->file, ev->line);  // file and line
     }
 
-    if (ev->message != NULL && ev->message[0] != '\0') {
+    if (!is_str_empty(ev->message)) {
         print_to_target_valist(tgt, ev->message,
                                ev->message_format_args);  // message
     } else {
