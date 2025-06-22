@@ -438,7 +438,7 @@ static bool new_topic_enabled = false;
 
 static void topic_print(print_target *tgt, ulog_Event *ev) {
     topic_t *t = topic_get(ev->topic);
-    if (t != NULL && is_str_empty(t->name)) {
+    if (t != NULL && !is_str_empty(t->name)) {
         print_to_target(tgt, "[%s] ", t->name);
     }
 }
@@ -815,7 +815,7 @@ static void log_log(print_target *tgt, ulog_Event *ev, bool full_time,
 // ================
 
 int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size) {
-    if (is_str_empty(out) || out_size == 0) {
+    if (out == NULL || out_size == 0) {
         return -1;
     }
     print_target tgt = {.type = T_BUFFER, .dsc.buffer = {out, 0, out_size}};
