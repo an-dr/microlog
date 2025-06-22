@@ -101,6 +101,21 @@ exe = executable(
 )
 ```
 
+**Option 4 - CPM:**
+
+- Download CPM (https://github.com/cpm-cmake/CPM.cmake)
+- Add microlog to your projects CMAKE file:
+```cmake
+include(cpm/CPM.cmake)
+CPMAddPackage("gh:an-dr/microlog@6.4.5")
+#Add other CPM packages
+
+target_link_libraries(${PROJECT_NAME} PUBLIC microlog)
+target_compile_definitions( microlog
+        INTERFACE
+        ULOG_NO_COLOR) # configuration
+```
+
 ### Use
 
 ```cpp
