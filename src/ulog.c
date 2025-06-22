@@ -167,10 +167,8 @@ static void time_print_full(print_target *tgt, ulog_Event *ev,
 // Disabled Private
 // ================
 #else  // FEATURE_TIME
-#define time_print_short(tgt, ev, append_space)                                \
-    (void)(tgt), (void)(ev), (void)(append_space)
-#define time_print_full(tgt, ev, append_space)                                 \
-    (void)(tgt), (void)(ev), (void)(append_space)
+#define time_print_short(tgt, ev, append_space) (void)(0)
+#define time_print_full(tgt, ev, append_space) (void)(0)
 #endif  // FEATURE_TIME
 
 /* ============================================================================
@@ -793,6 +791,7 @@ static void log_log(print_target *tgt, ulog_Event *ev, bool full_time,
     color ? color_print_start(tgt, ev) : (void)0;
 
     bool append_space = true;
+    (void)append_space; // May be unused if no prefix or time
 #if FEATURE_CUSTOM_PREFIX
     if (prefix_data.function != NULL) {
         append_space = false;  // Custom prefix does not need leading space
