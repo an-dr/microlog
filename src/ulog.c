@@ -80,8 +80,8 @@ static void print(print_target *tgt, const char *format, ...) {
    Prototypes
 ============================================================================ */
 
-static void _print_formatted_message(print_target *tgt, ulog_Event *ev,
-                                     bool full_time, bool color, bool new_line);
+static void log(print_target *tgt, ulog_Event *ev, bool full_time, bool color,
+                bool new_line);
 
 /* ============================================================================
    Feature: Color (Depends on: Print)
@@ -120,14 +120,11 @@ static void color_print_end(print_target *tgt) {
 ============================================================================ */
 #if FEATURE_TIME
 
-// HH:MM:SS(8) + 1 space + null terminator
-#define TIME_SHORT_BUF_SIZE 10
-
-// YYYY-MM-DD HH:MM:SS(19) + 1 space + null terminator
-#define TIME_FULL_BUF_SIZE 21
+#define TIME_SHORT_BUF_SIZE 10  // HH:MM:SS(8) + 1 space + null terminator
+#define TIME_FULL_BUF_SIZE 21   // YYYY-MM-DD HH:MM:SS(19) + 1 space + null
 
 typedef struct {
-    char sort_buf[TIME_SHORT_BUF_SIZE];
+    char short_buf[TIME_SHORT_BUF_SIZE];
 
 #if FEATURE_EXTRA_OUTPUTS  // Used for file for example
     char full_buf[TIME_FULL_BUF_SIZE];
@@ -139,30 +136,24 @@ static time_data_t time_data_buf = {0};
 // Private
 // ================
 static void time_print_short(print_target *tgt, ulog_Event *ev,
-                             bool leading_space) {
+                             bool append_space) {
+    char *buf          = time_data_buf.short_buf;
+    const char *format = append_space ? "%H:%M:%S " : "%H:%M:%S";
 
-    char *buf = time_data_buf.sort_buf;
-    if (leading_space) {
-        buf[strftime(buf, TIME_SHORT_BUF_SIZE, "%H:%M:%S ", ev->time)] = '\0';
-    } else {
-        buf[strftime(buf, TIME_SHORT_BUF_SIZE - 1, "%H:%M:%S", ev->time)] =
-            '\0';
-    }
+    size_t len = strftime(buf, TIME_SHORT_BUF_SIZE, format, ev->time);
+    buf[len]   = '\0';  // Ensure null termination
     print(tgt, "%s", buf);
 }
 
 #if FEATURE_EXTRA_OUTPUTS
 static void time_print_full(print_target *tgt, ulog_Event *ev,
                             bool append_space) {
-
     char *buf = time_data_buf.full_buf;
-    if (append_space) {
-        buf[strftime(buf, TIME_FULL_BUF_SIZE, "%Y-%m-%d %H:%M:%S ", ev->time)] =
-            '\0';
-    } else {
-        buf[strftime(buf, TIME_FULL_BUF_SIZE - 1, "%Y-%m-%d %H:%M:%S",
-                     ev->time)] = '\0';
-    }
+    const char *format =
+        append_space ? "%Y-%m-%d %H:%M:%S " : "%Y-%m-%d %H:%M:%S";
+
+    size_t len = strftime(buf, TIME_FULL_BUF_SIZE, format, ev->time);
+    buf[len]   = '\0';  // Ensure null termination
     print(tgt, "%s", buf);
 }
 #endif  // FEATURE_EXTRA_OUTPUTS
@@ -306,7 +297,7 @@ static callbacks_data_t callbacks_data = {
 
 static void callbacks_to_stdout(ulog_Event *ev, void *arg) {
     print_target tgt = {.type = T_STREAM, .dsc.stream = (FILE *)arg};
-    _print_formatted_message(&tgt, ev, false, true, true);
+    log(&tgt, ev, false, true, true);
 }
 
 static void callbacks_execute(ulog_Event *ev, callback_t *cb) {
@@ -367,7 +358,7 @@ static feature_extra_outputs_t feature_extra_outputs = {.callbacks = {{0}}};
 
 static void __callback_file(ulog_Event *ev, void *arg) {
     print_target tgt = {.type = T_STREAM, .dsc.stream = (FILE *)arg};
-    _print_formatted_message(&tgt, ev, true, false, true);
+    log(&tgt, ev, true, false, true);
 }
 
 static void _log_to_extra_outputs(ulog_Event *ev) {
@@ -714,8 +705,8 @@ void ulog_set_lock(ulog_LockFn function, void *lock_arg) {
 }
 
 /* ============================================================================
-   Core Feature: Logging (Depends on: Print, Levels, Callbacks, Extra Outputs,
-                          Custom Prefix, Topics, Time, Color, Locking)
+   Core Feature: Log (Depends on: Print, Levels, Callbacks, Extra Outputs,
+                      Custom Prefix, Topics, Time, Color, Locking)
 ============================================================================ */
 
 bool show_file_string = false;  // Show file and line in the log message
@@ -726,7 +717,7 @@ bool show_file_string = false;  // Show file and line in the log message
 /// @brief Prints the message
 /// @param tgt - Target
 /// @param ev - Event
-static void __print_message(print_target *tgt, ulog_Event *ev) {
+static void log_print_message(print_target *tgt, ulog_Event *ev) {
 
 #if FEATURE_FILE_STRING
     if (show_file_string) {
@@ -741,7 +732,7 @@ static void __print_message(print_target *tgt, ulog_Event *ev) {
     }
 }
 
-/// @brief Writes the formatted message
+/// @brief Writes a formatted message
 /// @details The message is formatted as follows:
 ///
 /// [Time][Prefix][Topic]Level [File: ]Message
@@ -755,9 +746,8 @@ static void __print_message(print_target *tgt, ulog_Event *ev) {
 /// @param full_time - Full time or short time
 /// @param color - Color or no color
 /// @param new_line - New line in the end or no new line
-static void _print_formatted_message(print_target *tgt, ulog_Event *ev,
-                                     bool full_time, bool color,
-                                     bool new_line) {
+static void log(print_target *tgt, ulog_Event *ev, bool full_time, bool color,
+                bool new_line) {
 
     color ? color_print_start(tgt, ev) : (void)0;
 
@@ -774,7 +764,7 @@ static void _print_formatted_message(print_target *tgt, ulog_Event *ev,
     prefix_print(tgt, ev);
     _print_topic(tgt, ev);
     levels_print(tgt, ev);
-    __print_message(tgt, ev);
+    log_print_message(tgt, ev);
 
     color ? color_print_end(tgt) : (void)0;
     new_line ? print(tgt, "\n") : (void)0;
@@ -788,7 +778,7 @@ int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size) {
         return -1;
     }
     print_target tgt = {.type = T_BUFFER, .dsc.buffer = {out, 0, out_size}};
-    _print_formatted_message(&tgt, ev, false, false, false);
+    log(&tgt, ev, false, false, false);
     return 0;
 }
 
