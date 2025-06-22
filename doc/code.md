@@ -4,7 +4,7 @@ As the library is a single file, the code is organized into sections. Each secti
 
 Typical feature section structure is as follows:
 
-- Section name
+- Section name, prefix, and other section dependencies
 - `#if FEATURE_NAME`
 - Private functions, objects, etc.
 - Public function implementations
@@ -16,30 +16,26 @@ The example is shown below:
 
 ```c
 /* ============================================================================
-   Feature: Custom Prefix
+   Feature: Prefix (`prefix_*`, depends on: Print)
 ============================================================================ */
 #if FEATURE_CUSTOM_PREFIX
 
 // Private
 // ================
-
 typedef struct {
-    bool enabled;                                // Is the custom prefix enabled
-    ulog_PrefixFn function;                      // Custom prefix function
-    char custom_prefix[CFG_CUSTOM_PREFIX_SIZE];  // Custom prefix
-} feature_custom_prefix_t;
+    ulog_PrefixFn function;
+    char prefix[CFG_CUSTOM_PREFIX_SIZE];
+} prefix_data_t;
 
-static feature_custom_prefix_t feature_custom_prefix = {
-    .enabled       = true,
-    .function      = NULL,
-    .custom_prefix = {0},
+static prefix_data_t prefix_data = {
+    .function = NULL,
+    .prefix   = {0},
 };
 
-static void print_prefix(log_target *tgt, ulog_Event *ev) {
-    if (feature_custom_prefix.function && feature_custom_prefix.enabled) {
-        feature_custom_prefix.function(ev, feature_custom_prefix.custom_prefix,
-                                       CFG_CUSTOM_PREFIX_SIZE);
-        print(tgt, "%s", feature_custom_prefix.custom_prefix);
+static void prefix_print(print_target *tgt, ulog_Event *ev) {
+    if (prefix_data.function != NULL) {
+        prefix_data.function(ev, prefix_data.prefix, CFG_CUSTOM_PREFIX_SIZE);
+        print_to_target(tgt, "%s", prefix_data.prefix);
     }
 }
 
@@ -47,19 +43,14 @@ static void print_prefix(log_target *tgt, ulog_Event *ev) {
 // ================
 
 void ulog_set_prefix_fn(ulog_PrefixFn function) {
-    feature_custom_prefix.function = function;
-}
-
-void ulog_enable_prefix(bool enable) {
-    feature_custom_prefix.enabled = enable;
+    prefix_data.function = function;
 }
 
 // Disabled Private
 // ================
 #else  // FEATURE_CUSTOM_PREFIX
-#define print_prefix(tgt, ev) (void)(tgt), (void)(ev)
+#define prefix_print(tgt, ev) (void)(tgt), (void)(ev)
 #endif  // FEATURE_CUSTOM_PREFIX
 
-```
 
 For code style and naming conventions, see [style.md](style.md).
