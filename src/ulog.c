@@ -370,7 +370,8 @@ static void cb_user_file(ulog_Event *ev, void *arg) {
 
 static void cb_user_execute_all(ulog_Event *ev) {
     // Processing the message for callbacks
-    for (int i = 0; i < CFG_EXTRA_OUTPUTS && cb_user_data.callbacks[i].function;
+    for (int i = 0; (i < CFG_EXTRA_OUTPUTS) &&
+                    (cb_user_data.callbacks[i].function != NULL);
          i++) {
         cb_execute(ev, &cb_user_data.callbacks[i]);
     }
@@ -665,7 +666,7 @@ static void *topic_create(int id, const char *topic_name, bool enable) {
 
 int ulog_add_topic(const char *topic_name, bool enable) {
     if (is_str_empty(topic_name)) {
-        return -1; // TODO: Add error code for empty topic name
+        return -1;  // TODO: Add error code for empty topic name
     }
 
     // if exists
