@@ -32,7 +32,7 @@
 #endif
 
 /* ============================================================================
-   Core Feature: Print (Depends on: - )
+   Core Feature: Print (`print_*`, depends on: - )
 ============================================================================ */
 
 //  Private
@@ -56,7 +56,8 @@ typedef struct {
     print_target_descriptor dsc;
 } print_target;
 
-static void print_args(print_target *tgt, const char *format, va_list args) {
+static void print_to_target_valist(print_target *tgt, const char *format,
+                                   va_list args) {
     if (tgt->type == T_BUFFER) {
         char *buf   = tgt->dsc.buffer.data + tgt->dsc.buffer.curr_pos;
         size_t size = tgt->dsc.buffer.size - tgt->dsc.buffer.curr_pos;
@@ -69,10 +70,10 @@ static void print_args(print_target *tgt, const char *format, va_list args) {
     }
 }
 
-static void print(print_target *tgt, const char *format, ...) {
+static void print_to_target(print_target *tgt, const char *format, ...) {
     va_list args;
     va_start(args, format);
-    print_args(tgt, format, args);
+    print_to_target_valist(tgt, format, args);
     va_end(args);
 }
 
@@ -80,11 +81,11 @@ static void print(print_target *tgt, const char *format, ...) {
    Prototypes
 ============================================================================ */
 
-static void log(print_target *tgt, ulog_Event *ev, bool full_time, bool color,
-                bool new_line);
+static void log_log(print_target *tgt, ulog_Event *ev, bool full_time,
+                    bool color, bool new_line);
 
 /* ============================================================================
-   Feature: Color (Depends on: Print)
+   Feature: Color (`color_*`, depends on: Print)
 ============================================================================ */
 #if FEATURE_COLOR
 
@@ -101,11 +102,11 @@ static const char *color_levels[] = {
 #define COLOR_TERMINATOR "\x1b[0m"
 
 static void color_print_start(print_target *tgt, ulog_Event *ev) {
-    print(tgt, "%s", color_levels[ev->level]);  // color start
+    print_to_target(tgt, "%s", color_levels[ev->level]);  // color start
 }
 
 static void color_print_end(print_target *tgt) {
-    print(tgt, "%s", COLOR_TERMINATOR);  // color end
+    print_to_target(tgt, "%s", COLOR_TERMINATOR);  // color end
 }
 
 // Disabled Private
@@ -116,7 +117,7 @@ static void color_print_end(print_target *tgt) {
 #endif  // FEATURE_COLOR
 
 /* ============================================================================
-   Feature: Time (Depends on: Print)
+   Feature: Time (`time_*`, depends on: Print)
 ============================================================================ */
 #if FEATURE_TIME
 
@@ -142,7 +143,7 @@ static void time_print_short(print_target *tgt, ulog_Event *ev,
 
     size_t len = strftime(buf, TIME_SHORT_BUF_SIZE, format, ev->time);
     buf[len]   = '\0';  // Ensure null termination
-    print(tgt, "%s", buf);
+    print_to_target(tgt, "%s", buf);
 }
 
 #if FEATURE_EXTRA_OUTPUTS
@@ -154,7 +155,7 @@ static void time_print_full(print_target *tgt, ulog_Event *ev,
 
     size_t len = strftime(buf, TIME_FULL_BUF_SIZE, format, ev->time);
     buf[len]   = '\0';  // Ensure null termination
-    print(tgt, "%s", buf);
+    print_to_target(tgt, "%s", buf);
 }
 #endif  // FEATURE_EXTRA_OUTPUTS
 
@@ -168,7 +169,7 @@ static void time_print_full(print_target *tgt, ulog_Event *ev,
 #endif  // FEATURE_TIME
 
 /* ============================================================================
-   Feature: Prefix (Depends on: Print)
+   Feature: Prefix (`prefix_*`, depends on: Print)
 ============================================================================ */
 #if FEATURE_CUSTOM_PREFIX
 
@@ -187,7 +188,7 @@ static prefix_data_t prefix_data = {
 static void prefix_print(print_target *tgt, ulog_Event *ev) {
     if (prefix_data.function) {
         prefix_data.function(ev, prefix_data.prefix, CFG_CUSTOM_PREFIX_SIZE);
-        print(tgt, "%s", prefix_data.prefix);
+        print_to_target(tgt, "%s", prefix_data.prefix);
     }
 }
 
@@ -205,7 +206,7 @@ void ulog_set_prefix_fn(ulog_PrefixFn function) {
 #endif  // FEATURE_CUSTOM_PREFIX
 
 /* ============================================================================
-   Core Feature: Levels (Depends on: Print)
+   Core Feature: Levels  (`levels_*`, depends on: Print)
 ============================================================================ */
 
 // Private
@@ -244,12 +245,14 @@ static const char *levels_strings[][LEVELS_TOTAL] = {
 static void levels_print(print_target *tgt, ulog_Event *ev) {
 #if FEATURE_SHORT_LEVELS || FEATURE_EMOJI_LEVELS
     if (levels_data.short_levels) {
-        print(tgt, "%-1s ", levels_strings[LEVELS_USE_SHORT][ev->level]);
+        print_to_target(tgt, "%-1s ",
+                        levels_strings[LEVELS_USE_SHORT][ev->level]);
     } else {
-        print(tgt, "%-5s ", levels_strings[LEVELS_USE_LONG][ev->level]);
+        print_to_target(tgt, "%-5s ",
+                        levels_strings[LEVELS_USE_LONG][ev->level]);
     }
 #else
-    print(tgt, "%-1s ", levels_strings[LEVELS_USE_LONG][ev->level]);
+    print_to_target(tgt, "%-1s ", levels_strings[LEVELS_USE_LONG][ev->level]);
 #endif  // FEATURE_SHORT_LEVELS || FEATURE_EMOJI_LEVELS
 }
 
@@ -273,7 +276,7 @@ void ulog_set_level(int level) {
 }
 
 /* ============================================================================
-   Core Feature: Callbacks (Depends on: Logging)
+   Core Feature: Callbacks (`cb_*`, depends on: Log, Time, Levels)
 ============================================================================ */
 
 //  Private
@@ -283,24 +286,24 @@ typedef struct {
     ulog_LogFn function;
     void *arg;
     int level;
-} callback_t;
+} cb_t;
 
 typedef struct {
     bool quiet_mode;
-    callback_t callback;
-} callbacks_data_t;
+    cb_t stdout_callback;
+} cb_data_t;
 
-static callbacks_data_t callbacks_data = {
+static cb_data_t cb_data = {
     .quiet_mode      = false,
     .stdout_callback = {0},
 };
 
-static void callbacks_to_stdout(ulog_Event *ev, void *arg) {
+static void cb_stdout(ulog_Event *ev, void *arg) {
     print_target tgt = {.type = T_STREAM, .dsc.stream = (FILE *)arg};
-    log(&tgt, ev, false, true, true);
+    log_log(&tgt, ev, false, true, true);
 }
 
-static void callbacks_execute(ulog_Event *ev, callback_t *cb) {
+static void cb_execute(ulog_Event *ev, cb_t *cb) {
     if (ev->level >= cb->level) {
 #if FEATURE_TIME
         if (!ev->time) {
@@ -323,16 +326,15 @@ static void callbacks_execute(ulog_Event *ev, callback_t *cb) {
     }
 }
 
-static void callbacks_send_to_stdout(ulog_Event *ev) {
-    if (!callbacks_data.quiet_mode) {
+static void cb_execute_stdout(ulog_Event *ev) {
+    if (!cb_data.quiet_mode) {
         // Initializing the stdout callback if not set
-        if (!callbacks_data.stdout_callback.function) {
-            callbacks_data.stdout_callback =
-                (callback_t){callbacks_to_stdout,
-                             stdout,  // pass stream
-                             LOG_TRACE};
+        if (cb_data.stdout_callback.function == NULL) {
+            cb_data.stdout_callback = (cb_t){cb_stdout,
+                                             stdout,  // pass stream
+                                             LOG_TRACE};
         }
-        callbacks_execute(ev, &callbacks_data.stdout_callback);
+        cb_execute(ev, &cb_data.stdout_callback);
     }
 }
 
@@ -341,32 +343,31 @@ static void callbacks_send_to_stdout(ulog_Event *ev) {
 
 /// @brief Sets the quiet mode
 void ulog_set_quiet(bool enable) {
-    callbacks_data.quiet_mode = enable;
+    cb_data.quiet_mode = enable;
 }
 
 /* ============================================================================
-   Feature: Callbacks Extra (Depends on: Callbacks)
+   Feature: User Callbacks (`cb_user_*` depends on: Callbacks)
 ============================================================================ */
 #if FEATURE_EXTRA_OUTPUTS
 // Private
 // ================
 typedef struct {
-    callback_t callbacks[CFG_EXTRA_OUTPUTS];
-} feature_extra_outputs_t;
+    cb_t callbacks[CFG_EXTRA_OUTPUTS];
+} cb_user_data_t;
 
-static feature_extra_outputs_t feature_extra_outputs = {.callbacks = {{0}}};
+static cb_user_data_t cb_user_data = {.callbacks = {{0}}};
 
-static void __callback_file(ulog_Event *ev, void *arg) {
+static void cb_user_file(ulog_Event *ev, void *arg) {
     print_target tgt = {.type = T_STREAM, .dsc.stream = (FILE *)arg};
-    log(&tgt, ev, true, false, true);
+    log_log(&tgt, ev, true, false, true);
 }
 
-static void _log_to_extra_outputs(ulog_Event *ev) {
+static void cb_user_execute_all(ulog_Event *ev) {
     // Processing the message for callbacks
-    for (int i = 0;
-         i < CFG_EXTRA_OUTPUTS && feature_extra_outputs.callbacks[i].function;
+    for (int i = 0; i < CFG_EXTRA_OUTPUTS && cb_user_data.callbacks[i].function;
          i++) {
-        callbacks_execute(ev, &feature_extra_outputs.callbacks[i]);
+        cb_execute(ev, &cb_user_data.callbacks[i]);
     }
 }
 
@@ -380,9 +381,8 @@ static void _log_to_extra_outputs(ulog_Event *ev) {
 /// @param level - Debug level
 int ulog_add_callback(ulog_LogFn function, void *arg, int level) {
     for (int i = 0; i < CFG_EXTRA_OUTPUTS; i++) {
-        if (!feature_extra_outputs.callbacks[i].function) {
-            feature_extra_outputs.callbacks[i] =
-                (callback_t){function, arg, level};
+        if (!cb_user_data.callbacks[i].function) {
+            cb_user_data.callbacks[i] = (cb_t){function, arg, level};
             return 0;
         }
     }
@@ -391,13 +391,13 @@ int ulog_add_callback(ulog_LogFn function, void *arg, int level) {
 
 /// @brief Add file callback
 int ulog_add_fp(FILE *fp, int level) {
-    return ulog_add_callback(__callback_file, fp, level);
+    return ulog_add_callback(cb_user_file, fp, level);
 }
 
 // Disabled Private
 // ================
 #else  // FEATURE_EXTRA_OUTPUTS
-#define _log_to_extra_outputs(ev) (void)(ev)
+#define cb_user_execute_all(ev) (void)(ev)
 #endif  // FEATURE_EXTRA_OUTPUTS
 
 /* ============================================================================
@@ -431,7 +431,7 @@ static bool new_topic_enabled = false;
 static void _print_topic(print_target *tgt, ulog_Event *ev) {
     topic_t *t = _get_topic_ptr(ev->topic);
     if (t != NULL && t->name) {
-        print(tgt, "[%s] ", t->name);
+        print_to_target(tgt, "[%s] ", t->name);
     }
 }
 
@@ -705,8 +705,9 @@ void ulog_set_lock(ulog_LockFn function, void *lock_arg) {
 }
 
 /* ============================================================================
-   Core Feature: Log (Depends on: Print, Levels, Callbacks, Extra Outputs,
-                      Custom Prefix, Topics, Time, Color, Locking)
+   Core Feature: Log (`log_*`, depends on: Print, Levels, Callbacks, 
+                      Extra Outputs, Custom Prefix, Topics, Time, Color, 
+                      Locking)
 ============================================================================ */
 
 bool show_file_string = false;  // Show file and line in the log message
@@ -721,14 +722,15 @@ static void log_print_message(print_target *tgt, ulog_Event *ev) {
 
 #if FEATURE_FILE_STRING
     if (show_file_string) {
-        print(tgt, "%s:%d: ", ev->file, ev->line);  // file and line
+        print_to_target(tgt, "%s:%d: ", ev->file, ev->line);  // file and line
     }
 #endif
 
     if (ev->message) {
-        print_args(tgt, ev->message, ev->message_format_args);  // message
+        print_to_target_valist(tgt, ev->message,
+                               ev->message_format_args);  // message
     } else {
-        print(tgt, "NULL");  // message
+        print_to_target(tgt, "NULL");  // message
     }
 }
 
@@ -746,8 +748,8 @@ static void log_print_message(print_target *tgt, ulog_Event *ev) {
 /// @param full_time - Full time or short time
 /// @param color - Color or no color
 /// @param new_line - New line in the end or no new line
-static void log(print_target *tgt, ulog_Event *ev, bool full_time, bool color,
-                bool new_line) {
+static void log_log(print_target *tgt, ulog_Event *ev, bool full_time,
+                    bool color, bool new_line) {
 
     color ? color_print_start(tgt, ev) : (void)0;
 
@@ -767,7 +769,7 @@ static void log(print_target *tgt, ulog_Event *ev, bool full_time, bool color,
     log_print_message(tgt, ev);
 
     color ? color_print_end(tgt) : (void)0;
-    new_line ? print(tgt, "\n") : (void)0;
+    new_line ? print_to_target(tgt, "\n") : (void)0;
 }
 
 // Public
@@ -778,7 +780,7 @@ int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size) {
         return -1;
     }
     print_target tgt = {.type = T_BUFFER, .dsc.buffer = {out, 0, out_size}};
-    log(&tgt, ev, false, false, false);
+    log_log(&tgt, ev, false, false, false);
     return 0;
 }
 
@@ -829,8 +831,8 @@ void ulog_log(int level, const char *file, int line, const char *topic,
 
     lock_lock();
 
-    callbacks_send_to_stdout(&ev);
-    _log_to_extra_outputs(&ev);
+    cb_execute_stdout(&ev);
+    cb_user_execute_all(&ev);
 
     lock_unlock();
 
