@@ -170,7 +170,7 @@ const char *ulog_get_level_string(int level);
 /// @param level - Debug level
 void ulog_set_level(int level);
 
-/// @brief Sets the quiet mode
+/// @brief Disables logging to stdout
 /// @param enable - Quiet mode
 void ulog_set_quiet(bool enable);
 

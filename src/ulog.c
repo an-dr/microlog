@@ -284,41 +284,29 @@ void ulog_set_level(int level) {
 }
 
 /* ============================================================================
-   Core Feature: Callbacks (`cb_*`, depends on: Log, Time, Levels)
+   Core Feature: Callbacks (`cb_*`, depends on: Print, Log, Levels)
 ============================================================================ */
 
 //  Private
 // ================
+#define CB_STDOUT_ID 0
+static void cb_stdout(ulog_Event *ev, void *arg);
 
 typedef struct {
     ulog_LogFn function;
     void *arg;
     int level;
+    bool is_enabled;  // Whether the callback is enabled or not
 } cb_t;
 
 typedef struct {
-    bool quiet_mode;
-    cb_t stdout_callback;
+    cb_t callbacks[1 + CFG_EXTRA_OUTPUTS];  // 0 is for stdout callback
 } cb_data_t;
 
-static cb_data_t cb_data = {
-    .quiet_mode      = false,
-    .stdout_callback = {0},
-};
+static cb_data_t cb_data = {.callbacks = {{cb_stdout, NULL, LOG_TRACE, true}}};
 
-static void cb_stdout(ulog_Event *ev, void *arg) {
-    print_target tgt = {.type = LOG_TARGET_STREAM, .dsc.stream = (FILE *)arg};
-    log_log(&tgt, ev, false, true, true);
-}
-
-static void cb_execute(ulog_Event *ev, cb_t *cb) {
-    if (ev->level >= cb->level) {
-#if FEATURE_TIME
-        if (ev->time == NULL) {
-            time_t t = time(NULL);
-            ev->time = localtime(&t);
-        }
-#endif  // FEATURE_TIME
+static void cb_handle_single(ulog_Event *ev, cb_t *cb) {
+    if (cb->is_enabled && ev->level >= cb->level) {
 
         // Create event copy to avoid va_list issues
         ulog_Event ev_copy = {0};
@@ -334,50 +322,38 @@ static void cb_execute(ulog_Event *ev, cb_t *cb) {
     }
 }
 
-static void cb_execute_stdout(ulog_Event *ev) {
-    if (!cb_data.quiet_mode) {
-        // Initializing the stdout callback if not set
-        if (cb_data.stdout_callback.function == NULL) {
-            cb_data.stdout_callback = (cb_t){cb_stdout,
-                                             stdout,  // pass stream
-                                             LOG_TRACE};
-        }
-        cb_execute(ev, &cb_data.stdout_callback);
+static void cb_handle_all(ulog_Event *ev) {
+    // Processing the message for callbacks
+    for (int i = 0;
+         (i < CFG_EXTRA_OUTPUTS) && (cb_data.callbacks[i].function != NULL);
+         i++) {
+        cb_handle_single(ev, &cb_data.callbacks[i]);
     }
+}
+
+static void cb_stdout(ulog_Event *ev, void *arg) {
+    print_target tgt = {.type = LOG_TARGET_STREAM, .dsc.stream = stdout};
+    log_log(&tgt, ev, false, true, true);
 }
 
 // Public
 // ================
 
-/// @brief Sets the quiet mode
 void ulog_set_quiet(bool enable) {
-    cb_data.quiet_mode = enable;
+    // Disable stdout callback if quiet mode is enabled
+    cb_data.callbacks[CB_STDOUT_ID].is_enabled = !enable;
 }
 
 /* ============================================================================
    Feature: User Callbacks (`cb_user_*` depends on: Callbacks)
 ============================================================================ */
 #if FEATURE_EXTRA_OUTPUTS
-// Private
+
+//  Private
 // ================
-typedef struct {
-    cb_t callbacks[CFG_EXTRA_OUTPUTS];
-} cb_user_data_t;
-
-static cb_user_data_t cb_user_data = {.callbacks = {{0}}};
-
 static void cb_user_file(ulog_Event *ev, void *arg) {
     print_target tgt = {.type = LOG_TARGET_STREAM, .dsc.stream = (FILE *)arg};
     log_log(&tgt, ev, true, false, true);
-}
-
-static void cb_user_execute_all(ulog_Event *ev) {
-    // Processing the message for callbacks
-    for (int i = 0; (i < CFG_EXTRA_OUTPUTS) &&
-                    (cb_user_data.callbacks[i].function != NULL);
-         i++) {
-        cb_execute(ev, &cb_user_data.callbacks[i]);
-    }
 }
 
 // Public
@@ -390,8 +366,8 @@ static void cb_user_execute_all(ulog_Event *ev) {
 /// @param level - Debug level
 int ulog_add_callback(ulog_LogFn function, void *arg, int level) {
     for (int i = 0; i < CFG_EXTRA_OUTPUTS; i++) {
-        if (cb_user_data.callbacks[i].function == NULL) {
-            cb_user_data.callbacks[i] = (cb_t){function, arg, level};
+        if (cb_data.callbacks[i].function == NULL) {
+            cb_data.callbacks[i] = (cb_t){function, arg, level, true};
             return 0;
         }
     }
@@ -403,10 +379,6 @@ int ulog_add_fp(FILE *fp, int level) {
     return ulog_add_callback(cb_user_file, fp, level);
 }
 
-// Disabled Private
-// ================
-#else  // FEATURE_EXTRA_OUTPUTS
-#define cb_user_execute_all(ev) (void)(ev)
 #endif  // FEATURE_EXTRA_OUTPUTS
 
 /* ============================================================================
@@ -836,6 +808,8 @@ int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size) {
 void ulog_log(int level, const char *file, int line, const char *topic,
               const char *message, ...) {
 
+    lock_lock();
+
     // Skip if level is lower than sets
     if (level < levels_data.level) {
         return;
@@ -860,10 +834,9 @@ void ulog_log(int level, const char *file, int line, const char *topic,
 
     va_start(ev.message_format_args, message);
 
-    lock_lock();
+    cb_handle_all(&ev);
 
-    cb_execute_stdout(&ev);
-    cb_user_execute_all(&ev);
+    va_end(ev.message_format_args);
 
     lock_unlock();
 
