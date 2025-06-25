@@ -86,8 +86,8 @@ static void print_to_target(print_target *tgt, const char *format, ...) {
    Prototypes
 ============================================================================ */
 
-static void log_log(print_target *tgt, ulog_Event *ev, bool full_time,
-                    bool color, bool new_line);
+static void log_print_event(print_target *tgt, ulog_Event *ev, bool full_time,
+                            bool color, bool new_line);
 
 /* ============================================================================
    Feature: Color (`color_*`, depends on: Print)
@@ -163,43 +163,47 @@ void ulog_set_prefix_fn(ulog_PrefixFn function) {
 ============================================================================ */
 #if FEATURE_TIME
 
-#define TIME_SHORT_BUF_SIZE 10  // HH:MM:SS(8) + 1 space + null terminator
+#define TIME_SHORT_BUF_SIZE 10  // HH:MM:SS(8) + 1 space + null
 #define TIME_FULL_BUF_SIZE 21   // YYYY-MM-DD HH:MM:SS(19) + 1 space + null
 
 // Private
 // ================
-static void time_print_short(print_target *tgt, ulog_Event *ev) {
-
-    char buf[TIME_SHORT_BUF_SIZE];
-#if FEATURE_CUSTOM_PREFIX
-    // If the custom prefix function is not set, add a space after the time
-    if(prefix_data.function == NULL) {
-        buf[strftime(buf, sizeof(buf), "%H:%M:%S ", ev->time)] = '\0';
-    } else {
-        buf[strftime(buf, sizeof(buf)-1, "%H:%M:%S", ev->time)] = '\0';
+static bool time_print_if_invalid(print_target *tgt, ulog_Event *ev) {
+    if (ev->time == NULL) {
+        print_to_target(tgt, "INVALID_TIME");
+        return true;  // Time is invalid, print error message
     }
-#else   // FEATURE_CUSTOM_PREFIX
-    buf[strftime(buf, sizeof(buf), "%H:%M:%S ", ev->time)] = '\0';
-#endif  // FEATURE_CUSTOM_PREFIX
+    return false;  // Time is valid
+}
 
+/// @brief Fills the event time with the current local time
+/// @param ev - Event to fill. Assumed not NULL
+static void time_fill_current_time(ulog_Event *ev) {
+    time_t current_time = time(NULL);     // Get current time
+    ev->time = localtime(&current_time);  // Fill time with current value
+}
+
+static void time_print_short(print_target *tgt, ulog_Event *ev,
+                             bool append_space) {
+    if (time_print_if_invalid(tgt, ev)) {
+        return;  // If time is not valid, stop printing
+    }
+    char buf[TIME_SHORT_BUF_SIZE] = {0};
+    const char *format            = append_space ? "%H:%M:%S " : "%H:%M:%S";
+    strftime(buf, TIME_SHORT_BUF_SIZE, format, ev->time);
     print_to_target(tgt, "%s", buf);
 }
 
 #if FEATURE_EXTRA_OUTPUTS
-static void time_print_full(print_target *tgt, ulog_Event *ev) {
-    
-    char buf[TIME_FULL_BUF_SIZE];
-#if FEATURE_CUSTOM_PREFIX
-    // If the custom prefix function is not set, add a space after the time
-    if(prefix_data.function == NULL) {
-        buf[strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S ", ev->time)] = '\0';
-    } else {
-        buf[strftime(buf, sizeof(buf)-1, "%Y-%m-%d %H:%M:%S", ev->time)] = '\0';
+static void time_print_full(print_target *tgt, ulog_Event *ev,
+                            bool append_space) {
+    if (time_print_if_invalid(tgt, ev)) {
+        return;  // If time is not valid, stop printing
     }
-#else   // FEATURE_CUSTOM_PREFIX
-    buf[strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S ", ev->time)] = '\0';
-#endif  // FEATURE_CUSTOM_PREFIX
-
+    char buf[TIME_FULL_BUF_SIZE] = {0};
+    const char *format =
+        append_space ? "%Y-%m-%d %H:%M:%S " : "%Y-%m-%d %H:%M:%S";
+    strftime(buf, TIME_FULL_BUF_SIZE, format, ev->time);
     print_to_target(tgt, "%s", buf);
 }
 #endif  // FEATURE_EXTRA_OUTPUTS
@@ -207,11 +211,10 @@ static void time_print_full(print_target *tgt, ulog_Event *ev) {
 // Disabled Private
 // ================
 #else  // FEATURE_TIME
-#define time_print_short(tgt, ev) (void)(0)
-#define time_print_full(tgt, ev) (void)(0)
+#define time_print_short(tgt, ev, append_space) (void)(0)
+#define time_print_full(tgt, ev, append_space) (void)(0)
+#define time_fill_current_time(ev) (void)(ev)
 #endif  // FEATURE_TIME
-
-
 
 /* ============================================================================
    Core Feature: Levels  (`levels_*`, depends on: Print)
@@ -284,41 +287,29 @@ void ulog_set_level(int level) {
 }
 
 /* ============================================================================
-   Core Feature: Callbacks (`cb_*`, depends on: Log, Time, Levels)
+   Core Feature: Callbacks (`cb_*`, depends on: Print, Log, Levels)
 ============================================================================ */
 
 //  Private
 // ================
+#define CB_STDOUT_ID 0
+static void cb_stdout(ulog_Event *ev, void *arg);
 
 typedef struct {
     ulog_LogFn function;
     void *arg;
     int level;
+    bool is_enabled;  // Whether the callback is enabled or not
 } cb_t;
 
 typedef struct {
-    bool quiet_mode;
-    cb_t stdout_callback;
+    cb_t callbacks[1 + CFG_EXTRA_OUTPUTS];  // 0 is for stdout callback
 } cb_data_t;
 
-static cb_data_t cb_data = {
-    .quiet_mode      = false,
-    .stdout_callback = {0},
-};
+static cb_data_t cb_data = {.callbacks = {{cb_stdout, NULL, LOG_TRACE, true}}};
 
-static void cb_stdout(ulog_Event *ev, void *arg) {
-    print_target tgt = {.type = LOG_TARGET_STREAM, .dsc.stream = (FILE *)arg};
-    log_log(&tgt, ev, false, true, true);
-}
-
-static void cb_execute(ulog_Event *ev, cb_t *cb) {
-    if (ev->level >= cb->level) {
-#if FEATURE_TIME
-        if (ev->time == NULL) {
-            time_t t = time(NULL);
-            ev->time = localtime(&t);
-        }
-#endif  // FEATURE_TIME
+static void cb_handle_single(ulog_Event *ev, cb_t *cb) {
+    if (cb->is_enabled && ev->level >= cb->level) {
 
         // Create event copy to avoid va_list issues
         ulog_Event ev_copy = {0};
@@ -334,50 +325,38 @@ static void cb_execute(ulog_Event *ev, cb_t *cb) {
     }
 }
 
-static void cb_execute_stdout(ulog_Event *ev) {
-    if (!cb_data.quiet_mode) {
-        // Initializing the stdout callback if not set
-        if (cb_data.stdout_callback.function == NULL) {
-            cb_data.stdout_callback = (cb_t){cb_stdout,
-                                             stdout,  // pass stream
-                                             LOG_TRACE};
-        }
-        cb_execute(ev, &cb_data.stdout_callback);
+static void cb_handle_all(ulog_Event *ev) {
+    // Processing the message for callbacks
+    for (int i = 0;
+         (i < CFG_EXTRA_OUTPUTS) && (cb_data.callbacks[i].function != NULL);
+         i++) {
+        cb_handle_single(ev, &cb_data.callbacks[i]);
     }
+}
+
+static void cb_stdout(ulog_Event *ev, void *arg) {
+    print_target tgt = {.type = LOG_TARGET_STREAM, .dsc.stream = stdout};
+    log_print_event(&tgt, ev, false, true, true);
 }
 
 // Public
 // ================
 
-/// @brief Sets the quiet mode
 void ulog_set_quiet(bool enable) {
-    cb_data.quiet_mode = enable;
+    // Disable stdout callback if quiet mode is enabled
+    cb_data.callbacks[CB_STDOUT_ID].is_enabled = !enable;
 }
 
 /* ============================================================================
    Feature: User Callbacks (`cb_user_*` depends on: Callbacks)
 ============================================================================ */
 #if FEATURE_EXTRA_OUTPUTS
-// Private
+
+//  Private
 // ================
-typedef struct {
-    cb_t callbacks[CFG_EXTRA_OUTPUTS];
-} cb_user_data_t;
-
-static cb_user_data_t cb_user_data = {.callbacks = {{0}}};
-
 static void cb_user_file(ulog_Event *ev, void *arg) {
     print_target tgt = {.type = LOG_TARGET_STREAM, .dsc.stream = (FILE *)arg};
-    log_log(&tgt, ev, true, false, true);
-}
-
-static void cb_user_execute_all(ulog_Event *ev) {
-    // Processing the message for callbacks
-    for (int i = 0; (i < CFG_EXTRA_OUTPUTS) &&
-                    (cb_user_data.callbacks[i].function != NULL);
-         i++) {
-        cb_execute(ev, &cb_user_data.callbacks[i]);
-    }
+    log_print_event(&tgt, ev, true, false, true);
 }
 
 // Public
@@ -390,8 +369,8 @@ static void cb_user_execute_all(ulog_Event *ev) {
 /// @param level - Debug level
 int ulog_add_callback(ulog_LogFn function, void *arg, int level) {
     for (int i = 0; i < CFG_EXTRA_OUTPUTS; i++) {
-        if (cb_user_data.callbacks[i].function == NULL) {
-            cb_user_data.callbacks[i] = (cb_t){function, arg, level};
+        if (cb_data.callbacks[i].function == NULL) {
+            cb_data.callbacks[i] = (cb_t){function, arg, level, true};
             return 0;
         }
     }
@@ -403,20 +382,19 @@ int ulog_add_fp(FILE *fp, int level) {
     return ulog_add_callback(cb_user_file, fp, level);
 }
 
-// Disabled Private
-// ================
-#else  // FEATURE_EXTRA_OUTPUTS
-#define cb_user_execute_all(ev) (void)(ev)
 #endif  // FEATURE_EXTRA_OUTPUTS
 
 /* ============================================================================
    Feature: Topics (Depends on: Print)
 ============================================================================ */
-#define TOPIC_ID_NO_TOPIC -1
-
 #if FEATURE_TOPICS
+
 // Private
 // ================
+
+#define TOPIC_ID_NO_TOPIC -1
+
+
 typedef struct {
     int id;
     const char *name;
@@ -437,7 +415,27 @@ static topic_t *topic_get_first(void);
 static topic_t *topic_get_next(topic_t *t);
 static topic_t *topic_get(int topic);
 
-static bool new_topic_enabled = false;
+
+typedef struct {
+    bool new_topic_enabled;  // Whether new topics are enabled by default
+
+#if CFG_TOPICS_DINAMIC_ALLOC
+    topic_t *topics;
+#else
+    topic_t topics[CFG_TOPICS_NUM];
+#endif
+
+} topic_data_t;
+
+static topic_data_t topic_data = {
+    .new_topic_enabled = false,  // New topics are disabled by default
+
+#if CFG_TOPICS_DINAMIC_ALLOC
+    .topics = NULL,  // No topics allocated by default
+#else
+    .topics = {{0}},  // Initialize static topics array to zero
+#endif
+};
 
 static void topic_print(print_target *tgt, ulog_Event *ev) {
     topic_t *t = topic_get(ev->topic);
@@ -499,28 +497,44 @@ static bool topic_is_enabled(int topic) {
 /// @brief Processes the topic
 /// @param topic - Topic name
 /// @param level - Log level
-/// @return true processing allows the log, false otherwise
-static int topic_process(const char *topic, int level, int *out_topic_id) {
-    if (topic == NULL || strlen(topic) == 0) {
-        *out_topic_id = TOPIC_ID_NO_TOPIC;
-        return true;  // No topic, consider processed
+/// @param is_log_allowed - Output log allowed
+/// @param topic_id - Output topic ID
+static void topic_process(const char *topic, int level, bool *is_log_allowed,
+                          int *topic_id) {
+    if (is_log_allowed == NULL || topic_id == NULL) {
+        return;  // Invalid arguments, do nothing
     }
 
-    *out_topic_id = ulog_get_topic_id(topic);
-    if (*out_topic_id == TOPIC_NOT_FOUND) {
-#if CFG_TOPICS_DINAMIC_ALLOC == false
-        return false;  // Processing failed, topic not found
-#else
+    // Fail by default
+    *is_log_allowed = false;              // Default to not allowed
+    *topic_id       = TOPIC_ID_NO_TOPIC;  // Default to no topic
+
+    // No topic, always allowed
+    if (topic == NULL || strlen(topic) == 0) {
+        *topic_id       = TOPIC_ID_NO_TOPIC;
+        *is_log_allowed = true;
+        return;
+    }
+
+    // If topic is not found, fail for STATIC allocation
+    // or add a new one for DYNAMIC allocation
+    *topic_id = ulog_get_topic_id(topic);
+    if (*topic_id == TOPIC_NOT_FOUND) {
+#if CFG_TOPICS_DINAMIC_ALLOC
         // If no topic add a disabled one, so we can enable it later
-        *out_topic_id = ulog_add_topic(topic, new_topic_enabled);
+        *topic_id = ulog_add_topic(topic, topic_data.new_topic_enabled);
+#else
+        *is_log_allowed = false;  // Topic not found, processing failed
+        return;                   // Processing failed, topic not found
 #endif
     }
 
-    if (!topic_is_enabled(*out_topic_id) ||
-        (level < topic_get_level(*out_topic_id))) {
-        return false;
+    // If topic is not enabled or level is lower than topic level, skip logging
+    if (!topic_is_enabled(*topic_id) || (level < topic_get_level(*topic_id))) {
+        *is_log_allowed = false;
+        return;
     }
-    return true;
+    *is_log_allowed = true;
 }
 
 // Public
@@ -544,7 +558,7 @@ int ulog_disable_topic(const char *topic_name) {
 }
 
 int ulog_enable_all_topics(void) {
-    new_topic_enabled = true;
+    topic_data.new_topic_enabled = true;
     for (topic_t *t = topic_get_first(); t != NULL; t = topic_get_next(t)) {
         t->enabled = true;
     }
@@ -552,7 +566,7 @@ int ulog_enable_all_topics(void) {
 }
 
 int ulog_disable_all_topics(void) {
-    new_topic_enabled = false;
+    topic_data.new_topic_enabled = false;
     for (topic_t *t = topic_get_first(); t != NULL; t = topic_get_next(t)) {
         t->enabled = false;
     }
@@ -571,7 +585,8 @@ int ulog_get_topic_id(const char *topic_name) {
 #else
 
 #define topic_print(tgt, ev) (void)(tgt), (void)(ev)
-#define topic_process(topic, level, out_topic_id) true
+#define topic_process(topic, level, is_log_allowed, topic_id)                  \
+    (void)(topic), (void)(level), (void)(is_log_allowed), (void)(topic_id)
 
 #endif  // FEATURE_TOPICS
 
@@ -581,14 +596,13 @@ int ulog_get_topic_id(const char *topic_name) {
 #if FEATURE_TOPICS && CFG_TOPICS_DINAMIC_ALLOC == false
 // Private
 // ================
-static topic_t topics[CFG_TOPICS_NUM] = {{0}};
-
 static topic_t *topic_get_first(void) {
-    return topics;
+    return topic_data.topics;
 }
 
 static topic_t *topic_get_next(topic_t *t) {
-    if ((t >= topics) && (t < topics + CFG_TOPICS_NUM - 1)) {
+    if ((t >= topic_data.topics) &&
+        (t < topic_data.topics + CFG_TOPICS_NUM - 1)) {
         return t + 1;
     }
     return NULL;
@@ -596,7 +610,7 @@ static topic_t *topic_get_next(topic_t *t) {
 
 static topic_t *topic_get(int topic) {
     if (topic < CFG_TOPICS_NUM) {
-        return &topics[topic];
+        return &topic_data.topics[topic];
     }
     return NULL;
 }
@@ -611,15 +625,15 @@ int ulog_add_topic(const char *topic_name, bool enable) {
 
     for (int i = 0; i < CFG_TOPICS_NUM; i++) {
         // If there is an empty slot
-        if (is_str_empty(topics[i].name)) {
-            topics[i].id      = i;
-            topics[i].name    = topic_name;
-            topics[i].enabled = enable;
-            topics[i].level   = ULOG_DEFAULT_LOG_LEVEL;
+        if (is_str_empty(topic_data.topics[i].name)) {
+            topic_data.topics[i].id      = i;
+            topic_data.topics[i].name    = topic_name;
+            topic_data.topics[i].enabled = enable;
+            topic_data.topics[i].level   = ULOG_DEFAULT_LOG_LEVEL;
             return i;
         }
         // If the topic already exists
-        else if (strcmp(topics[i].name, topic_name) == 0) {
+        else if (strcmp(topic_data.topics[i].name, topic_name) == 0) {
             return i;
         }
     }
@@ -634,10 +648,9 @@ int ulog_add_topic(const char *topic_name, bool enable) {
 #if FEATURE_TOPICS && CFG_TOPICS_DINAMIC_ALLOC == true
 // Private
 // ================
-static topic_t *topics = NULL;
 
 static topic_t *topic_get_first(void) {
-    return topics;
+    return topic_data.topics;
 }
 
 static topic_t *topic_get_next(topic_t *t) {
@@ -669,7 +682,7 @@ static void *topic_create(int id, const char *topic_name, bool enable) {
 
 int ulog_add_topic(const char *topic_name, bool enable) {
     if (is_str_empty(topic_name)) {
-        return -1;  // TODO: Add error code for empty topic name
+        return -1;
     }
 
     // if exists
@@ -680,9 +693,9 @@ int ulog_add_topic(const char *topic_name, bool enable) {
     }
 
     // If the beginning is empty
-    if (topics == NULL) {
-        topics = (topic_t *)topic_create(0, topic_name, enable);
-        if (topics != NULL) {
+    if (topic_data.topics == NULL) {
+        topic_data.topics = (topic_t *)topic_create(0, topic_name, enable);
+        if (topic_data.topics != NULL) {
             return 0;
         }
         return -1;
@@ -690,7 +703,7 @@ int ulog_add_topic(const char *topic_name, bool enable) {
 
     // If the beginning is not empty
     int current_id = 0;
-    topic_t *t     = topics;
+    topic_t *t     = topic_data.topics;
     while (t->next != NULL) {
         t = t->next;
         current_id++;
@@ -790,26 +803,21 @@ static void log_print_message(print_target *tgt, ulog_Event *ev) {
 /// @param full_time - Full time or short time
 /// @param color - Color or no color
 /// @param new_line - New line in the end or no new line
-static void log_log(print_target *tgt, ulog_Event *ev, bool full_time,
-                    bool color, bool new_line) {
+static void log_print_event(print_target *tgt, ulog_Event *ev, bool full_time,
+                            bool color, bool new_line) {
 
     color ? color_print_start(tgt, ev) : (void)0;
 
     bool append_space = true;
-    (void)append_space; // May be unused if no prefix or time
-
-
-#if FEATURE_TIME
-    if (full_time) {
-#if FEATURE_EXTRA_OUTPUTS
-        time_print_full(tgt, ev);
-#endif
-    } else {
-        time_print_short(tgt, ev);
+    (void)append_space;  // May be unused if no prefix and time
+#if FEATURE_CUSTOM_PREFIX
+    if (prefix_data.function != NULL) {
+        append_space = false;  // Custom prefix does not need leading space
     }
-#else
-    (void)full_time;
-#endif  // FEATURE_TIME
+#endif
+
+    full_time ? time_print_full(tgt, ev, append_space)
+              : time_print_short(tgt, ev, append_space);
 
     prefix_print(tgt, ev);
     topic_print(tgt, ev);
@@ -818,6 +826,28 @@ static void log_log(print_target *tgt, ulog_Event *ev, bool full_time,
 
     color ? color_print_end(tgt) : (void)0;
     new_line ? print_to_target(tgt, "\n") : (void)0;
+}
+
+void log_fill_event(ulog_Event *ev, const char *message, int level,
+                    const char *file, int line, int topic_id) {
+    if (ev == NULL) {
+        return;  // Invalid event, do nothing
+    }
+
+    ev->message = message;
+    ev->file    = file;
+    ev->line    = line;
+    ev->level   = level;
+
+#if FEATURE_TOPICS
+    ev->topic = topic_id;
+#endif
+
+#if FEATURE_TIME
+    ev->time = NULL;  // Time will be filled later
+#endif
+
+    time_fill_current_time(ev);  // Fill time with current value
 }
 
 // Public
@@ -829,43 +859,35 @@ int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size) {
     }
     print_target tgt = {.type       = LOG_TARGET_BUFFER,
                         .dsc.buffer = {out, 0, out_size}};
-    log_log(&tgt, ev, false, false, false);
+    log_print_event(&tgt, ev, false, false, false);
     return 0;
 }
 
 void ulog_log(int level, const char *file, int line, const char *topic,
               const char *message, ...) {
 
-    // Skip if level is lower than sets
-    if (level < levels_data.level) {
-        return;
-    }
-
-    int topic_id = TOPIC_ID_NO_TOPIC;
-    (void)topic_id;
-    // Skip if topic processing does not allow the log
-    if (!topic_process(topic, level, &topic_id)) {
-        return;
-    }
-
-    ulog_Event ev = {
-        .message = message,
-        .file    = file,
-        .line    = line,
-        .level   = level,
-#if FEATURE_TOPICS
-        .topic = topic_id,
-#endif
-    };
-
-    va_start(ev.message_format_args, message);
-
     lock_lock();
 
-    cb_execute_stdout(&ev);
-    cb_user_execute_all(&ev);
+    // Skip if level is lower than sets
+    bool is_log_allowed = level >= levels_data.level;
+    if (!is_log_allowed) {
+        return;
+    }
 
-    lock_unlock();
+    // Try to get topic ID and check if logging is allowed for this topic
+    int topic_id;
+    topic_process(topic, level, &is_log_allowed, &topic_id);
+    if (!is_log_allowed) {
+        return;
+    }
+
+    ulog_Event ev = {0};
+    log_fill_event(&ev, message, level, file, line, topic_id);
+    va_start(ev.message_format_args, message);
+
+    cb_handle_all(&ev);
 
     va_end(ev.message_format_args);
+
+    lock_unlock();
 }
