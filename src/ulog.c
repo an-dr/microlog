@@ -86,8 +86,8 @@ static void print_to_target(print_target *tgt, const char *format, ...) {
    Prototypes
 ============================================================================ */
 
-static void log_log(print_target *tgt, ulog_Event *ev, bool full_time,
-                    bool color, bool new_line);
+static void log_print_event(print_target *tgt, ulog_Event *ev, bool full_time,
+                            bool color, bool new_line);
 
 /* ============================================================================
    Feature: Color (`color_*`, depends on: Print)
@@ -163,43 +163,47 @@ void ulog_set_prefix_fn(ulog_PrefixFn function) {
 ============================================================================ */
 #if FEATURE_TIME
 
-#define TIME_SHORT_BUF_SIZE 10  // HH:MM:SS(8) + 1 space + null terminator
+#define TIME_SHORT_BUF_SIZE 10  // HH:MM:SS(8) + 1 space + null
 #define TIME_FULL_BUF_SIZE 21   // YYYY-MM-DD HH:MM:SS(19) + 1 space + null
 
 // Private
 // ================
-static void time_print_short(print_target *tgt, ulog_Event *ev) {
-
-    char buf[TIME_SHORT_BUF_SIZE];
-#if FEATURE_CUSTOM_PREFIX
-    // If the custom prefix function is not set, add a space after the time
-    if(prefix_data.function == NULL) {
-        buf[strftime(buf, sizeof(buf), "%H:%M:%S ", ev->time)] = '\0';
-    } else {
-        buf[strftime(buf, sizeof(buf)-1, "%H:%M:%S", ev->time)] = '\0';
+static bool time_print_if_invalid(print_target *tgt, ulog_Event *ev) {
+    if (ev->time == NULL) {
+        print_to_target(tgt, "INVALID_TIME");
+        return true;  // Time is invalid, print error message
     }
-#else   // FEATURE_CUSTOM_PREFIX
-    buf[strftime(buf, sizeof(buf), "%H:%M:%S ", ev->time)] = '\0';
-#endif  // FEATURE_CUSTOM_PREFIX
+    return false;  // Time is valid
+}
 
+/// @brief Fills the event time with the current local time
+/// @param ev - Event to fill. Assumed not NULL
+static void time_fill_current_time(ulog_Event *ev) {
+    time_t current_time = time(NULL);     // Get current time
+    ev->time = localtime(&current_time);  // Fill time with current value
+}
+
+static void time_print_short(print_target *tgt, ulog_Event *ev,
+                             bool append_space) {
+    if (time_print_if_invalid(tgt, ev)) {
+        return;  // If time is not valid, stop printing
+    }
+    char buf[TIME_SHORT_BUF_SIZE] = {0};
+    const char *format            = append_space ? "%H:%M:%S " : "%H:%M:%S";
+    strftime(buf, TIME_SHORT_BUF_SIZE, format, ev->time);
     print_to_target(tgt, "%s", buf);
 }
 
 #if FEATURE_EXTRA_OUTPUTS
-static void time_print_full(print_target *tgt, ulog_Event *ev) {
-    
-    char buf[TIME_FULL_BUF_SIZE];
-#if FEATURE_CUSTOM_PREFIX
-    // If the custom prefix function is not set, add a space after the time
-    if(prefix_data.function == NULL) {
-        buf[strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S ", ev->time)] = '\0';
-    } else {
-        buf[strftime(buf, sizeof(buf)-1, "%Y-%m-%d %H:%M:%S", ev->time)] = '\0';
+static void time_print_full(print_target *tgt, ulog_Event *ev,
+                            bool append_space) {
+    if (time_print_if_invalid(tgt, ev)) {
+        return;  // If time is not valid, stop printing
     }
-#else   // FEATURE_CUSTOM_PREFIX
-    buf[strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S ", ev->time)] = '\0';
-#endif  // FEATURE_CUSTOM_PREFIX
-
+    char buf[TIME_FULL_BUF_SIZE] = {0};
+    const char *format =
+        append_space ? "%Y-%m-%d %H:%M:%S " : "%Y-%m-%d %H:%M:%S";
+    strftime(buf, TIME_FULL_BUF_SIZE, format, ev->time);
     print_to_target(tgt, "%s", buf);
 }
 #endif  // FEATURE_EXTRA_OUTPUTS
@@ -207,11 +211,10 @@ static void time_print_full(print_target *tgt, ulog_Event *ev) {
 // Disabled Private
 // ================
 #else  // FEATURE_TIME
-#define time_print_short(tgt, ev) (void)(0)
-#define time_print_full(tgt, ev) (void)(0)
+#define time_print_short(tgt, ev, append_space) (void)(0)
+#define time_print_full(tgt, ev, append_space) (void)(0)
+#define time_fill_current_time(ev) (void)(ev)
 #endif  // FEATURE_TIME
-
-
 
 /* ============================================================================
    Core Feature: Levels  (`levels_*`, depends on: Print)
@@ -333,7 +336,7 @@ static void cb_handle_all(ulog_Event *ev) {
 
 static void cb_stdout(ulog_Event *ev, void *arg) {
     print_target tgt = {.type = LOG_TARGET_STREAM, .dsc.stream = stdout};
-    log_log(&tgt, ev, false, true, true);
+    log_print_event(&tgt, ev, false, true, true);
 }
 
 // Public
@@ -353,7 +356,7 @@ void ulog_set_quiet(bool enable) {
 // ================
 static void cb_user_file(ulog_Event *ev, void *arg) {
     print_target tgt = {.type = LOG_TARGET_STREAM, .dsc.stream = (FILE *)arg};
-    log_log(&tgt, ev, true, false, true);
+    log_print_event(&tgt, ev, true, false, true);
 }
 
 // Public
@@ -762,26 +765,21 @@ static void log_print_message(print_target *tgt, ulog_Event *ev) {
 /// @param full_time - Full time or short time
 /// @param color - Color or no color
 /// @param new_line - New line in the end or no new line
-static void log_log(print_target *tgt, ulog_Event *ev, bool full_time,
-                    bool color, bool new_line) {
+static void log_print_event(print_target *tgt, ulog_Event *ev, bool full_time,
+                            bool color, bool new_line) {
 
     color ? color_print_start(tgt, ev) : (void)0;
 
     bool append_space = true;
-    (void)append_space; // May be unused if no prefix or time
-
-
-#if FEATURE_TIME
-    if (full_time) {
-#if FEATURE_EXTRA_OUTPUTS
-        time_print_full(tgt, ev);
-#endif
-    } else {
-        time_print_short(tgt, ev);
+    (void)append_space;  // May be unused if no prefix and time
+#if FEATURE_CUSTOM_PREFIX
+    if (prefix_data.function != NULL) {
+        append_space = false;  // Custom prefix does not need leading space
     }
-#else
-    (void)full_time;
-#endif  // FEATURE_TIME
+#endif
+
+    full_time ? time_print_full(tgt, ev, append_space)
+              : time_print_short(tgt, ev, append_space);
 
     prefix_print(tgt, ev);
     topic_print(tgt, ev);
@@ -790,6 +788,28 @@ static void log_log(print_target *tgt, ulog_Event *ev, bool full_time,
 
     color ? color_print_end(tgt) : (void)0;
     new_line ? print_to_target(tgt, "\n") : (void)0;
+}
+
+void log_fill_event(ulog_Event *ev, const char *message, int level,
+                    const char *file, int line, int topic_id) {
+    if (ev == NULL) {
+        return;  // Invalid event, do nothing
+    }
+
+    ev->message = message;
+    ev->file    = file;
+    ev->line    = line;
+    ev->level   = level;
+
+#if FEATURE_TOPICS
+    ev->topic = topic_id;
+#endif
+
+#if FEATURE_TIME
+    ev->time = NULL;  // Time will be filled later
+#endif
+
+    time_fill_current_time(ev);  // Fill time with current value
 }
 
 // Public
@@ -801,7 +821,7 @@ int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size) {
     }
     print_target tgt = {.type       = LOG_TARGET_BUFFER,
                         .dsc.buffer = {out, 0, out_size}};
-    log_log(&tgt, ev, false, false, false);
+    log_print_event(&tgt, ev, false, false, false);
     return 0;
 }
 
@@ -822,16 +842,8 @@ void ulog_log(int level, const char *file, int line, const char *topic,
         return;
     }
 
-    ulog_Event ev = {
-        .message = message,
-        .file    = file,
-        .line    = line,
-        .level   = level,
-#if FEATURE_TOPICS
-        .topic = topic_id,
-#endif
-    };
-
+    ulog_Event ev = {0};
+    log_fill_event(&ev, message, level, file, line, topic_id);
     va_start(ev.message_format_args, message);
 
     cb_handle_all(&ev);
@@ -839,6 +851,4 @@ void ulog_log(int level, const char *file, int line, const char *topic,
     va_end(ev.message_format_args);
 
     lock_unlock();
-
-    va_end(ev.message_format_args);
 }
