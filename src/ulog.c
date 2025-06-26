@@ -295,6 +295,7 @@ void ulog_set_level(int level) {
 //  Private
 // ================
 #define CB_STDOUT_ID 0
+#define CB_NUM_CALLBACKS (1 + CFG_EXTRA_OUTPUTS)  // 1 for stdout callback + extra outputs
 static void cb_stdout(ulog_Event *ev, void *arg);
 
 typedef struct {
@@ -305,7 +306,7 @@ typedef struct {
 } cb_t;
 
 typedef struct {
-    cb_t callbacks[1 + CFG_EXTRA_OUTPUTS];  // 0 is for stdout callback
+    cb_t callbacks[CB_NUM_CALLBACKS];  // 0 is for stdout callback
 } cb_data_t;
 
 static cb_data_t cb_data = {.callbacks = {{cb_stdout, NULL, LOG_TRACE, true}}};
@@ -330,7 +331,7 @@ static void cb_handle_single(ulog_Event *ev, cb_t *cb) {
 static void cb_handle_all(ulog_Event *ev) {
     // Processing the message for callbacks
     for (int i = 0;
-         (i < CFG_EXTRA_OUTPUTS) && (cb_data.callbacks[i].function != NULL);
+         (i < CB_NUM_CALLBACKS) && (cb_data.callbacks[i].function != NULL);
          i++) {
         cb_handle_single(ev, &cb_data.callbacks[i]);
     }
