@@ -390,13 +390,12 @@ int ulog_add_fp(FILE *fp, int level) {
 /* ============================================================================
    Feature: Topics (Depends on: Print)
 ============================================================================ */
+#define TOPIC_ID_NO_TOPIC -1
+
 #if FEATURE_TOPICS
 
 // Private
 // ================
-
-#define TOPIC_ID_NO_TOPIC -1
-
 
 typedef struct {
     int id;
@@ -874,14 +873,16 @@ void ulog_log(int level, const char *file, int line, const char *topic,
     // Skip if level is lower than sets
     bool is_log_allowed = level >= levels_data.level;
     if (!is_log_allowed) {
+        lock_unlock();
         return;
     }
 
     // Try to get topic ID and check if logging is allowed for this topic
-    int topic_id;
+    int topic_id = TOPIC_ID_NO_TOPIC;
     topic_process(topic, level, &is_log_allowed, &topic_id);
     if (!is_log_allowed) {
-        return;
+        lock_unlock();
+        return;  // Topic is not enabled or level is lower than topic level
     }
 
     ulog_Event ev = {0};
