@@ -206,6 +206,8 @@ static void time_print_full(print_target *tgt, ulog_Event *ev,
     strftime(buf, TIME_FULL_BUF_SIZE, format, ev->time);
     print_to_target(tgt, "%s", buf);
 }
+#else
+#define time_print_full(tgt, ev, append_space) (void)(0)
 #endif  // FEATURE_EXTRA_OUTPUTS
 
 // Disabled Private
