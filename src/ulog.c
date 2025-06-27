@@ -434,39 +434,23 @@ static topic_data_t topic_data = {
 
 // === Implementation specific functions for topics ===========================
 
-/// @brief Checks if the topic is enabled
-/// @param topic - Topic ID or -1 if no topic
-/// @return true if enabled or no topic, false otherwise
-static bool topic_is_enabled(int topic);
-
-/// @brief Checks if the topic is enabled
-/// @param topic - Topic ID or -1 if no topic
-/// @return 0 if enabled or no topic, -1 otherwise
-static int topic_set_level(int topic, int level);
-
-/// @brief Processes the topic
-/// @param topic - Topic name
-/// @return 0 on success, -1 if topic not found
-static int topic_enable(int topic);
-
-/// @brief Disables the topic
-/// @param topic - Topic ID
-/// @return 0 on success, -1 if topic not found
-static int topic_disable(int topic);
-
-/// @brief Gets the first topic in the list
-/// @return Pointer to the first topic if exists, NULL otherwise
-static topic_t *topic_get_first(void);
-
-/// @brief Gets the next topic in the list
-/// @param t - Current topic pointer
-/// @return Pointer to the next topic if exists, NULL otherwise
-static topic_t *topic_get_next(topic_t *t);
+/// @brief Converts a topic string to its ID
+/// @param str - Topic string
+/// @return Topic ID or -1 if not found
+static int topic_str_to_id(const char *str);
 
 /// @brief Gets the topic by ID
 /// @param topic - Topic ID
 /// @return Pointer to the topic if found, NULL otherwise
 static topic_t *topic_get(int topic);
+
+/// @brief Enable all topics
+/// @return 0 on success, -1 if no topics
+static int topic_enable_all();
+
+/// @brief Disable all topics
+/// @return 0 on success, -1 if no topics
+static int topic_disable_all();
 
 // === Common Topic Functions =================================================
 
@@ -605,27 +589,18 @@ int ulog_disable_topic(const char *topic_name) {
 
 int ulog_enable_all_topics(void) {
     topic_data.new_topic_enabled = true;
-    for (topic_t *t = topic_get_first(); t != NULL; t = topic_get_next(t)) {
-        t->enabled = true;
-    }
+    topic_enable_all();
     return 0;
 }
 
 int ulog_disable_all_topics(void) {
     topic_data.new_topic_enabled = false;
-    for (topic_t *t = topic_get_first(); t != NULL; t = topic_get_next(t)) {
-        t->enabled = false;
-    }
+    topic_disable_all();
     return 0;
 }
 
 int ulog_get_topic_id(const char *topic_name) {
-    for (topic_t *t = topic_get_first(); t != NULL; t = topic_get_next(t)) {
-        if (!is_str_empty(t->name) && strcmp(t->name, topic_name) == 0) {
-            return t->id;
-        }
-    }
-    return TOPIC_NOT_FOUND;
+    return topic_str_to_id(topic_name);
 }
 
 #else
@@ -642,16 +617,37 @@ int ulog_get_topic_id(const char *topic_name) {
 #if FEATURE_TOPICS && CFG_TOPICS_DYNAMIC_ALLOC == false
 // Private
 // ================
-static topic_t *topic_get_first(void) {
-    return topic_data.topics;
+
+int topic_enable_all(void) {
+    for (int i = 0; i < CFG_TOPICS_NUM; i++) {
+        if (is_str_empty(topic_data.topics[i].name)) {
+            break;  // End of topics, no more to enable
+        }
+        topic_data.topics[i].enabled = true;
+    }
+    return 0;
 }
 
-static topic_t *topic_get_next(topic_t *t) {
-    if ((t >= topic_data.topics) &&
-        (t < topic_data.topics + CFG_TOPICS_NUM - 1)) {
-        return t + 1;
+int topic_disable_all(void) {
+    for (int i = 0; i < CFG_TOPICS_NUM; i++) {
+        if (is_str_empty(topic_data.topics[i].name)) {
+            break;  // End of topics, no more to disable
+        }
+        topic_data.topics[i].enabled = false;
     }
-    return NULL;
+    return 0;
+}
+
+int topic_str_to_id(const char *str) {
+    for (int i = 0; i < CFG_TOPICS_NUM; i++) {
+        if (is_str_empty(topic_data.topics[i].name)) {
+            break;  // End of topics, not found
+        }
+        if (strcmp(topic_data.topics[i].name, str) == 0) {
+            return topic_data.topics[i].id;
+        }
+    }
+    return TOPIC_NOT_FOUND;  // Not found
 }
 
 static topic_t *topic_get(int topic) {
@@ -701,6 +697,40 @@ static topic_t *topic_get_first(void) {
 
 static topic_t *topic_get_next(topic_t *t) {
     return t->next;
+}
+
+static topic_t *topic_get_last(void) {
+    topic_t *last = topic_data.topics;
+    if (last == NULL) {
+        return NULL;  // No topics
+    }
+    while (last->next != NULL) {
+        last = last->next;
+    }
+    return last;
+}
+
+static int topic_enable_all(void) {
+    for (topic_t *t = topic_get_first(); t != NULL; t = topic_get_next(t)) {
+        t->enabled = true;
+    }
+    return 0;
+}
+
+static int topic_disable_all(void) {
+    for (topic_t *t = topic_get_first(); t != NULL; t = topic_get_next(t)) {
+        t->enabled = false;
+    }
+    return 0;
+}
+
+int topic_str_to_id(const char *str) {
+    for (topic_t *t = topic_get_first(); t != NULL; t = topic_get_next(t)) {
+        if (!is_str_empty(t->name) && strcmp(t->name, str) == 0) {
+            return t->id;
+        }
+    }
+    return TOPIC_NOT_FOUND;
 }
 
 static topic_t *topic_get(int topic) {
