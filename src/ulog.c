@@ -390,7 +390,7 @@ int ulog_add_fp(FILE *fp, int level) {
 #endif  // FEATURE_EXTRA_OUTPUTS
 
 /* ============================================================================
-   Feature: Topics (Depends on: Print)
+   Feature: Topics (Depends on: Print, Levels)
 ============================================================================ */
 #define TOPIC_ID_NO_TOPIC -1
 
@@ -490,6 +490,19 @@ static int topic_get_level(int topic) {
     return LOG_TRACE;
 }
 
+/// @brief Checks if the topic is loggable
+/// @param t - Pointer to the topic, NULL is allowed
+/// @return true if loggable, false otherwise
+static bool topic_is_loggable(topic_t *t) {
+    if (t == NULL) {
+        return false;  // Topic not found, cannot log
+    }
+    if (!t->enabled || t->level < levels_data.level) {
+        return false;  // Topic is disabled, cannot log
+    }
+    return true;
+}
+
 /// @brief Enables the topic
 /// @param topic - Topic ID
 /// @return 0 on success, -1 if topic not found
@@ -540,36 +553,25 @@ static void topic_process(const char *topic, int level, bool *is_log_allowed,
         return;  // Invalid arguments, do nothing
     }
 
-    // Fail by default
-    *is_log_allowed = false;              // Default to not allowed
-    *topic_id       = TOPIC_ID_NO_TOPIC;  // Default to no topic
+    topic_t *t = topic_get(topic_str_to_id(topic));
 
-    // No topic, always allowed
-    if (topic == NULL || strlen(topic) == 0) {
-        *topic_id       = TOPIC_ID_NO_TOPIC;
-        *is_log_allowed = true;
-        return;
-    }
-
-    // If topic is not found, fail for STATIC allocation
-    // or add a new one for DYNAMIC allocation
-    *topic_id = ulog_get_topic_id(topic);
-    if (*topic_id == TOPIC_NOT_FOUND) {
 #if CFG_TOPICS_DYNAMIC_ALLOC
-        // If no topic add a disabled one, so we can enable it later
+    // Allocate a new topic if not found
+    if (t == NULL) {
         *topic_id = ulog_add_topic(topic, topic_data.new_topic_enabled);
-#else
-        *is_log_allowed = false;  // Topic not found, processing failed
-        return;                   // Processing failed, topic not found
-#endif
+        if (*topic_id == -1) {
+            *is_log_allowed = false;  // Topic was not added, processing failed
+            return;                   // Processing failed, topic not found
+        }
+        t = topic_get(*topic_id);  // Get the newly added topic
     }
+#endif  // CFG_TOPICS_DYNAMIC_ALLOC
 
-    // If topic is not enabled or level is lower than topic level, skip logging
-    if (!topic_is_enabled(*topic_id) || (level < topic_get_level(*topic_id))) {
-        *is_log_allowed = false;
-        return;
+    *is_log_allowed = topic_is_loggable(t);
+    if (!*is_log_allowed) {
+        return;  // Topic is not loggable, stop processing
     }
-    *is_log_allowed = true;
+    *topic_id = t->id;  // Set topic ID
 }
 
 // Public
@@ -960,10 +962,12 @@ void ulog_log(int level, const char *file, int line, const char *topic,
 
     // Try to get topic ID and check if logging is allowed for this topic
     int topic_id = TOPIC_ID_NO_TOPIC;
-    topic_process(topic, level, &is_log_allowed, &topic_id);
-    if (!is_log_allowed) {
-        lock_unlock();
-        return;  // Topic is not enabled or level is lower than topic level
+    if (!is_str_empty(topic)) {
+        topic_process(topic, level, &is_log_allowed, &topic_id);
+        if (!is_log_allowed) {
+            lock_unlock();
+            return;  // Topic is not enabled or level is lower than topic level
+        }
     }
 
     ulog_Event ev = {0};
