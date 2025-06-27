@@ -452,6 +452,11 @@ static int topic_enable_all();
 /// @return 0 on success, -1 if no topics
 static int topic_disable_all();
 
+/// @brief Add a new topic
+/// @param topic_name - Topic name
+/// @param enable - Whether the topic is enabled after creation
+static int topic_add(const char *topic_name, bool enable);
+
 // === Common Topic Functions =================================================
 
 static void topic_print(print_target *tgt, ulog_Event *ev) {
@@ -578,12 +583,10 @@ int ulog_set_topic_level(const char *topic_name, int level) {
 }
 
 int ulog_enable_topic(const char *topic_name) {
-    ulog_add_topic(topic_name, true);
     return topic_enable(ulog_get_topic_id(topic_name));
 }
 
 int ulog_disable_topic(const char *topic_name) {
-    ulog_add_topic(topic_name, false);
     return topic_disable(ulog_get_topic_id(topic_name));
 }
 
@@ -601,6 +604,13 @@ int ulog_disable_all_topics(void) {
 
 int ulog_get_topic_id(const char *topic_name) {
     return topic_str_to_id(topic_name);
+}
+
+int ulog_add_topic(const char *topic_name, bool enable) {
+    if (is_str_empty(topic_name)) {
+        return -1;  // Invalid topic name, do nothing
+    }
+    return topic_add(topic_name, enable);
 }
 
 #else
@@ -657,10 +667,7 @@ static topic_t *topic_get(int topic) {
     return NULL;
 }
 
-// Public
-// ================
-
-int ulog_add_topic(const char *topic_name, bool enable) {
+static int topic_add(const char *topic_name, bool enable) {
     if (is_str_empty(topic_name)) {
         return -1;
     }
@@ -734,6 +741,9 @@ int topic_str_to_id(const char *str) {
 }
 
 static topic_t *topic_get(int topic) {
+    if (topic < 0) {
+        return NULL;  // Invalid topic ID
+    }
     for (topic_t *t = topic_get_first(); t != NULL; t = topic_get_next(t)) {
         if (t->id == topic) {
             return t;
@@ -742,7 +752,13 @@ static topic_t *topic_get(int topic) {
     return NULL;
 }
 
-static void *topic_create(int id, const char *topic_name, bool enable) {
+static void *topic_allocate(int id, const char *topic_name, bool enable) {
+    if (is_str_empty(topic_name)) {
+        return NULL;  // Invalid topic name, do not allocate
+    }
+    if (id < 0) {
+        return NULL;  // Invalid ID, do not allocate
+    }
     topic_t *t = malloc(sizeof(topic_t));
     if (t != NULL) {
         t->id      = id;
@@ -753,10 +769,7 @@ static void *topic_create(int id, const char *topic_name, bool enable) {
     return t;
 }
 
-// Public
-// ================
-
-int ulog_add_topic(const char *topic_name, bool enable) {
+static int topic_add(const char *topic_name, bool enable) {
     if (is_str_empty(topic_name)) {
         return -1;
     }
@@ -769,9 +782,9 @@ int ulog_add_topic(const char *topic_name, bool enable) {
     }
 
     // If the beginning is empty
-    topic_t *t     = topic_get_last();
+    topic_t *t = topic_get_last();
     if (t == NULL) {
-        topic_data.topics = (topic_t *)topic_create(0, topic_name, enable);
+        topic_data.topics = (topic_t *)topic_allocate(0, topic_name, enable);
         if (topic_data.topics != NULL) {
             return 0;
         }
@@ -779,7 +792,7 @@ int ulog_add_topic(const char *topic_name, bool enable) {
     }
 
     // If the beginning is not empty
-    t->next = topic_create(t->id + 1, topic_name, enable);
+    t->next = topic_allocate(t->id + 1, topic_name, enable);
     if (t->next) {
         return t->id + 1;
     }
