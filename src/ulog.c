@@ -295,7 +295,9 @@ void ulog_set_level(int level) {
 //  Private
 // ================
 #define CB_STDOUT_ID 0
-#define CB_NUM_CALLBACKS (1 + CFG_EXTRA_OUTPUTS)  // 1 for stdout callback + extra outputs
+#define CB_NUM_CALLBACKS (1 + CFG_EXTRA_OUTPUTS)  // 1 for stdout + extra
+
+// Forward declarations for data initialization
 static void cb_stdout(ulog_Event *ev, void *arg);
 
 typedef struct {
@@ -403,25 +405,16 @@ typedef struct {
     bool enabled;
     int level;
 
-#if CFG_TOPICS_DINAMIC_ALLOC == true
+#if CFG_TOPICS_DYNAMIC_ALLOC
     void *next;  // Pointer to the next topic pointer (Topic **)
 #endif
 
 } topic_t;
 
-static bool topic_is_enabled(int topic);
-static int topic_set_level(int topic, int level);
-static int topic_enable(int topic);
-static int topic_disable(int topic);
-static topic_t *topic_get_first(void);
-static topic_t *topic_get_next(topic_t *t);
-static topic_t *topic_get(int topic);
-
-
 typedef struct {
     bool new_topic_enabled;  // Whether new topics are enabled by default
 
-#if CFG_TOPICS_DINAMIC_ALLOC
+#if CFG_TOPICS_DYNAMIC_ALLOC
     topic_t *topics;
 #else
     topic_t topics[CFG_TOPICS_NUM];
@@ -432,20 +425,62 @@ typedef struct {
 static topic_data_t topic_data = {
     .new_topic_enabled = false,  // New topics are disabled by default
 
-#if CFG_TOPICS_DINAMIC_ALLOC
+#if CFG_TOPICS_DYNAMIC_ALLOC
     .topics = NULL,  // No topics allocated by default
 #else
     .topics = {{0}},  // Initialize static topics array to zero
 #endif
 };
 
+// === Implementation specific functions for topics ===========================
+
+/// @brief Checks if the topic is enabled
+/// @param topic - Topic ID or -1 if no topic
+/// @return true if enabled or no topic, false otherwise
+static bool topic_is_enabled(int topic);
+
+/// @brief Checks if the topic is enabled
+/// @param topic - Topic ID or -1 if no topic
+/// @return 0 if enabled or no topic, -1 otherwise
+static int topic_set_level(int topic, int level);
+
+/// @brief Processes the topic
+/// @param topic - Topic name
+/// @return 0 on success, -1 if topic not found
+static int topic_enable(int topic);
+
+/// @brief Disables the topic
+/// @param topic - Topic ID
+/// @return 0 on success, -1 if topic not found
+static int topic_disable(int topic);
+
+/// @brief Gets the first topic in the list
+/// @return Pointer to the first topic if exists, NULL otherwise
+static topic_t *topic_get_first(void);
+
+/// @brief Gets the next topic in the list
+/// @param t - Current topic pointer
+/// @return Pointer to the next topic if exists, NULL otherwise
+static topic_t *topic_get_next(topic_t *t);
+
+/// @brief Gets the topic by ID
+/// @param topic - Topic ID
+/// @return Pointer to the topic if found, NULL otherwise
+static topic_t *topic_get(int topic);
+
+// === Common Topic Functions =================================================
+
 static void topic_print(print_target *tgt, ulog_Event *ev) {
     topic_t *t = topic_get(ev->topic);
-    if (t != NULL && !is_str_empty(t->name)) {
+    if (t != NULL) {
         print_to_target(tgt, "[%s] ", t->name);
     }
 }
 
+/// @brief Sets the topic level
+/// @param topic - Topic ID
+/// @param level - Log level to set
+/// @return 0 on success, -1 if topic not found
 static int topic_set_level(int topic, int level) {
     topic_t *t = topic_get(topic);
     if (t != NULL) {
@@ -455,6 +490,9 @@ static int topic_set_level(int topic, int level) {
     return -1;
 }
 
+/// @brief Gets the topic level
+/// @param topic - Topic ID
+/// @return Log level of the topic, or LOG_TRACE if topic not found
 static int topic_get_level(int topic) {
     topic_t *t = topic_get(topic);
     if (t != NULL) {
@@ -463,6 +501,9 @@ static int topic_get_level(int topic) {
     return LOG_TRACE;
 }
 
+/// @brief Enables the topic
+/// @param topic - Topic ID
+/// @return 0 on success, -1 if topic not found
 static int topic_enable(int topic) {
     topic_t *t = topic_get(topic);
     if (t != NULL) {
@@ -472,6 +513,9 @@ static int topic_enable(int topic) {
     return -1;
 }
 
+/// @brief Disables the topic
+/// @param topic - Topic ID
+/// @return 0 on success, -1 if topic not found
 static int topic_disable(int topic) {
     topic_t *t = topic_get(topic);
     if (t != NULL) {
@@ -522,7 +566,7 @@ static void topic_process(const char *topic, int level, bool *is_log_allowed,
     // or add a new one for DYNAMIC allocation
     *topic_id = ulog_get_topic_id(topic);
     if (*topic_id == TOPIC_NOT_FOUND) {
-#if CFG_TOPICS_DINAMIC_ALLOC
+#if CFG_TOPICS_DYNAMIC_ALLOC
         // If no topic add a disabled one, so we can enable it later
         *topic_id = ulog_add_topic(topic, topic_data.new_topic_enabled);
 #else
@@ -595,7 +639,7 @@ int ulog_get_topic_id(const char *topic_name) {
 /* ============================================================================
    Feature: Topics - Static Allocation (`topic_*`, depends on: Topics)
 ============================================================================ */
-#if FEATURE_TOPICS && CFG_TOPICS_DINAMIC_ALLOC == false
+#if FEATURE_TOPICS && CFG_TOPICS_DYNAMIC_ALLOC == false
 // Private
 // ================
 static topic_t *topic_get_first(void) {
@@ -611,7 +655,7 @@ static topic_t *topic_get_next(topic_t *t) {
 }
 
 static topic_t *topic_get(int topic) {
-    if (topic < CFG_TOPICS_NUM) {
+    if (topic < CFG_TOPICS_NUM && topic >= 0) {
         return &topic_data.topics[topic];
     }
     return NULL;
@@ -641,13 +685,13 @@ int ulog_add_topic(const char *topic_name, bool enable) {
     }
     return -1;
 }
-#endif  // FEATURE_TOPICS && CFG_TOPICS_DINAMIC_ALLOC == false
+#endif  // FEATURE_TOPICS && CFG_TOPICS_DYNAMIC_ALLOC == false
 
 /* ============================================================================
    Feature: Topics - Dynamic Allocation (`topic_*`, depends on: Topics)
 ============================================================================ */
 
-#if FEATURE_TOPICS && CFG_TOPICS_DINAMIC_ALLOC == true
+#if FEATURE_TOPICS && CFG_TOPICS_DYNAMIC_ALLOC == true
 // Private
 // ================
 
@@ -718,7 +762,7 @@ int ulog_add_topic(const char *topic_name, bool enable) {
     return -1;
 }
 
-#endif  // FEATURE_TOPICS && CFG_TOPICS_DINAMIC_ALLOC == true
+#endif  // FEATURE_TOPICS && CFG_TOPICS_DYNAMIC_ALLOC == true
 
 /* ============================================================================
    Core Functionality: Lock (Depends on: - )
