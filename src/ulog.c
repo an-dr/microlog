@@ -769,7 +769,8 @@ int ulog_add_topic(const char *topic_name, bool enable) {
     }
 
     // If the beginning is empty
-    if (topic_data.topics == NULL) {
+    topic_t *t     = topic_get_last();
+    if (t == NULL) {
         topic_data.topics = (topic_t *)topic_create(0, topic_name, enable);
         if (topic_data.topics != NULL) {
             return 0;
@@ -778,16 +779,9 @@ int ulog_add_topic(const char *topic_name, bool enable) {
     }
 
     // If the beginning is not empty
-    int current_id = 0;
-    topic_t *t     = topic_data.topics;
-    while (t->next != NULL) {
-        t = t->next;
-        current_id++;
-    }
-
-    t->next = topic_create(current_id + 1, topic_name, enable);
+    t->next = topic_create(t->id + 1, topic_name, enable);
     if (t->next) {
-        return current_id + 1;
+        return t->id + 1;
     }
     return -1;
 }
