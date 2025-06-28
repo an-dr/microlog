@@ -479,25 +479,15 @@ static int topic_set_level(int topic, int level) {
     return -1;
 }
 
-/// @brief Gets the topic level
-/// @param topic - Topic ID
-/// @return Log level of the topic, or LOG_TRACE if topic not found
-static int topic_get_level(int topic) {
-    topic_t *t = topic_get(topic);
-    if (t != NULL) {
-        return t->level;
-    }
-    return LOG_TRACE;
-}
-
 /// @brief Checks if the topic is loggable
 /// @param t - Pointer to the topic, NULL is allowed
+/// @param level - Log level to check against
 /// @return true if loggable, false otherwise
-static bool topic_is_loggable(topic_t *t) {
+static bool topic_is_loggable(topic_t *t, int level) {
     if (t == NULL) {
         return false;  // Topic not found, cannot log
     }
-    if (!t->enabled || t->level < levels_data.level) {
+    if (!t->enabled || t->level > level) {
         return false;  // Topic is disabled, cannot log
     }
     return true;
@@ -527,21 +517,6 @@ static int topic_disable(int topic) {
     return -1;
 }
 
-/// @brief Checks if the topic is enabled
-/// @param topic - Topic ID or -1 if no topic
-/// @return true if enabled or no topic, false otherwise
-static bool topic_is_enabled(int topic) {
-    if (topic < 0) {  // no topic, always allowed
-        return true;
-    }
-
-    topic_t *t = topic_get(topic);
-    if (t != NULL) {
-        return t->enabled;
-    }
-    return false;
-}
-
 /// @brief Processes the topic
 /// @param topic - Topic name
 /// @param level - Log level
@@ -567,7 +542,7 @@ static void topic_process(const char *topic, int level, bool *is_log_allowed,
     }
 #endif  // CFG_TOPICS_DYNAMIC_ALLOC
 
-    *is_log_allowed = topic_is_loggable(t);
+    *is_log_allowed = topic_is_loggable(t, level);
     if (!*is_log_allowed) {
         return;  // Topic is not loggable, stop processing
     }
@@ -680,7 +655,7 @@ static int topic_add(const char *topic_name, bool enable) {
             topic_data.topics[i].id      = i;
             topic_data.topics[i].name    = topic_name;
             topic_data.topics[i].enabled = enable;
-            topic_data.topics[i].level   = ULOG_DEFAULT_LOG_LEVEL;
+            topic_data.topics[i].level   = LOG_TRACE;
             return i;
         }
         // If the topic already exists
@@ -766,6 +741,7 @@ static void *topic_allocate(int id, const char *topic_name, bool enable) {
         t->id      = id;
         t->name    = topic_name;
         t->enabled = enable;
+        t->level   = LOG_TRACE; 
         t->next    = NULL;
     }
     return t;
