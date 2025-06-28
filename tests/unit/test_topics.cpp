@@ -25,11 +25,9 @@ bool TestFixture::callback_is_set = false;
 
 TEST_CASE_FIXTURE(TestFixture, "Topics: Enable/Disable and Levels") {
     ulog_add_topic("testtopic", true);
-    logt_warn("testtopic",
+    
+    logt_trace("testtopic",
               "Topic enabled - At default topic level - should appear");
-    CHECK(ut_callback_get_message_count() == 1);
-
-    logt_info("testtopic", "Below default topic level - should not appear");
     CHECK(ut_callback_get_message_count() == 1);
 
     logt_error("testtopic", "Above default topic level - should appear");

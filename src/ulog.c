@@ -295,7 +295,9 @@ void ulog_set_level(int level) {
 //  Private
 // ================
 #define CB_STDOUT_ID 0
-#define CB_NUM_CALLBACKS (1 + CFG_EXTRA_OUTPUTS)  // 1 for stdout callback + extra outputs
+#define CB_NUM_CALLBACKS (1 + CFG_EXTRA_OUTPUTS)  // 1 for stdout + extra
+
+// Forward declarations for data initialization
 static void cb_stdout(ulog_Event *ev, void *arg);
 
 typedef struct {
@@ -388,7 +390,7 @@ int ulog_add_fp(FILE *fp, int level) {
 #endif  // FEATURE_EXTRA_OUTPUTS
 
 /* ============================================================================
-   Feature: Topics (Depends on: Print)
+   Feature: Topics (Depends on: Print, Levels)
 ============================================================================ */
 #define TOPIC_ID_NO_TOPIC -1
 
@@ -403,25 +405,16 @@ typedef struct {
     bool enabled;
     int level;
 
-#if CFG_TOPICS_DINAMIC_ALLOC == true
+#if CFG_TOPICS_DYNAMIC_ALLOC
     void *next;  // Pointer to the next topic pointer (Topic **)
 #endif
 
 } topic_t;
 
-static bool topic_is_enabled(int topic);
-static int topic_set_level(int topic, int level);
-static int topic_enable(int topic);
-static int topic_disable(int topic);
-static topic_t *topic_get_first(void);
-static topic_t *topic_get_next(topic_t *t);
-static topic_t *topic_get(int topic);
-
-
 typedef struct {
     bool new_topic_enabled;  // Whether new topics are enabled by default
 
-#if CFG_TOPICS_DINAMIC_ALLOC
+#if CFG_TOPICS_DYNAMIC_ALLOC
     topic_t *topics;
 #else
     topic_t topics[CFG_TOPICS_NUM];
@@ -432,20 +425,51 @@ typedef struct {
 static topic_data_t topic_data = {
     .new_topic_enabled = false,  // New topics are disabled by default
 
-#if CFG_TOPICS_DINAMIC_ALLOC
+#if CFG_TOPICS_DYNAMIC_ALLOC
     .topics = NULL,  // No topics allocated by default
 #else
     .topics = {{0}},  // Initialize static topics array to zero
 #endif
 };
 
+// === Implementation specific functions for topics ===========================
+
+/// @brief Converts a topic string to its ID
+/// @param str - Topic string
+/// @return Topic ID or -1 if not found
+static int topic_str_to_id(const char *str);
+
+/// @brief Gets the topic by ID
+/// @param topic - Topic ID
+/// @return Pointer to the topic if found, NULL otherwise
+static topic_t *topic_get(int topic);
+
+/// @brief Enable all topics
+/// @return 0 on success, -1 if no topics
+static int topic_enable_all();
+
+/// @brief Disable all topics
+/// @return 0 on success, -1 if no topics
+static int topic_disable_all();
+
+/// @brief Add a new topic
+/// @param topic_name - Topic name
+/// @param enable - Whether the topic is enabled after creation
+static int topic_add(const char *topic_name, bool enable);
+
+// === Common Topic Functions =================================================
+
 static void topic_print(print_target *tgt, ulog_Event *ev) {
     topic_t *t = topic_get(ev->topic);
-    if (t != NULL && !is_str_empty(t->name)) {
+    if (t != NULL) {
         print_to_target(tgt, "[%s] ", t->name);
     }
 }
 
+/// @brief Sets the topic level
+/// @param topic - Topic ID
+/// @param level - Log level to set
+/// @return 0 on success, -1 if topic not found
 static int topic_set_level(int topic, int level) {
     topic_t *t = topic_get(topic);
     if (t != NULL) {
@@ -455,14 +479,23 @@ static int topic_set_level(int topic, int level) {
     return -1;
 }
 
-static int topic_get_level(int topic) {
-    topic_t *t = topic_get(topic);
-    if (t != NULL) {
-        return t->level;
+/// @brief Checks if the topic is loggable
+/// @param t - Pointer to the topic, NULL is allowed
+/// @param level - Log level to check against
+/// @return true if loggable, false otherwise
+static bool topic_is_loggable(topic_t *t, int level) {
+    if (t == NULL) {
+        return false;  // Topic not found, cannot log
     }
-    return LOG_TRACE;
+    if (!t->enabled || t->level > level) {
+        return false;  // Topic is disabled, cannot log
+    }
+    return true;
 }
 
+/// @brief Enables the topic
+/// @param topic - Topic ID
+/// @return 0 on success, -1 if topic not found
 static int topic_enable(int topic) {
     topic_t *t = topic_get(topic);
     if (t != NULL) {
@@ -472,6 +505,9 @@ static int topic_enable(int topic) {
     return -1;
 }
 
+/// @brief Disables the topic
+/// @param topic - Topic ID
+/// @return 0 on success, -1 if topic not found
 static int topic_disable(int topic) {
     topic_t *t = topic_get(topic);
     if (t != NULL) {
@@ -479,21 +515,6 @@ static int topic_disable(int topic) {
         return 0;
     }
     return -1;
-}
-
-/// @brief Checks if the topic is enabled
-/// @param topic - Topic ID or -1 if no topic
-/// @return true if enabled or no topic, false otherwise
-static bool topic_is_enabled(int topic) {
-    if (topic < 0) {  // no topic, always allowed
-        return true;
-    }
-
-    topic_t *t = topic_get(topic);
-    if (t != NULL) {
-        return t->enabled;
-    }
-    return false;
 }
 
 /// @brief Processes the topic
@@ -507,36 +528,25 @@ static void topic_process(const char *topic, int level, bool *is_log_allowed,
         return;  // Invalid arguments, do nothing
     }
 
-    // Fail by default
-    *is_log_allowed = false;              // Default to not allowed
-    *topic_id       = TOPIC_ID_NO_TOPIC;  // Default to no topic
+    topic_t *t = topic_get(topic_str_to_id(topic));
 
-    // No topic, always allowed
-    if (topic == NULL || strlen(topic) == 0) {
-        *topic_id       = TOPIC_ID_NO_TOPIC;
-        *is_log_allowed = true;
-        return;
-    }
-
-    // If topic is not found, fail for STATIC allocation
-    // or add a new one for DYNAMIC allocation
-    *topic_id = ulog_get_topic_id(topic);
-    if (*topic_id == TOPIC_NOT_FOUND) {
-#if CFG_TOPICS_DINAMIC_ALLOC
-        // If no topic add a disabled one, so we can enable it later
+#if CFG_TOPICS_DYNAMIC_ALLOC
+    // Allocate a new topic if not found
+    if (t == NULL) {
         *topic_id = ulog_add_topic(topic, topic_data.new_topic_enabled);
-#else
-        *is_log_allowed = false;  // Topic not found, processing failed
-        return;                   // Processing failed, topic not found
-#endif
+        if (*topic_id == -1) {
+            *is_log_allowed = false;  // Topic was not added, processing failed
+            return;                   // Processing failed, topic not found
+        }
+        t = topic_get(*topic_id);  // Get the newly added topic
     }
+#endif  // CFG_TOPICS_DYNAMIC_ALLOC
 
-    // If topic is not enabled or level is lower than topic level, skip logging
-    if (!topic_is_enabled(*topic_id) || (level < topic_get_level(*topic_id))) {
-        *is_log_allowed = false;
-        return;
+    *is_log_allowed = topic_is_loggable(t, level);
+    if (!*is_log_allowed) {
+        return;  // Topic is not loggable, stop processing
     }
-    *is_log_allowed = true;
+    *topic_id = t->id;  // Set topic ID
 }
 
 // Public
@@ -550,38 +560,34 @@ int ulog_set_topic_level(const char *topic_name, int level) {
 }
 
 int ulog_enable_topic(const char *topic_name) {
-    ulog_add_topic(topic_name, true);
     return topic_enable(ulog_get_topic_id(topic_name));
 }
 
 int ulog_disable_topic(const char *topic_name) {
-    ulog_add_topic(topic_name, false);
     return topic_disable(ulog_get_topic_id(topic_name));
 }
 
 int ulog_enable_all_topics(void) {
     topic_data.new_topic_enabled = true;
-    for (topic_t *t = topic_get_first(); t != NULL; t = topic_get_next(t)) {
-        t->enabled = true;
-    }
+    topic_enable_all();
     return 0;
 }
 
 int ulog_disable_all_topics(void) {
     topic_data.new_topic_enabled = false;
-    for (topic_t *t = topic_get_first(); t != NULL; t = topic_get_next(t)) {
-        t->enabled = false;
-    }
+    topic_disable_all();
     return 0;
 }
 
 int ulog_get_topic_id(const char *topic_name) {
-    for (topic_t *t = topic_get_first(); t != NULL; t = topic_get_next(t)) {
-        if (!is_str_empty(t->name) && strcmp(t->name, topic_name) == 0) {
-            return t->id;
-        }
+    return topic_str_to_id(topic_name);
+}
+
+int ulog_add_topic(const char *topic_name, bool enable) {
+    if (is_str_empty(topic_name)) {
+        return -1;  // Invalid topic name, do nothing
     }
-    return TOPIC_NOT_FOUND;
+    return topic_add(topic_name, enable);
 }
 
 #else
@@ -595,32 +601,50 @@ int ulog_get_topic_id(const char *topic_name) {
 /* ============================================================================
    Feature: Topics - Static Allocation (`topic_*`, depends on: Topics)
 ============================================================================ */
-#if FEATURE_TOPICS && CFG_TOPICS_DINAMIC_ALLOC == false
+#if FEATURE_TOPICS && CFG_TOPICS_DYNAMIC_ALLOC == false
 // Private
 // ================
-static topic_t *topic_get_first(void) {
-    return topic_data.topics;
+
+int topic_enable_all(void) {
+    for (int i = 0; i < CFG_TOPICS_NUM; i++) {
+        if (is_str_empty(topic_data.topics[i].name)) {
+            break;  // End of topics, no more to enable
+        }
+        topic_data.topics[i].enabled = true;
+    }
+    return 0;
 }
 
-static topic_t *topic_get_next(topic_t *t) {
-    if ((t >= topic_data.topics) &&
-        (t < topic_data.topics + CFG_TOPICS_NUM - 1)) {
-        return t + 1;
+int topic_disable_all(void) {
+    for (int i = 0; i < CFG_TOPICS_NUM; i++) {
+        if (is_str_empty(topic_data.topics[i].name)) {
+            break;  // End of topics, no more to disable
+        }
+        topic_data.topics[i].enabled = false;
     }
-    return NULL;
+    return 0;
+}
+
+int topic_str_to_id(const char *str) {
+    for (int i = 0; i < CFG_TOPICS_NUM; i++) {
+        if (is_str_empty(topic_data.topics[i].name)) {
+            break;  // End of topics, not found
+        }
+        if (strcmp(topic_data.topics[i].name, str) == 0) {
+            return topic_data.topics[i].id;
+        }
+    }
+    return TOPIC_NOT_FOUND;  // Not found
 }
 
 static topic_t *topic_get(int topic) {
-    if (topic < CFG_TOPICS_NUM) {
+    if (topic < CFG_TOPICS_NUM && topic >= 0) {
         return &topic_data.topics[topic];
     }
     return NULL;
 }
 
-// Public
-// ================
-
-int ulog_add_topic(const char *topic_name, bool enable) {
+static int topic_add(const char *topic_name, bool enable) {
     if (is_str_empty(topic_name)) {
         return -1;
     }
@@ -631,7 +655,7 @@ int ulog_add_topic(const char *topic_name, bool enable) {
             topic_data.topics[i].id      = i;
             topic_data.topics[i].name    = topic_name;
             topic_data.topics[i].enabled = enable;
-            topic_data.topics[i].level   = ULOG_DEFAULT_LOG_LEVEL;
+            topic_data.topics[i].level   = LOG_TRACE;
             return i;
         }
         // If the topic already exists
@@ -641,13 +665,13 @@ int ulog_add_topic(const char *topic_name, bool enable) {
     }
     return -1;
 }
-#endif  // FEATURE_TOPICS && CFG_TOPICS_DINAMIC_ALLOC == false
+#endif  // FEATURE_TOPICS && CFG_TOPICS_DYNAMIC_ALLOC == false
 
 /* ============================================================================
    Feature: Topics - Dynamic Allocation (`topic_*`, depends on: Topics)
 ============================================================================ */
 
-#if FEATURE_TOPICS && CFG_TOPICS_DINAMIC_ALLOC == true
+#if FEATURE_TOPICS && CFG_TOPICS_DYNAMIC_ALLOC == true
 // Private
 // ================
 
@@ -659,7 +683,44 @@ static topic_t *topic_get_next(topic_t *t) {
     return t->next;
 }
 
+static topic_t *topic_get_last(void) {
+    topic_t *last = topic_data.topics;
+    if (last == NULL) {
+        return NULL;  // No topics
+    }
+    while (last->next != NULL) {
+        last = last->next;
+    }
+    return last;
+}
+
+static int topic_enable_all(void) {
+    for (topic_t *t = topic_get_first(); t != NULL; t = topic_get_next(t)) {
+        t->enabled = true;
+    }
+    return 0;
+}
+
+static int topic_disable_all(void) {
+    for (topic_t *t = topic_get_first(); t != NULL; t = topic_get_next(t)) {
+        t->enabled = false;
+    }
+    return 0;
+}
+
+int topic_str_to_id(const char *str) {
+    for (topic_t *t = topic_get_first(); t != NULL; t = topic_get_next(t)) {
+        if (!is_str_empty(t->name) && strcmp(t->name, str) == 0) {
+            return t->id;
+        }
+    }
+    return TOPIC_NOT_FOUND;
+}
+
 static topic_t *topic_get(int topic) {
+    if (topic < 0) {
+        return NULL;  // Invalid topic ID
+    }
     for (topic_t *t = topic_get_first(); t != NULL; t = topic_get_next(t)) {
         if (t->id == topic) {
             return t;
@@ -668,21 +729,25 @@ static topic_t *topic_get(int topic) {
     return NULL;
 }
 
-static void *topic_create(int id, const char *topic_name, bool enable) {
+static void *topic_allocate(int id, const char *topic_name, bool enable) {
+    if (is_str_empty(topic_name)) {
+        return NULL;  // Invalid topic name, do not allocate
+    }
+    if (id < 0) {
+        return NULL;  // Invalid ID, do not allocate
+    }
     topic_t *t = malloc(sizeof(topic_t));
     if (t != NULL) {
         t->id      = id;
         t->name    = topic_name;
         t->enabled = enable;
+        t->level   = LOG_TRACE; 
         t->next    = NULL;
     }
     return t;
 }
 
-// Public
-// ================
-
-int ulog_add_topic(const char *topic_name, bool enable) {
+static int topic_add(const char *topic_name, bool enable) {
     if (is_str_empty(topic_name)) {
         return -1;
     }
@@ -695,8 +760,9 @@ int ulog_add_topic(const char *topic_name, bool enable) {
     }
 
     // If the beginning is empty
-    if (topic_data.topics == NULL) {
-        topic_data.topics = (topic_t *)topic_create(0, topic_name, enable);
+    topic_t *t = topic_get_last();
+    if (t == NULL) {
+        topic_data.topics = (topic_t *)topic_allocate(0, topic_name, enable);
         if (topic_data.topics != NULL) {
             return 0;
         }
@@ -704,21 +770,14 @@ int ulog_add_topic(const char *topic_name, bool enable) {
     }
 
     // If the beginning is not empty
-    int current_id = 0;
-    topic_t *t     = topic_data.topics;
-    while (t->next != NULL) {
-        t = t->next;
-        current_id++;
-    }
-
-    t->next = topic_create(current_id + 1, topic_name, enable);
+    t->next = topic_allocate(t->id + 1, topic_name, enable);
     if (t->next) {
-        return current_id + 1;
+        return t->id + 1;
     }
     return -1;
 }
 
-#endif  // FEATURE_TOPICS && CFG_TOPICS_DINAMIC_ALLOC == true
+#endif  // FEATURE_TOPICS && CFG_TOPICS_DYNAMIC_ALLOC == true
 
 /* ============================================================================
    Core Functionality: Lock (Depends on: - )
@@ -879,10 +938,12 @@ void ulog_log(int level, const char *file, int line, const char *topic,
 
     // Try to get topic ID and check if logging is allowed for this topic
     int topic_id = TOPIC_ID_NO_TOPIC;
-    topic_process(topic, level, &is_log_allowed, &topic_id);
-    if (!is_log_allowed) {
-        lock_unlock();
-        return;  // Topic is not enabled or level is lower than topic level
+    if (!is_str_empty(topic)) {
+        topic_process(topic, level, &is_log_allowed, &topic_id);
+        if (!is_log_allowed) {
+            lock_unlock();
+            return;  // Topic is not enabled or level is lower than topic level
+        }
     }
 
     ulog_Event ev = {0};

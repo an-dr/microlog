@@ -3,6 +3,8 @@
 
 #include "ulog.h"
 #include "ut_callback.h"
+#include <chrono>
+#include <ctime>
 
 struct TestFixture {
 public:
@@ -98,4 +100,24 @@ TEST_CASE_FIXTURE(TestFixture, "File Output") {
     fclose(fp);
     
     CHECK(strstr(buffer, "This is an INFO message to file.") != nullptr);
+}
+
+TEST_CASE_FIXTURE(TestFixture, "Performance") {
+    //Current time
+    auto start = std::chrono::high_resolution_clock::now();
+    int iterations = 100000;
+    for (int i = 0; i < iterations; ++i) {
+    logt_fatal("testtopic", "This is a FATAL message with topic");
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration = end - start;
+    auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
+    float average_log_time = duration_us / iterations;    
+    // Check if the duration is within acceptable limits
+    CHECK(duration_us < 1000000); // 1 second for 100000 iterations
+    CHECK(ut_callback_get_message_count() == iterations);
+    // Check if the average log time is reasonable
+    CHECK(average_log_time < 1000); // Less than 1 millisecond per log
+    
+    printf("Logging 100000 messages took: %d microseconds (%f per log)\n", duration_us, average_log_time);
 }

@@ -106,12 +106,12 @@ extern "C" {
 
 #if ULOG_TOPICS_NUM > 0
 #define FEATURE_TOPICS true
-#define CFG_TOPICS_DINAMIC_ALLOC false
+#define CFG_TOPICS_DYNAMIC_ALLOC false
 #define CFG_TOPICS_NUM ULOG_TOPICS_NUM
 
 #elif ULOG_TOPICS_NUM == -1
 #define FEATURE_TOPICS true
-#define CFG_TOPICS_DINAMIC_ALLOC true
+#define CFG_TOPICS_DYNAMIC_ALLOC true
 #define CFG_TOPICS_NUM -1
 
 #else  // ULOG_TOPICS_NUM == 0
