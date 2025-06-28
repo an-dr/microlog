@@ -26,9 +26,9 @@
 // If testing is enabled, we define NOT_SO_STATIC as empty to allow
 // the functions to be visible outside of this file for testing purposes.
 #ifdef ULOG_TESTING
-#define NOT_VERY_STATIC
+    #define NOT_VERY_STATIC
 #else
-#define NOT_VERY_STATIC static
+    #define NOT_VERY_STATIC static
 #endif
 
 // Check if the string is empty or not provided
@@ -104,7 +104,7 @@ static const char *color_levels[] = {
     "\x1b[31m",  // ERROR : Red #f00
     "\x1b[35m"   // FATAL : Magenta #f0f
 };
-#define COLOR_TERMINATOR "\x1b[0m"
+    #define COLOR_TERMINATOR "\x1b[0m"
 
 static void color_print_start(print_target *tgt, ulog_Event *ev) {
     print_to_target(tgt, "%s", color_levels[ev->level]);  // color start
@@ -117,8 +117,8 @@ static void color_print_end(print_target *tgt) {
 // Disabled Private
 // ================
 #else  // FEATURE_COLOR
-#define color_print_start(tgt, ev) (void)(tgt), (void)(ev)
-#define color_print_end(tgt) (void)(tgt)
+    #define color_print_start(tgt, ev) (void)(tgt), (void)(ev)
+    #define color_print_end(tgt) (void)(tgt)
 #endif  // FEATURE_COLOR
 
 /* ============================================================================
@@ -155,7 +155,7 @@ void ulog_set_prefix_fn(ulog_PrefixFn function) {
 // Disabled Private
 // ================
 #else  // FEATURE_CUSTOM_PREFIX
-#define prefix_print(tgt, ev) (void)(tgt), (void)(ev)
+    #define prefix_print(tgt, ev) (void)(tgt), (void)(ev)
 #endif  // FEATURE_CUSTOM_PREFIX
 
 /* ============================================================================
@@ -163,8 +163,8 @@ void ulog_set_prefix_fn(ulog_PrefixFn function) {
 ============================================================================ */
 #if FEATURE_TIME
 
-#define TIME_SHORT_BUF_SIZE 10  // HH:MM:SS(8) + 1 space + null
-#define TIME_FULL_BUF_SIZE 21   // YYYY-MM-DD HH:MM:SS(19) + 1 space + null
+    #define TIME_SHORT_BUF_SIZE 10  // HH:MM:SS(8) + 1 space + null
+    #define TIME_FULL_BUF_SIZE 21   // YYYY-MM-DD HH:MM:SS(19) + 1 space + null
 
 // Private
 // ================
@@ -194,7 +194,7 @@ static void time_print_short(print_target *tgt, ulog_Event *ev,
     print_to_target(tgt, "%s", buf);
 }
 
-#if FEATURE_EXTRA_OUTPUTS
+    #if FEATURE_EXTRA_OUTPUTS
 static void time_print_full(print_target *tgt, ulog_Event *ev,
                             bool append_space) {
     if (time_print_if_invalid(tgt, ev)) {
@@ -206,16 +206,16 @@ static void time_print_full(print_target *tgt, ulog_Event *ev,
     strftime(buf, TIME_FULL_BUF_SIZE, format, ev->time);
     print_to_target(tgt, "%s", buf);
 }
-#else
-#define time_print_full(tgt, ev, append_space) (void)(0)
-#endif  // FEATURE_EXTRA_OUTPUTS
+    #else
+        #define time_print_full(tgt, ev, append_space) (void)(0)
+    #endif  // FEATURE_EXTRA_OUTPUTS
 
 // Disabled Private
 // ================
 #else  // FEATURE_TIME
-#define time_print_short(tgt, ev, append_space) (void)(0)
-#define time_print_full(tgt, ev, append_space) (void)(0)
-#define time_fill_current_time(ev) (void)(ev)
+    #define time_print_short(tgt, ev, append_space) (void)(0)
+    #define time_print_full(tgt, ev, append_space) (void)(0)
+    #define time_fill_current_time(ev) (void)(ev)
 #endif  // FEATURE_TIME
 
 /* ============================================================================
@@ -225,7 +225,7 @@ static void time_print_full(print_target *tgt, ulog_Event *ev,
 // Private
 // ================
 #ifndef ULOG_DEFAULT_LOG_LEVEL
-#define ULOG_DEFAULT_LOG_LEVEL LOG_TRACE
+    #define ULOG_DEFAULT_LOG_LEVEL LOG_TRACE
 #endif
 
 typedef struct {
@@ -405,31 +405,31 @@ typedef struct {
     bool enabled;
     int level;
 
-#if CFG_TOPICS_DYNAMIC_ALLOC
+    #if CFG_TOPICS_DYNAMIC_ALLOC
     void *next;  // Pointer to the next topic pointer (Topic **)
-#endif
+    #endif
 
 } topic_t;
 
 typedef struct {
     bool new_topic_enabled;  // Whether new topics are enabled by default
 
-#if CFG_TOPICS_DYNAMIC_ALLOC
+    #if CFG_TOPICS_DYNAMIC_ALLOC
     topic_t *topics;
-#else
+    #else
     topic_t topics[CFG_TOPICS_NUM];
-#endif
+    #endif
 
 } topic_data_t;
 
 static topic_data_t topic_data = {
     .new_topic_enabled = false,  // New topics are disabled by default
 
-#if CFG_TOPICS_DYNAMIC_ALLOC
+    #if CFG_TOPICS_DYNAMIC_ALLOC
     .topics = NULL,  // No topics allocated by default
-#else
+    #else
     .topics = {{0}},  // Initialize static topics array to zero
-#endif
+    #endif
 };
 
 // === Implementation specific functions for topics ===========================
@@ -530,7 +530,7 @@ static void topic_process(const char *topic, int level, bool *is_log_allowed,
 
     topic_t *t = topic_get(topic_str_to_id(topic));
 
-#if CFG_TOPICS_DYNAMIC_ALLOC
+    #if CFG_TOPICS_DYNAMIC_ALLOC
     // Allocate a new topic if not found
     if (t == NULL) {
         *topic_id = ulog_add_topic(topic, topic_data.new_topic_enabled);
@@ -540,7 +540,7 @@ static void topic_process(const char *topic, int level, bool *is_log_allowed,
         }
         t = topic_get(*topic_id);  // Get the newly added topic
     }
-#endif  // CFG_TOPICS_DYNAMIC_ALLOC
+    #endif  // CFG_TOPICS_DYNAMIC_ALLOC
 
     *is_log_allowed = topic_is_loggable(t, level);
     if (!*is_log_allowed) {
@@ -592,9 +592,9 @@ int ulog_add_topic(const char *topic_name, bool enable) {
 
 #else
 
-#define topic_print(tgt, ev) (void)(tgt), (void)(ev)
-#define topic_process(topic, level, is_log_allowed, topic_id)                  \
-    (void)(topic), (void)(level), (void)(is_log_allowed), (void)(topic_id)
+    #define topic_print(tgt, ev) (void)(tgt), (void)(ev)
+    #define topic_process(topic, level, is_log_allowed, topic_id)              \
+        (void)(topic), (void)(level), (void)(is_log_allowed), (void)(topic_id)
 
 #endif  // FEATURE_TOPICS
 
@@ -741,7 +741,7 @@ static void *topic_allocate(int id, const char *topic_name, bool enable) {
         t->id      = id;
         t->name    = topic_name;
         t->enabled = enable;
-        t->level   = LOG_TRACE; 
+        t->level   = LOG_TRACE;
         t->next    = NULL;
     }
     return t;

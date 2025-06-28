@@ -23,6 +23,7 @@ AllowShortFunctionsOnASingleLine: None
 BasedOnStyle: LLVM
 ColumnLimit: 80
 IncludeBlocks: Preserve
+IndentPPDirectives: AfterHash
 IndentWidth: 4
 Language: Cpp
 SortIncludes: true
