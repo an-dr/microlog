@@ -44,103 +44,108 @@ extern "C" {
 ============================================================================ */
 
 #ifdef ULOG_HAVE_TIME
-#    define FEATURE_TIME true
+#define FEATURE_TIME true
 #else
-#    define FEATURE_TIME false
+#define FEATURE_TIME false
 #endif
 
 #ifndef ULOG_NO_COLOR
-#    define FEATURE_COLOR true
+#define FEATURE_COLOR true
 #else
-#    define FEATURE_COLOR false
+#define FEATURE_COLOR false
 #endif
 
 #if ULOG_CUSTOM_PREFIX_SIZE > 0
-#    define FEATURE_CUSTOM_PREFIX true
-#    define CFG_CUSTOM_PREFIX_SIZE ULOG_CUSTOM_PREFIX_SIZE
+#define FEATURE_CUSTOM_PREFIX true
+#define FEATURE_CUSTOM_PREFIX_CFG_SIZE ULOG_CUSTOM_PREFIX_SIZE
 #else
-#    define FEATURE_CUSTOM_PREFIX false
-#    define CFG_CUSTOM_PREFIX_SIZE 0
+#define FEATURE_CUSTOM_PREFIX false
+#define FEATURE_CUSTOM_PREFIX_CFG_SIZE 0
 #endif
 
 #ifndef ULOG_HIDE_FILE_STRING
-#    define FEATURE_FILE_STRING true
+#define FEATURE_FILE_STRING true
 #else
-#    define FEATURE_FILE_STRING false
+#define FEATURE_FILE_STRING false
 #endif
 
 #if ULOG_EXTRA_OUTPUTS > 0
-#    define FEATURE_EXTRA_OUTPUTS true
-#    define CFG_EXTRA_OUTPUTS ULOG_EXTRA_OUTPUTS
+#define FEATURE_EXTRA_OUTPUTS true
+#define FEATURE_EXTRA_OUTPUTS_CFG ULOG_EXTRA_OUTPUTS
 #else
-#    define FEATURE_EXTRA_OUTPUTS false
-#    define CFG_EXTRA_OUTPUTS 0
+#define FEATURE_EXTRA_OUTPUTS false
+#define FEATURE_EXTRA_OUTPUTS_CFG 0
 #endif
 
 #ifdef ULOG_SHORT_LEVEL_STRINGS
-#    define FEATURE_SHORT_LEVELS true
+#define FEATURE_SHORT_LEVELS true
 #else
-#    define FEATURE_SHORT_LEVELS false
+#define FEATURE_SHORT_LEVELS false
 #endif
 
 #ifdef ULOG_USE_EMOJI
 
-#    define FEATURE_EMOJI_LEVELS true
+#define FEATURE_EMOJI_LEVELS true
 
-#    if FEATURE_SHORT_LEVELS
-#        define FEATURE_SHORT_LEVELS false
-#        warning                                                               \
-            "ULOG_USE_EMOJI overrides ULOG_SHORT_LEVEL_STRINGS! Disable ULOG_SHORT_LEVEL_STRINGS"
-#    endif  // FEATURE_SHORT_LEVELS
+#if FEATURE_SHORT_LEVELS
+#define FEATURE_SHORT_LEVELS false
+#warning                                                                       \
+    "ULOG_USE_EMOJI overrides ULOG_SHORT_LEVEL_STRINGS! Disable ULOG_SHORT_LEVEL_STRINGS"
+#endif  // FEATURE_SHORT_LEVELS
 
 #else  // ULOG_USE_EMOJI
 
-#    define FEATURE_EMOJI_LEVELS false
+#define FEATURE_EMOJI_LEVELS false
 
 #endif  // ULOG_USE_EMOJI
 
 #if ULOG_TOPICS_NUM > 0
-#    define FEATURE_TOPICS true
-#    define CFG_TOPICS_DYNAMIC_ALLOC false
-#    define CFG_TOPICS_NUM ULOG_TOPICS_NUM
+#define FEATURE_TOPICS true
+#define FEATURE_TOPICS_CFG_DYNAMIC_ALLOC false
+#define FEATURE_TOPICS_CFG_NUM ULOG_TOPICS_NUM
 
 #elif ULOG_TOPICS_NUM == -1
-#    define FEATURE_TOPICS true
-#    define CFG_TOPICS_DYNAMIC_ALLOC true
-#    define CFG_TOPICS_NUM -1
+#define FEATURE_TOPICS true
+#define FEATURE_TOPICS_CFG_DYNAMIC_ALLOC true
+#define FEATURE_TOPICS_CFG_NUM -1
 
 #else  // ULOG_TOPICS_NUM == 0
-#    define FEATURE_TOPICS false
+#define FEATURE_TOPICS false
 
 #endif  // ULOG_TOPICS_NUM
-
-
 
 #ifdef ULOG_RUNTIME_CONFIG
 #define FEATURE_RUNTIME_CONFIG true
 // Undef all FEATURE_* macros to avoid conflicts
-#undef FEATURE_TIME
 #undef FEATURE_COLOR
 #undef FEATURE_CUSTOM_PREFIX
 #undef FEATURE_FILE_STRING
 #undef FEATURE_SHORT_LEVELS
-#undef FEATURE_EMOJI_LEVELS
 #undef FEATURE_EXTRA_OUTPUTS
 #undef FEATURE_TOPICS
 
 // Configure features based on runtime config
+#define FEATURE_COLOR true
+#define FEATURE_CUSTOM_PREFIX true
+#define FEATURE_CUSTOM_PREFIX_CFG_SIZE 64
+#define FEATURE_EXTRA_OUTPUTS true
+#define FEATURE_EXTRA_OUTPUTS_CFG 4
+#define FEATURE_FILE_STRING true
+#define FEATURE_SHORT_LEVELS true
+#define FEATURE_TOPICS true
+#define FEATURE_TOPICS_CFG_DYNAMIC_ALLOC true
+#define FEATURE_TOPICS_CFG_NUM -1
 
 #else
 #define FEATURE_RUNTIME_CONFIG false
 #endif
-
 
 /* ============================================================================
    Core Functionality
 ============================================================================ */
 
 #if FEATURE_TIME
-#    include <time.h>
+#include <time.h>
 #endif
 
 enum { LOG_TRACE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
@@ -214,6 +219,24 @@ typedef void (*ulog_LockFn)(bool lock, void *lock_arg);
 /// @param function - Lock function
 /// @param lock_arg - User data
 void ulog_set_lock(ulog_LockFn function, void *lock_arg);
+
+/* ============================================================================
+   Feature: Runtime Config
+============================================================================ */
+#if FEATURE_RUNTIME_CONFIG
+
+typedef struct ulog_config {
+    bool color;         // Enable/disable color
+    bool short_levels;  // Use short level strings
+    bool file_string;   // Show file and line in the log message
+};
+
+/// @brief Configures the logging library
+/// @param config - Configuration structure
+/// @return 0 if success, -1 if failed
+int ulog_configure(const struct ulog_config *config);
+
+#endif  // FEATURE_RUNTIME_CONFIG
 
 /* ============================================================================
    Feature: Custom Prefix

@@ -26,9 +26,9 @@
 // If testing is enabled, we define NOT_SO_STATIC as empty to allow
 // the functions to be visible outside of this file for testing purposes.
 #ifdef ULOG_TESTING
-    #define NOT_VERY_STATIC
+#define NOT_VERY_STATIC
 #else
-    #define NOT_VERY_STATIC static
+#define NOT_VERY_STATIC static
 #endif
 
 // Check if the string is empty or not provided
@@ -83,11 +83,91 @@ static void print_to_target(print_target *tgt, const char *format, ...) {
 }
 
 /* ============================================================================
+   Core Functionality: Lock (Depends on: - )
+============================================================================ */
+
+// Private
+// ================
+typedef struct {
+    ulog_LockFn function;  // Lock function
+    void *args;            // Argument for the lock function
+} lock_data_t;
+
+static lock_data_t lock_data = {
+    .function = NULL,  // No lock function by default
+    .args     = NULL,  // No lock argument by default
+};
+
+static void lock_lock(void) {
+    if (lock_data.function != NULL) {
+        lock_data.function(true, lock_data.args);
+    }
+}
+
+static void lock_unlock(void) {
+    if (lock_data.function != NULL) {
+        lock_data.function(false, lock_data.args);
+    }
+}
+
+// Public
+// ================
+
+/// @brief  Sets the lock function and user data
+void ulog_set_lock(ulog_LockFn function, void *lock_arg) {
+    lock_data.function = function;
+    lock_data.args     = lock_arg;
+}
+
+/* ============================================================================
    Prototypes
 ============================================================================ */
 
 static void log_print_event(print_target *tgt, ulog_Event *ev, bool full_time,
                             bool color, bool new_line);
+
+/* ============================================================================
+   Core Feature: Runtime Configuration (`cfg_*`, depends on: - )
+============================================================================ */
+#if FEATURE_RUNTIME_CONFIG
+
+typedef struct {
+    bool color_enabled;
+
+} cfg_data_t;
+
+static cfg_data_t cfg_data = {
+    .color_enabled = FEATURE_COLOR,
+};
+
+// Private
+// ================
+
+bool cfg_is_color_enabled(void) {
+    return cfg_data.color_enabled;
+}
+
+// Public
+// ================
+
+int ulog_configure(const ulog_config *config) { // TODO: replace with separate functions?
+    lock_lock();  // Lock the configuration
+
+    if (config == NULL) {
+        return -1;  // Invalid configuration, do nothing
+    }
+
+    // Apply the configuration
+    cfg_data.color_enabled = config->color;
+
+    // Additional configurations can be added here
+    lock_unlock();  // Unlock the configuration
+    return 0;       // Success
+}
+
+#else  // FEATURE_RUNTIME_CONFIG
+#define cfg_is_color_enabled() (FEATURE_COLOR)
+#endif  // FEATURE_RUNTIME_CONFIG
 
 /* ============================================================================
    Feature: Color (`color_*`, depends on: Print)
@@ -104,21 +184,27 @@ static const char *color_levels[] = {
     "\x1b[31m",  // ERROR : Red #f00
     "\x1b[35m"   // FATAL : Magenta #f0f
 };
-    #define COLOR_TERMINATOR "\x1b[0m"
+#define COLOR_TERMINATOR "\x1b[0m"
 
 static void color_print_start(print_target *tgt, ulog_Event *ev) {
+    if (!cfg_is_color_enabled()) {
+        return;  // Color is disabled, do not print color codes
+    }
     print_to_target(tgt, "%s", color_levels[ev->level]);  // color start
 }
 
 static void color_print_end(print_target *tgt) {
+    if (!cfg_is_color_enabled()) {
+        return;  // Color is disabled, do not print color codes
+    }
     print_to_target(tgt, "%s", COLOR_TERMINATOR);  // color end
 }
 
 // Disabled Private
 // ================
 #else  // FEATURE_COLOR
-    #define color_print_start(tgt, ev) (void)(tgt), (void)(ev)
-    #define color_print_end(tgt) (void)(tgt)
+#define color_print_start(tgt, ev) (void)(tgt), (void)(ev)
+#define color_print_end(tgt) (void)(tgt)
 #endif  // FEATURE_COLOR
 
 /* ============================================================================
@@ -130,7 +216,7 @@ static void color_print_end(print_target *tgt) {
 // ================
 typedef struct {
     ulog_PrefixFn function;
-    char prefix[CFG_CUSTOM_PREFIX_SIZE];
+    char prefix[FEATURE_CUSTOM_PREFIX_CFG_SIZE];
 } prefix_data_t;
 
 static prefix_data_t prefix_data = {
@@ -140,7 +226,8 @@ static prefix_data_t prefix_data = {
 
 static void prefix_print(print_target *tgt, ulog_Event *ev) {
     if (prefix_data.function != NULL) {
-        prefix_data.function(ev, prefix_data.prefix, CFG_CUSTOM_PREFIX_SIZE);
+        prefix_data.function(ev, prefix_data.prefix,
+                             FEATURE_CUSTOM_PREFIX_CFG_SIZE);
         print_to_target(tgt, "%s", prefix_data.prefix);
     }
 }
@@ -155,7 +242,7 @@ void ulog_set_prefix_fn(ulog_PrefixFn function) {
 // Disabled Private
 // ================
 #else  // FEATURE_CUSTOM_PREFIX
-    #define prefix_print(tgt, ev) (void)(tgt), (void)(ev)
+#define prefix_print(tgt, ev) (void)(tgt), (void)(ev)
 #endif  // FEATURE_CUSTOM_PREFIX
 
 /* ============================================================================
@@ -163,8 +250,8 @@ void ulog_set_prefix_fn(ulog_PrefixFn function) {
 ============================================================================ */
 #if FEATURE_TIME
 
-    #define TIME_SHORT_BUF_SIZE 10  // HH:MM:SS(8) + 1 space + null
-    #define TIME_FULL_BUF_SIZE 21   // YYYY-MM-DD HH:MM:SS(19) + 1 space + null
+#define TIME_SHORT_BUF_SIZE 10  // HH:MM:SS(8) + 1 space + null
+#define TIME_FULL_BUF_SIZE 21   // YYYY-MM-DD HH:MM:SS(19) + 1 space + null
 
 // Private
 // ================
@@ -194,7 +281,7 @@ static void time_print_short(print_target *tgt, ulog_Event *ev,
     print_to_target(tgt, "%s", buf);
 }
 
-    #if FEATURE_EXTRA_OUTPUTS
+#if FEATURE_EXTRA_OUTPUTS
 static void time_print_full(print_target *tgt, ulog_Event *ev,
                             bool append_space) {
     if (time_print_if_invalid(tgt, ev)) {
@@ -206,16 +293,16 @@ static void time_print_full(print_target *tgt, ulog_Event *ev,
     strftime(buf, TIME_FULL_BUF_SIZE, format, ev->time);
     print_to_target(tgt, "%s", buf);
 }
-    #else
-        #define time_print_full(tgt, ev, append_space) (void)(0)
-    #endif  // FEATURE_EXTRA_OUTPUTS
+#else
+#define time_print_full(tgt, ev, append_space) (void)(0)
+#endif  // FEATURE_EXTRA_OUTPUTS
 
 // Disabled Private
 // ================
 #else  // FEATURE_TIME
-    #define time_print_short(tgt, ev, append_space) (void)(0)
-    #define time_print_full(tgt, ev, append_space) (void)(0)
-    #define time_fill_current_time(ev) (void)(ev)
+#define time_print_short(tgt, ev, append_space) (void)(0)
+#define time_print_full(tgt, ev, append_space) (void)(0)
+#define time_fill_current_time(ev) (void)(ev)
 #endif  // FEATURE_TIME
 
 /* ============================================================================
@@ -225,7 +312,7 @@ static void time_print_full(print_target *tgt, ulog_Event *ev,
 // Private
 // ================
 #ifndef ULOG_DEFAULT_LOG_LEVEL
-    #define ULOG_DEFAULT_LOG_LEVEL LOG_TRACE
+#define ULOG_DEFAULT_LOG_LEVEL LOG_TRACE
 #endif
 
 typedef struct {
@@ -295,7 +382,7 @@ void ulog_set_level(int level) {
 //  Private
 // ================
 #define CB_STDOUT_ID 0
-#define CB_NUM_CALLBACKS (1 + CFG_EXTRA_OUTPUTS)  // 1 for stdout + extra
+#define CB_NUM_CALLBACKS (1 + FEATURE_EXTRA_OUTPUTS_CFG)  // stdout + extra
 
 // Forward declarations for data initialization
 static void cb_stdout(ulog_Event *ev, void *arg);
@@ -373,7 +460,7 @@ static void cb_user_file(ulog_Event *ev, void *arg) {
 ///              processed by the callback
 /// @param level - Debug level
 int ulog_add_callback(ulog_LogFn function, void *arg, int level) {
-    for (int i = 0; i < CFG_EXTRA_OUTPUTS; i++) {
+    for (int i = 0; i < FEATURE_EXTRA_OUTPUTS_CFG; i++) {
         if (cb_data.callbacks[i].function == NULL) {
             cb_data.callbacks[i] = (cb_t){function, arg, level, true};
             return 0;
@@ -405,31 +492,31 @@ typedef struct {
     bool enabled;
     int level;
 
-    #if CFG_TOPICS_DYNAMIC_ALLOC
+#if FEATURE_TOPICS_CFG_DYNAMIC_ALLOC
     void *next;  // Pointer to the next topic pointer (Topic **)
-    #endif
+#endif
 
 } topic_t;
 
 typedef struct {
     bool new_topic_enabled;  // Whether new topics are enabled by default
 
-    #if CFG_TOPICS_DYNAMIC_ALLOC
+#if FEATURE_TOPICS_CFG_DYNAMIC_ALLOC
     topic_t *topics;
-    #else
-    topic_t topics[CFG_TOPICS_NUM];
-    #endif
+#else
+    topic_t topics[FEATURE_TOPICS_CFG_NUM];
+#endif
 
 } topic_data_t;
 
 static topic_data_t topic_data = {
     .new_topic_enabled = false,  // New topics are disabled by default
 
-    #if CFG_TOPICS_DYNAMIC_ALLOC
+#if FEATURE_TOPICS_CFG_DYNAMIC_ALLOC
     .topics = NULL,  // No topics allocated by default
-    #else
+#else
     .topics = {{0}},  // Initialize static topics array to zero
-    #endif
+#endif
 };
 
 // === Implementation specific functions for topics ===========================
@@ -530,7 +617,7 @@ static void topic_process(const char *topic, int level, bool *is_log_allowed,
 
     topic_t *t = topic_get(topic_str_to_id(topic));
 
-    #if CFG_TOPICS_DYNAMIC_ALLOC
+#if FEATURE_TOPICS_CFG_DYNAMIC_ALLOC
     // Allocate a new topic if not found
     if (t == NULL) {
         *topic_id = ulog_add_topic(topic, topic_data.new_topic_enabled);
@@ -540,7 +627,7 @@ static void topic_process(const char *topic, int level, bool *is_log_allowed,
         }
         t = topic_get(*topic_id);  // Get the newly added topic
     }
-    #endif  // CFG_TOPICS_DYNAMIC_ALLOC
+#endif  // FEATURE_TOPICS_CFG_DYNAMIC_ALLOC
 
     *is_log_allowed = topic_is_loggable(t, level);
     if (!*is_log_allowed) {
@@ -592,21 +679,21 @@ int ulog_add_topic(const char *topic_name, bool enable) {
 
 #else
 
-    #define topic_print(tgt, ev) (void)(tgt), (void)(ev)
-    #define topic_process(topic, level, is_log_allowed, topic_id)              \
-        (void)(topic), (void)(level), (void)(is_log_allowed), (void)(topic_id)
+#define topic_print(tgt, ev) (void)(tgt), (void)(ev)
+#define topic_process(topic, level, is_log_allowed, topic_id)                  \
+    (void)(topic), (void)(level), (void)(is_log_allowed), (void)(topic_id)
 
 #endif  // FEATURE_TOPICS
 
 /* ============================================================================
    Feature: Topics - Static Allocation (`topic_*`, depends on: Topics)
 ============================================================================ */
-#if FEATURE_TOPICS && CFG_TOPICS_DYNAMIC_ALLOC == false
+#if FEATURE_TOPICS && FEATURE_TOPICS_CFG_DYNAMIC_ALLOC == false
 // Private
 // ================
 
 int topic_enable_all(void) {
-    for (int i = 0; i < CFG_TOPICS_NUM; i++) {
+    for (int i = 0; i < FEATURE_TOPICS_CFG_NUM; i++) {
         if (is_str_empty(topic_data.topics[i].name)) {
             break;  // End of topics, no more to enable
         }
@@ -616,7 +703,7 @@ int topic_enable_all(void) {
 }
 
 int topic_disable_all(void) {
-    for (int i = 0; i < CFG_TOPICS_NUM; i++) {
+    for (int i = 0; i < FEATURE_TOPICS_CFG_NUM; i++) {
         if (is_str_empty(topic_data.topics[i].name)) {
             break;  // End of topics, no more to disable
         }
@@ -626,7 +713,7 @@ int topic_disable_all(void) {
 }
 
 int topic_str_to_id(const char *str) {
-    for (int i = 0; i < CFG_TOPICS_NUM; i++) {
+    for (int i = 0; i < FEATURE_TOPICS_CFG_NUM; i++) {
         if (is_str_empty(topic_data.topics[i].name)) {
             break;  // End of topics, not found
         }
@@ -638,7 +725,7 @@ int topic_str_to_id(const char *str) {
 }
 
 static topic_t *topic_get(int topic) {
-    if (topic < CFG_TOPICS_NUM && topic >= 0) {
+    if (topic < FEATURE_TOPICS_CFG_NUM && topic >= 0) {
         return &topic_data.topics[topic];
     }
     return NULL;
@@ -649,7 +736,7 @@ static int topic_add(const char *topic_name, bool enable) {
         return -1;
     }
 
-    for (int i = 0; i < CFG_TOPICS_NUM; i++) {
+    for (int i = 0; i < FEATURE_TOPICS_CFG_NUM; i++) {
         // If there is an empty slot
         if (is_str_empty(topic_data.topics[i].name)) {
             topic_data.topics[i].id      = i;
@@ -665,13 +752,13 @@ static int topic_add(const char *topic_name, bool enable) {
     }
     return -1;
 }
-#endif  // FEATURE_TOPICS && CFG_TOPICS_DYNAMIC_ALLOC == false
+#endif  // FEATURE_TOPICS && FEATURE_TOPICS_CFG_DYNAMIC_ALLOC == false
 
 /* ============================================================================
    Feature: Topics - Dynamic Allocation (`topic_*`, depends on: Topics)
 ============================================================================ */
 
-#if FEATURE_TOPICS && CFG_TOPICS_DYNAMIC_ALLOC == true
+#if FEATURE_TOPICS && FEATURE_TOPICS_CFG_DYNAMIC_ALLOC == true
 // Private
 // ================
 
@@ -777,44 +864,7 @@ static int topic_add(const char *topic_name, bool enable) {
     return -1;
 }
 
-#endif  // FEATURE_TOPICS && CFG_TOPICS_DYNAMIC_ALLOC == true
-
-/* ============================================================================
-   Core Functionality: Lock (Depends on: - )
-============================================================================ */
-
-// Private
-// ================
-typedef struct {
-    ulog_LockFn function;  // Lock function
-    void *args;            // Argument for the lock function
-} lock_data_t;
-
-static lock_data_t lock_data = {
-    .function = NULL,  // No lock function by default
-    .args     = NULL,  // No lock argument by default
-};
-
-static void lock_lock(void) {
-    if (lock_data.function != NULL) {
-        lock_data.function(true, lock_data.args);
-    }
-}
-
-static void lock_unlock(void) {
-    if (lock_data.function != NULL) {
-        lock_data.function(false, lock_data.args);
-    }
-}
-
-// Public
-// ================
-
-/// @brief  Sets the lock function and user data
-void ulog_set_lock(ulog_LockFn function, void *lock_arg) {
-    lock_data.function = function;
-    lock_data.args     = lock_arg;
-}
+#endif  // FEATURE_TOPICS && FEATURE_TOPICS_CFG_DYNAMIC_ALLOC == true
 
 /* ============================================================================
    Core Feature: Log (`log_*`, depends on: Print, Levels, Callbacks,
