@@ -24,7 +24,7 @@ The example is shown below:
 // ================
 typedef struct {
     ulog_PrefixFn function;
-    char prefix[CFG_CUSTOM_PREFIX_SIZE];
+    char prefix[FEATURE_CUSTOM_PREFIX_CFG_SIZE];
 } prefix_data_t;
 
 static prefix_data_t prefix_data = {
@@ -34,7 +34,7 @@ static prefix_data_t prefix_data = {
 
 static void prefix_print(print_target *tgt, ulog_Event *ev) {
     if (prefix_data.function != NULL) {
-        prefix_data.function(ev, prefix_data.prefix, CFG_CUSTOM_PREFIX_SIZE);
+        prefix_data.function(ev, prefix_data.prefix, FEATURE_CUSTOM_PREFIX_CFG_SIZE);
         print_to_target(tgt, "%s", prefix_data.prefix);
     }
 }
