@@ -86,11 +86,10 @@ extern "C" {
 
 #define ULOG_FEATURE_EMOJI_LEVELS true
 
-#if ULOG_FEATURE_SHORT_LEVELS
-#define ULOG_FEATURE_SHORT_LEVELS false
-#warning                                                                       \
-    "ULOG_USE_EMOJI overrides ULOG_SHORT_LEVEL_STRINGS! Disable ULOG_SHORT_LEVEL_STRINGS"
-#endif  // ULOG_FEATURE_SHORT_LEVELS
+#if FEATURE_SHORT_LEVELS
+#define FEATURE_SHORT_LEVELS false
+#warning "ULOG_USE_EMOJI overrides ULOG_SHORT_LEVEL_STRINGS! Disable ULOG_SHORT_LEVEL_STRINGS"
+#endif  // FEATURE_SHORT_LEVELS
 
 #else  // ULOG_USE_EMOJI
 
@@ -121,18 +120,20 @@ extern "C" {
 #include <time.h>
 #endif
 
-enum { LOG_TRACE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
+enum { LOG_TRACE,
+       LOG_DEBUG,
+       LOG_INFO,
+       LOG_WARN,
+       LOG_ERROR,
+       LOG_FATAL };
 
-#define log_trace(...)                                                         \
-    ulog_log(LOG_TRACE, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define log_debug(...)                                                         \
-    ulog_log(LOG_DEBUG, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define log_trace(...) ulog_log(LOG_TRACE, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define log_debug(...) ulog_log(LOG_DEBUG, __FILE__, __LINE__, NULL, __VA_ARGS__)
 #define log_info(...) ulog_log(LOG_INFO, __FILE__, __LINE__, NULL, __VA_ARGS__)
 #define log_warn(...) ulog_log(LOG_WARN, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define log_error(...)                                                         \
-    ulog_log(LOG_ERROR, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define log_fatal(...)                                                         \
-    ulog_log(LOG_FATAL, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define log_error(...) ulog_log(LOG_ERROR, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define log_fatal(...) ulog_log(LOG_FATAL, __FILE__, __LINE__, NULL, __VA_ARGS__)
+
 
 /// @brief Event structure
 typedef struct {
@@ -232,18 +233,12 @@ int ulog_add_fp(FILE *fp, int level);
 ============================================================================ */
 
 #define TOPIC_NOT_FOUND 0x7FFFFFFF
-#define logt_trace(TOPIC_NAME, ...)                                            \
-    ulog_log(LOG_TRACE, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_debug(TOPIC_NAME, ...)                                            \
-    ulog_log(LOG_DEBUG, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_info(TOPIC_NAME, ...)                                             \
-    ulog_log(LOG_INFO, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_warn(TOPIC_NAME, ...)                                             \
-    ulog_log(LOG_WARN, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_error(TOPIC_NAME, ...)                                            \
-    ulog_log(LOG_ERROR, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_fatal(TOPIC_NAME, ...)                                            \
-    ulog_log(LOG_FATAL, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_trace(TOPIC_NAME, ...) ulog_log(LOG_TRACE, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_debug(TOPIC_NAME, ...) ulog_log(LOG_DEBUG, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_info(TOPIC_NAME, ...) ulog_log(LOG_INFO, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_warn(TOPIC_NAME, ...) ulog_log(LOG_WARN, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_error(TOPIC_NAME, ...) ulog_log(LOG_ERROR, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_fatal(TOPIC_NAME, ...) ulog_log(LOG_FATAL, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
 
 #if ULOG_FEATURE_TOPICS
 
