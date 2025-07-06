@@ -43,7 +43,7 @@ typedef union {
 - **Local Variables:** `snake_case`, short is widely used or very tiny scope, otherwise full meaningful words.
     - Example: `tgt`, `ev`, `buf`, `format`, `out_topic_id`
 - **Constants/Macros:** `ALL_CAPS` with underscores.
-    - Example: `ULOG_DEFAULT_LOG_LEVEL`, `FEATURE_TOPICS_CFG_NUM`
+    - Example: `ULOG_DEFAULT_LOG_LEVEL`, `ULOG_FEATURE_TOPICS_NUM`
 
 ### Parameters
 
