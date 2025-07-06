@@ -127,49 +127,6 @@ static void log_print_event(print_target *tgt, ulog_Event *ev, bool full_time,
                             bool color, bool new_line);
 
 /* ============================================================================
-   Core Feature: Runtime Configuration (`cfg_*`, depends on: - )
-============================================================================ */
-#if FEATURE_RUNTIME_CONFIG
-
-typedef struct {
-    bool color_enabled;
-
-} cfg_data_t;
-
-static cfg_data_t cfg_data = {
-    .color_enabled = FEATURE_COLOR,
-};
-
-// Private
-// ================
-
-bool cfg_is_color_enabled(void) {
-    return cfg_data.color_enabled;
-}
-
-// Public
-// ================
-
-int ulog_configure(const ulog_config *config) { // TODO: replace with separate functions?
-    lock_lock();  // Lock the configuration
-
-    if (config == NULL) {
-        return -1;  // Invalid configuration, do nothing
-    }
-
-    // Apply the configuration
-    cfg_data.color_enabled = config->color;
-
-    // Additional configurations can be added here
-    lock_unlock();  // Unlock the configuration
-    return 0;       // Success
-}
-
-#else  // FEATURE_RUNTIME_CONFIG
-#define cfg_is_color_enabled() (FEATURE_COLOR)
-#endif  // FEATURE_RUNTIME_CONFIG
-
-/* ============================================================================
    Feature: Color (`color_*`, depends on: Print)
 ============================================================================ */
 #if FEATURE_COLOR
@@ -187,16 +144,10 @@ static const char *color_levels[] = {
 #define COLOR_TERMINATOR "\x1b[0m"
 
 static void color_print_start(print_target *tgt, ulog_Event *ev) {
-    if (!cfg_is_color_enabled()) {
-        return;  // Color is disabled, do not print color codes
-    }
     print_to_target(tgt, "%s", color_levels[ev->level]);  // color start
 }
 
 static void color_print_end(print_target *tgt) {
-    if (!cfg_is_color_enabled()) {
-        return;  // Color is disabled, do not print color codes
-    }
     print_to_target(tgt, "%s", COLOR_TERMINATOR);  // color end
 }
 
