@@ -31,45 +31,82 @@ extern "C" {
 
 | Feature                    | Feature Default | Compilation Options          |
 |----------------------------|-----------------|------------------------------|
-| ULOG_FEATURE_TIME          | OFF             | ULOG_HAVE_TIME               |
 | ULOG_FEATURE_COLOR         | ON              | ULOG_NO_COLOR                |
 | ULOG_FEATURE_CUSTOM_PREFIX | OFF             | ULOG_CUSTOM_PREFIX_SIZE      |
-| ULOG_FEATURE_FILE_STRING   | ON              | ULOG_HIDE_FILE_STRING        |
-| ULOG_FEATURE_SHORT_LEVELS  | OFF             | ULOG_SHORT_LEVEL_STRINGS     |
 | ULOG_FEATURE_EMOJI_LEVELS  | OFF             | ULOG_USE_EMOJI               |
 | ULOG_FEATURE_EXTRA_OUTPUTS | OFF             | ULOG_EXTRA_OUTPUTS           |
+| ULOG_FEATURE_FILE_STRING   | ON              | ULOG_HIDE_FILE_STRING        |
+| ULOG_FEATURE_SHORT_LEVELS  | OFF             | ULOG_SHORT_LEVEL_STRINGS     |
+| ULOG_FEATURE_TIME          | OFF             | ULOG_HAVE_TIME               |
 | ULOG_FEATURE_TOPICS        | OFF             | ULOG_TOPICS_NUM              |
 
 ============================================================================ */
+// clang-format off
+#ifdef ULOG_HAVE_COLOR
+    #define ULOG_FEATURE_COLOR true
+#else
+    #define ULOG_FEATURE_COLOR false
+#endif
 
-#define ULOG_FEATURE_TIME defined(ULOG_HAVE_TIME)
-#define ULOG_FEATURE_COLOR defined(ULOG_HAVE_COLOR)
-#define ULOG_FEATURE_FILE_STRING (!defined(ULOG_HIDE_FILE_STRING))
-#define ULOG_FEATURE_SHORT_LEVELS defined(ULOG_SHORT_LEVEL_STRINGS)
-#define ULOG_FEATURE_EMOJI_LEVELS defined(ULOG_USE_EMOJI)
 
-#define ULOG_FEATURE_CUSTOM_PREFIX                                             \
-    (defined(ULOG_CUSTOM_PREFIX_SIZE) && (ULOG_CUSTOM_PREFIX_SIZE > 0))
+#if defined(ULOG_CUSTOM_PREFIX_SIZE) && (ULOG_CUSTOM_PREFIX_SIZE > 0)
+    #define ULOG_FEATURE_CUSTOM_PREFIX true
+#else
+    #define ULOG_FEATURE_CUSTOM_PREFIX false
+#endif
 
-#define ULOG_FEATURE_EXTRA_OUTPUTS                                             \
-    (defined(ULOG_EXTRA_OUTPUTS) && (ULOG_EXTRA_OUTPUTS > 0))
 
-#define ULOG_FEATURE_TOPICS                                                    \
-    (defined(ULOG_TOPICS_NUM) &&                                               \
-     (ULOG_TOPICS_NUM >= 0 || ULOG_TOPICS_NUM == -1))
+#ifdef ULOG_HAVE_TIME
+    #include <time.h>
+    #define ULOG_FEATURE_TIME true
+#else
+    #define ULOG_FEATURE_TIME false
+#endif
 
-#if ULOG_FEATURE_SHORT_LEVELS && ULOG_FEATURE_EMOJI_LEVELS
-#warning                                                                       \
-    "ULOG_USE_EMOJI overrides ULOG_SHORT_LEVEL_STRINGS! Disable ULOG_SHORT_LEVEL_STRINGS"
-#endif  // ULOG_USE_EMOJI
+
+#ifdef ULOG_USE_EMOJI
+    #define ULOG_FEATURE_EMOJI_LEVELS true
+    #if ULOG_SHORT_LEVEL_STRINGS
+        #warning "ULOG_USE_EMOJI overrides ULOG_SHORT_LEVEL_STRINGS! Disable ULOG_SHORT_LEVEL_STRINGS"
+    #endif
+#else
+    #define ULOG_FEATURE_EMOJI_LEVELS false
+#endif
+
+
+
+#if defined(ULOG_EXTRA_OUTPUTS) && (ULOG_EXTRA_OUTPUTS > 0)
+    #define ULOG_FEATURE_EXTRA_OUTPUTS true
+#else
+    #define ULOG_FEATURE_EXTRA_OUTPUTS false
+#endif
+
+
+#ifdef ULOG_HIDE_FILE_STRING
+    #define ULOG_FEATURE_FILE_STRING false
+#else
+    #define ULOG_FEATURE_FILE_STRING true
+#endif
+
+
+
+#ifdef ULOG_SHORT_LEVEL_STRINGS
+    #define ULOG_FEATURE_SHORT_LEVELS true
+#else
+    #define ULOG_FEATURE_SHORT_LEVELS false
+#endif
+
+
+#if defined(ULOG_TOPICS_NUM) && (ULOG_TOPICS_NUM >= 0 || ULOG_TOPICS_NUM == -1)
+    #define ULOG_FEATURE_TOPICS true
+#else
+    #define ULOG_FEATURE_TOPICS false
+#endif
+// clang-format on
 
 /* ============================================================================
    Core Functionality
 ============================================================================ */
-
-#if ULOG_FEATURE_TIME
-#include <time.h>
-#endif
 // clang-format off
 enum { LOG_TRACE,
        LOG_DEBUG,
@@ -77,6 +114,7 @@ enum { LOG_TRACE,
        LOG_WARN,
        LOG_ERROR,
        LOG_FATAL };
+       
 #define log_trace(...) ulog_log(LOG_TRACE, __FILE__, __LINE__, NULL, __VA_ARGS__)
 #define log_debug(...) ulog_log(LOG_DEBUG, __FILE__, __LINE__, NULL, __VA_ARGS__)
 #define log_info(...) ulog_log(LOG_INFO, __FILE__, __LINE__, NULL, __VA_ARGS__)
@@ -181,6 +219,8 @@ int ulog_add_fp(FILE *fp, int level);
 /* ============================================================================
    Feature: Log Topics
 ============================================================================ */
+#if ULOG_FEATURE_TOPICS
+
 // clang-format off
 #define TOPIC_NOT_FOUND 0x7FFFFFFF
 #define logt_trace(TOPIC_NAME, ...) ulog_log(LOG_TRACE, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
@@ -190,7 +230,6 @@ int ulog_add_fp(FILE *fp, int level);
 #define logt_error(TOPIC_NAME, ...) ulog_log(LOG_ERROR, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
 #define logt_fatal(TOPIC_NAME, ...) ulog_log(LOG_FATAL, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
 // clang-format on
-#if ULOG_FEATURE_TOPICS
 
 /// @brief Adds a topic
 /// @param topic_name - Topic name. "" and NULL are not valid

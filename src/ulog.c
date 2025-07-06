@@ -413,7 +413,7 @@ static void cb_user_file(ulog_Event *ev, void *arg) {
 ///              processed by the callback
 /// @param level - Debug level
 int ulog_add_callback(ulog_LogFn function, void *arg, int level) {
-    for (int i = 0; i < ULOG_FEATURE_EXTRA_OUTPUTS_NUM; i++) {
+    for (int i = 0; i < CB_NUM_CALLBACKS; i++) {
         if (cb_data.callbacks[i].function == NULL) {
             cb_data.callbacks[i] = (cb_t){function, arg, level, true};
             return 0;
