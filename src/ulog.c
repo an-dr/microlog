@@ -333,8 +333,13 @@ void ulog_set_level(int level) {
 
 //  Private
 // ================
+#if ULOG_FEATURE_EXTRA_OUTPUTS
+#define CB_USER_NUM ULOG_EXTRA_OUTPUTS
+#else 
+#define CB_USER_NUM 0
+#endif  // ULOG_FEATURE_EXTRA_OUTPUTS
+
 #define CB_STDOUT_ID 0
-#define CB_USER_NUM (ULOG_FEATURE_EXTRA_OUTPUTS ? ULOG_EXTRA_OUTPUTS : 0)
 #define CB_NUM_CALLBACKS (1 + CB_USER_NUM)  // stdout + extra
 
 // Forward declarations for data initialization
