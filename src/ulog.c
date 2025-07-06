@@ -340,7 +340,7 @@ void ulog_set_level(int level) {
 #endif  // ULOG_FEATURE_EXTRA_OUTPUTS
 
 #define CB_STDOUT_ID 0
-#define CB_NUM_CALLBACKS (1 + CB_USER_NUM)  // stdout + extra
+#define CB_TOTAL_NUM (1 + CB_USER_NUM)  // stdout + extra
 
 // Forward declarations for data initialization
 static void cb_stdout(ulog_Event *ev, void *arg);
@@ -353,7 +353,7 @@ typedef struct {
 } cb_t;
 
 typedef struct {
-    cb_t callbacks[CB_NUM_CALLBACKS];  // 0 is for stdout callback
+    cb_t callbacks[CB_TOTAL_NUM];  // 0 is for stdout callback
 } cb_data_t;
 
 static cb_data_t cb_data = {.callbacks = {{cb_stdout, NULL, LOG_TRACE, true}}};
@@ -378,7 +378,7 @@ static void cb_handle_single(ulog_Event *ev, cb_t *cb) {
 static void cb_handle_all(ulog_Event *ev) {
     // Processing the message for callbacks
     for (int i = 0;
-         (i < CB_NUM_CALLBACKS) && (cb_data.callbacks[i].function != NULL);
+         (i < CB_TOTAL_NUM) && (cb_data.callbacks[i].function != NULL);
          i++) {
         cb_handle_single(ev, &cb_data.callbacks[i]);
     }
@@ -418,7 +418,7 @@ static void cb_user_file(ulog_Event *ev, void *arg) {
 ///              processed by the callback
 /// @param level - Debug level
 int ulog_add_callback(ulog_LogFn function, void *arg, int level) {
-    for (int i = 0; i < CB_NUM_CALLBACKS; i++) {
+    for (int i = 0; i < CB_TOTAL_NUM; i++) {
         if (cb_data.callbacks[i].function == NULL) {
             cb_data.callbacks[i] = (cb_t){function, arg, level, true};
             return 0;
