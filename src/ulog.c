@@ -163,11 +163,13 @@ static void color_print_end(print_target *tgt) {
 ============================================================================ */
 #if ULOG_FEATURE_CUSTOM_PREFIX
 
+#define PREFIX_SIZE ULOG_CUSTOM_PREFIX_SIZE
+
 // Private
 // ================
 typedef struct {
     ulog_PrefixFn function;
-    char prefix[ULOG_FEATURE_CUSTOM_PREFIX_SIZE];
+    char prefix[PREFIX_SIZE];
 } prefix_data_t;
 
 static prefix_data_t prefix_data = {
@@ -177,8 +179,7 @@ static prefix_data_t prefix_data = {
 
 static void prefix_print(print_target *tgt, ulog_Event *ev) {
     if (prefix_data.function != NULL) {
-        prefix_data.function(ev, prefix_data.prefix,
-                             ULOG_FEATURE_CUSTOM_PREFIX_SIZE);
+        prefix_data.function(ev, prefix_data.prefix, PREFIX_SIZE);
         print_to_target(tgt, "%s", prefix_data.prefix);
     }
 }
@@ -333,7 +334,8 @@ void ulog_set_level(int level) {
 //  Private
 // ================
 #define CB_STDOUT_ID 0
-#define CB_NUM_CALLBACKS (1 + ULOG_FEATURE_EXTRA_OUTPUTS_NUM)  // stdout + extra
+#define CB_USER_NUM (ULOG_FEATURE_EXTRA_OUTPUTS ? ULOG_EXTRA_OUTPUTS : 0)
+#define CB_NUM_CALLBACKS (1 + CB_USER_NUM)  // stdout + extra
 
 // Forward declarations for data initialization
 static void cb_stdout(ulog_Event *ev, void *arg);
@@ -428,14 +430,16 @@ int ulog_add_fp(FILE *fp, int level) {
 #endif  // ULOG_FEATURE_EXTRA_OUTPUTS
 
 /* ============================================================================
-   Feature: Topics (Depends on: Print, Levels)
+   Feature: Topics (`topic_*` depends on: Print, Levels)
 ============================================================================ */
-#define TOPIC_ID_NO_TOPIC -1
 
 #if ULOG_FEATURE_TOPICS
 
 // Private
 // ================
+#define TOPIC_ID_NO_TOPIC -1
+#define TOPIC_DYNAMIC (ULOG_TOPICS_NUM < 0)
+#define TOPIC_STATIC_NUM ULOG_TOPICS_NUM
 
 typedef struct {
     int id;
@@ -443,7 +447,7 @@ typedef struct {
     bool enabled;
     int level;
 
-#if ULOG_FEATURE_TOPICS_DYNAMIC_ALLOC
+#if TOPIC_DYNAMIC
     void *next;  // Pointer to the next topic pointer (Topic **)
 #endif
 
@@ -452,10 +456,10 @@ typedef struct {
 typedef struct {
     bool new_topic_enabled;  // Whether new topics are enabled by default
 
-#if ULOG_FEATURE_TOPICS_DYNAMIC_ALLOC
+#if TOPIC_DYNAMIC
     topic_t *topics;
 #else
-    topic_t topics[ULOG_FEATURE_TOPICS_NUM];
+    topic_t topics[TOPIC_STATIC_NUM];
 #endif
 
 } topic_data_t;
@@ -463,7 +467,7 @@ typedef struct {
 static topic_data_t topic_data = {
     .new_topic_enabled = false,  // New topics are disabled by default
 
-#if ULOG_FEATURE_TOPICS_DYNAMIC_ALLOC
+#if TOPIC_DYNAMIC
     .topics = NULL,  // No topics allocated by default
 #else
     .topics = {{0}},  // Initialize static topics array to zero
@@ -568,7 +572,7 @@ static void topic_process(const char *topic, int level, bool *is_log_allowed,
 
     topic_t *t = topic_get(topic_str_to_id(topic));
 
-#if ULOG_FEATURE_TOPICS_DYNAMIC_ALLOC
+#if TOPIC_DYNAMIC
     // Allocate a new topic if not found
     if (t == NULL) {
         *topic_id = ulog_add_topic(topic, topic_data.new_topic_enabled);
@@ -578,7 +582,7 @@ static void topic_process(const char *topic, int level, bool *is_log_allowed,
         }
         t = topic_get(*topic_id);  // Get the newly added topic
     }
-#endif  // ULOG_FEATURE_TOPICS_DYNAMIC_ALLOC
+#endif  // TOPIC_DYNAMIC
 
     *is_log_allowed = topic_is_loggable(t, level);
     if (!*is_log_allowed) {
@@ -639,12 +643,12 @@ int ulog_add_topic(const char *topic_name, bool enable) {
 /* ============================================================================
    Feature: Topics - Static Allocation (`topic_*`, depends on: Topics)
 ============================================================================ */
-#if ULOG_FEATURE_TOPICS && ULOG_FEATURE_TOPICS_DYNAMIC_ALLOC == false
+#if ULOG_FEATURE_TOPICS && TOPIC_DYNAMIC == false
 // Private
 // ================
 
 int topic_enable_all(void) {
-    for (int i = 0; i < ULOG_FEATURE_TOPICS_NUM; i++) {
+    for (int i = 0; i < TOPIC_STATIC_NUM; i++) {
         if (is_str_empty(topic_data.topics[i].name)) {
             break;  // End of topics, no more to enable
         }
@@ -654,7 +658,7 @@ int topic_enable_all(void) {
 }
 
 int topic_disable_all(void) {
-    for (int i = 0; i < ULOG_FEATURE_TOPICS_NUM; i++) {
+    for (int i = 0; i < TOPIC_STATIC_NUM; i++) {
         if (is_str_empty(topic_data.topics[i].name)) {
             break;  // End of topics, no more to disable
         }
@@ -664,7 +668,7 @@ int topic_disable_all(void) {
 }
 
 int topic_str_to_id(const char *str) {
-    for (int i = 0; i < ULOG_FEATURE_TOPICS_NUM; i++) {
+    for (int i = 0; i < TOPIC_STATIC_NUM; i++) {
         if (is_str_empty(topic_data.topics[i].name)) {
             break;  // End of topics, not found
         }
@@ -676,7 +680,7 @@ int topic_str_to_id(const char *str) {
 }
 
 static topic_t *topic_get(int topic) {
-    if (topic < ULOG_FEATURE_TOPICS_NUM && topic >= 0) {
+    if (topic < TOPIC_STATIC_NUM && topic >= 0) {
         return &topic_data.topics[topic];
     }
     return NULL;
@@ -687,7 +691,7 @@ static int topic_add(const char *topic_name, bool enable) {
         return -1;
     }
 
-    for (int i = 0; i < ULOG_FEATURE_TOPICS_NUM; i++) {
+    for (int i = 0; i < TOPIC_STATIC_NUM; i++) {
         // If there is an empty slot
         if (is_str_empty(topic_data.topics[i].name)) {
             topic_data.topics[i].id      = i;
@@ -703,13 +707,13 @@ static int topic_add(const char *topic_name, bool enable) {
     }
     return -1;
 }
-#endif  // ULOG_FEATURE_TOPICS && ULOG_FEATURE_TOPICS_DYNAMIC_ALLOC == false
+#endif  // ULOG_FEATURE_TOPICS && TOPIC_DYNAMIC == false
 
 /* ============================================================================
    Feature: Topics - Dynamic Allocation (`topic_*`, depends on: Topics)
 ============================================================================ */
 
-#if ULOG_FEATURE_TOPICS && ULOG_FEATURE_TOPICS_DYNAMIC_ALLOC == true
+#if ULOG_FEATURE_TOPICS && TOPIC_DYNAMIC == true
 // Private
 // ================
 
@@ -815,7 +819,7 @@ static int topic_add(const char *topic_name, bool enable) {
     return -1;
 }
 
-#endif  // ULOG_FEATURE_TOPICS && ULOG_FEATURE_TOPICS_DYNAMIC_ALLOC == true
+#endif  // ULOG_FEATURE_TOPICS && TOPIC_DYNAMIC == true
 
 /* ============================================================================
    Core Feature: Log (`log_*`, depends on: Print, Levels, Callbacks,
@@ -938,7 +942,7 @@ void ulog_log(int level, const char *file, int line, const char *topic,
     }
 
     // Try to get topic ID and check if logging is allowed for this topic
-    int topic_id = TOPIC_ID_NO_TOPIC;
+    int topic_id = -1;
     if (!is_str_empty(topic)) {
         topic_process(topic, level, &is_log_allowed, &topic_id);
         if (!is_log_allowed) {
