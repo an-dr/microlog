@@ -105,10 +105,13 @@ TEST_CASE_FIXTURE(TestFixture, "File Output") {
 
 TEST_CASE_FIXTURE(TestFixture, "Performance") {
     // Current time
-    auto start                = std::chrono::high_resolution_clock::now();
     const int iterations      = 10000;
     const int one_second      = 1000000;  // 1 second in microseconds
     const int one_millisecond = 1000;     // 1 millisecond in microseconds
+
+    ulog_enable_topic("testtopic");
+    
+    auto start = std::chrono::high_resolution_clock::now();
 
     for (int i = 0; i < iterations; ++i) {
         logt_fatal("testtopic", "This is a FATAL message with topic");
@@ -124,6 +127,6 @@ TEST_CASE_FIXTURE(TestFixture, "Performance") {
     // Check if the average log time is reasonable
     CHECK(average_log_time < one_millisecond);  // Less than 1 us per log
 
-    printf("Logging %d messages took: %d microseconds (%.6f per log)\n",
+    printf("Logging %d messages took: %ld microseconds (%.6f per log)\n",
            iterations, duration_us, average_log_time);
 }
