@@ -61,7 +61,7 @@ extern "C" {
 #if ULOG_FEATURE_SHORT_LEVELS && ULOG_FEATURE_EMOJI_LEVELS
 #warning                                                                       \
     "ULOG_USE_EMOJI overrides ULOG_SHORT_LEVEL_STRINGS! Disable ULOG_SHORT_LEVEL_STRINGS"
-#else  // ULOG_USE_EMOJI
+#endif  // ULOG_USE_EMOJI
 
 /* ============================================================================
    Core Functionality
