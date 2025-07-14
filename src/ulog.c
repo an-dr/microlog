@@ -163,13 +163,11 @@ static void color_print_end(print_target *tgt) {
 ============================================================================ */
 #if ULOG_FEATURE_CUSTOM_PREFIX
 
-#define PREFIX_SIZE ULOG_CUSTOM_PREFIX_SIZE
-
 // Private
 // ================
 typedef struct {
     ulog_PrefixFn function;
-    char prefix[PREFIX_SIZE];
+    char prefix[ULOG_CUSTOM_PREFIX_SIZE];
 } prefix_data_t;
 
 static prefix_data_t prefix_data = {
@@ -179,7 +177,7 @@ static prefix_data_t prefix_data = {
 
 static void prefix_print(print_target *tgt, ulog_Event *ev) {
     if (prefix_data.function != NULL) {
-        prefix_data.function(ev, prefix_data.prefix, PREFIX_SIZE);
+        prefix_data.function(ev, prefix_data.prefix, ULOG_CUSTOM_PREFIX_SIZE);
         print_to_target(tgt, "%s", prefix_data.prefix);
     }
 }
