@@ -39,6 +39,8 @@ extern "C" {
 | ULOG_FEATURE_SHORT_LEVELS  | OFF             | ULOG_SHORT_LEVEL_STRINGS     |
 | ULOG_FEATURE_TIME          | OFF             | ULOG_HAVE_TIME               |
 | ULOG_FEATURE_TOPICS        | OFF             | ULOG_TOPICS_NUM              |
+| ULOG_FEATURE_RUNTIME_CONFIG| OFF             | ULOG_RUNTIME_CONFIG          |
+
 
 ============================================================================ */
 // clang-format off
@@ -102,6 +104,36 @@ extern "C" {
 #else
     #define ULOG_FEATURE_TOPICS false
 #endif
+
+
+
+#ifdef ULOG_RUNTIME_CONFIG
+#define ULOG_FEATURE_RUNTIME_CONFIG true
+// Undef all ULOG_FEATURE_* macros to avoid conflicts
+#undef ULOG_FEATURE_COLOR
+#undef ULOG_FEATURE_CUSTOM_PREFIX
+#undef ULOG_FEATURE_FILE_STRING
+#undef ULOG_FEATURE_SHORT_LEVELS
+#undef ULOG_FEATURE_EXTRA_OUTPUTS
+#undef ULOG_FEATURE_TOPICS
+
+// Configure features based on runtime config
+#define ULOG_FEATURE_COLOR true
+#define ULOG_FEATURE_CUSTOM_PREFIX true
+#define ULOG_FEATURE_CUSTOM_PREFIX_CFG_SIZE 64
+#define ULOG_FEATURE_EXTRA_OUTPUTS true
+#define ULOG_FEATURE_EXTRA_OUTPUTS_CFG 4
+#define ULOG_FEATURE_FILE_STRING true
+#define ULOG_FEATURE_SHORT_LEVELS true
+#define ULOG_FEATURE_TOPICS true
+#define ULOG_FEATURE_TOPICS_CFG_DYNAMIC_ALLOC true
+#define ULOG_FEATURE_TOPICS_CFG_NUM -1
+
+#else
+#define ULOG_FEATURE_RUNTIME_CONFIG false
+#endif
+
+
 // clang-format on
 
 /* ============================================================================
@@ -136,8 +168,11 @@ typedef struct {
     struct tm *time;
 #endif
 
+#if ULOG_FEATURE_FILE_STRING
     const char *file;  // Event file name
     int line;          // Event line number
+#endif // ULOG_FEATURE_FILE_STRING
+    
     int level;         // Event debug level
 } ulog_Event;
 
@@ -181,6 +216,20 @@ typedef void (*ulog_LockFn)(bool lock, void *lock_arg);
 /// @param function - Lock function
 /// @param lock_arg - User data
 void ulog_set_lock(ulog_LockFn function, void *lock_arg);
+
+/* ============================================================================
+   Feature: Runtime Config
+============================================================================ */
+#if FEATURE_RUNTIME_CONFIG
+
+void ulog_configure_color(bool enabled);
+void ulog_configure_prefix(bool enabled);
+void ulog_configure_file_string(bool enabled);
+void ulog_configure_time(bool enabled);
+void ulog_configure_levels(bool use_short_levels);
+void ulog_configure_topics(bool enabled);
+
+#endif  // FEATURE_RUNTIME_CONFIG
 
 /* ============================================================================
    Feature: Custom Prefix

@@ -415,6 +415,7 @@ All feature states can be read using the following public macros. The macros are
 | `ULOG_HAVE_TIME`             | `ULOG_FEATURE_TIME`          | ❌ false        |
 | `ULOG_HIDE_FILE_STRING`      | `ULOG_FEATURE_FILE_STRING`   | ✅ true         |
 | `ULOG_NO_COLOR`              | `ULOG_FEATURE_COLOR`         | ✅ true         |
+| `ULOG_RUNTIME_CFG`           | `ULOG_FEATURE_RUNTIME_CONFIG`| ❌ false        |
 | `ULOG_SHORT_LEVEL_STRINGS`   | `ULOG_FEATURE_SHORT_LEVELS`  | ❌ false        |
 | `ULOG_TOPICS_NUM`            | `ULOG_FEATURE_TOPICS`        | ❌ false        |
 | `ULOG_USE_EMOJI`             | `ULOG_FEATURE_EMOJI_LEVELS`  | ❌ false        |

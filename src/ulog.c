@@ -37,6 +37,13 @@ static inline bool is_str_empty(const char *str) {
 }
 
 /* ============================================================================
+   Prototypes
+============================================================================ */
+
+static void log_print_event(print_target *tgt, ulog_Event *ev, bool full_time,
+                            bool color, bool new_line);
+
+/* ============================================================================
    Core Feature: Print (`print_*`, depends on: - )
 ============================================================================ */
 
@@ -118,16 +125,41 @@ void ulog_set_lock(ulog_LockFn function, void *lock_arg) {
     lock_data.function = function;
     lock_data.args     = lock_arg;
 }
-
 /* ============================================================================
-   Prototypes
+   Feature: Color Config (`color_cfg_*`, depends on: - )
 ============================================================================ */
+#if ULOG_FEATURE_COLOR && ULOG_FEATURE_RUNTIME_CONFIG
 
-static void log_print_event(print_target *tgt, ulog_Event *ev, bool full_time,
-                            bool color, bool new_line);
+typedef struct {
+    bool enabled;
+} color_cfg_t;
+
+static color_cfg_t color_cfg = {
+    .enabled = ULOG_FEATURE_COLOR,
+};
+
+// Private
+// ================
+
+bool color_cfg_is_enabled(void) {
+    return color_cfg.enabled;
+}
+
+// Public
+// ================
+
+void ulog_configure_color(bool enabled) {
+    lock_lock();  // Lock the configuration
+    color_cfg.enabled = enabled;
+    lock_unlock();  // Unlock the configuration
+}
+
+#else  // ULOG_FEATURE_RUNTIME_CONFIG
+#define color_cfg_is_enabled() (ULOG_FEATURE_COLOR)
+#endif  // ULOG_FEATURE_RUNTIME_CONFIG
 
 /* ============================================================================
-   Feature: Color (`color_*`, depends on: Print)
+   Feature: Color (`color_*`, depends on: Print, Color Config)
 ============================================================================ */
 #if ULOG_FEATURE_COLOR
 
@@ -144,10 +176,16 @@ static const char *color_levels[] = {
 #define COLOR_TERMINATOR "\x1b[0m"
 
 static void color_print_start(print_target *tgt, ulog_Event *ev) {
+    if (!color_cfg_is_enabled()) {
+        return;  // Color is disabled, do not print color codes
+    }
     print_to_target(tgt, "%s", color_levels[ev->level]);  // color start
 }
 
 static void color_print_end(print_target *tgt) {
+    if (!color_cfg_is_enabled()) {
+        return;  // Color is disabled, do not print color codes
+    }
     print_to_target(tgt, "%s", COLOR_TERMINATOR);  // color end
 }
 
@@ -159,7 +197,40 @@ static void color_print_end(print_target *tgt) {
 #endif  // ULOG_FEATURE_COLOR
 
 /* ============================================================================
-   Feature: Prefix (`prefix_*`, depends on: Print)
+   Feature: Prefix Config (`prefix_cfg_*`, depends on: - )
+============================================================================ */
+#if ULOG_FEATURE_CUSTOM_PREFIX && ULOG_FEATURE_RUNTIME_CONFIG
+
+typedef struct {
+    bool enabled;
+} prefix_cfg_t;
+
+static prefix_cfg_t prefix_cfg = {
+    .enabled = ULOG_FEATURE_CUSTOM_PREFIX,
+};
+
+// Private
+// ================
+
+bool prefix_cfg_is_enabled(void) {
+    return prefix_cfg.enabled;
+}
+
+// Public
+// ================
+
+void ulog_configure_prefix(bool enabled) {
+    lock_lock();  // Lock the configuration
+    prefix_cfg.enabled = enabled;
+    lock_unlock();  // Unlock the configuration
+}
+
+#else  // ULOG_FEATURE_RUNTIME_CONFIG
+#define prefix_cfg_is_enabled() (ULOG_FEATURE_CUSTOM_PREFIX)
+#endif  // ULOG_FEATURE_RUNTIME_CONFIG
+
+/* ============================================================================
+   Feature: Prefix (`prefix_*`, depends on: Print, Prefix Config)
 ============================================================================ */
 #if ULOG_FEATURE_CUSTOM_PREFIX
 
@@ -176,10 +247,11 @@ static prefix_data_t prefix_data = {
 };
 
 static void prefix_print(print_target *tgt, ulog_Event *ev) {
-    if (prefix_data.function != NULL) {
-        prefix_data.function(ev, prefix_data.prefix, ULOG_CUSTOM_PREFIX_SIZE);
-        print_to_target(tgt, "%s", prefix_data.prefix);
+    if (prefix_data.function == NULL || !prefix_cfg_is_enabled()) {
+        return;
     }
+    prefix_data.function(ev, prefix_data.prefix, ULOG_CUSTOM_PREFIX_SIZE);
+    print_to_target(tgt, "%s", prefix_data.prefix);
 }
 
 // Public
@@ -196,7 +268,40 @@ void ulog_set_prefix_fn(ulog_PrefixFn function) {
 #endif  // ULOG_FEATURE_CUSTOM_PREFIX
 
 /* ============================================================================
-   Feature: Time (`time_*`, depends on: Print)
+   Feature: Time Config (`time_cfg_*`, depends on: - )
+============================================================================ */
+#if ULOG_FEATURE_TIME && ULOG_FEATURE_RUNTIME_CONFIG
+
+typedef struct {
+    bool enabled;
+} time_cfg_t;
+
+static time_cfg_t time_cfg = {
+    .enabled = ULOG_FEATURE_TIME,
+};
+
+// Private
+// ================
+
+bool time_cfg_is_enabled(void) {
+    return time_cfg.enabled;
+}
+
+// Public
+// ================
+
+void ulog_configure_time(bool enabled) {
+    lock_lock();  // Lock the configuration
+    time_cfg.enabled = enabled;
+    lock_unlock();  // Unlock the configuration
+}
+
+#else  // ULOG_FEATURE_RUNTIME_CONFIG
+#define time_cfg_is_enabled() (ULOG_FEATURE_TIME)
+#endif  // ULOG_FEATURE_RUNTIME_CONFIG
+
+/* ============================================================================
+   Feature: Time (`time_*`, depends on: Time, Print)
 ============================================================================ */
 #if ULOG_FEATURE_TIME
 
@@ -222,8 +327,8 @@ static void time_fill_current_time(ulog_Event *ev) {
 
 static void time_print_short(print_target *tgt, ulog_Event *ev,
                              bool append_space) {
-    if (time_print_if_invalid(tgt, ev)) {
-        return;  // If time is not valid, stop printing
+    if (!time_cfg_is_enabled() || time_print_if_invalid(tgt, ev)) {
+        return;  // If time is not valid or disabled, stop printing
     }
     char buf[TIME_SHORT_BUF_SIZE] = {0};
     const char *format            = append_space ? "%H:%M:%S " : "%H:%M:%S";
@@ -234,8 +339,8 @@ static void time_print_short(print_target *tgt, ulog_Event *ev,
 #if ULOG_FEATURE_EXTRA_OUTPUTS
 static void time_print_full(print_target *tgt, ulog_Event *ev,
                             bool append_space) {
-    if (time_print_if_invalid(tgt, ev)) {
-        return;  // If time is not valid, stop printing
+    if (!time_cfg_is_enabled() || time_print_if_invalid(tgt, ev)) {
+        return;  // If time is not valid or disabled, stop printing
     }
     char buf[TIME_FULL_BUF_SIZE] = {0};
     const char *format =
@@ -256,7 +361,40 @@ static void time_print_full(print_target *tgt, ulog_Event *ev,
 #endif  // ULOG_FEATURE_TIME
 
 /* ============================================================================
-   Core Feature: Levels  (`levels_*`, depends on: Print)
+   Feature: Levels Config (`levels_cfg_*`, depends on: - )
+============================================================================ */
+#if ULOG_FEATURE_RUNTIME_CONFIG
+
+typedef struct {
+    bool short_levels;  // Use short level strings
+} levels_cfg_t;
+
+static levels_cfg_t levels_cfg = {
+    .short_levels = FEATURE_SHORT_LEVELS || FEATURE_EMOJI_LEVELS,
+};
+
+// Private
+// ================
+
+bool levels_cfg_is_short(void) {
+    return levels_cfg.short_levels;
+}
+
+// Public
+// ================
+
+void ulog_configure_levels(bool use_short_levels) {
+    lock_lock();  // Lock the configuration
+    levels_cfg.short_levels = use_short_levels;
+    lock_unlock();  // Unlock the configuration
+}
+
+#else  // ULOG_FEATURE_RUNTIME_CONFIG
+#define levels_cfg_is_short() (ULOG_FEATURE_SHORT_LEVELS)
+#endif  // ULOG_FEATURE_RUNTIME_CONFIG
+
+/* ============================================================================
+   Core Feature: Levels  (`levels_*`, depends on: Levels Config, Print)
 ============================================================================ */
 
 // Private
@@ -267,12 +405,10 @@ static void time_print_full(print_target *tgt, ulog_Event *ev,
 
 typedef struct {
     int level;
-    bool short_levels;
 } levels_data_t;
 
 static levels_data_t levels_data = {
-    .level        = ULOG_DEFAULT_LOG_LEVEL,
-    .short_levels = ULOG_FEATURE_SHORT_LEVELS || ULOG_FEATURE_EMOJI_LEVELS,
+    .level = ULOG_DEFAULT_LOG_LEVEL,
 };
 
 // clang-format off
@@ -294,7 +430,7 @@ static const char *levels_strings[][LEVELS_TOTAL] = {
 
 static void levels_print(print_target *tgt, ulog_Event *ev) {
 #if ULOG_FEATURE_SHORT_LEVELS || ULOG_FEATURE_EMOJI_LEVELS
-    if (levels_data.short_levels) {
+    if (levels_cfg_is_short()) {
         print_to_target(tgt, "%-1s ",
                         levels_strings[LEVELS_USE_SHORT][ev->level]);
     } else {
@@ -333,7 +469,7 @@ void ulog_set_level(int level) {
 // ================
 #if ULOG_FEATURE_EXTRA_OUTPUTS
 #define CB_USER_NUM ULOG_EXTRA_OUTPUTS
-#else 
+#else
 #define CB_USER_NUM 0
 #endif  // ULOG_FEATURE_EXTRA_OUTPUTS
 
@@ -376,8 +512,7 @@ static void cb_handle_single(ulog_Event *ev, cb_t *cb) {
 static void cb_handle_all(ulog_Event *ev) {
     // Processing the message for callbacks
     for (int i = 0;
-         (i < CB_TOTAL_NUM) && (cb_data.callbacks[i].function != NULL);
-         i++) {
+         (i < CB_TOTAL_NUM) && (cb_data.callbacks[i].function != NULL); i++) {
         cb_handle_single(ev, &cb_data.callbacks[i]);
     }
 }
@@ -433,7 +568,40 @@ int ulog_add_fp(FILE *fp, int level) {
 #endif  // ULOG_FEATURE_EXTRA_OUTPUTS
 
 /* ============================================================================
-   Feature: Topics (`topic_*` depends on: Print, Levels)
+   Feature: Topics Config (`topic_cfg_*`, depends on: - )
+============================================================================ */
+#if ULOG_FEATURE_TOPICS && ULOG_FEATURE_RUNTIME_CONFIG
+
+typedef struct {
+    bool enabled;
+} topic_cfg_t;
+
+static topic_cfg_t topic_cfg = {
+    .enabled = ULOG_FEATURE_TOPICS,
+};
+
+// Private
+// ================
+
+bool topic_cfg_is_enabled(void) {
+    return topic_cfg.enabled;
+}
+
+// Public
+// ================
+
+void ulog_configure_topics(bool enabled) {
+    lock_lock();  // Lock the configuration
+    topic_cfg.enabled = enabled;
+    lock_unlock();  // Unlock the configuration
+}
+
+#else  // ULOG_FEATURE_RUNTIME_CONFIG
+#define topic_cfg_is_enabled() (ULOG_FEATURE_TOPICS)
+#endif  // ULOG_FEATURE_RUNTIME_CONFIG
+
+/* ============================================================================
+   Feature: Topics (`topic_*`, depends on: Topics Config, Print, Levels)
 ============================================================================ */
 
 #if ULOG_FEATURE_TOPICS
@@ -505,6 +673,10 @@ static int topic_add(const char *topic_name, bool enable);
 // === Common Topic Functions =================================================
 
 static void topic_print(print_target *tgt, ulog_Event *ev) {
+    if (!topic_cfg_is_enabled()) {
+        return;  // Topics are disabled, do nothing
+    }
+
     topic_t *t = topic_get(ev->topic);
     if (t != NULL) {
         print_to_target(tgt, "[%s] ", t->name);
@@ -825,9 +997,42 @@ static int topic_add(const char *topic_name, bool enable) {
 #endif  // ULOG_FEATURE_TOPICS && TOPIC_DYNAMIC == true
 
 /* ============================================================================
+   Feature: File Path Config (`file_path_cfg_*`, depends on: - )
+============================================================================ */
+#if ULOG_FEATURE_FILE_STRING && ULOG_FEATURE_RUNTIME_CONFIG
+
+typedef struct {
+    bool enabled;
+} file_path_cfg_t;
+
+static file_path_cfg_t file_path_cfg = {
+    .enabled = FEATURE_FILE_STRING,
+};
+
+// Private
+// ================
+
+bool file_path_cfg_is_enabled(void) {
+    return file_path_cfg.enabled;
+}
+
+// Public
+// ================
+
+void ulog_configure_file_string(bool enabled) {
+    lock_lock();  // Lock the configuration
+    file_path_cfg.enabled = enabled;
+    lock_unlock();  // Unlock the configuration
+}
+
+#else  // ULOG_FEATURE_RUNTIME_CONFIG
+#define file_path_cfg_is_enabled() (FEATURE_FILE_STRING)
+#endif  // ULOG_FEATURE_RUNTIME_CONFIG
+
+/* ============================================================================
    Core Feature: Log (`log_*`, depends on: Print, Levels, Callbacks,
                       Extra Outputs, Custom Prefix, Topics, Time, Color,
-                      Locking)
+                      Locking,File Path)
 ============================================================================ */
 
 typedef struct {
@@ -846,7 +1051,7 @@ static log_data_t log_data = {
 /// @param ev - Event
 static void log_print_message(print_target *tgt, ulog_Event *ev) {
 
-    if (log_data.show_file_string) {
+    if (file_path_cfg_is_enabled()) {
         print_to_target(tgt, "%s:%d: ", ev->file, ev->line);  // file and line
     }
 
@@ -904,12 +1109,19 @@ void log_fill_event(ulog_Event *ev, const char *message, int level,
     }
 
     ev->message = message;
-    ev->file    = file;
-    ev->line    = line;
     ev->level   = level;
+
+#if ULOG_FEATURE_FILE_STRING
+    ev->file = file;
+    ev->line = line;
+#else
+    (void)(file), (void)(line);  // Unused if file string is disabled
+#endif  // ULOG_FEATURE_FILE_STRING
 
 #if ULOG_FEATURE_TOPICS
     ev->topic = topic_id;
+#else
+    (void)(topic_id);  // Unused if topics are disabled
 #endif
 
 #if ULOG_FEATURE_TIME
