@@ -8,14 +8,14 @@
 constexpr static size_t TIME_STAMP_SIZE      = 8;   // HH:MM:SS
 constexpr static size_t FULL_TIME_STAMP_SIZE = 19;  // YYYY-MM-DD HH:MM:SS
 
-#if FEATURE_CUSTOM_PREFIX
+#if ULOG_FEATURE_CUSTOM_PREFIX
 static void test_prefix(ulog_Event *ev, char *prefix, size_t prefix_size) {
     (void)ev;
 
     // NOTE: Test cases expect the first character to be non-whitespace
     snprintf(prefix, prefix_size, "[PREFIX]");
 }
-#endif  // FEATURE_CUSTOM_PREFIX
+#endif  // ULOG_FEATURE_CUSTOM_PREFIX
 
 struct TimeTestFixture {
   public:
@@ -82,7 +82,7 @@ void _check_console_time(bool prefix = false) {
     REQUIRE(sscanf(ut_callback_get_last_message(), "%d:%d:%d ", &hh, &mm,
                    &ss) == 3);
 
-#if FEATURE_CUSTOM_PREFIX
+#if ULOG_FEATURE_CUSTOM_PREFIX
     if (prefix) {
         // Should be no space after time
         REQUIRE(ut_callback_get_last_message()[TIME_STAMP_SIZE] != ' ');
@@ -90,10 +90,10 @@ void _check_console_time(bool prefix = false) {
         // If no custom prefix, there should be a space after the time
         REQUIRE(ut_callback_get_last_message()[TIME_STAMP_SIZE] == ' ');
     }
-#else   // FEATURE_CUSTOM_PREFIX
+#else   // ULOG_FEATURE_CUSTOM_PREFIX
     // If no custom prefix, there should be a space after the time
     REQUIRE(ut_callback_get_last_message()[TIME_STAMP_SIZE] == ' ');
-#endif  // FEATURE_CUSTOM_PREFIX
+#endif  // ULOG_FEATURE_CUSTOM_PREFIX
 
     _check_time_fields(hh, mm, ss, before, after);
 }
@@ -128,7 +128,7 @@ void _check_file_time(bool prefix = false) {
     REQUIRE(sscanf(buffer, "%d-%d-%d %d:%d:%d ", &yr, &mo, &d, &hh, &mm, &ss) ==
             6);
 
-#if FEATURE_CUSTOM_PREFIX
+#if ULOG_FEATURE_CUSTOM_PREFIX
     if (prefix) {
         // Should be no space after time
         REQUIRE(buffer[FULL_TIME_STAMP_SIZE] != ' ');
@@ -136,10 +136,10 @@ void _check_file_time(bool prefix = false) {
         // If no custom prefix, there should be a space after the time
         REQUIRE(buffer[FULL_TIME_STAMP_SIZE] == ' ');
     }
-#else   // FEATURE_CUSTOM_PREFIX
+#else   // ULOG_FEATURE_CUSTOM_PREFIX
     // If no custom prefix, there should be a space after the time
     REQUIRE(buffer[FULL_TIME_STAMP_SIZE] == ' ');
-#endif  // FEATURE_CUSTOM_PREFIX
+#endif  // ULOG_FEATURE_CUSTOM_PREFIX
 
     _check_date_time_fields(yr, mo, d, hh, mm, ss, before, after);
 }
@@ -149,11 +149,11 @@ TEST_CASE_FIXTURE(TimeTestFixture, "Check time without prefix") {
     _check_file_time();
 }
 
-#if FEATURE_CUSTOM_PREFIX
+#if ULOG_FEATURE_CUSTOM_PREFIX
 TEST_CASE_FIXTURE(TimeTestFixture, "Check time with prefix") {
     ulog_set_prefix_fn(test_prefix);
 
     _check_console_time(true);
     _check_file_time(true);
 }
-#endif  // FEATURE_CUSTOM_PREFIX
+#endif  // ULOG_FEATURE_CUSTOM_PREFIX

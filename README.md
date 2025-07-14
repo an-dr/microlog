@@ -54,6 +54,7 @@ The project is based on several core principles:
         - [Custom Log Prefix](#custom-log-prefix)
         - [Timestamp](#timestamp)
         - [Other Customization](#other-customization)
+        - [Feature Flags](#feature-flags)
     - [Contributing](#contributing)
     - [License](#license)
     - [Credits](#credits)
@@ -402,6 +403,21 @@ The following defines can be used to customize the library's output:
 - `ULOG_HIDE_FILE_STRING` - Hide the file name and line number.
 - `ULOG_SHORT_LEVEL_STRINGS` - Use short level strings, e.g. "T" for "TRACE", "I" for "INFO".
 - `ULOG_USE_EMOJI` - Use emojis for log levels (⚪, 🟢, 🔵, 🟡, 🟠, 🔴, 💥). Overrides `ULOG_SHORT_LEVEL_STRINGS`. WARNING: not all compilers and terminals support emojis.
+
+### Feature Flags
+
+All feature states can be read using the following public macros. The macros are defined based on the compilation options described above, please do not modify them directly!
+
+| Compilation Options          | Flag (true/false)            |         Default |
+|------------------------------|------------------------------|-----------------|
+| `ULOG_CUSTOM_PREFIX_SIZE`    | `ULOG_FEATURE_CUSTOM_PREFIX` | ❌ false        |
+| `ULOG_EXTRA_OUTPUTS`         | `ULOG_FEATURE_EXTRA_OUTPUTS` | ❌ false        |
+| `ULOG_HAVE_TIME`             | `ULOG_FEATURE_TIME`          | ❌ false        |
+| `ULOG_HIDE_FILE_STRING`      | `ULOG_FEATURE_FILE_STRING`   | ✅ true         |
+| `ULOG_NO_COLOR`              | `ULOG_FEATURE_COLOR`         | ✅ true         |
+| `ULOG_SHORT_LEVEL_STRINGS`   | `ULOG_FEATURE_SHORT_LEVELS`  | ❌ false        |
+| `ULOG_TOPICS_NUM`            | `ULOG_FEATURE_TOPICS`        | ❌ false        |
+| `ULOG_USE_EMOJI`             | `ULOG_FEATURE_EMOJI_LEVELS`  | ❌ false        |
 
 ## Contributing
 

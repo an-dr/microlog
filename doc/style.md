@@ -42,8 +42,8 @@ typedef union {
 - **Global/Static Variables:** NOT ALLOWED. Create a structure to hold state if needed.
 - **Local Variables:** `snake_case`, short is widely used or very tiny scope, otherwise full meaningful words.
     - Example: `tgt`, `ev`, `buf`, `format`, `out_topic_id`
-- **Constants/Macros:** `ALL_CAPS` with underscores.
-    - Example: `ULOG_DEFAULT_LOG_LEVEL`, `CFG_TOPICS_NUM`
+- **Constants/Macros:** `ALL_CAPS` with underscores, always with a feature prefix if private, or `ULOG_` prefix for public constants.
+    - Example: `COLORS_RED`, `ULOG_DEFAULT_LOG_LEVEL`
 
 ### Parameters
 

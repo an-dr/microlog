@@ -21,20 +21,20 @@ int main(int argc, char *argv[]) {
 
     /* Extra Outputs =============================== */
 
-#if FEATURE_EXTRA_OUTPUTS
+#if ULOG_FEATURE_EXTRA_OUTPUTS
 
     FILE *fp = fopen("example.log", "w");
     ulog_add_fp(fp, LOG_INFO);
     ulog_add_callback(custom_callback,
                       (void *)"     - Custom Callback: ", LOG_INFO);
 
-#endif  // FEATURE_EXTRA_OUTPUTS
+#endif  // ULOG_FEATURE_EXTRA_OUTPUTS
 
     /* Custom Prefix ==================================== */
 
-#if FEATURE_CUSTOM_PREFIX
+#if ULOG_FEATURE_CUSTOM_PREFIX
     ulog_set_prefix_fn(update_prefix);
-#endif  // FEATURE_CUSTOM_PREFIX
+#endif  // ULOG_FEATURE_CUSTOM_PREFIX
 
     /* Core Logging ===================================== */
     // ulog_set_quiet(true);
@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
     /* Topics =========================================== */
     printf("\n");
 
-#if FEATURE_TOPICS
+#if ULOG_FEATURE_TOPICS
 
     ulog_add_topic("Bluetooth", true);
     ulog_add_topic("Audio", false);
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
     // logt_info("Indication",
     //          "Indication message 2 (level lower than global level)");
 
-#endif  // FEATURE_TOPICS
+#endif  // ULOG_FEATURE_TOPICS
 
     return 0;
 }
