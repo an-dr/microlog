@@ -45,15 +45,20 @@ The project is based on several core principles:
         - [Use](#use)
     - [User Manual](#user-manual)
         - [Basics](#basics)
+        - [Runtime Configuration](#runtime-configuration)
         - [Log Verbosity](#log-verbosity)
         - [Thread-safety](#thread-safety)
         - [Log Topics](#log-topics)
+            - [Log Topics - Runtime Configuration](#log-topics---runtime-configuration)
         - [Extra Outputs](#extra-outputs)
             - [File Output](#file-output)
             - [Custom Output](#custom-output)
+            - [Extra Outputs - Runtime Configuration](#extra-outputs---runtime-configuration)
         - [Custom Log Prefix](#custom-log-prefix)
         - [Timestamp](#timestamp)
+            - [Custom Log Prefix - Runtime Configuration](#custom-log-prefix---runtime-configuration)
         - [Other Customization](#other-customization)
+            - [Other Customization - Runtime Configuration](#other-customization---runtime-configuration)
         - [Feature Flags](#feature-flags)
     - [Contributing](#contributing)
     - [License](#license)
@@ -174,6 +179,10 @@ Note: You might want to adjust the compiler argument  `-fmacro-prefix-map=OLD_PA
 ```meson
 add_global_arguments('-fmacro-prefix-map=../=',language: 'c')
 ```
+
+### Runtime Configuration
+
+Most of the library features are configured compile time to reduce the code size and complexity. However, if the code size is not a concern, you can enable runtime configuration by defining `ULOG_FEATURE_RUNTIME_CFG`. When the feature is enables all other features are enabled too in some default mode described in bellow. All runtime configuration functions are prefixed with `ulog_configure_*`.
 
 ### Log Verbosity
 
@@ -314,6 +323,14 @@ logt_info("network", "Connected to server");
 logt_info("storage", "No free space");
 ```
 
+#### Log Topics - Runtime Configuration
+
+If runtime configuration enabled topics are created runtime in the **dynamic allocation mode**.
+
+Configuration functions:
+
+- `void ulog_configure_topics(bool enabled)` - will show or hide topics in the log output when printing using `logt_xxx` macros.
+
 ### Extra Outputs
 
 The feature is controlled by the following defines:
@@ -356,6 +373,10 @@ void arduino_callback(ulog_Event *ev, void *arg) {
 ulog_add_callback(arduino_callback, NULL, LOG_INFO);
 ```
 
+#### Extra Outputs - Runtime Configuration
+
+In the runtime configuration mode, `ULOG_FEATURE_EXTRA_OUTPUTS_CFG` is set to 8.
+
 ### Custom Log Prefix
 
 Sets a custom prefix function. The function is called with the log level and should return a string that will be printed right before the log level. It can be used to add custom data to the log messages, e.g. millisecond time.
@@ -395,6 +416,14 @@ console:
 20:18:26 TRACE src/main.c:11: Hello world
 ```
 
+#### Custom Log Prefix - Runtime Configuration
+
+If runtime configuration enabled, `ULOG_FEATURE_CUSTOM_PREFIX_CFG_SIZE` is set to 64.
+
+Functions to configure the custom prefix:
+
+- `void ulog_configure_prefix(bool enabled)` - will enable or disable custom prefix in the log output.
+
 ### Other Customization
 
 The following defines can be used to customize the library's output:
@@ -403,6 +432,15 @@ The following defines can be used to customize the library's output:
 - `ULOG_HIDE_FILE_STRING` - Hide the file name and line number.
 - `ULOG_SHORT_LEVEL_STRINGS` - Use short level strings, e.g. "T" for "TRACE", "I" for "INFO".
 - `ULOG_USE_EMOJI` - Use emojis for log levels (⚪, 🟢, 🔵, 🟡, 🟠, 🔴, 💥). Overrides `ULOG_SHORT_LEVEL_STRINGS`. WARNING: not all compilers and terminals support emojis.
+
+#### Other Customization - Runtime Configuration
+
+Configuration functions:
+
+- `void ulog_configure_color(bool enabled)` - will enable or disable ANSI color escape codes when printing to stdout.
+- `void ulog_configure_file_string(bool enabled)` - will show or hide file and line in the log output.
+- `void ulog_configure_short_level_strings(bool enabled)` - will enable or disable short level strings, e.g. "T" for "TRACE", "I" for "INFO".
+- `void ulog_configure_time(bool enabled)` - will enable or disable time in the log output.
 
 ### Feature Flags
 

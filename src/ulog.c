@@ -36,12 +36,6 @@ static inline bool is_str_empty(const char *str) {
     return (str == NULL) || (str[0] == '\0');
 }
 
-/* ============================================================================
-   Prototypes
-============================================================================ */
-
-static void log_print_event(print_target *tgt, ulog_Event *ev, bool full_time,
-                            bool color, bool new_line);
 
 /* ============================================================================
    Core Feature: Print (`print_*`, depends on: - )
@@ -88,6 +82,13 @@ static void print_to_target(print_target *tgt, const char *format, ...) {
     print_to_target_valist(tgt, format, args);
     va_end(args);
 }
+
+/* ============================================================================
+   Prototypes
+============================================================================ */
+
+static void log_print_event(print_target *tgt, ulog_Event *ev, bool full_time,
+                            bool color, bool new_line);
 
 /* ============================================================================
    Core Functionality: Lock (Depends on: - )
@@ -1026,7 +1027,7 @@ void ulog_configure_file_string(bool enabled) {
 }
 
 #else  // ULOG_FEATURE_RUNTIME_CONFIG
-#define file_path_cfg_is_enabled() (FEATURE_FILE_STRING)
+#define file_path_cfg_is_enabled() (ULOG_FEATURE_FILE_STRING)
 #endif  // ULOG_FEATURE_RUNTIME_CONFIG
 
 /* ============================================================================
@@ -1038,10 +1039,6 @@ void ulog_configure_file_string(bool enabled) {
 typedef struct {
     bool show_file_string;  // Show file and line in the log message
 } log_data_t;
-
-static log_data_t log_data = {
-    .show_file_string = ULOG_FEATURE_FILE_STRING,
-};
 
 // Private
 // ================
