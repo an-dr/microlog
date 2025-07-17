@@ -55,8 +55,9 @@ The project is based on several core principles:
             - [Custom Output](#custom-output)
             - [Extra Outputs - Runtime Configuration](#extra-outputs---runtime-configuration)
         - [Custom Log Prefix](#custom-log-prefix)
-        - [Timestamp](#timestamp)
             - [Custom Log Prefix - Runtime Configuration](#custom-log-prefix---runtime-configuration)
+        - [Timestamp](#timestamp)
+            - [Timestamp - Runtime Configuration](#timestamp---runtime-configuration)
         - [Other Customization](#other-customization)
             - [Other Customization - Runtime Configuration](#other-customization---runtime-configuration)
         - [Feature Flags](#feature-flags)
@@ -398,7 +399,16 @@ The output will be:
 
 ```txt
 19:51:42, 105 ms ERROR src/main.c:38: Error message
-````
+```
+
+#### Custom Log Prefix - Runtime Configuration
+
+If runtime configuration enabled, `ULOG_FEATURE_CUSTOM_PREFIX_CFG_SIZE` is set to 64.
+
+Functions to configure the custom prefix:
+
+- `void ulog_configure_prefix(bool enabled)` - will enable or disable custom prefix in the log output.
+
 
 ### Timestamp
 
@@ -416,13 +426,11 @@ console:
 20:18:26 TRACE src/main.c:11: Hello world
 ```
 
-#### Custom Log Prefix - Runtime Configuration
+#### Timestamp - Runtime Configuration
 
-If runtime configuration enabled, `ULOG_FEATURE_CUSTOM_PREFIX_CFG_SIZE` is set to 64.
+Functions to configure the timestamp:
 
-Functions to configure the custom prefix:
-
-- `void ulog_configure_prefix(bool enabled)` - will enable or disable custom prefix in the log output.
+- `void ulog_configure_time(bool enabled)` - will enable or disable time in the log output.
 
 ### Other Customization
 
