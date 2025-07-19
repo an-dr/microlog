@@ -39,7 +39,7 @@ extern "C" {
 | ULOG_FEATURE_SHORT_LEVELS  | OFF             | ULOG_SHORT_LEVEL_STRINGS     |
 | ULOG_FEATURE_TIME          | OFF             | ULOG_HAVE_TIME               |
 | ULOG_FEATURE_TOPICS        | OFF             | ULOG_TOPICS_NUM              |
-| ULOG_FEATURE_RUNTIME_CONFIG| OFF             | ULOG_RUNTIME_CONFIG          |
+| ULOG_FEATURE_RUNTIME_MODE  | OFF             | ULOG_RUNTIME_MODE            |
 
 
 ============================================================================ */
@@ -107,8 +107,8 @@ extern "C" {
 
 
 
-#ifdef ULOG_RUNTIME_CONFIG
-#define ULOG_FEATURE_RUNTIME_CONFIG true
+#ifdef ULOG_RUNTIME_MODE
+#define ULOG_FEATURE_RUNTIME_MODE true
 // Undef all ULOG_FEATURE_* macros to avoid conflicts
 #undef ULOG_FEATURE_COLOR
 #undef ULOG_FEATURE_CUSTOM_PREFIX
@@ -120,17 +120,16 @@ extern "C" {
 // Configure features based on runtime config
 #define ULOG_FEATURE_COLOR true
 #define ULOG_FEATURE_CUSTOM_PREFIX true
-#define ULOG_FEATURE_CUSTOM_PREFIX_CFG_SIZE 64
+#define ULOG_CUSTOM_PREFIX_SIZE 64
 #define ULOG_FEATURE_EXTRA_OUTPUTS true
-#define ULOG_FEATURE_EXTRA_OUTPUTS_CFG 8
+#define ULOG_EXTRA_OUTPUTS 8
 #define ULOG_FEATURE_FILE_STRING true
 #define ULOG_FEATURE_SHORT_LEVELS true
 #define ULOG_FEATURE_TOPICS true
-#define ULOG_FEATURE_TOPICS_CFG_DYNAMIC_ALLOC true
-#define ULOG_FEATURE_TOPICS_CFG_NUM -1
+#define ULOG_TOPICS_NUM -1
 
 #else
-#define ULOG_FEATURE_RUNTIME_CONFIG false
+#define ULOG_FEATURE_RUNTIME_MODE false
 #endif
 
 
@@ -220,7 +219,7 @@ void ulog_set_lock(ulog_LockFn function, void *lock_arg);
 /* ============================================================================
    Feature: Runtime Config
 ============================================================================ */
-#if FEATURE_RUNTIME_CONFIG
+#if ULOG_FEATURE_RUNTIME_MODE
 
 void ulog_configure_color(bool enabled);
 void ulog_configure_prefix(bool enabled);
@@ -229,7 +228,7 @@ void ulog_configure_time(bool enabled);
 void ulog_configure_levels(bool use_short_levels);
 void ulog_configure_topics(bool enabled);
 
-#endif  // FEATURE_RUNTIME_CONFIG
+#endif  // ULOG_FEATURE_RUNTIME_MODE
 
 /* ============================================================================
    Feature: Custom Prefix

@@ -45,7 +45,7 @@ The project is based on several core principles:
         - [Use](#use)
     - [User Manual](#user-manual)
         - [Basics](#basics)
-        - [Runtime Configuration](#runtime-configuration)
+        - [Runtime Mode](#runtime-mode)
         - [Log Verbosity](#log-verbosity)
         - [Thread-safety](#thread-safety)
         - [Log Topics](#log-topics)
@@ -181,9 +181,9 @@ Note: You might want to adjust the compiler argument  `-fmacro-prefix-map=OLD_PA
 add_global_arguments('-fmacro-prefix-map=../=',language: 'c')
 ```
 
-### Runtime Configuration
+### Runtime Mode
 
-Most of the library features are configured compile time to reduce the code size and complexity. However, if the code size is not a concern, you can enable runtime configuration by defining `ULOG_FEATURE_RUNTIME_CFG`. When the feature is enables all other features are enabled too in some default mode described in bellow. All runtime configuration functions are prefixed with `ulog_configure_*`.
+Most of the library features are configured compile time to reduce the code size and complexity. However, if the code size is not a concern, you can enable runtime configuration by defining `ULOG_FEATURE_RUNTIME_MODE`. When the feature is enables all other features are enabled too in some default mode described in bellow. All runtime configuration functions are prefixed with `ulog_configure_*`.
 
 ### Log Verbosity
 
@@ -376,7 +376,7 @@ ulog_add_callback(arduino_callback, NULL, LOG_INFO);
 
 #### Extra Outputs - Runtime Configuration
 
-In the runtime configuration mode, `ULOG_FEATURE_EXTRA_OUTPUTS_CFG` is set to 8.
+In the runtime configuration mode, `ULOG_EXTRA_OUTPUTS` is set to 8.
 
 ### Custom Log Prefix
 
@@ -461,7 +461,7 @@ All feature states can be read using the following public macros. The macros are
 | `ULOG_HAVE_TIME`             | `ULOG_FEATURE_TIME`          | ❌ false        |
 | `ULOG_HIDE_FILE_STRING`      | `ULOG_FEATURE_FILE_STRING`   | ✅ true         |
 | `ULOG_NO_COLOR`              | `ULOG_FEATURE_COLOR`         | ✅ true         |
-| `ULOG_RUNTIME_CFG`           | `ULOG_FEATURE_RUNTIME_CONFIG`| ❌ false        |
+| `ULOG_RUNTIME_MODE`          | `ULOG_FEATURE_RUNTIME_MODE`  | ❌ false        |
 | `ULOG_SHORT_LEVEL_STRINGS`   | `ULOG_FEATURE_SHORT_LEVELS`  | ❌ false        |
 | `ULOG_TOPICS_NUM`            | `ULOG_FEATURE_TOPICS`        | ❌ false        |
 | `ULOG_USE_EMOJI`             | `ULOG_FEATURE_EMOJI_LEVELS`  | ❌ false        |

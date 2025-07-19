@@ -31,7 +31,7 @@ set(ULOG_CONFIG_TEST_TOPICS ${ULOG_CONFIG_BASE}
                             "-DULOG_TOPICS_NUM=2"
                             )
                             
-set(ULOG_CONFIG_TEST_RUNTIME_CONFIG "-DULOG_FEATURE_RUNTIME_CONFIG")
+set(ULOG_CONFIG_TEST_RUNTIME_CONFIG "-DULOG_RUNTIME_MODE")
                      
 # --- Core Tests ---
 add_executable(test_core)
