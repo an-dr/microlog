@@ -55,6 +55,7 @@ The project is based on several core principles:
         - [Timestamp](#timestamp)
         - [Other Customization](#other-customization)
         - [Feature Flags](#feature-flags)
+    - [Changelog](#changelog)
     - [Contributing](#contributing)
     - [License](#license)
     - [Credits](#credits)
@@ -418,6 +419,10 @@ All feature states can be read using the following public macros. The macros are
 | `ULOG_SHORT_LEVEL_STRINGS`   | `ULOG_FEATURE_SHORT_LEVELS`  | ❌ false        |
 | `ULOG_TOPICS_NUM`            | `ULOG_FEATURE_TOPICS`        | ❌ false        |
 | `ULOG_USE_EMOJI`             | `ULOG_FEATURE_EMOJI_LEVELS`  | ❌ false        |
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a detailed history of all changes to this project.
 
 ## Contributing
 
