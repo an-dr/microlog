@@ -183,7 +183,17 @@ add_global_arguments('-fmacro-prefix-map=../=',language: 'c')
 
 ### Runtime Mode
 
-Most of the library features are configured compile time to reduce the code size and complexity. However, if the code size is not a concern, you can enable runtime configuration by defining `ULOG_FEATURE_RUNTIME_MODE`. When the feature is enables all other features are enabled too in some default mode described in bellow. All runtime configuration functions are prefixed with `ulog_configure_*`.
+Most of the library features are configured compile time to reduce the code size and complexity. However, if the code size is not a concern, you can enable runtime configuration by defining `ULOG_FEATURE_RUNTIME_MODE`. When the feature is enables all other features are enabled too in some default mode described in bellow. All runtime configuration functions are prefixed with `ulog_configure_*`. The default configuration is following:
+
+| Feature       | Default Configuration                   |
+| ------------- | --------------------------------------  |
+| Custom prefix | ☑️ visible, ULOG_CUSTOM_PREFIX_SIZE: 64 |
+| Extra Outputs | ULOG_EXTRA_OUTPUTS : 8                  |
+| Time          | ☑️ visible                              |
+| File String   | ☑️ visible                              |
+| Color         | ☑️ visible                              |
+| Short Levels  | ⬜ disabled                             |
+| Topics        | ☑️ visible, dynamic allocation          |
 
 ### Log Verbosity
 
