@@ -71,8 +71,7 @@ static void print_to_target_valist(print_target *tgt, const char *format,
         char *buf   = tgt->dsc.buffer.data + tgt->dsc.buffer.curr_pos;
         size_t size = tgt->dsc.buffer.size - tgt->dsc.buffer.curr_pos;
         if (size > 0U) {
-            int printed = vsnprintf(buf, size, format, args);
-            tgt->dsc.buffer.curr_pos += printed;
+            tgt->dsc.buffer.curr_pos += vsnprintf(buf, size, format, args);
         }
     } else if (tgt->type == LOG_TARGET_STREAM) {
         FILE *stream = tgt->dsc.stream;
@@ -1037,7 +1036,7 @@ void ulog_configure_file_string(bool enabled) {
 /* ============================================================================
    Core Feature: Log (`log_*`, depends on: Print, Levels, Callbacks,
                       Extra Outputs, Custom Prefix, Topics, Time, Color,
-                      Locking,File Path)
+                      Locking, File Path)
 ============================================================================ */
 
 typedef struct {
