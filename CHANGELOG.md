@@ -92,3 +92,85 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Improve log level handling for topics with new default level configuration
+
+## [6.3.3] - 2025-06-01
+
+### Changed
+- Remove unit tests from release workflow to improve release process
+
+## [6.3.1] - 2025-05-31
+
+### Fixed
+- Fix va_args bug causing segmentation fault on Linux ([#55](https://github.com/an-dr/microlog/pull/55))
+- Add proper va_list copying to avoid platform-specific issues
+- Create event copy to avoid va_list issues in callback processing
+
+### Added
+- Add devcontainer for local builds and tests
+- Add cross-platform development environment support
+
+## [6.3.0] - 2025-05-22
+
+### Added
+- Add logging level configuration to topics ([#36](https://github.com/an-dr/microlog/pull/36))
+- Add `ulog_set_topic_level()` function to set debug level for individual topics
+- Support for per-topic logging level control
+
+### Changed
+- By default, topic logging level is set to `LOG_TRACE`
+- Topics now respect both global logging level and topic-specific level
+- Update README and examples with topic logging level configuration
+
+## [6.2.1] - 2025-04-26
+
+### Added
+- Add minimalistic source package for easier distribution
+- Add source package generation to build workflow
+
+### Changed
+- Update installation documentation to include source package option
+
+## [6.2.0] - 2025-04-26
+
+### Added  
+- Add CMake package support with `find_package` integration ([#28](https://github.com/an-dr/microlog/pull/28))
+- Add CI workflows for PR, merge and new version tag
+- Add build tests and package testing
+- Add Meson package support
+
+### Changed
+- Improve project packaging and distribution
+- Add comprehensive CI/CD pipeline
+- Update README with CMake and Meson package installation instructions
+
+## [6.1.0] - 2025-04-18
+
+### Changed
+- Refactoring to remove non-standard `fmemopen` ([#25](https://github.com/an-dr/microlog/pull/25))
+- Implement internal `vprint` and `print` functions accepting streams and buffers
+- Add support for MSVC and other non-POSIX compilers
+- Improve cross-platform compatibility
+
+## [6.0.1] - 2024-12-10
+
+### Fixed
+- Fix missing space between log level and message ([#21](https://github.com/an-dr/microlog/pull/21))
+- Improve log message formatting consistency
+- Fix time formatting for custom prefix feature
+
+## [6.0.0] - 2024-09-18
+
+### Added
+- Add Log Topics Feature ([#18](https://github.com/an-dr/microlog/pull/18))
+- Support for filtering log messages by subsystems (e.g., "network", "storage")
+- Add topic-specific logging macros (`logt_trace`, `logt_debug`, etc.)
+- Support for both static and dynamic topic allocation
+- Add topic management functions (`ulog_add_topic`, `ulog_enable_topic`, etc.)
+
+### Changed
+- Rename Extra Destinations to Extra Outputs for clarity
+- Update log message format to include topic information
+- Major version bump due to API changes
+
+### Fixed
+- Various bug fixes and improvements
