@@ -59,7 +59,6 @@ extern "C" {
 
 
 #ifdef ULOG_HAVE_TIME
-    #include <time.h>
     #define ULOG_FEATURE_TIME true
 #else
     #define ULOG_FEATURE_TIME false
@@ -112,9 +111,10 @@ extern "C" {
 // Undef all ULOG_FEATURE_* macros to avoid conflicts
 #undef ULOG_FEATURE_COLOR
 #undef ULOG_FEATURE_CUSTOM_PREFIX
+#undef ULOG_FEATURE_EXTRA_OUTPUTS
 #undef ULOG_FEATURE_FILE_STRING
 #undef ULOG_FEATURE_SHORT_LEVELS
-#undef ULOG_FEATURE_EXTRA_OUTPUTS
+#undef ULOG_FEATURE_TIME
 #undef ULOG_FEATURE_TOPICS
 
 // Configure features based on runtime config
@@ -125,6 +125,7 @@ extern "C" {
 #define ULOG_EXTRA_OUTPUTS 8
 #define ULOG_FEATURE_FILE_STRING true
 #define ULOG_FEATURE_SHORT_LEVELS true
+#define ULOG_FEATURE_TIME true
 #define ULOG_FEATURE_TOPICS true
 #define ULOG_TOPICS_NUM -1
 
