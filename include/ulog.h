@@ -105,7 +105,6 @@ extern "C" {
 #endif
 
 
-
 #ifdef ULOG_RUNTIME_MODE
 #define ULOG_FEATURE_RUNTIME_MODE true
 // Undef all ULOG_FEATURE_* macros to avoid conflicts
