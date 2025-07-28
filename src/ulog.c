@@ -170,12 +170,20 @@ void ulog_configure_color(bool enabled) {
 //  Private
 // ================
 static const char *color_levels[] = {
-    "\x1b[37m",  // TRACE : White #000
-    "\x1b[36m",  // DEBUG : Cyan #0ff
+    // "\x1b[37m",  // TRACE : White #000
+    // "\x1b[36m",  // DEBUG : Cyan #0ff
+    // "\x1b[32m",  // INFO : Green #0f0
+    // "\x1b[33m",  // WARN : Yellow #ff0
+    // "\x1b[31m",  // ERROR : Red #f00
+    // "\x1b[35m"   // FATAL : Magenta #f0f
+    "\x1b[35m",  // EMERG : Magenta #f0f
+    "\x1b[33m",  // ALERT : Yellow #ff0
+    "\x1b[31m",  // CRIT : Red #f00
+    "\x1b[31m",  // ERR : Red #f00
+    "\x1b[33m",  // WARNING : Yellow #ff0
+    "\x1b[36m",  // NOTICE : Cyan #0ff
     "\x1b[32m",  // INFO : Green #0f0
-    "\x1b[33m",  // WARN : Yellow #ff0
-    "\x1b[31m",  // ERROR : Red #f00
-    "\x1b[35m"   // FATAL : Magenta #f0f
+    "\x1b[34m",  // DEBUG : Blue #00f
 };
 #define COLOR_TERMINATOR "\x1b[0m"
 
@@ -418,16 +426,16 @@ static levels_data_t levels_data = {
 // clang-format off
 #define LEVELS_USE_LONG     0
 #define LEVELS_USE_SHORT    1
-#define LEVELS_TOTAL        6
+#define LEVELS_TOTAL        8
 
 /// @brief Level strings
 static const char *levels_strings[][LEVELS_TOTAL] = {
-     {"TRACE",  "DEBUG",    "INFO",     "WARN",     "ERROR",    "FATAL"}
+    { "EMERG",  "ALERT",    "CRIT",     "ERR",     "WARNING",    "NOTICE",     "INFO",    "DEBUG" }
 #if ULOG_FEATURE_EMOJI_LEVELS
-    ,{"⚪",     "🔵",       "🟢",       "🟡",       "🔴",       "💥"}
+    ,{"💥",     "⚠️",       "🔴",       "🟠",       "🟡",       "🟢",        "🔵",      "⚪"}
 #endif
 #if !ULOG_FEATURE_EMOJI_LEVELS && ULOG_FEATURE_SHORT_LEVELS
-    ,{"T",      "D",        "I",        "W",        "E",        "F"}
+    ,{"M",      "A",        "C",        "E",        "W",         "N",         "I",       "D"}
 #endif
 };
 // clang-format on
@@ -459,7 +467,7 @@ const char *ulog_get_level_string(int level) {
 
 /// @brief Sets the debug level
 void ulog_set_level(int level) {
-    if (level < LOG_TRACE || level > LOG_FATAL) {
+    if (level < LOG_EMERGENCY || level > LOG_DEBUG) {
         return;  // Invalid level, do nothing
     }
     levels_data.level = level;
@@ -494,7 +502,7 @@ typedef struct {
     cb_t callbacks[CB_TOTAL_NUM];  // 0 is for stdout callback
 } cb_data_t;
 
-static cb_data_t cb_data = {.callbacks = {{cb_stdout, NULL, LOG_TRACE, true}}};
+static cb_data_t cb_data = {.callbacks = {{cb_stdout, NULL, LOG_DEBUG, true}}};
 
 static void cb_handle_single(ulog_Event *ev, cb_t *cb) {
     if (cb->is_enabled && ev->level >= cb->level) {

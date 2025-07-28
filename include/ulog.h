@@ -139,19 +139,24 @@ extern "C" {
    Core Functionality
 ============================================================================ */
 // clang-format off
-enum { LOG_TRACE,
-       LOG_DEBUG,
-       LOG_INFO,
-       LOG_WARN,
+enum { LOG_EMERGENCY = 0,
+       LOG_ALERT,
+       LOG_CRITICAL,
        LOG_ERROR,
-       LOG_FATAL };
-       
-#define log_trace(...) ulog_log(LOG_TRACE, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define log_debug(...) ulog_log(LOG_DEBUG, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define log_info(...) ulog_log(LOG_INFO, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define log_warn(...) ulog_log(LOG_WARN, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define log_error(...) ulog_log(LOG_ERROR, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define log_fatal(...) ulog_log(LOG_FATAL, __FILE__, __LINE__, NULL, __VA_ARGS__)
+       LOG_WARNING,
+       LOG_NOTICE,
+       LOG_INFO,   
+       LOG_DEBUG };
+
+
+#define log_emerg(...)      ulog_log(LOG_EMERGENCY, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define log_alert(...)      ulog_log(LOG_ALERT,     __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define log_crit(...)       ulog_log(LOG_CRITICAL,  __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define log_err(...)        ulog_log(LOG_ERROR,     __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define log_warning(...)    ulog_log(LOG_WARNING,   __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define log_notice(...)     ulog_log(LOG_NOTICE,    __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define log_info(...)       ulog_log(LOG_INFO,      __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define log_debug(...)      ulog_log(LOG_DEBUG,     __FILE__, __LINE__, NULL, __VA_ARGS__)
 // clang-format on
 
 /// @brief Event structure
@@ -271,12 +276,15 @@ int ulog_add_fp(FILE *fp, int level);
 
 // clang-format off
 #define TOPIC_NOT_FOUND 0x7FFFFFFF
-#define logt_trace(TOPIC_NAME, ...) ulog_log(LOG_TRACE, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_debug(TOPIC_NAME, ...) ulog_log(LOG_DEBUG, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_info(TOPIC_NAME, ...) ulog_log(LOG_INFO, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_warn(TOPIC_NAME, ...) ulog_log(LOG_WARN, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_error(TOPIC_NAME, ...) ulog_log(LOG_ERROR, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_fatal(TOPIC_NAME, ...) ulog_log(LOG_FATAL, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+
+#define logt_emerg(TOPIC_NAME, ...)     ulog_log(LOG_EMERGENCY, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_alert(TOPIC_NAME, ...)     ulog_log(LOG_ALERT,     __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_crit(TOPIC_NAME, ...)      ulog_log(LOG_CRITICAL,  __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_err(TOPIC_NAME, ...)       ulog_log(LOG_ERROR,     __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_warning(TOPIC_NAME, ...)   ulog_log(LOG_WARNING,   __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_notice(TOPIC_NAME, ...)    ulog_log(LOG_NOTICE,    __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_info(TOPIC_NAME, ...)      ulog_log(LOG_INFO,      __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_debug(TOPIC_NAME, ...)     ulog_log(LOG_DEBUG,     __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
 // clang-format on
 
 /// @brief Adds a topic
