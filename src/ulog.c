@@ -406,7 +406,7 @@ void ulog_configure_levels(bool use_short_levels) {
 // Private
 // ================
 #ifndef ULOG_DEFAULT_LOG_LEVEL
-#define ULOG_DEFAULT_LOG_LEVEL LOG_DEBUG
+#define ULOG_DEFAULT_LOG_LEVEL ULOG_DEBUG
 #endif
 
 typedef struct {
@@ -435,7 +435,7 @@ static const char *levels_strings[][LEVELS_TOTAL] = {
 // clang-format on
 
 static bool levels_is_allowed(ulog_Level msg_level, ulog_Level log_verbosity) {
-    if (msg_level > log_verbosity || msg_level < LOG_EMERGENCY) {
+    if (msg_level > log_verbosity || msg_level < ULOG_EMERGENCY) {
         return false;  // Level is higher than the configured level, not allowed
     }
     return true;  // Level is allowed
@@ -468,7 +468,7 @@ const char *ulog_get_level_string(int level) {
 
 /// @brief Sets the debug level
 void ulog_set_level(int level) {
-    if (level < LOG_EMERGENCY || level > LOG_DEBUG) {
+    if (level < ULOG_EMERGENCY || level > ULOG_DEBUG) {
         return;  // Invalid level, do nothing
     }
     levels_data.level = level;
@@ -503,7 +503,7 @@ typedef struct {
     cb_t callbacks[CB_TOTAL_NUM];  // 0 is for stdout callback
 } cb_data_t;
 
-static cb_data_t cb_data = {.callbacks = {{cb_stdout, NULL, LOG_DEBUG, true}}};
+static cb_data_t cb_data = {.callbacks = {{cb_stdout, NULL, ULOG_DEBUG, true}}};
 
 static void cb_handle_single(ulog_Event *ev, cb_t *cb) {
     if (cb->is_enabled && levels_is_allowed(ev->level, cb->level)) {
@@ -885,7 +885,7 @@ static int topic_add(const char *topic_name, bool enable) {
             topic_data.topics[i].id      = i;
             topic_data.topics[i].name    = topic_name;
             topic_data.topics[i].enabled = enable;
-            topic_data.topics[i].level   = LOG_DEBUG;
+            topic_data.topics[i].level   = ULOG_DEBUG;
             return i;
         }
         // If the topic already exists
@@ -971,7 +971,7 @@ static void *topic_allocate(int id, const char *topic_name, bool enable) {
         t->id      = id;
         t->name    = topic_name;
         t->enabled = enable;
-        t->level   = LOG_DEBUG;
+        t->level   = ULOG_DEBUG;
         t->next    = NULL;
     }
     return t;

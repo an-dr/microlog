@@ -11,9 +11,9 @@ static void test_prefix(ulog_Event *ev, char *prefix, size_t prefix_size) {
 
 struct TestFixture {
     TestFixture() {
-        ulog_set_level(LOG_DEBUG);
+        ulog_set_level(ULOG_DEBUG);
         ulog_set_quiet(false);
-        ulog_add_callback(ut_callback, nullptr, LOG_DEBUG);
+        ulog_add_callback(ut_callback, nullptr, ULOG_DEBUG);
         ut_callback_reset();
         ulog_set_prefix_fn(test_prefix);
     }

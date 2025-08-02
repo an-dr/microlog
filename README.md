@@ -5,16 +5,18 @@
 
 A simple customizable logging library. Features:
 
+- **Syslog compatibility**
+  - Syslog logging levels with standardized meaning
 - **Log topics**
-    - To filter log messages by subsystems, e.g. "network", "storage", etc.
+  - To filter log messages by subsystems, e.g. "network", "storage", etc.
 - **Callbacks for custom output**
-    - E.g. files, serial ports, etc.
+  - E.g. files, serial ports, etc.
 - **Thread-safety**
-    - Via external locking injection
+  - Via external locking injection
 - **Customizable log format**
-    - Color, custom dynamic data, emojis, etc.
+  - Color, custom dynamic data, emojis, etc.
 - **Support for embedded systems**
-    - Optional static memory allocation, optional color, no special dependencies
+  - Optional static memory allocation, optional color, no special dependencies
 
 In the default configuration it looks like this:
 
@@ -45,8 +47,8 @@ The project is based on several core principles:
         - [Use](#use)
     - [User Manual](#user-manual)
         - [Basics](#basics)
+        - [Log Levels and Verbosity](#log-levels-and-verbosity)
         - [Runtime Mode](#runtime-mode)
-        - [Log Verbosity](#log-verbosity)
         - [Thread-safety](#thread-safety)
         - [Log Topics](#log-topics)
             - [Log Topics - Runtime Configuration](#log-topics---runtime-configuration)
@@ -78,8 +80,8 @@ The project is based on several core principles:
 
 - Download a CMake Package from [Releases](https://github.com/an-dr/microlog/releases)
 - Specify the install location:
-    - Specify package storage `cmake -B./build -DCMAKE_PREFIX_PATH="~/MyCmakePackages"` or
-    - Set `microlog_DIR` variable with path to the package `microlog_DIR=~/microlog-1.2.3-cmake`
+  - Specify package storage `cmake -B./build -DCMAKE_PREFIX_PATH="~/MyCmakePackages"` or
+  - Set `microlog_DIR` variable with path to the package `microlog_DIR=~/microlog-1.2.3-cmake`
 - Use in your project:
 
 ```cmake
@@ -112,6 +114,7 @@ exe = executable(
 
 - Download CPM (https://github.com/cpm-cmake/CPM.cmake)
 - Add microlog to your projects CMAKE file:
+
 ```cmake
 include(cpm/CPM.cmake)
 CPMAddPackage("gh:an-dr/microlog@6.4.5")
@@ -142,10 +145,12 @@ The library provides printf-like macros for logging:
 
 ```c
 log_debug(const char *fmt, ...);
-log_debug(const char *fmt, ...);
 log_info(const char *fmt, ...);
+log_notice(const char *fmt, ...);
 log_warning(const char *fmt, ...);
 log_err(const char *fmt, ...);
+log_crit(const char *fmt, ...);
+log_alert(const char *fmt, ...);
 log_emerg(const char *fmt, ...);
 ```
 
@@ -181,39 +186,38 @@ Note: You might want to adjust the compiler argument  `-fmacro-prefix-map=OLD_PA
 add_global_arguments('-fmacro-prefix-map=../=',language: 'c')
 ```
 
-### Runtime Mode
+### Log Levels and Verbosity
 
-Most of the library features are configured compile time to reduce the code size and complexity. However, if the code size is not a concern, you can enable runtime configuration by defining `ULOG_FEATURE_RUNTIME_MODE`. When the feature is enables all other features are enabled too in some default mode described in bellow. All runtime configuration functions are prefixed with `ulog_configure_*`. The default configuration is following:
+The library provides 8 syslog-compatible log levels:
 
-| Feature       | Default Configuration                   |
-| ------------- | --------------------------------------  |
-| Custom prefix | ☑️ visible, ULOG_CUSTOM_PREFIX_SIZE: 64 |
-| Extra Outputs | ULOG_EXTRA_OUTPUTS : 8                  |
-| Time          | ☑️ visible                              |
-| File String   | ☑️ visible                              |
-| Color         | ☑️ visible                              |
-| Short Levels  | ⬜ disabled                             |
-| Topics        | ☑️ visible, dynamic allocation          |
+| Level          | Value | When to use                                                                     | Examples                                                                         |
+| -------------- | ----- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| ULOG_EMERGENCY | 0     | System is unusable, execution cannot continue.                                  | Kernel panic, unrecoverable hardware fault,fatal stack overflow, etc.            |
+| ULOG_ALERT     | 1     | Immediate action required, the system is still running but in a critical state. | Watchdog failed, corrupted database,compromised security context, et.c           |
+| ULOG_CRITICAL  | 2     | A key component has failed, affecting core functionality.                       | Memory allocation failure, corrupted config, failed subsystem init, etc.         |
+| ULOG_ERROR     | 3     | An operation failed, but the application can still run.                         | File not found, invalid user input, sensor read failed, etc.                     |
+| ULOG_WARNING   | 4     | Non-critical issue that may indicate a future problem.                          | Deprecated API usage, slow response time, unexpected value from peripheral, etc. |
+| ULOG_NOTICE    | 5     | Normal but noteworthy event.                                                    | Configuration loaded, user logged in, device connected, etc.                     |
+| ULOG_INFO      | 6     | Informational message.                                                          | Background job started, file opened, service initialized, etc.                   |
+| ULOG_DEBUG     | 7     | Used during development for tracing execution and values.                       | Entering function, variable state, loop counters, etc.                           |
 
-### Log Verbosity
+The default log level is `ULOG_DEBUG`, such that nothing is ignored.
 
-The default log level is `LOG_DEBUG`, such that nothing is ignored.
-
-There are two ways to modify it so that all logs below the given level will not be written to `stderr`:
+There are two ways to modify it so that all logs below the given level will not be written to `stdout`:
 
 - at compile time by defining `ULOG_DEFAULT_LOG_LEVEL` - this is particularly useful when one wants to configure the log level according to a configuration (debug or release for instance) without modifying the source code,
 - at run time by using the `ulog_set_level()` function.
 
-The example below shows how to configure log level to `LOG_INFO`:
+The example below shows how to configure log level to `ULOG_INFO`:
 
 ```c
-ulog_set_level(LOG_INFO);
+ulog_set_level(ULOG_INFO);
 ```
 
 To get the name of the log level use `ulog_get_level_string`:
 
 ```c
-const char *level = ulog_get_level_string(LOG_INFO);
+const char *level = ulog_get_level_string(ULOG_INFO);
 ptrintf("Level: %s\n", level);
 ```
 
@@ -223,6 +227,20 @@ While this mode is enabled the library will not output anything to `stderr`, but
 ```c
 ulog_set_quiet(true);
 ```
+
+### Runtime Mode
+
+Most of the library features are configured compile time to reduce the code size and complexity. However, if the code size is not a concern, you can enable runtime configuration by defining `ULOG_FEATURE_RUNTIME_MODE`. When the feature is enables all other features are enabled too in some default mode described in bellow. All runtime configuration functions are prefixed with `ulog_configure_*`. The default configuration is following:
+
+| Feature       | Default Configuration                     |
+| ------------- | ----------------------------------------- |
+| Custom prefix | ☑️ visible, ULOG_CUSTOM_PREFIX_SIZE: 64 |
+| Extra Outputs | ULOG_EXTRA_OUTPUTS : 8                    |
+| Time          | ☑️ visible                              |
+| File String   | ☑️ visible                              |
+| Color         | ☑️ visible                              |
+| Short Levels  | ⬜ disabled                               |
+| Topics        | ☑️ visible, dynamic allocation          |
 
 ### Thread-safety
 
@@ -295,31 +313,31 @@ logt_debug("network", "Disconnected from server");
 logt_fatal("video", "No signal");
 ```
 
-By default, the logging level of each topic is set to `LOG_DEBUG`. It is possible to alter this behavior by calling `ulog_set_topic_level()`. All topics below the level set by `ulog_set_level()` (`LOG_DEBUG` by default) will not generate log.
+By default, the logging level of each topic is set to `ULOG_DEBUG`. It is possible to alter this behavior by calling `ulog_set_topic_level()`. All topics below the level set by `ulog_set_level()` (`ULOG_DEBUG` by default) will not generate log.
 
 For example:
 
 ```c
-// By default, both topic logging levels are set to LOG_DEBUG
+// By default, both topic logging levels are set to ULOG_DEBUG
 ulog_add_topic("network", true);
 ulog_add_topic("storage", true);
 
-// Both topics generate log as global logging level is set to LOG_DEBUG
+// Both topics generate log as global logging level is set to ULOG_DEBUG
 logt_info("network", "Connected to server");
 logt_warning("storage", "No free space");
 
-ulog_set_level(LOG_INFO);
-ulog_set_topic_level("storage", LOG_WARNING);
+ulog_set_level(ULOG_INFO);
+ulog_set_topic_level("storage", ULOG_WARNING);
 
 // Only "storage" topic generates log
 logt_info("network", "Connected to server");
 logt_info("storage", "No free space");
 ```
 
-For example - with `ULOG_DEFAULT_LOG_LEVEL` set to `LOG_INFO`:
+For example - with `ULOG_DEFAULT_LOG_LEVEL` set to `ULOG_INFO`:
 
 ```c
-// By default, both topic logging levels are set to LOG_INFO
+// By default, both topic logging levels are set to ULOG_INFO
 ulog_add_topic("network", true);
 ulog_add_topic("storage", true);
 
@@ -327,9 +345,9 @@ ulog_add_topic("storage", true);
 logt_debug("network", "Connected to server");
 logt_warning("storage", "No free space");
 
-ulog_set_topic_level("storage", LOG_WARNING);
+ulog_set_topic_level("storage", ULOG_WARNING);
 
-// Both topics generate log as global logging level is set to LOG_DEBUG
+// Both topics generate log as global logging level is set to ULOG_DEBUG
 logt_info("network", "Connected to server");
 logt_info("storage", "No free space");
 ```
@@ -362,7 +380,7 @@ file pointer a value less-than-zero is returned.
 ```c
 FILE *fp = fopen("log.txt", "w");
 if (fp) {
-    ulog_add_fp(fp, LOG_INFO);
+    ulog_add_fp(fp, ULOG_INFO);
 }
 ```
 
@@ -381,7 +399,7 @@ void arduino_callback(ulog_Event *ev, void *arg) {
 
 . . .
 
-ulog_add_callback(arduino_callback, NULL, LOG_INFO);
+ulog_add_callback(arduino_callback, NULL, ULOG_INFO);
 ```
 
 #### Extra Outputs - Runtime Configuration
@@ -418,7 +436,6 @@ If runtime configuration enabled, `ULOG_FEATURE_CUSTOM_PREFIX_CFG_SIZE` is set t
 Functions to configure the custom prefix:
 
 - `void ulog_configure_prefix(bool enabled)` - will enable or disable custom prefix in the log output.
-
 
 ### Timestamp
 
@@ -464,17 +481,17 @@ Configuration functions:
 
 All feature states can be read using the following public macros. The macros are defined based on the compilation options described above, please do not modify them directly!
 
-| Compilation Options          | Flag (true/false)            |         Default |
-|------------------------------|------------------------------|-----------------|
-| `ULOG_CUSTOM_PREFIX_SIZE`    | `ULOG_FEATURE_CUSTOM_PREFIX` | ❌ false        |
-| `ULOG_EXTRA_OUTPUTS`         | `ULOG_FEATURE_EXTRA_OUTPUTS` | ❌ false        |
-| `ULOG_HAVE_TIME`             | `ULOG_FEATURE_TIME`          | ❌ false        |
-| `ULOG_HIDE_FILE_STRING`      | `ULOG_FEATURE_FILE_STRING`   | ✅ true         |
-| `ULOG_NO_COLOR`              | `ULOG_FEATURE_COLOR`         | ✅ true         |
-| `ULOG_RUNTIME_MODE`          | `ULOG_FEATURE_RUNTIME_MODE`  | ❌ false        |
-| `ULOG_SHORT_LEVEL_STRINGS`   | `ULOG_FEATURE_SHORT_LEVELS`  | ❌ false        |
-| `ULOG_TOPICS_NUM`            | `ULOG_FEATURE_TOPICS`        | ❌ false        |
-| `ULOG_USE_EMOJI`             | `ULOG_FEATURE_EMOJI_LEVELS`  | ❌ false        |
+| Compilation Options          | Flag (true/false)              | Default  |
+| ---------------------------- | ------------------------------ | -------- |
+| `ULOG_CUSTOM_PREFIX_SIZE`  | `ULOG_FEATURE_CUSTOM_PREFIX` | ❌ false |
+| `ULOG_EXTRA_OUTPUTS`       | `ULOG_FEATURE_EXTRA_OUTPUTS` | ❌ false |
+| `ULOG_HAVE_TIME`           | `ULOG_FEATURE_TIME`          | ❌ false |
+| `ULOG_HIDE_FILE_STRING`    | `ULOG_FEATURE_FILE_STRING`   | ✅ true  |
+| `ULOG_NO_COLOR`            | `ULOG_FEATURE_COLOR`         | ✅ true  |
+| `ULOG_RUNTIME_MODE`        | `ULOG_FEATURE_RUNTIME_MODE`  | ❌ false |
+| `ULOG_SHORT_LEVEL_STRINGS` | `ULOG_FEATURE_SHORT_LEVELS`  | ❌ false |
+| `ULOG_TOPICS_NUM`          | `ULOG_FEATURE_TOPICS`        | ❌ false |
+| `ULOG_USE_EMOJI`           | `ULOG_FEATURE_EMOJI_LEVELS`  | ❌ false |
 
 ## Contributing
 
@@ -486,4 +503,4 @@ This library is free software; you can redistribute it and/or modify it under th
 
 ## Credits
 
-Based on <https://github.com/rxi/log.c.git>
+Based on [https://github.com/rxi/log.c.git](https://github.com/rxi/log.c.git)

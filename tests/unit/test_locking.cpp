@@ -14,9 +14,9 @@ void dummy_lock(bool lock, void *arg) {
 
 struct LockingTestFixture {
     LockingTestFixture() {
-        ulog_set_level(LOG_DEBUG);
+        ulog_set_level(ULOG_DEBUG);
         ulog_set_quiet(false);
-        ulog_add_callback(ut_callback, nullptr, LOG_DEBUG);
+        ulog_add_callback(ut_callback, nullptr, ULOG_DEBUG);
         ut_callback_reset();
         ulog_set_lock(dummy_lock, nullptr);
         lock_events.clear();
