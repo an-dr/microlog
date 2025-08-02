@@ -170,14 +170,14 @@ void ulog_configure_color(bool enabled) {
 //  Private
 // ================
 static const char *color_levels[] = {
-    "\x1b[35m",  // EMERG : Magenta #f0f
-    "\x1b[33m",  // ALERT : Yellow #ff0
+    "\x1b[41m",  // EMERG : Bright Red (Background) #f00
+    "\x1b[31m",  // ALERT : Red #f00
     "\x1b[31m",  // CRIT : Red #f00
     "\x1b[31m",  // ERR : Red #f00
     "\x1b[33m",  // WARNING : Yellow #ff0
     "\x1b[36m",  // NOTICE : Cyan #0ff
-    "\x1b[32m",  // INFO : Green #0f0
-    "\x1b[34m",  // DEBUG : Blue #00f
+    "\x1b[37m",  // INFO : White #fff
+    "\x1b[30m",  // DEBUG : Gray #808080
 };
 #define COLOR_TERMINATOR "\x1b[0m"
 

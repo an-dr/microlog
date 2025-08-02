@@ -38,12 +38,14 @@ int main(int argc, char *argv[]) {
 
     /* Core Logging ===================================== */
     // ulog_set_quiet(true);
-    log_debug("Trace message %d", 1);
-    log_debug("Debug message 0x%x", 2);
-    log_info("Info message %f", 3.0);
-    log_warning("Warning message %c", '4');
-    log_err("Error message %s", "Five");
-    log_emerg("Fatal message %s", "6");
+    log_emerg("Emergency message %d", 0);
+    log_alert("Alert message 0x%x", 1);
+    log_crit("Critical message %f", 2.0);
+    log_err("Error message %c", '3');
+    log_warning("Warning message %s", "Four");
+    log_notice("Notice message %s", "Five");
+    log_info("Info message %s", "Six");
+    log_debug("Debug message %s", "Seven");
 
     /* Topics =========================================== */
     printf("\n");

@@ -41,31 +41,31 @@ The project is based on several core principles:
 ## Table of Contents
 
 - [microlog](#microlog)
-    - [Table of Contents](#table-of-contents)
-    - [Quick Start](#quick-start)
-        - [Install](#install)
-        - [Use](#use)
-    - [User Manual](#user-manual)
-        - [Basics](#basics)
-        - [Log Levels and Verbosity](#log-levels-and-verbosity)
-        - [Runtime Mode](#runtime-mode)
-        - [Thread-safety](#thread-safety)
-        - [Log Topics](#log-topics)
-            - [Log Topics - Runtime Configuration](#log-topics---runtime-configuration)
-        - [Extra Outputs](#extra-outputs)
-            - [File Output](#file-output)
-            - [Custom Output](#custom-output)
-            - [Extra Outputs - Runtime Configuration](#extra-outputs---runtime-configuration)
-        - [Custom Log Prefix](#custom-log-prefix)
-            - [Custom Log Prefix - Runtime Configuration](#custom-log-prefix---runtime-configuration)
-        - [Timestamp](#timestamp)
-            - [Timestamp - Runtime Configuration](#timestamp---runtime-configuration)
-        - [Other Customization](#other-customization)
-            - [Other Customization - Runtime Configuration](#other-customization---runtime-configuration)
-        - [Feature Flags](#feature-flags)
-    - [Contributing](#contributing)
-    - [License](#license)
-    - [Credits](#credits)
+  - [Table of Contents](#table-of-contents)
+  - [Quick Start](#quick-start)
+    - [Install](#install)
+    - [Use](#use)
+  - [User Manual](#user-manual)
+    - [Basics](#basics)
+    - [Log Levels and Verbosity](#log-levels-and-verbosity)
+    - [Runtime Mode](#runtime-mode)
+    - [Thread-safety](#thread-safety)
+    - [Log Topics](#log-topics)
+      - [Log Topics - Runtime Configuration](#log-topics---runtime-configuration)
+    - [Extra Outputs](#extra-outputs)
+      - [File Output](#file-output)
+      - [Custom Output](#custom-output)
+      - [Extra Outputs - Runtime Configuration](#extra-outputs---runtime-configuration)
+    - [Custom Log Prefix](#custom-log-prefix)
+      - [Custom Log Prefix - Runtime Configuration](#custom-log-prefix---runtime-configuration)
+    - [Timestamp](#timestamp)
+      - [Timestamp - Runtime Configuration](#timestamp---runtime-configuration)
+    - [Other Customization](#other-customization)
+      - [Other Customization - Runtime Configuration](#other-customization---runtime-configuration)
+    - [Feature Flags](#feature-flags)
+  - [Contributing](#contributing)
+  - [License](#license)
+  - [Credits](#credits)
 
 ## Quick Start
 
@@ -190,16 +190,16 @@ add_global_arguments('-fmacro-prefix-map=../=',language: 'c')
 
 The library provides 8 syslog-compatible log levels:
 
-| Level          | Value | When to use                                                                     | Examples                                                                         |
-| -------------- | ----- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| ULOG_EMERGENCY | 0     | System is unusable, execution cannot continue.                                  | Kernel panic, unrecoverable hardware fault,fatal stack overflow, etc.            |
-| ULOG_ALERT     | 1     | Immediate action required, the system is still running but in a critical state. | Watchdog failed, corrupted database,compromised security context, et.c           |
-| ULOG_CRITICAL  | 2     | A key component has failed, affecting core functionality.                       | Memory allocation failure, corrupted config, failed subsystem init, etc.         |
-| ULOG_ERROR     | 3     | An operation failed, but the application can still run.                         | File not found, invalid user input, sensor read failed, etc.                     |
-| ULOG_WARNING   | 4     | Non-critical issue that may indicate a future problem.                          | Deprecated API usage, slow response time, unexpected value from peripheral, etc. |
-| ULOG_NOTICE    | 5     | Normal but noteworthy event.                                                    | Configuration loaded, user logged in, device connected, etc.                     |
-| ULOG_INFO      | 6     | Informational message.                                                          | Background job started, file opened, service initialized, etc.                   |
-| ULOG_DEBUG     | 7     | Used during development for tracing execution and values.                       | Entering function, variable state, loop counters, etc.                           |
+| Level          | Value | Color                   | When to use                                                                     | Examples                                                                         |
+| -------------- | ----- | ----------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| ULOG_EMERGENCY | 0     | Bright Red (Background) | System is unusable, execution cannot continue.                                  | Kernel panic, unrecoverable hardware fault,fatal stack overflow, etc.            |
+| ULOG_ALERT     | 1     | Bright Red              | Immediate action required, the system is still running but in a critical state. | Watchdog failed, corrupted database,compromised security context, et.c           |
+| ULOG_CRITICAL  | 2     | Red                     | A key component has failed, affecting core functionality.                       | Memory allocation failure, corrupted config, failed subsystem init, etc.         |
+| ULOG_ERROR     | 3     | Red                     | An operation failed, but the application can still run.                         | File not found, invalid user input, sensor read failed, etc.                     |
+| ULOG_WARNING   | 4     | Yellow                  | Non-critical issue that may indicate a future problem.                          | Deprecated API usage, slow response time, unexpected value from peripheral, etc. |
+| ULOG_NOTICE    | 5     | Cyan                    | Normal but noteworthy event.                                                    | Configuration loaded, user logged in, device connected, etc.                     |
+| ULOG_INFO      | 6     | White                   | Informational message.                                                          | Background job started, file opened, service initialized, etc.                   |
+| ULOG_DEBUG     | 7     | Gray                    | Used during development for tracing execution and values.                       | Entering function, variable state, loop counters, etc.                           |
 
 The default log level is `ULOG_DEBUG`, such that nothing is ignored.
 
