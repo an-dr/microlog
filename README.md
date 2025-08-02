@@ -141,12 +141,12 @@ int main() {
 The library provides printf-like macros for logging:
 
 ```c
-log_trace(const char *fmt, ...);
+log_debug(const char *fmt, ...);
 log_debug(const char *fmt, ...);
 log_info(const char *fmt, ...);
-log_warn(const char *fmt, ...);
-log_error(const char *fmt, ...);
-log_fatal(const char *fmt, ...);
+log_warning(const char *fmt, ...);
+log_err(const char *fmt, ...);
+log_emerg(const char *fmt, ...);
 ```
 
 Each function takes a printf format string followed by additional arguments:
@@ -197,7 +197,7 @@ Most of the library features are configured compile time to reduce the code size
 
 ### Log Verbosity
 
-The default log level is `LOG_TRACE`, such that nothing is ignored.
+The default log level is `LOG_DEBUG`, such that nothing is ignored.
 
 There are two ways to modify it so that all logs below the given level will not be written to `stderr`:
 
@@ -259,11 +259,11 @@ If you want to use dynamic topics, you need to define `ULOG_TOPICS_NUM` to be -1
 Printing the log message with the topic is done by the set of function-like macros similar to log_xxx, but with the topic as the first argument:
 
 ```c
-logt_trace(const char *topic_name, const char *fmt, ...)
+logt_debug(const char *topic_name, const char *fmt, ...)
 logt_debug(const char *topic_name, const char *fmt, ...)
 logt_info(const char *topic_name, const char *fmt, ...) 
-logt_warn(const char *topic_name, const char *fmt, ...) 
-logt_error(const char *topic_name, const char *fmt, ...)
+logt_warning(const char *topic_name, const char *fmt, ...) 
+logt_err(const char *topic_name, const char *fmt, ...)
 logt_fatal(const char *topic_name, const char *fmt, ...)
 ```
 
@@ -280,7 +280,7 @@ ulog_add_topic("storage", false); // disabled by default
 logt_info("network", "Connected to server");
 
 ulog_enable_topic("storage");
-logt_warn("storage", "No free space");
+logt_warning("storage", "No free space");
 
 . . .
 
@@ -288,28 +288,28 @@ logt_warn("storage", "No free space");
 
 // by default all topics are disabled
 ulog_enable_topic("storage");
-logt_error("storage", "No free space");
+logt_err("storage", "No free space");
 
 ulog_enable_all_topics(); 
-logt_trace("network", "Disconnected from server");
+logt_debug("network", "Disconnected from server");
 logt_fatal("video", "No signal");
 ```
 
-By default, the logging level of each topic is set to `LOG_TRACE`. It is possible to alter this behavior by calling `ulog_set_topic_level()`. All topics below the level set by `ulog_set_level()` (`LOG_TRACE` by default) will not generate log.
+By default, the logging level of each topic is set to `LOG_DEBUG`. It is possible to alter this behavior by calling `ulog_set_topic_level()`. All topics below the level set by `ulog_set_level()` (`LOG_DEBUG` by default) will not generate log.
 
 For example:
 
 ```c
-// By default, both topic logging levels are set to LOG_TRACE
+// By default, both topic logging levels are set to LOG_DEBUG
 ulog_add_topic("network", true);
 ulog_add_topic("storage", true);
 
-// Both topics generate log as global logging level is set to LOG_TRACE
+// Both topics generate log as global logging level is set to LOG_DEBUG
 logt_info("network", "Connected to server");
-logt_warn("storage", "No free space");
+logt_warning("storage", "No free space");
 
 ulog_set_level(LOG_INFO);
-ulog_set_topic_level("storage", LOG_WARN);
+ulog_set_topic_level("storage", LOG_WARNING);
 
 // Only "storage" topic generates log
 logt_info("network", "Connected to server");
@@ -325,11 +325,11 @@ ulog_add_topic("storage", true);
 
 // Only "storage" topic generates log
 logt_debug("network", "Connected to server");
-logt_warn("storage", "No free space");
+logt_warning("storage", "No free space");
 
-ulog_set_topic_level("storage", LOG_WARN);
+ulog_set_topic_level("storage", LOG_WARNING);
 
-// Both topics generate log as global logging level is set to LOG_TRACE
+// Both topics generate log as global logging level is set to LOG_DEBUG
 logt_info("network", "Connected to server");
 logt_info("storage", "No free space");
 ```

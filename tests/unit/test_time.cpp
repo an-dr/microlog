@@ -24,7 +24,7 @@ struct TimeTestFixture {
     TimeTestFixture() {
         // Per-test setup
         if (!callback_is_set) {
-            ulog_add_callback(ut_callback, nullptr, LOG_TRACE);
+            ulog_add_callback(ut_callback, nullptr, LOG_DEBUG);
             callback_is_set = true;
         }
         ut_callback_reset();

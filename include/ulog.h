@@ -132,21 +132,22 @@ extern "C" {
 #define ULOG_FEATURE_RUNTIME_MODE false
 #endif
 
-
 // clang-format on
 
 /* ============================================================================
    Core Functionality
 ============================================================================ */
 // clang-format off
-enum { LOG_EMERGENCY = 0,
-       LOG_ALERT,
-       LOG_CRITICAL,
-       LOG_ERROR,
-       LOG_WARNING,
-       LOG_NOTICE,
-       LOG_INFO,   
-       LOG_DEBUG };
+typedef enum ulog_level_enum{ 
+    LOG_EMERGENCY = 0,
+    LOG_ALERT,
+    LOG_CRITICAL,
+    LOG_ERROR,
+    LOG_WARNING,
+    LOG_NOTICE,
+    LOG_INFO,   
+    LOG_DEBUG 
+} ulog_Level;
 
 
 #define log_emerg(...)      ulog_log(LOG_EMERGENCY, __FILE__, __LINE__, NULL, __VA_ARGS__)
@@ -175,9 +176,9 @@ typedef struct {
 #if ULOG_FEATURE_FILE_STRING
     const char *file;  // Event file name
     int line;          // Event line number
-#endif // ULOG_FEATURE_FILE_STRING
-    
-    int level;         // Event debug level
+#endif                 // ULOG_FEATURE_FILE_STRING
+
+    int level;  // Event debug level
 } ulog_Event;
 
 typedef void (*ulog_LogFn)(ulog_Event *ev, void *arg);
@@ -207,7 +208,7 @@ int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size);
 /// @param topic - Topic name
 /// @param message - Message format string
 /// @param ... - Format arguments
-void ulog_log(int level, const char *file, int line, const char *topic,
+void ulog_log(ulog_Level level, const char *file, int line, const char *topic,
               const char *message, ...);
 
 /* ============================================================================

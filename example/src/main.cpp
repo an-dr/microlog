@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
 
     printf("\n");
 
-    ulog_set_level(LOG_TRACE);
+    ulog_set_level(LOG_DEBUG);
 
     /* Extra Outputs =============================== */
 
@@ -38,12 +38,12 @@ int main(int argc, char *argv[]) {
 
     /* Core Logging ===================================== */
     // ulog_set_quiet(true);
-    log_trace("Trace message %d", 1);
+    log_debug("Trace message %d", 1);
     log_debug("Debug message 0x%x", 2);
     log_info("Info message %f", 3.0);
-    log_warn("Warning message %c", '4');
-    log_error("Error message %s", "Five");
-    log_fatal("Fatal message %s", "6");
+    log_warning("Warning message %c", '4');
+    log_err("Error message %s", "Five");
+    log_emerg("Fatal message %s", "6");
 
     /* Topics =========================================== */
     printf("\n");
@@ -57,17 +57,17 @@ int main(int argc, char *argv[]) {
     // logt_fatal("Serial", "Serial message 0");
 
     ulog_enable_all_topics();
-    logt_trace("Bluetooth", "Bluetooth message 1");
+    logt_debug("Bluetooth", "Bluetooth message 1");
     logt_debug("Indication", "Indication message 1");
     logt_info("Audio", "Audio message");
-    logt_warn("Serial", "Serial message 1");
-    logt_error("Serial", "Serial message 2");
+    logt_warning("Serial", "Serial message 1");
+    logt_err("Serial", "Serial message 2");
 
     ulog_disable_topic("Serial");
-    // logt_warn("Serial", "Serial message 3 (disabled)");
+    // logt_warning("Serial", "Serial message 3 (disabled)");
 
     ulog_set_level(LOG_INFO);
-    ulog_set_topic_level("Bluetooth", LOG_WARN);
+    ulog_set_topic_level("Bluetooth", LOG_WARNING);
     ulog_set_topic_level("Indication", LOG_DEBUG);
     logt_info("Bluetooth", "Bluetooth message 2");
     // logt_info("Indication",

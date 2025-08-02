@@ -10,10 +10,10 @@ struct TestFixture {
     TestFixture() {
         // Per-test setup
         if (!callback_is_set) {
-            ulog_add_callback(ut_callback, nullptr, LOG_TRACE);
+            ulog_add_callback(ut_callback, nullptr, LOG_DEBUG);
             callback_is_set = true;
         }
-        ulog_set_level(LOG_TRACE);
+        ulog_set_level(LOG_DEBUG);
         ulog_set_quiet(false);
         ut_callback_reset();
     }
@@ -26,11 +26,11 @@ bool TestFixture::callback_is_set = false;
 TEST_CASE_FIXTURE(TestFixture, "Topics: Enable/Disable and Levels") {
     ulog_add_topic("testtopic", true);
     
-    logt_trace("testtopic",
+    logt_debug("testtopic",
               "Topic enabled - At default topic level - should appear");
     CHECK(ut_callback_get_message_count() == 1);
 
-    logt_error("testtopic", "Above default topic level - should appear");
+    logt_err("testtopic", "Above default topic level - should appear");
     CHECK(ut_callback_get_message_count() == 2);
 
     ulog_disable_topic("testtopic");
@@ -39,14 +39,14 @@ TEST_CASE_FIXTURE(TestFixture, "Topics: Enable/Disable and Levels") {
 
     ulog_enable_topic("testtopic");
     ulog_set_topic_level("testtopic", LOG_ERROR);
-    logt_warn("testtopic", "Below topic level - should not appear");
+    logt_warning("testtopic", "Below topic level - should not appear");
     CHECK(ut_callback_get_message_count() == 2);
 
-    logt_error("testtopic", "At topic level - should appear");
+    logt_err("testtopic", "At topic level - should appear");
     CHECK(ut_callback_get_message_count() == 3);
 
-    ulog_set_topic_level("testtopic", LOG_TRACE);
-    logt_trace("testtopic", "At topic level - should appear");
+    ulog_set_topic_level("testtopic", LOG_DEBUG);
+    logt_debug("testtopic", "At topic level - should appear");
     CHECK(ut_callback_get_message_count() == 4);
 
     ulog_disable_topic("testtopic");
@@ -94,7 +94,7 @@ TEST_CASE_FIXTURE(TestFixture, "Topics: Cannot create duplicate") {
     CHECK(res == 0);
     res = ulog_add_topic("testtopic_2", true);
     CHECK(res == 1);
-    logt_error("testtopic_2",
+    logt_err("testtopic_2",
                "Should appear because there is still one free slot");
     CHECK(ut_callback_get_message_count() == 2);
 }
@@ -105,7 +105,7 @@ TEST_CASE_FIXTURE(TestFixture,
 
     res = ulog_add_topic("testtopic_3", true);
     CHECK(res == -1);
-    logt_error("testtopic_3",
+    logt_err("testtopic_3",
                "Should not appear because static allocation is set to 2 slots");
     CHECK(ut_callback_get_message_count() == 0);
 }

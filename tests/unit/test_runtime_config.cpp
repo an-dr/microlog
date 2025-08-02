@@ -11,9 +11,9 @@ static void test_prefix(ulog_Event *ev, char *prefix, size_t prefix_size) {
 
 struct TestFixture {
     TestFixture() {
-        ulog_set_level(LOG_TRACE);
+        ulog_set_level(LOG_DEBUG);
         ulog_set_quiet(false);
-        ulog_add_callback(ut_callback, nullptr, LOG_TRACE);
+        ulog_add_callback(ut_callback, nullptr, LOG_DEBUG);
         ut_callback_reset();
         ulog_set_prefix_fn(test_prefix);
     }
@@ -49,14 +49,14 @@ TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Custom Prefix") {
 TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Color") {
     // Test color enable/disable
     ulog_configure_color(true);
-    log_error("Test message with color");
+    log_err("Test message with color");
 
     const char *last_message = ut_callback_get_last_message();
     REQUIRE(last_message != nullptr);
     REQUIRE(strstr(last_message, "Test message with color") != nullptr);
 
     ulog_configure_color(false);
-    log_error("Test message without color");
+    log_err("Test message without color");
 
     last_message = ut_callback_get_last_message();
     REQUIRE(last_message != nullptr);
@@ -105,7 +105,7 @@ TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Short Level Strings") {
 TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Time") {
     // Test time enable/disable
     ulog_configure_time(true);
-    log_warn("Test message with time");
+    log_warning("Test message with time");
 
     const char *last_message = ut_callback_get_last_message();
     REQUIRE(last_message != nullptr);
@@ -116,7 +116,7 @@ TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Time") {
     REQUIRE(strstr(last_message, "Test message with time") != nullptr);
 
     ulog_configure_time(false);
-    log_warn("Test message without time");
+    log_warning("Test message without time");
 
     last_message = ut_callback_get_last_message();
     REQUIRE(last_message != nullptr);

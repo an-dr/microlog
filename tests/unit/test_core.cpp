@@ -13,7 +13,7 @@ struct TestFixture {
     TestFixture() {
         // Per-test setup
         if (!callback_is_set) {
-            ulog_add_callback(ut_callback, nullptr, LOG_TRACE);
+            ulog_add_callback(ut_callback, nullptr, LOG_DEBUG);
             callback_is_set = true;
         }
         ulog_set_quiet(false);
@@ -26,29 +26,29 @@ struct TestFixture {
 bool TestFixture::callback_is_set = false;
 
 TEST_CASE_FIXTURE(TestFixture, "Default level") {
-    log_trace("This TRACE should not be processed.");
+    log_debug("This TRACE should not be processed.");
     CHECK(ut_callback_get_message_count() == 0);
     log_debug("This DEBUG should be processed.");
     CHECK(ut_callback_get_message_count() == 1);
     log_info("This INFO should be processed.");
     CHECK(ut_callback_get_message_count() == 2);
-    log_warn("This WARN should be processed.");
+    log_warning("This WARN should be processed.");
     CHECK(ut_callback_get_message_count() == 3);
-    log_error("This ERROR should be processed.");
+    log_err("This ERROR should be processed.");
     CHECK(ut_callback_get_message_count() == 4);
-    log_fatal("This FATAL should be processed.");
+    log_emerg("This FATAL should be processed.");
     CHECK(ut_callback_get_message_count() == 5);
 }
 
 TEST_CASE_FIXTURE(TestFixture, "Base") {
-    ulog_set_level(LOG_TRACE);
+    ulog_set_level(LOG_DEBUG);
 
-    log_trace("This is a TRACE message: %d", 123);
+    log_debug("This is a TRACE message: %d", 123);
     log_debug("This is a DEBUG message: %s", "test");
     log_info("This is an INFO message: %.2f", 1.23);
-    log_warn("This is a WARN message");
-    log_error("This is an ERROR message: %x", 0xff);
-    log_fatal("This is a FATAL message");
+    log_warning("This is a WARN message");
+    log_err("This is an ERROR message: %x", 0xff);
+    log_emerg("This is a FATAL message");
 
     CHECK(ut_callback_get_message_count() == 6);
     CHECK(strstr(ut_callback_get_last_message(), "This is a FATAL message") !=
@@ -58,17 +58,17 @@ TEST_CASE_FIXTURE(TestFixture, "Base") {
 TEST_CASE_FIXTURE(TestFixture, "Levels") {
     ulog_set_level(LOG_INFO);
 
-    log_trace("This TRACE should not be processed.");
+    log_debug("This TRACE should not be processed.");
     CHECK(ut_callback_get_message_count() == 0);
     log_debug("This DEBUG should not be processed.");
     CHECK(ut_callback_get_message_count() == 0);
     log_info("This INFO should be processed.");
     CHECK(ut_callback_get_message_count() == 1);
-    log_warn("This WARN should be processed.");
+    log_warning("This WARN should be processed.");
     CHECK(ut_callback_get_message_count() == 2);
-    log_error("This ERROR should be processed.");
+    log_err("This ERROR should be processed.");
     CHECK(ut_callback_get_message_count() == 3);
-    log_fatal("This FATAL should be processed.");
+    log_emerg("This FATAL should be processed.");
     CHECK(ut_callback_get_message_count() == 4);
 }
 
@@ -108,7 +108,7 @@ TEST_CASE_FIXTURE(TestFixture, "Performance") {
     auto start = std::chrono::high_resolution_clock::now();
     int iterations = 100000;
     for (int i = 0; i < iterations; ++i) {
-        log_fatal("This is a FATAL message with topic");
+        log_emerg("This is a FATAL message with topic");
     }
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration = end - start;

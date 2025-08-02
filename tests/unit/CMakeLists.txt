@@ -27,7 +27,7 @@ set(ULOG_CONFIG_TEST_CORE ${ULOG_CONFIG_BASE}
                           )
 
 set(ULOG_CONFIG_TEST_TOPICS ${ULOG_CONFIG_BASE}
-                            "-DULOG_DEFAULT_LOG_LEVEL=LOG_WARN"
+                            "-DULOG_DEFAULT_LOG_LEVEL=LOG_WARNING"
                             "-DULOG_TOPICS_NUM=2"
                             )
                             
