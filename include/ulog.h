@@ -150,13 +150,36 @@ typedef enum ulog_level_enum{
 } ulog_Level;
 
 
+// @brief System is unusable. Used when execution cannot continue.
+//        E.g. kernel panic, unrecoverable hardware fault, or fatal stack overflow.
 #define log_emerg(...)      ulog_log(LOG_EMERGENCY, __FILE__, __LINE__, NULL, __VA_ARGS__)
+
+// @brief Immediate action required. Used when the system is still running but in a critical state.
+//        E.g. watchdog failed, corrupted database, or compromised security context.
 #define log_alert(...)      ulog_log(LOG_ALERT,     __FILE__, __LINE__, NULL, __VA_ARGS__)
+
+// @brief Critical condition. A key component has failed, affecting core functionality.
+//        E.g. memory allocation failure, corrupted config, or failed subsystem init.
 #define log_crit(...)       ulog_log(LOG_CRITICAL,  __FILE__, __LINE__, NULL, __VA_ARGS__)
+
+// @brief Error condition. An operation failed, but the application can still run.
+//        E.g. file not found, invalid user input, sensor read failed.
 #define log_err(...)        ulog_log(LOG_ERROR,     __FILE__, __LINE__, NULL, __VA_ARGS__)
+
+// @brief Warning. Non-critical issue that may indicate a future problem.
+//        E.g. deprecated API usage, slow response time, unexpected value from peripheral.
 #define log_warning(...)    ulog_log(LOG_WARNING,   __FILE__, __LINE__, NULL, __VA_ARGS__)
+
+// @brief Normal but noteworthy event.
+//        E.g. configuration loaded, user logged in, device connected.
 #define log_notice(...)     ulog_log(LOG_NOTICE,    __FILE__, __LINE__, NULL, __VA_ARGS__)
+
+// @brief Informational message.
+//        E.g. background job started, file opened, service initialized.
 #define log_info(...)       ulog_log(LOG_INFO,      __FILE__, __LINE__, NULL, __VA_ARGS__)
+
+// @brief Debug-level detail. Used during development for tracing execution and values.
+//        E.g. entering function, variable state, loop counters.
 #define log_debug(...)      ulog_log(LOG_DEBUG,     __FILE__, __LINE__, NULL, __VA_ARGS__)
 // clang-format on
 
@@ -278,13 +301,36 @@ int ulog_add_fp(FILE *fp, int level);
 // clang-format off
 #define TOPIC_NOT_FOUND 0x7FFFFFFF
 
+// @brief System is unusable. Used when execution cannot continue.
+//        E.g. kernel panic, unrecoverable hardware fault, or fatal stack overflow.
 #define logt_emerg(TOPIC_NAME, ...)     ulog_log(LOG_EMERGENCY, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+
+// @brief Immediate action required. Used when the system is still running but in a critical state.
+//        E.g. watchdog failed, corrupted database, or compromised security context.
 #define logt_alert(TOPIC_NAME, ...)     ulog_log(LOG_ALERT,     __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+
+// @brief Critical condition. A key component has failed, affecting core functionality.
+//        E.g. memory allocation failure, corrupted config, or failed subsystem init.
 #define logt_crit(TOPIC_NAME, ...)      ulog_log(LOG_CRITICAL,  __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+
+// @brief Error condition. An operation failed, but the application can still run.
+//        E.g. file not found, invalid user input, sensor read failed.
 #define logt_err(TOPIC_NAME, ...)       ulog_log(LOG_ERROR,     __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+
+// @brief Warning. Non-critical issue that may indicate a future problem.
+//        E.g. deprecated API usage, slow response time, unexpected value from peripheral.
 #define logt_warning(TOPIC_NAME, ...)   ulog_log(LOG_WARNING,   __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+
+// @brief Normal but noteworthy event.
+//        E.g. configuration loaded, user logged in, device connected.
 #define logt_notice(TOPIC_NAME, ...)    ulog_log(LOG_NOTICE,    __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+
+// @brief Informational message.
+//        E.g. background job started, file opened, service initialized.
 #define logt_info(TOPIC_NAME, ...)      ulog_log(LOG_INFO,      __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+
+// @brief Debug-level detail. Used during development for tracing execution and values.
+//        E.g. entering function, variable state, loop counters.
 #define logt_debug(TOPIC_NAME, ...)     ulog_log(LOG_DEBUG,     __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
 // clang-format on
 
