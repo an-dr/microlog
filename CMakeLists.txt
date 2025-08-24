@@ -12,7 +12,8 @@ cmake_minimum_required(VERSION 3.15.0)
 
 # Read version
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/version" VERSION_CONTENT)
-string(STRIP "${VERSION_CONTENT}" PROJECT_VERSION)
+string(STRIP "${VERSION_CONTENT}" PROJECT_VERSION_RAW)
+string(REGEX REPLACE "^([0-9]+\\.[0-9]+\\.[0-9]+).*$" "\\1" PROJECT_VERSION "${PROJECT_VERSION_RAW}")
 
 project(microlog VERSION ${PROJECT_VERSION})
 
