@@ -197,23 +197,23 @@ Most of the library features are configured compile time to reduce the code size
 
 ### Log Verbosity
 
-The default log level is `LOG_TRACE`, such that nothing is ignored.
+The default log level is `ULOG_TRACE`, such that nothing is ignored.
 
 There are two ways to modify it so that all logs below the given level will not be written to `stderr`:
 
 - at compile time by defining `ULOG_DEFAULT_LOG_LEVEL` - this is particularly useful when one wants to configure the log level according to a configuration (debug or release for instance) without modifying the source code,
 - at run time by using the `ulog_set_level()` function.
 
-The example below shows how to configure log level to `LOG_INFO`:
+The example below shows how to configure log level to `ULOG_INFO`:
 
 ```c
-ulog_set_level(LOG_INFO);
+ulog_set_level(ULOG_INFO);
 ```
 
 To get the name of the log level use `ulog_get_level_string`:
 
 ```c
-const char *level = ulog_get_level_string(LOG_INFO);
+const char *level = ulog_get_level_string(ULOG_INFO);
 ptrintf("Level: %s\n", level);
 ```
 
@@ -295,31 +295,31 @@ logt_trace("network", "Disconnected from server");
 logt_fatal("video", "No signal");
 ```
 
-By default, the logging level of each topic is set to `LOG_TRACE`. It is possible to alter this behavior by calling `ulog_set_topic_level()`. All topics below the level set by `ulog_set_level()` (`LOG_TRACE` by default) will not generate log.
+By default, the logging level of each topic is set to `ULOG_TRACE`. It is possible to alter this behavior by calling `ulog_set_topic_level()`. All topics below the level set by `ulog_set_level()` (`ULOG_TRACE` by default) will not generate log.
 
 For example:
 
 ```c
-// By default, both topic logging levels are set to LOG_TRACE
+// By default, both topic logging levels are set to ULOG_TRACE
 ulog_add_topic("network", true);
 ulog_add_topic("storage", true);
 
-// Both topics generate log as global logging level is set to LOG_TRACE
+// Both topics generate log as global logging level is set to ULOG_TRACE
 logt_info("network", "Connected to server");
 logt_warn("storage", "No free space");
 
-ulog_set_level(LOG_INFO);
-ulog_set_topic_level("storage", LOG_WARN);
+ulog_set_level(ULOG_INFO);
+ulog_set_topic_level("storage", ULOG_WARN);
 
 // Only "storage" topic generates log
 logt_info("network", "Connected to server");
 logt_info("storage", "No free space");
 ```
 
-For example - with `ULOG_DEFAULT_LOG_LEVEL` set to `LOG_INFO`:
+For example - with `ULOG_DEFAULT_LOG_LEVEL` set to `ULOG_INFO`:
 
 ```c
-// By default, both topic logging levels are set to LOG_INFO
+// By default, both topic logging levels are set to ULOG_INFO
 ulog_add_topic("network", true);
 ulog_add_topic("storage", true);
 
@@ -327,9 +327,9 @@ ulog_add_topic("storage", true);
 logt_debug("network", "Connected to server");
 logt_warn("storage", "No free space");
 
-ulog_set_topic_level("storage", LOG_WARN);
+ulog_set_topic_level("storage", ULOG_WARN);
 
-// Both topics generate log as global logging level is set to LOG_TRACE
+// Both topics generate log as global logging level is set to ULOG_TRACE
 logt_info("network", "Connected to server");
 logt_info("storage", "No free space");
 ```
@@ -362,7 +362,7 @@ file pointer a value less-than-zero is returned.
 ```c
 FILE *fp = fopen("log.txt", "w");
 if (fp) {
-    ulog_add_fp(fp, LOG_INFO);
+    ulog_add_fp(fp, ULOG_INFO);
 }
 ```
 
@@ -381,7 +381,7 @@ void arduino_callback(ulog_Event *ev, void *arg) {
 
 . . .
 
-ulog_add_callback(arduino_callback, NULL, LOG_INFO);
+ulog_add_callback(arduino_callback, NULL, ULOG_INFO);
 ```
 
 #### Extra Outputs - Runtime Configuration

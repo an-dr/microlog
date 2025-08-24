@@ -132,26 +132,27 @@ extern "C" {
 #define ULOG_FEATURE_RUNTIME_MODE false
 #endif
 
-
 // clang-format on
 
 /* ============================================================================
    Core Functionality
 ============================================================================ */
 // clang-format off
-enum { LOG_TRACE,
-       LOG_DEBUG,
-       LOG_INFO,
-       LOG_WARN,
-       LOG_ERROR,
-       LOG_FATAL };
+typedef enum  ulog_LevelEnum { 
+    ULOG_TRACE = 0,
+    ULOG_DEBUG,
+    ULOG_INFO,
+    ULOG_WARN,
+    ULOG_ERROR,
+    ULOG_FATAL
+} ulog_Level;
        
-#define log_trace(...) ulog_log(LOG_TRACE, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define log_debug(...) ulog_log(LOG_DEBUG, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define log_info(...) ulog_log(LOG_INFO, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define log_warn(...) ulog_log(LOG_WARN, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define log_error(...) ulog_log(LOG_ERROR, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define log_fatal(...) ulog_log(LOG_FATAL, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define log_trace(...) ulog_log(ULOG_TRACE, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define log_debug(...) ulog_log(ULOG_DEBUG, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define log_info(...) ulog_log(ULOG_INFO, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define log_warn(...) ulog_log(ULOG_WARN, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define log_error(...) ulog_log(ULOG_ERROR, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define log_fatal(...) ulog_log(ULOG_FATAL, __FILE__, __LINE__, NULL, __VA_ARGS__)
 // clang-format on
 
 /// @brief Event structure
@@ -170,9 +171,9 @@ typedef struct {
 #if ULOG_FEATURE_FILE_STRING
     const char *file;  // Event file name
     int line;          // Event line number
-#endif // ULOG_FEATURE_FILE_STRING
-    
-    int level;         // Event debug level
+#endif                 // ULOG_FEATURE_FILE_STRING
+
+    int level;  // Event debug level
 } ulog_Event;
 
 typedef void (*ulog_LogFn)(ulog_Event *ev, void *arg);
@@ -202,7 +203,7 @@ int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size);
 /// @param topic - Topic name
 /// @param message - Message format string
 /// @param ... - Format arguments
-void ulog_log(int level, const char *file, int line, const char *topic,
+void ulog_log(ulog_Level level, const char *file, int line, const char *topic,
               const char *message, ...);
 
 /* ============================================================================
@@ -271,12 +272,12 @@ int ulog_add_fp(FILE *fp, int level);
 
 // clang-format off
 #define TOPIC_NOT_FOUND 0x7FFFFFFF
-#define logt_trace(TOPIC_NAME, ...) ulog_log(LOG_TRACE, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_debug(TOPIC_NAME, ...) ulog_log(LOG_DEBUG, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_info(TOPIC_NAME, ...) ulog_log(LOG_INFO, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_warn(TOPIC_NAME, ...) ulog_log(LOG_WARN, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_error(TOPIC_NAME, ...) ulog_log(LOG_ERROR, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_fatal(TOPIC_NAME, ...) ulog_log(LOG_FATAL, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_trace(TOPIC_NAME, ...) ulog_log(ULOG_TRACE, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_debug(TOPIC_NAME, ...) ulog_log(ULOG_DEBUG, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_info(TOPIC_NAME, ...) ulog_log(ULOG_INFO, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_warn(TOPIC_NAME, ...) ulog_log(ULOG_WARN, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_error(TOPIC_NAME, ...) ulog_log(ULOG_ERROR, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define logt_fatal(TOPIC_NAME, ...) ulog_log(ULOG_FATAL, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
 // clang-format on
 
 /// @brief Adds a topic

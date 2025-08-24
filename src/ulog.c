@@ -404,11 +404,11 @@ void ulog_configure_levels(bool use_short_levels) {
 // Private
 // ================
 #ifndef ULOG_DEFAULT_LOG_LEVEL
-#define ULOG_DEFAULT_LOG_LEVEL LOG_TRACE
+#define ULOG_DEFAULT_LOG_LEVEL ULOG_TRACE
 #endif
 
 typedef struct {
-    int level;
+    ulog_Level level;
 } levels_data_t;
 
 static levels_data_t levels_data = {
@@ -431,6 +431,13 @@ static const char *levels_strings[][LEVELS_TOTAL] = {
 #endif
 };
 // clang-format on
+
+static bool levels_is_allowed(ulog_Level msg_level, ulog_Level log_verbosity) {
+    if (msg_level <= log_verbosity || msg_level < ULOG_TRACE) {
+        return false;  // Level is higher than the configured level, not allowed
+    }
+    return true;  // Level is allowed
+}
 
 static void levels_print(print_target *tgt, ulog_Event *ev) {
 #if ULOG_FEATURE_SHORT_LEVELS || ULOG_FEATURE_EMOJI_LEVELS
@@ -459,7 +466,7 @@ const char *ulog_get_level_string(int level) {
 
 /// @brief Sets the debug level
 void ulog_set_level(int level) {
-    if (level < LOG_TRACE || level > LOG_FATAL) {
+    if (level < ULOG_TRACE || level > ULOG_FATAL) {
         return;  // Invalid level, do nothing
     }
     levels_data.level = level;
@@ -486,7 +493,7 @@ static void cb_stdout(ulog_Event *ev, void *arg);
 typedef struct {
     ulog_LogFn function;
     void *arg;
-    int level;
+    ulog_Level level;
     bool is_enabled;  // Whether the callback is enabled or not
 } cb_t;
 
@@ -494,11 +501,11 @@ typedef struct {
     cb_t callbacks[CB_TOTAL_NUM];  // 0 is for stdout callback
 } cb_data_t;
 
-static cb_data_t cb_data = {.callbacks = {{cb_stdout, NULL, LOG_TRACE, true}}};
+static cb_data_t cb_data = {.callbacks = {{cb_stdout, NULL, ULOG_TRACE, true}}};
 
 static void cb_handle_single(ulog_Event *ev, cb_t *cb) {
-    if (cb->is_enabled && ev->level >= cb->level) {
-
+    if (cb->is_enabled && levels_is_allowed(ev->level, cb->level)) {
+        
         // Create event copy to avoid va_list issues
         ulog_Event ev_copy = {0};
         memcpy(&ev_copy, ev, sizeof(ulog_Event));
@@ -708,7 +715,7 @@ static bool topic_is_loggable(topic_t *t, int level) {
     if (t == NULL) {
         return false;  // Topic not found, cannot log
     }
-    if (!t->enabled || t->level > level) {
+    if (!t->enabled || !levels_is_allowed(level, t->level)) {
         return false;  // Topic is disabled, cannot log
     }
     return true;
@@ -876,7 +883,7 @@ static int topic_add(const char *topic_name, bool enable) {
             topic_data.topics[i].id      = i;
             topic_data.topics[i].name    = topic_name;
             topic_data.topics[i].enabled = enable;
-            topic_data.topics[i].level   = LOG_TRACE;
+            topic_data.topics[i].level   = ULOG_TRACE;
             return i;
         }
         // If the topic already exists
@@ -962,7 +969,7 @@ static void *topic_allocate(int id, const char *topic_name, bool enable) {
         t->id      = id;
         t->name    = topic_name;
         t->enabled = enable;
-        t->level   = LOG_TRACE;
+        t->level   = ULOG_TRACE;
         t->next    = NULL;
     }
     return t;
@@ -1144,13 +1151,13 @@ int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size) {
     return 0;
 }
 
-void ulog_log(int level, const char *file, int line, const char *topic,
+void ulog_log(ulog_Level level, const char *file, int line, const char *topic,
               const char *message, ...) {
 
     lock_lock();
 
     // Skip if level is lower than sets
-    bool is_log_allowed = level >= levels_data.level;
+    bool is_log_allowed = levels_is_allowed(level, levels_data.level);
     if (!is_log_allowed) {
         lock_unlock();
         return;

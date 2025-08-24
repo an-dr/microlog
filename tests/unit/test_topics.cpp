@@ -10,10 +10,10 @@ struct TestFixture {
     TestFixture() {
         // Per-test setup
         if (!callback_is_set) {
-            ulog_add_callback(ut_callback, nullptr, LOG_TRACE);
+            ulog_add_callback(ut_callback, nullptr, ULOG_TRACE);
             callback_is_set = true;
         }
-        ulog_set_level(LOG_TRACE);
+        ulog_set_level(ULOG_TRACE);
         ulog_set_quiet(false);
         ut_callback_reset();
     }
@@ -38,14 +38,14 @@ TEST_CASE_FIXTURE(TestFixture, "Topics: Enable/Disable and Levels") {
     CHECK(ut_callback_get_message_count() == 2);
 
     ulog_enable_topic("testtopic");
-    ulog_set_topic_level("testtopic", LOG_ERROR);
+    ulog_set_topic_level("testtopic", ULOG_ERROR);
     logt_warn("testtopic", "Below topic level - should not appear");
     CHECK(ut_callback_get_message_count() == 2);
 
     logt_error("testtopic", "At topic level - should appear");
     CHECK(ut_callback_get_message_count() == 3);
 
-    ulog_set_topic_level("testtopic", LOG_TRACE);
+    ulog_set_topic_level("testtopic", ULOG_TRACE);
     logt_trace("testtopic", "At topic level - should appear");
     CHECK(ut_callback_get_message_count() == 4);
 
@@ -57,7 +57,7 @@ TEST_CASE_FIXTURE(TestFixture, "Topics: Enable/Disable and Levels") {
     logt_info("testtopic", "Topic re-enabled and should appear");
     CHECK(ut_callback_get_message_count() == 5);
 
-    ulog_set_topic_level("testtopic", LOG_INFO);
+    ulog_set_topic_level("testtopic", ULOG_INFO);
     logt_info("testtopic", "Topic level set to INFO and should appear");
     CHECK(ut_callback_get_message_count() == 6);
 

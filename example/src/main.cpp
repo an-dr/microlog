@@ -17,16 +17,16 @@ int main(int argc, char *argv[]) {
 
     printf("\n");
 
-    ulog_set_level(LOG_TRACE);
+    ulog_set_level(ULOG_TRACE);
 
     /* Extra Outputs =============================== */
 
 #if ULOG_FEATURE_EXTRA_OUTPUTS
 
     FILE *fp = fopen("example.log", "w");
-    ulog_add_fp(fp, LOG_INFO);
+    ulog_add_fp(fp, ULOG_INFO);
     ulog_add_callback(custom_callback,
-                      (void *)"     - Custom Callback: ", LOG_INFO);
+                      (void *)"     - Custom Callback: ", ULOG_INFO);
 
 #endif  // ULOG_FEATURE_EXTRA_OUTPUTS
 
@@ -66,9 +66,9 @@ int main(int argc, char *argv[]) {
     ulog_disable_topic("Serial");
     // logt_warn("Serial", "Serial message 3 (disabled)");
 
-    ulog_set_level(LOG_INFO);
-    ulog_set_topic_level("Bluetooth", LOG_WARN);
-    ulog_set_topic_level("Indication", LOG_DEBUG);
+    ulog_set_level(ULOG_INFO);
+    ulog_set_topic_level("Bluetooth", ULOG_WARN);
+    ulog_set_topic_level("Indication", ULOG_DEBUG);
     logt_info("Bluetooth", "Bluetooth message 2");
     // logt_info("Indication",
     //          "Indication message 2 (level lower than global level)");
