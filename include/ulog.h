@@ -44,10 +44,10 @@ extern "C" {
 
 ============================================================================ */
 // clang-format off
-#ifdef ULOG_HAVE_COLOR
-    #define ULOG_FEATURE_COLOR true
-#else
+#ifdef ULOG_NO_COLOR
     #define ULOG_FEATURE_COLOR false
+#else
+    #define ULOG_FEATURE_COLOR true
 #endif
 
 
