@@ -530,6 +530,7 @@ static void cb_handle_all(ulog_event *ev) {
 }
 
 static void cb_stdout(ulog_event *ev, void *arg) {
+    (void)(arg); // Unused
     print_target tgt = {.type = LOG_TARGET_STREAM, .dsc.stream = stdout};
     log_print_event(&tgt, ev, false, true, true);
 }

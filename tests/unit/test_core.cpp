@@ -120,5 +120,5 @@ TEST_CASE_FIXTURE(TestFixture, "Performance") {
     // Check if the average log time is reasonable
     CHECK(average_log_time < 1000); // Less than 1 millisecond per log
 
-    printf("Logging 100000 messages took: %d microseconds (%f per log)\n", duration_us, average_log_time);
+    printf("Logging 100000 messages took: %ld microseconds (%f per log)\n", duration_us, average_log_time);
 }
