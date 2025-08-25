@@ -433,7 +433,7 @@ static const char *levels_strings[][LEVELS_TOTAL] = {
 // clang-format on
 
 static bool levels_is_allowed(ulog_level msg_level, ulog_level log_verbosity) {
-    if (msg_level <= log_verbosity || msg_level < ULOG_LEVEL_TRACE) {
+    if (msg_level < log_verbosity || msg_level < ULOG_LEVEL_TRACE) {
         return false;  // Level is higher than the configured level, not allowed
     }
     return true;  // Level is allowed
