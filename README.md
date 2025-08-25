@@ -202,18 +202,18 @@ The default log level is `ULOG_LEVEL_TRACE`, such that nothing is ignored.
 There are two ways to modify it so that all logs below the given level will not be written to `stderr`:
 
 - at compile time by defining `ULOG_DEFAULT_LOG_LEVEL` - this is particularly useful when one wants to configure the log level according to a configuration (debug or release for instance) without modifying the source code,
-- at run time by using the `ulog_set_level()` function.
+- at run time by using the `ulog_level_set()` function.
 
 The example below shows how to configure log level to `ULOG_LEVEL_INFO`:
 
 ```c
-ulog_set_level(ULOG_LEVEL_INFO);
+ulog_level_set(ULOG_LEVEL_INFO);
 ```
 
-To get the name of the log level use `ulog_get_level_string`:
+To get the name of the log level use `ulog_level_to_string`:
 
 ```c
-const char *level = ulog_get_level_string(ULOG_LEVEL_INFO);
+const char *level = ulog_level_to_string(ULOG_LEVEL_INFO);
 ptrintf("Level: %s\n", level);
 ```
 
@@ -226,7 +226,7 @@ ulog_set_quiet(true);
 
 ### Thread-safety
 
-If the log will be written to from multiple threads a lock function can be set. To do this use the `ulog_set_lock()` function.
+If the log will be written to from multiple threads a lock function can be set. To do this use the `ulog_lock_set()` function.
 The function is passed the boolean `true` if the lock should be acquired or `false` if the lock should be released and the given `udata` value.
 
 ```c
@@ -242,7 +242,7 @@ void lock_function(bool lock, void *lock_arg) {
 . . .
 
 pthread_mutex_t mutex;
-ulog_set_lock(lock_function, mutex);
+ulog_lock_set(lock_function, mutex);
 ```
 
 ### Log Topics
@@ -252,7 +252,7 @@ The feature is controlled by `ULOG_TOPICS_NUM`. It allows to filter log messages
 There are two mechanism of working with the topics:
 
 - `dynamic` - slower, but new topic will be added automatically
-- `static` - faster, but you need to define all topic using `ulog_add_topic`
+- `static` - faster, but you need to define all topic using `ulog_topic_add`
 
 If you want to use dynamic topics, you need to define `ULOG_TOPICS_NUM` to be -1. Otherwise, you need to define the number of topics for static allocation.
 
@@ -274,12 +274,12 @@ For example:
 ```c
 // Static topics
 
-ulog_add_topic("network", true); // enabled by default
-ulog_add_topic("storage", false); // disabled by default
+ulog_topic_add("network", true); // enabled by default
+ulog_topic_add("storage", false); // disabled by default
 
 logt_info("network", "Connected to server");
 
-ulog_enable_topic("storage");
+ulog_topic_enable("storage");
 logt_warn("storage", "No free space");
 
 . . .
@@ -287,29 +287,29 @@ logt_warn("storage", "No free space");
 // Dynamic topics
 
 // by default all topics are disabled
-ulog_enable_topic("storage");
+ulog_topic_enable("storage");
 logt_error("storage", "No free space");
 
-ulog_enable_all_topics(); 
+ulog_topic_enable_all(); 
 logt_trace("network", "Disconnected from server");
 logt_fatal("video", "No signal");
 ```
 
-By default, the logging level of each topic is set to `ULOG_LEVEL_TRACE`. It is possible to alter this behavior by calling `ulog_set_topic_level()`. All topics below the level set by `ulog_set_level()` (`ULOG_LEVEL_TRACE` by default) will not generate log.
+By default, the logging level of each topic is set to `ULOG_LEVEL_TRACE`. It is possible to alter this behavior by calling `ulog_topic_set_level()`. All topics below the level set by `ulog_level_set()` (`ULOG_LEVEL_TRACE` by default) will not generate log.
 
 For example:
 
 ```c
 // By default, both topic logging levels are set to ULOG_LEVEL_TRACE
-ulog_add_topic("network", true);
-ulog_add_topic("storage", true);
+ulog_topic_add("network", true);
+ulog_topic_add("storage", true);
 
 // Both topics generate log as global logging level is set to ULOG_LEVEL_TRACE
 logt_info("network", "Connected to server");
 logt_warn("storage", "No free space");
 
-ulog_set_level(ULOG_LEVEL_INFO);
-ulog_set_topic_level("storage", ULOG_LEVEL_WARN);
+ulog_level_set(ULOG_LEVEL_INFO);
+ulog_topic_set_level("storage", ULOG_LEVEL_WARN);
 
 // Only "storage" topic generates log
 logt_info("network", "Connected to server");
@@ -320,14 +320,14 @@ For example - with `ULOG_DEFAULT_LOG_LEVEL` set to `ULOG_LEVEL_INFO`:
 
 ```c
 // By default, both topic logging levels are set to ULOG_LEVEL_INFO
-ulog_add_topic("network", true);
-ulog_add_topic("storage", true);
+ulog_topic_add("network", true);
+ulog_topic_add("storage", true);
 
 // Only "storage" topic generates log
 logt_debug("network", "Connected to server");
 logt_warn("storage", "No free space");
 
-ulog_set_topic_level("storage", ULOG_LEVEL_WARN);
+ulog_topic_set_level("storage", ULOG_LEVEL_WARN);
 
 // Both topics generate log as global logging level is set to ULOG_LEVEL_TRACE
 logt_info("network", "Connected to server");
@@ -350,7 +350,7 @@ The feature is controlled by the following defines:
 
 #### File Output
 
-One or more file pointers where the log will be written can be provided to the library by using the `ulog_add_fp()` function. The data written to the file output is of the following format (with the full time stamp):
+One or more file pointers where the log will be written can be provided to the library by using the `ulog_user_callback_add_fp()` function. The data written to the file output is of the following format (with the full time stamp):
 
 ```txt
 2047-03-11 20:18:26 TRACE src/main.c:11: Hello world
@@ -362,13 +362,13 @@ file pointer a value less-than-zero is returned.
 ```c
 FILE *fp = fopen("log.txt", "w");
 if (fp) {
-    ulog_add_fp(fp, ULOG_LEVEL_INFO);
+    ulog_user_callback_add_fp(fp, ULOG_LEVEL_INFO);
 }
 ```
 
 #### Custom Output
 
-One or more callback functions which are called with the log data can be provided to the library by using the `ulog_add_callback()` function. Yo ucan use `ulog_event_to_cstr` to convert the `ulog_event` structure to a string.
+One or more callback functions which are called with the log data can be provided to the library by using the `ulog_user_callback_add()` function. Yo ucan use `ulog_event_to_cstr` to convert the `ulog_event` structure to a string.
 
 ```c
 void arduino_callback(ulog_event *ev, void *arg) {
@@ -381,7 +381,7 @@ void arduino_callback(ulog_event *ev, void *arg) {
 
 . . .
 
-ulog_add_callback(arduino_callback, NULL, ULOG_LEVEL_INFO);
+ulog_user_callback_add(arduino_callback, NULL, ULOG_LEVEL_INFO);
 ```
 
 #### Extra Outputs - Runtime Configuration
@@ -401,7 +401,7 @@ void update_prefix(ulog_event *ev, char *prefix, size_t prefix_size) {
 
 . . .
 
-ulog_set_prefix_fn(prefix_fn);
+ulog_prefix_set_fn(prefix_fn);
 
 ```
 

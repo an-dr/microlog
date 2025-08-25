@@ -17,15 +17,15 @@ int main(int argc, char *argv[]) {
 
     printf("\n");
 
-    ulog_set_level(ULOG_LEVEL_TRACE);
+    ulog_level_set(ULOG_LEVEL_TRACE);
 
     /* Extra Outputs =============================== */
 
 #if ULOG_FEATURE_EXTRA_OUTPUTS
 
     FILE *fp = fopen("example.log", "w");
-    ulog_add_fp(fp, ULOG_LEVEL_INFO);
-    ulog_add_callback(custom_callback,
+    ulog_user_callback_add_fp(fp, ULOG_LEVEL_INFO);
+    ulog_user_callback_add(custom_callback,
                       (void *)"     - Custom Callback: ", ULOG_LEVEL_INFO);
 
 #endif  // ULOG_FEATURE_EXTRA_OUTPUTS
@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
     /* Custom Prefix ==================================== */
 
 #if ULOG_FEATURE_CUSTOM_PREFIX
-    ulog_set_prefix_fn(update_prefix);
+    ulog_prefix_set_fn(update_prefix);
 #endif  // ULOG_FEATURE_CUSTOM_PREFIX
 
     /* Core Logging ===================================== */
@@ -50,25 +50,25 @@ int main(int argc, char *argv[]) {
 
 #if ULOG_FEATURE_TOPICS
 
-    ulog_add_topic("Bluetooth", true);
-    ulog_add_topic("Audio", false);
-    ulog_add_topic("Serial", false);
+    ulog_topic_add("Bluetooth", true);
+    ulog_topic_add("Audio", false);
+    ulog_topic_add("Serial", false);
 
     // logt_fatal("Serial", "Serial message 0");
 
-    ulog_enable_all_topics();
+    ulog_topic_enable_all();
     logt_trace("Bluetooth", "Bluetooth message 1");
     logt_debug("Indication", "Indication message 1");
     logt_info("Audio", "Audio message");
     logt_warn("Serial", "Serial message 1");
     logt_error("Serial", "Serial message 2");
 
-    ulog_disable_topic("Serial");
+    ulog_topic_disable("Serial");
     // logt_warn("Serial", "Serial message 3 (disabled)");
 
-    ulog_set_level(ULOG_LEVEL_INFO);
-    ulog_set_topic_level("Bluetooth", ULOG_LEVEL_WARN);
-    ulog_set_topic_level("Indication", ULOG_LEVEL_DEBUG);
+    ulog_level_set(ULOG_LEVEL_INFO);
+    ulog_topic_set_level("Bluetooth", ULOG_LEVEL_WARN);
+    ulog_topic_set_level("Indication", ULOG_LEVEL_DEBUG);
     logt_info("Bluetooth", "Bluetooth message 2");
     // logt_info("Indication",
     //          "Indication message 2 (level lower than global level)");

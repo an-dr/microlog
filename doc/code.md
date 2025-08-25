@@ -42,7 +42,7 @@ static void prefix_print(print_target *tgt, ulog_event *ev) {
 // Public
 // ================
 
-void ulog_set_prefix_fn(ulog_prefix_fn function) {
+void ulog_prefix_set_fn(ulog_prefix_fn function) {
     prefix_data.function = function;
 }
 

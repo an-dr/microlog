@@ -26,115 +26,6 @@ extern "C" {
 #include <stdio.h>
 
 /* ============================================================================
-   Configuration options
-===============================================================================
-
-| Feature                    | Feature Default | Compilation Options          |
-|----------------------------|-----------------|------------------------------|
-| ULOG_FEATURE_COLOR         | ON              | ULOG_NO_COLOR                |
-| ULOG_FEATURE_CUSTOM_PREFIX | OFF             | ULOG_CUSTOM_PREFIX_SIZE      |
-| ULOG_FEATURE_EMOJI_LEVELS  | OFF             | ULOG_USE_EMOJI               |
-| ULOG_FEATURE_EXTRA_OUTPUTS | OFF             | ULOG_EXTRA_OUTPUTS           |
-| ULOG_FEATURE_FILE_STRING   | ON              | ULOG_HIDE_FILE_STRING        |
-| ULOG_FEATURE_SHORT_LEVELS  | OFF             | ULOG_SHORT_LEVEL_STRINGS     |
-| ULOG_FEATURE_TIME          | OFF             | ULOG_HAVE_TIME               |
-| ULOG_FEATURE_TOPICS        | OFF             | ULOG_TOPICS_NUM              |
-| ULOG_FEATURE_RUNTIME_MODE  | OFF             | ULOG_RUNTIME_MODE            |
-
-
-============================================================================ */
-// clang-format off
-#ifdef ULOG_NO_COLOR
-    #define ULOG_FEATURE_COLOR false
-#else
-    #define ULOG_FEATURE_COLOR true
-#endif
-
-
-#if defined(ULOG_CUSTOM_PREFIX_SIZE) && (ULOG_CUSTOM_PREFIX_SIZE > 0)
-    #define ULOG_FEATURE_CUSTOM_PREFIX true
-#else
-    #define ULOG_FEATURE_CUSTOM_PREFIX false
-#endif
-
-
-#ifdef ULOG_HAVE_TIME
-    #define ULOG_FEATURE_TIME true
-#else
-    #define ULOG_FEATURE_TIME false
-#endif
-
-
-#ifdef ULOG_USE_EMOJI
-    #define ULOG_FEATURE_EMOJI_LEVELS true
-    #if ULOG_SHORT_LEVEL_STRINGS
-        #warning "ULOG_USE_EMOJI overrides ULOG_SHORT_LEVEL_STRINGS! Disable ULOG_SHORT_LEVEL_STRINGS"
-    #endif
-#else
-    #define ULOG_FEATURE_EMOJI_LEVELS false
-#endif
-
-
-
-#if defined(ULOG_EXTRA_OUTPUTS) && (ULOG_EXTRA_OUTPUTS > 0)
-    #define ULOG_FEATURE_EXTRA_OUTPUTS true
-#else
-    #define ULOG_FEATURE_EXTRA_OUTPUTS false
-#endif
-
-
-#ifdef ULOG_HIDE_FILE_STRING
-    #define ULOG_FEATURE_FILE_STRING false
-#else
-    #define ULOG_FEATURE_FILE_STRING true
-#endif
-
-
-
-#ifdef ULOG_SHORT_LEVEL_STRINGS
-    #define ULOG_FEATURE_SHORT_LEVELS true
-#else
-    #define ULOG_FEATURE_SHORT_LEVELS false
-#endif
-
-
-#if defined(ULOG_TOPICS_NUM) && (ULOG_TOPICS_NUM >= 0 || ULOG_TOPICS_NUM == -1)
-    #define ULOG_FEATURE_TOPICS true
-#else
-    #define ULOG_FEATURE_TOPICS false
-#endif
-
-
-#ifdef ULOG_RUNTIME_MODE
-#define ULOG_FEATURE_RUNTIME_MODE true
-// Undef all ULOG_FEATURE_* macros to avoid conflicts
-#undef ULOG_FEATURE_COLOR
-#undef ULOG_FEATURE_CUSTOM_PREFIX
-#undef ULOG_FEATURE_EXTRA_OUTPUTS
-#undef ULOG_FEATURE_FILE_STRING
-#undef ULOG_FEATURE_SHORT_LEVELS
-#undef ULOG_FEATURE_TIME
-#undef ULOG_FEATURE_TOPICS
-
-// Configure features based on runtime config
-#define ULOG_FEATURE_COLOR true
-#define ULOG_FEATURE_CUSTOM_PREFIX true
-#define ULOG_CUSTOM_PREFIX_SIZE 64
-#define ULOG_FEATURE_EXTRA_OUTPUTS true
-#define ULOG_EXTRA_OUTPUTS 8
-#define ULOG_FEATURE_FILE_STRING true
-#define ULOG_FEATURE_SHORT_LEVELS true
-#define ULOG_FEATURE_TIME true
-#define ULOG_FEATURE_TOPICS true
-#define ULOG_TOPICS_NUM -1
-
-#else
-#define ULOG_FEATURE_RUNTIME_MODE false
-#endif
-
-// clang-format on
-
-/* ============================================================================
    Core Functionality
 ============================================================================ */
 // clang-format off
@@ -159,31 +50,21 @@ typedef enum  ulog_level_enum {
 typedef struct {
     const char *message;          // Message format string
     va_list message_format_args;  // Format arguments
-
-#if ULOG_FEATURE_TOPICS
     int topic;
-#endif
-
-#if ULOG_FEATURE_TIME
     struct tm *time;
-#endif
-
-#if ULOG_FEATURE_FILE_STRING
     const char *file;  // Event file name
     int line;          // Event line number
-#endif                 // ULOG_FEATURE_FILE_STRING
-
-    int level;  // Event debug level
+    int level;         // Event debug level
 } ulog_event;
 
 typedef void (*ulog_log_fn)(ulog_event *ev, void *arg);
 
 /// @brief Returns the string representation of the level
-const char *ulog_get_level_string(int level);
+const char *ulog_level_to_string(int level);
 
 /// @brief Sets the debug level
 /// @param level - Debug level
-void ulog_set_level(int level);
+void ulog_level_set(int level);
 
 /// @brief Disables logging to stdout
 /// @param enable - Quiet mode
@@ -215,12 +96,11 @@ typedef void (*ulog_lock_fn)(bool lock, void *lock_arg);
 /// @brief  Sets the lock function and user data
 /// @param function - Lock function
 /// @param lock_arg - User data
-void ulog_set_lock(ulog_lock_fn function, void *lock_arg);
+void ulog_lock_set(ulog_lock_fn function, void *lock_arg);
 
 /* ============================================================================
    Feature: Runtime Config
 ============================================================================ */
-#if ULOG_FEATURE_RUNTIME_MODE
 
 void ulog_configure_color(bool enabled);
 void ulog_configure_prefix(bool enabled);
@@ -229,26 +109,20 @@ void ulog_configure_time(bool enabled);
 void ulog_configure_levels(bool use_short_levels);
 void ulog_configure_topics(bool enabled);
 
-#endif  // ULOG_FEATURE_RUNTIME_MODE
-
 /* ============================================================================
    Feature: Custom Prefix
 ============================================================================ */
-#if ULOG_FEATURE_CUSTOM_PREFIX
 
 typedef void (*ulog_prefix_fn)(ulog_event *ev, char *prefix,
                                size_t prefix_size);
 
 /// @brief Sets the prefix function
 /// @param function - Prefix function
-void ulog_set_prefix_fn(ulog_prefix_fn function);
-
-#endif  // ULOG_FEATURE_CUSTOM_PREFIX
+void ulog_prefix_set_fn(ulog_prefix_fn function);
 
 /* ============================================================================
-   Feature: Extra Outputs
+   Feature: User Callbacks
 ============================================================================ */
-#if ULOG_FEATURE_EXTRA_OUTPUTS
 
 /// @brief Adds a callback
 /// @param function - Callback function
@@ -256,20 +130,17 @@ void ulog_set_prefix_fn(ulog_prefix_fn function);
 ///              processed by the callback
 /// @param level - Debug level
 /// @return 0 if success, -1 if failed
-int ulog_add_callback(ulog_log_fn function, void *arg, int level);
+int ulog_user_callback_add(ulog_log_fn function, void *arg, int level);
 
 /// @brief Add file callback
 /// @param fp - File pointer
 /// @param level - Debug level
 /// @return 0 if success, -1 if failed
-int ulog_add_fp(FILE *fp, int level);
-
-#endif  // ULOG_FEATURE_EXTRA_OUTPUTS
+int ulog_user_callback_add_fp(FILE *fp, int level);
 
 /* ============================================================================
    Feature: Log Topics
 ============================================================================ */
-#if ULOG_FEATURE_TOPICS
 
 // clang-format off
 #define TOPIC_NOT_FOUND 0x7FFFFFFF
@@ -285,36 +156,34 @@ int ulog_add_fp(FILE *fp, int level);
 /// @param topic_name - Topic name. "" and NULL are not valid
 /// @param enable
 /// @return Topic ID if success, -1 if failed
-int ulog_add_topic(const char *topic_name, bool enable);
+int ulog_topic_add(const char *topic_name, bool enable);
 
 /// @brief Sets the debug level of a given topic
 /// @param topic_name - Topic name. "" and NULL are not valid
 /// @param level - Debug level
 /// @return 0 if success, -1 if failed
-int ulog_set_topic_level(const char *topic_name, int level);
+int ulog_topic_set_level(const char *topic_name, ulog_level level);
 
 /// @brief Gets the topic ID
 /// @param topic_name - Topic name. "" and NULL are not valid
 /// @return  Topic ID if success, -1 if failed, TOPIC_NOT_FOUND if not found
-int ulog_get_topic_id(const char *topic_name);
+int ulog_topic_get_id(const char *topic_name);
 
 /// @brief Enables the topic
 /// @param topic_name - Topic name. "" and NULL are not valid
 /// @return 0 if success, -1 if failed
-int ulog_enable_topic(const char *topic_name);
+int ulog_topic_enable(const char *topic_name);
 
 /// @brief Disables the topic
 /// @param topic_name - Topic name. "" and NULL are not valid
 /// @return 0 if success, -1 if failed
-int ulog_disable_topic(const char *topic_name);
+int ulog_topic_disable(const char *topic_name);
 
 /// @brief Enables all topics
-int ulog_enable_all_topics(void);
+int ulog_topic_enable_all(void);
 
 /// @brief Disables all topics
-int ulog_disable_all_topics(void);
-
-#endif  // ULOG_FEATURE_TOPICS
+int ulog_topic_disable_all(void);
 
 #ifdef __cplusplus
 }
