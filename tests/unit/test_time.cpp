@@ -9,7 +9,7 @@ constexpr static size_t TIME_STAMP_SIZE      = 8;   // HH:MM:SS
 constexpr static size_t FULL_TIME_STAMP_SIZE = 19;  // YYYY-MM-DD HH:MM:SS
 
 #if ULOG_FEATURE_CUSTOM_PREFIX
-static void test_prefix(ulog_Event *ev, char *prefix, size_t prefix_size) {
+static void test_prefix(ulog_event *ev, char *prefix, size_t prefix_size) {
     (void)ev;
 
     // NOTE: Test cases expect the first character to be non-whitespace
@@ -24,7 +24,7 @@ struct TimeTestFixture {
     TimeTestFixture() {
         // Per-test setup
         if (!callback_is_set) {
-            ulog_add_callback(ut_callback, nullptr, LOG_TRACE);
+            ulog_add_callback(ut_callback, nullptr, ULOG_LEVEL_TRACE);
             callback_is_set = true;
         }
         ut_callback_reset();
@@ -107,7 +107,7 @@ void _check_file_time(bool prefix = false) {
 
     FILE *fp = fopen(filename.c_str(), "w");
     REQUIRE(fp != nullptr);
-    ulog_add_fp(fp, LOG_INFO);
+    ulog_add_fp(fp, ULOG_LEVEL_INFO);
 
     time_t before, after;
     _get_time_bounds(before, after);

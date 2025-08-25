@@ -4,16 +4,16 @@
 #include "ulog.h"
 #include "ut_callback.h"
 
-static void test_prefix(ulog_Event *ev, char *prefix, size_t prefix_size) {
+static void test_prefix(ulog_event *ev, char *prefix, size_t prefix_size) {
     (void)ev;
     snprintf(prefix, prefix_size, "[PREFIX]");
 }
 
 struct TestFixture {
     TestFixture() {
-        ulog_set_level(LOG_TRACE);
+        ulog_set_level(ULOG_LEVEL_TRACE);
         ulog_set_quiet(false);
-        ulog_add_callback(ut_callback, nullptr, LOG_TRACE);
+        ulog_add_callback(ut_callback, nullptr, ULOG_LEVEL_TRACE);
         ut_callback_reset();
         ulog_set_prefix_fn(test_prefix);
     }

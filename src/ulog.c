@@ -90,7 +90,7 @@ static void print_to_target(print_target *tgt, const char *format, ...) {
    Prototypes
 ============================================================================ */
 
-static void log_print_event(print_target *tgt, ulog_Event *ev, bool full_time,
+static void log_print_event(print_target *tgt, ulog_event *ev, bool full_time,
                             bool color, bool new_line);
 
 /* ============================================================================
@@ -100,8 +100,8 @@ static void log_print_event(print_target *tgt, ulog_Event *ev, bool full_time,
 // Private
 // ================
 typedef struct {
-    ulog_LockFn function;  // Lock function
-    void *args;            // Argument for the lock function
+    ulog_lock_fn function;  // Lock function
+    void *args;             // Argument for the lock function
 } lock_data_t;
 
 static lock_data_t lock_data = {
@@ -125,7 +125,7 @@ static void lock_unlock(void) {
 // ================
 
 /// @brief  Sets the lock function and user data
-void ulog_set_lock(ulog_LockFn function, void *lock_arg) {
+void ulog_set_lock(ulog_lock_fn function, void *lock_arg) {
     lock_data.function = function;
     lock_data.args     = lock_arg;
 }
@@ -179,7 +179,7 @@ static const char *color_levels[] = {
 };
 #define COLOR_TERMINATOR "\x1b[0m"
 
-static void color_print_start(print_target *tgt, ulog_Event *ev) {
+static void color_print_start(print_target *tgt, ulog_event *ev) {
     if (!color_cfg_is_enabled()) {
         return;  // Color is disabled, do not print color codes
     }
@@ -241,7 +241,7 @@ void ulog_configure_prefix(bool enabled) {
 // Private
 // ================
 typedef struct {
-    ulog_PrefixFn function;
+    ulog_prefix_fn function;
     char prefix[ULOG_CUSTOM_PREFIX_SIZE];
 } prefix_data_t;
 
@@ -250,7 +250,7 @@ static prefix_data_t prefix_data = {
     .prefix   = {0},
 };
 
-static void prefix_print(print_target *tgt, ulog_Event *ev) {
+static void prefix_print(print_target *tgt, ulog_event *ev) {
     if (prefix_data.function == NULL || !prefix_cfg_is_enabled()) {
         return;
     }
@@ -261,7 +261,7 @@ static void prefix_print(print_target *tgt, ulog_Event *ev) {
 // Public
 // ================
 
-void ulog_set_prefix_fn(ulog_PrefixFn function) {
+void ulog_set_prefix_fn(ulog_prefix_fn function) {
     prefix_data.function = function;
 }
 
@@ -314,7 +314,7 @@ void ulog_configure_time(bool enabled) {
 
 // Private
 // ================
-static bool time_print_if_invalid(print_target *tgt, ulog_Event *ev) {
+static bool time_print_if_invalid(print_target *tgt, ulog_event *ev) {
     if (ev->time == NULL) {
         print_to_target(tgt, "INVALID_TIME");
         return true;  // Time is invalid, print error message
@@ -324,12 +324,12 @@ static bool time_print_if_invalid(print_target *tgt, ulog_Event *ev) {
 
 /// @brief Fills the event time with the current local time
 /// @param ev - Event to fill. Assumed not NULL
-static void time_fill_current_time(ulog_Event *ev) {
+static void time_fill_current_time(ulog_event *ev) {
     time_t current_time = time(NULL);     // Get current time
     ev->time = localtime(&current_time);  // Fill time with current value
 }
 
-static void time_print_short(print_target *tgt, ulog_Event *ev,
+static void time_print_short(print_target *tgt, ulog_event *ev,
                              bool append_space) {
     if (!time_cfg_is_enabled() || time_print_if_invalid(tgt, ev)) {
         return;  // If time is not valid or disabled, stop printing
@@ -341,7 +341,7 @@ static void time_print_short(print_target *tgt, ulog_Event *ev,
 }
 
 #if ULOG_FEATURE_EXTRA_OUTPUTS
-static void time_print_full(print_target *tgt, ulog_Event *ev,
+static void time_print_full(print_target *tgt, ulog_event *ev,
                             bool append_space) {
     if (!time_cfg_is_enabled() || time_print_if_invalid(tgt, ev)) {
         return;  // If time is not valid or disabled, stop printing
@@ -404,11 +404,11 @@ void ulog_configure_levels(bool use_short_levels) {
 // Private
 // ================
 #ifndef ULOG_DEFAULT_LOG_LEVEL
-#define ULOG_DEFAULT_LOG_LEVEL LOG_TRACE
+#define ULOG_DEFAULT_LOG_LEVEL ULOG_LEVEL_TRACE
 #endif
 
 typedef struct {
-    int level;
+    ulog_level level;
 } levels_data_t;
 
 static levels_data_t levels_data = {
@@ -432,7 +432,14 @@ static const char *levels_strings[][LEVELS_TOTAL] = {
 };
 // clang-format on
 
-static void levels_print(print_target *tgt, ulog_Event *ev) {
+static bool levels_is_allowed(ulog_level msg_level, ulog_level log_verbosity) {
+    if (msg_level < log_verbosity || msg_level < ULOG_LEVEL_TRACE) {
+        return false;  // Level is higher than the configured level, not allowed
+    }
+    return true;  // Level is allowed
+}
+
+static void levels_print(print_target *tgt, ulog_event *ev) {
 #if ULOG_FEATURE_SHORT_LEVELS || ULOG_FEATURE_EMOJI_LEVELS
     if (levels_cfg_is_short()) {
         print_to_target(tgt, "%-1s ",
@@ -459,7 +466,7 @@ const char *ulog_get_level_string(int level) {
 
 /// @brief Sets the debug level
 void ulog_set_level(int level) {
-    if (level < LOG_TRACE || level > LOG_FATAL) {
+    if (level < ULOG_LEVEL_TRACE || level > ULOG_LEVEL_FATAL) {
         return;  // Invalid level, do nothing
     }
     levels_data.level = level;
@@ -481,12 +488,12 @@ void ulog_set_level(int level) {
 #define CB_TOTAL_NUM (1 + CB_USER_NUM)  // stdout + extra
 
 // Forward declarations for data initialization
-static void cb_stdout(ulog_Event *ev, void *arg);
+static void cb_stdout(ulog_event *ev, void *arg);
 
 typedef struct {
-    ulog_LogFn function;
+    ulog_log_fn function;
     void *arg;
-    int level;
+    ulog_level level;
     bool is_enabled;  // Whether the callback is enabled or not
 } cb_t;
 
@@ -494,14 +501,15 @@ typedef struct {
     cb_t callbacks[CB_TOTAL_NUM];  // 0 is for stdout callback
 } cb_data_t;
 
-static cb_data_t cb_data = {.callbacks = {{cb_stdout, NULL, LOG_TRACE, true}}};
+static cb_data_t cb_data = {
+    .callbacks = {{cb_stdout, NULL, ULOG_LEVEL_TRACE, true}}};
 
-static void cb_handle_single(ulog_Event *ev, cb_t *cb) {
-    if (cb->is_enabled && ev->level >= cb->level) {
+static void cb_handle_single(ulog_event *ev, cb_t *cb) {
+    if (cb->is_enabled && levels_is_allowed(ev->level, cb->level)) {
 
         // Create event copy to avoid va_list issues
-        ulog_Event ev_copy = {0};
-        memcpy(&ev_copy, ev, sizeof(ulog_Event));
+        ulog_event ev_copy = {0};
+        memcpy(&ev_copy, ev, sizeof(ulog_event));
 
         // Initialize the va_list for the copied event
         // Note: We use a copy of the va_list to avoid issues with passing it
@@ -513,7 +521,7 @@ static void cb_handle_single(ulog_Event *ev, cb_t *cb) {
     }
 }
 
-static void cb_handle_all(ulog_Event *ev) {
+static void cb_handle_all(ulog_event *ev) {
     // Processing the message for callbacks
     for (int i = 0;
          (i < CB_TOTAL_NUM) && (cb_data.callbacks[i].function != NULL); i++) {
@@ -521,7 +529,8 @@ static void cb_handle_all(ulog_Event *ev) {
     }
 }
 
-static void cb_stdout(ulog_Event *ev, void *arg) {
+static void cb_stdout(ulog_event *ev, void *arg) {
+    (void)(arg); // Unused
     print_target tgt = {.type = LOG_TARGET_STREAM, .dsc.stream = stdout};
     log_print_event(&tgt, ev, false, true, true);
 }
@@ -541,7 +550,7 @@ void ulog_set_quiet(bool enable) {
 
 //  Private
 // ================
-static void cb_user_file(ulog_Event *ev, void *arg) {
+static void cb_user_file(ulog_event *ev, void *arg) {
     print_target tgt = {.type = LOG_TARGET_STREAM, .dsc.stream = (FILE *)arg};
     log_print_event(&tgt, ev, true, false, true);
 }
@@ -554,7 +563,7 @@ static void cb_user_file(ulog_Event *ev, void *arg) {
 /// @param arg - Optional argument that will be added to the event to be
 ///              processed by the callback
 /// @param level - Debug level
-int ulog_add_callback(ulog_LogFn function, void *arg, int level) {
+int ulog_add_callback(ulog_log_fn function, void *arg, int level) {
     for (int i = 0; i < CB_TOTAL_NUM; i++) {
         if (cb_data.callbacks[i].function == NULL) {
             cb_data.callbacks[i] = (cb_t){function, arg, level, true};
@@ -676,7 +685,7 @@ static int topic_add(const char *topic_name, bool enable);
 
 // === Common Topic Functions =================================================
 
-static void topic_print(print_target *tgt, ulog_Event *ev) {
+static void topic_print(print_target *tgt, ulog_event *ev) {
     if (!topic_cfg_is_enabled()) {
         return;  // Topics are disabled, do nothing
     }
@@ -708,7 +717,7 @@ static bool topic_is_loggable(topic_t *t, int level) {
     if (t == NULL) {
         return false;  // Topic not found, cannot log
     }
-    if (!t->enabled || t->level > level) {
+    if (!t->enabled || !levels_is_allowed(level, t->level)) {
         return false;  // Topic is disabled, cannot log
     }
     return true;
@@ -876,7 +885,7 @@ static int topic_add(const char *topic_name, bool enable) {
             topic_data.topics[i].id      = i;
             topic_data.topics[i].name    = topic_name;
             topic_data.topics[i].enabled = enable;
-            topic_data.topics[i].level   = LOG_TRACE;
+            topic_data.topics[i].level   = ULOG_LEVEL_TRACE;
             return i;
         }
         // If the topic already exists
@@ -962,7 +971,7 @@ static void *topic_allocate(int id, const char *topic_name, bool enable) {
         t->id      = id;
         t->name    = topic_name;
         t->enabled = enable;
-        t->level   = LOG_TRACE;
+        t->level   = ULOG_LEVEL_TRACE;
         t->next    = NULL;
     }
     return t;
@@ -1049,7 +1058,7 @@ typedef struct {
 /// @brief Prints the message
 /// @param tgt - Target
 /// @param ev - Event
-static void log_print_message(print_target *tgt, ulog_Event *ev) {
+static void log_print_message(print_target *tgt, ulog_event *ev) {
 
     if (file_path_cfg_is_enabled()) {
         print_to_target(tgt, "%s:%d: ", ev->file, ev->line);  // file and line
@@ -1077,7 +1086,7 @@ static void log_print_message(print_target *tgt, ulog_Event *ev) {
 /// @param full_time - Full time or short time
 /// @param color - Color or no color
 /// @param new_line - New line in the end or no new line
-static void log_print_event(print_target *tgt, ulog_Event *ev, bool full_time,
+static void log_print_event(print_target *tgt, ulog_event *ev, bool full_time,
                             bool color, bool new_line) {
 
     color ? color_print_start(tgt, ev) : (void)0;
@@ -1102,7 +1111,7 @@ static void log_print_event(print_target *tgt, ulog_Event *ev, bool full_time,
     new_line ? print_to_target(tgt, "\n") : (void)0;
 }
 
-void log_fill_event(ulog_Event *ev, const char *message, int level,
+void log_fill_event(ulog_event *ev, const char *message, int level,
                     const char *file, int line, int topic_id) {
     if (ev == NULL) {
         return;  // Invalid event, do nothing
@@ -1134,7 +1143,7 @@ void log_fill_event(ulog_Event *ev, const char *message, int level,
 // Public
 // ================
 
-int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size) {
+int ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size) {
     if (out == NULL || out_size == 0) {
         return -1;
     }
@@ -1144,13 +1153,13 @@ int ulog_event_to_cstr(ulog_Event *ev, char *out, size_t out_size) {
     return 0;
 }
 
-void ulog_log(int level, const char *file, int line, const char *topic,
+void ulog_log(ulog_level level, const char *file, int line, const char *topic,
               const char *message, ...) {
 
     lock_lock();
 
     // Skip if level is lower than sets
-    bool is_log_allowed = level >= levels_data.level;
+    bool is_log_allowed = levels_is_allowed(level, levels_data.level);
     if (!is_log_allowed) {
         lock_unlock();
         return;
@@ -1166,7 +1175,7 @@ void ulog_log(int level, const char *file, int line, const char *topic,
         }
     }
 
-    ulog_Event ev = {0};
+    ulog_event ev = {0};
     log_fill_event(&ev, message, level, file, line, topic_id);
     va_start(ev.message_format_args, message);
 

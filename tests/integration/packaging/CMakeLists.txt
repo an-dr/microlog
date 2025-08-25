@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 project(example_package)
 
-find_package(microlog 6.0.0 REQUIRED)
+find_package(microlog 7.0.0 REQUIRED)
 
 add_executable(example_package example.cpp)
 
