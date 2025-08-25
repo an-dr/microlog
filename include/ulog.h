@@ -46,16 +46,8 @@ typedef enum  ulog_level_enum {
 #define log_fatal(...) ulog_log(ULOG_LEVEL_FATAL, __FILE__, __LINE__, NULL, __VA_ARGS__)
 // clang-format on
 
-/// @brief Event structure
-typedef struct {
-    const char *message;          // Message format string
-    va_list message_format_args;  // Format arguments
-    int topic;
-    struct tm *time;
-    const char *file;  // Event file name
-    int line;          // Event line number
-    int level;         // Event debug level
-} ulog_event;
+/// @brief Event structure (opaque)
+typedef struct ulog_event ulog_event;
 
 typedef void (*ulog_log_fn)(ulog_event *ev, void *arg);
 
@@ -68,7 +60,7 @@ void ulog_level_set(int level);
 
 /// @brief Disables logging to stdout
 /// @param enable - Quiet mode
-void ulog_set_quiet(bool enable);
+void ulog_set_quiet(bool enable); // TODO: ulog_disable_stdout/enable_stdout?
 
 /// @brief Write event content to a buffer as a log message
 /// @param ev - Event

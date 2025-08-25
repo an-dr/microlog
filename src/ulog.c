@@ -204,6 +204,28 @@ static void log_print_event(print_target *tgt, ulog_event *ev, bool full_time,
 
 // Private
 // ================
+
+/// @brief Event structure
+struct ulog_event {
+    const char *message;          // Message format string
+    va_list message_format_args;  // Format arguments
+
+#if ULOG_FEATURE_TOPICS
+    int topic;
+#endif
+
+#if ULOG_FEATURE_TIME
+    struct tm *time;
+#endif
+
+#if ULOG_FEATURE_FILE_STRING
+    const char *file;  // Event file name
+    int line;          // Event line number
+#endif                 // ULOG_FEATURE_FILE_STRING
+
+    int level;  // Event debug level
+};
+
 typedef struct {
     ulog_lock_fn function;  // Lock function
     void *args;             // Argument for the lock function
@@ -637,7 +659,7 @@ static void cb_handle_all(ulog_event *ev) {
 }
 
 static void cb_stdout(ulog_event *ev, void *arg) {
-    (void)(arg); // Unused
+    (void)(arg);  // Unused
     print_target tgt = {.type = LOG_TARGET_STREAM, .dsc.stream = stdout};
     log_print_event(&tgt, ev, false, true, true);
 }
