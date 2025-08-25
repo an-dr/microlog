@@ -197,23 +197,23 @@ Most of the library features are configured compile time to reduce the code size
 
 ### Log Verbosity
 
-The default log level is `ULOG_TRACE`, such that nothing is ignored.
+The default log level is `ULOG_LEVEL_TRACE`, such that nothing is ignored.
 
 There are two ways to modify it so that all logs below the given level will not be written to `stderr`:
 
 - at compile time by defining `ULOG_DEFAULT_LOG_LEVEL` - this is particularly useful when one wants to configure the log level according to a configuration (debug or release for instance) without modifying the source code,
 - at run time by using the `ulog_set_level()` function.
 
-The example below shows how to configure log level to `ULOG_INFO`:
+The example below shows how to configure log level to `ULOG_LEVEL_INFO`:
 
 ```c
-ulog_set_level(ULOG_INFO);
+ulog_set_level(ULOG_LEVEL_INFO);
 ```
 
 To get the name of the log level use `ulog_get_level_string`:
 
 ```c
-const char *level = ulog_get_level_string(ULOG_INFO);
+const char *level = ulog_get_level_string(ULOG_LEVEL_INFO);
 ptrintf("Level: %s\n", level);
 ```
 
@@ -295,31 +295,31 @@ logt_trace("network", "Disconnected from server");
 logt_fatal("video", "No signal");
 ```
 
-By default, the logging level of each topic is set to `ULOG_TRACE`. It is possible to alter this behavior by calling `ulog_set_topic_level()`. All topics below the level set by `ulog_set_level()` (`ULOG_TRACE` by default) will not generate log.
+By default, the logging level of each topic is set to `ULOG_LEVEL_TRACE`. It is possible to alter this behavior by calling `ulog_set_topic_level()`. All topics below the level set by `ulog_set_level()` (`ULOG_LEVEL_TRACE` by default) will not generate log.
 
 For example:
 
 ```c
-// By default, both topic logging levels are set to ULOG_TRACE
+// By default, both topic logging levels are set to ULOG_LEVEL_TRACE
 ulog_add_topic("network", true);
 ulog_add_topic("storage", true);
 
-// Both topics generate log as global logging level is set to ULOG_TRACE
+// Both topics generate log as global logging level is set to ULOG_LEVEL_TRACE
 logt_info("network", "Connected to server");
 logt_warn("storage", "No free space");
 
-ulog_set_level(ULOG_INFO);
-ulog_set_topic_level("storage", ULOG_WARN);
+ulog_set_level(ULOG_LEVEL_INFO);
+ulog_set_topic_level("storage", ULOG_LEVEL_WARN);
 
 // Only "storage" topic generates log
 logt_info("network", "Connected to server");
 logt_info("storage", "No free space");
 ```
 
-For example - with `ULOG_DEFAULT_LOG_LEVEL` set to `ULOG_INFO`:
+For example - with `ULOG_DEFAULT_LOG_LEVEL` set to `ULOG_LEVEL_INFO`:
 
 ```c
-// By default, both topic logging levels are set to ULOG_INFO
+// By default, both topic logging levels are set to ULOG_LEVEL_INFO
 ulog_add_topic("network", true);
 ulog_add_topic("storage", true);
 
@@ -327,9 +327,9 @@ ulog_add_topic("storage", true);
 logt_debug("network", "Connected to server");
 logt_warn("storage", "No free space");
 
-ulog_set_topic_level("storage", ULOG_WARN);
+ulog_set_topic_level("storage", ULOG_LEVEL_WARN);
 
-// Both topics generate log as global logging level is set to ULOG_TRACE
+// Both topics generate log as global logging level is set to ULOG_LEVEL_TRACE
 logt_info("network", "Connected to server");
 logt_info("storage", "No free space");
 ```
@@ -362,16 +362,16 @@ file pointer a value less-than-zero is returned.
 ```c
 FILE *fp = fopen("log.txt", "w");
 if (fp) {
-    ulog_add_fp(fp, ULOG_INFO);
+    ulog_add_fp(fp, ULOG_LEVEL_INFO);
 }
 ```
 
 #### Custom Output
 
-One or more callback functions which are called with the log data can be provided to the library by using the `ulog_add_callback()` function. Yo ucan use `ulog_event_to_cstr` to convert the `ulog_Event` structure to a string.
+One or more callback functions which are called with the log data can be provided to the library by using the `ulog_add_callback()` function. Yo ucan use `ulog_event_to_cstr` to convert the `ulog_event` structure to a string.
 
 ```c
-void arduino_callback(ulog_Event *ev, void *arg) {
+void arduino_callback(ulog_event *ev, void *arg) {
     static char buffer[128];
     int result = ulog_event_to_cstr(ev, buffer, sizeof(buffer));
     if (result == 0) {
@@ -381,7 +381,7 @@ void arduino_callback(ulog_Event *ev, void *arg) {
 
 . . .
 
-ulog_add_callback(arduino_callback, NULL, ULOG_INFO);
+ulog_add_callback(arduino_callback, NULL, ULOG_LEVEL_INFO);
 ```
 
 #### Extra Outputs - Runtime Configuration
@@ -395,7 +395,7 @@ Sets a custom prefix function. The function is called with the log level and sho
 Requires `ULOG_CUSTOM_PREFIX_SIZE` to be more than 0.
 
 ```c
-void update_prefix(ulog_Event *ev, char *prefix, size_t prefix_size) {
+void update_prefix(ulog_event *ev, char *prefix, size_t prefix_size) {
     snprintf(prefix, prefix_size, ", %d ms", millis());
 }
 

@@ -23,16 +23,16 @@ The example is shown below:
 // Private
 // ================
 typedef struct {
-    ulog_PrefixFn function;
+    ulog_prefix_fn function;
     char prefix[ULOG_FEATURE_CUSTOM_PREFIX_SIZE];
 } prefix_data_t;
-
+ 
 static prefix_data_t prefix_data = {
     .function = NULL,
     .prefix   = {0},
 };
 
-static void prefix_print(print_target *tgt, ulog_Event *ev) {
+static void prefix_print(print_target *tgt, ulog_event *ev) {
     if (prefix_data.function != NULL) {
         prefix_data.function(ev, prefix_data.prefix, ULOG_FEATURE_CUSTOM_PREFIX_SIZE);
         print_to_target(tgt, "%s", prefix_data.prefix);
@@ -42,7 +42,7 @@ static void prefix_print(print_target *tgt, ulog_Event *ev) {
 // Public
 // ================
 
-void ulog_set_prefix_fn(ulog_PrefixFn function) {
+void ulog_set_prefix_fn(ulog_prefix_fn function) {
     prefix_data.function = function;
 }
 

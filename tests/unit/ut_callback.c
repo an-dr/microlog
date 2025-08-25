@@ -6,7 +6,7 @@ static int processed_message_count                  = 0;
 static char last_message_buffer[UT_LOG_BUFFER_SIZE] = {0};
 
 // Custom log callback for tests
-void ut_callback(ulog_Event *ev, void *arg) {
+void ut_callback(ulog_event *ev, void *arg) {
     (void)arg;  // Userdata is now 'arg', mark as unused if not used.
 
     if (!ev || !ev->message) {

@@ -22,12 +22,12 @@ set(ULOG_CONFIG_NO_PREFIX "-DULOG_EXTRA_OUTPUTS=8"
                                 )
 
 set(ULOG_CONFIG_TEST_CORE ${ULOG_CONFIG_BASE}
-                          "-DULOG_DEFAULT_LOG_LEVEL=ULOG_DEBUG"
+                          "-DULOG_DEFAULT_LOG_LEVEL=ULOG_LEVEL_DEBUG"
                           "-DULOG_TOPICS_NUM=-1"
                           )
 
 set(ULOG_CONFIG_TEST_TOPICS ${ULOG_CONFIG_BASE}
-                            "-DULOG_DEFAULT_LOG_LEVEL=ULOG_WARN"
+                            "-DULOG_DEFAULT_LOG_LEVEL=ULOG_LEVEL_WARN"
                             "-DULOG_TOPICS_NUM=2"
                             )
                             
