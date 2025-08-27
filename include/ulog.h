@@ -8,7 +8,7 @@
 // Original implementation by rxi: https://github.com/rxi
 // Modified by Andrei Gramakov: https://agramakov.me, mail@agramakov.me
 //
-// Copyright (c) 2024 Andrei Gramakov. All rights reserved.
+// Copyright (c) 2025 Andrei Gramakov. All rights reserved.
 //
 // This file is licensed under the terms of the MIT license.
 // For a copy, see: https://opensource.org/licenses/MIT
@@ -176,25 +176,37 @@ typedef struct {
     int level;  // Event debug level
 } ulog_event;
 
+typedef enum {
+    ULOG_OK          = 0,
+    ULOG_ERR_GENERIC = -1,
+    ULOG_ERR_BAD_ARG = -2,
+} ulog_status;
+
+typedef int ulog_output;
+enum {
+    ULOG_OUTPUT_INVALID = -1,
+    ULOG_OUTPUT_STDOUT  = 0,
+};
+
 typedef void (*ulog_log_fn)(ulog_event *ev, void *arg);
 
 /// @brief Returns the string representation of the level
-const char *ulog_get_level_string(int level);
+const char *ulog_level_to_string(ulog_level level);
 
 /// @brief Sets the debug level
 /// @param level - Debug level
-void ulog_set_level(int level);
+void ulog_level_set(ulog_level level);
 
 /// @brief Disables logging to stdout
 /// @param enable - Quiet mode
-void ulog_set_quiet(bool enable);
+void ulog_set_quiet(bool enable);  // TODO: ulog_disable_stdout/enable_stdout?
 
-/// @brief Write event content to a buffer as a log message
+/// @brief Write eve\nt content to a buffer as a log message
 /// @param ev - Event
 /// @param out_buf - Output buffer
 /// @param out_buf_size - Output buffer size
-/// @return 0 if success, -1 if failed
-int ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size);
+/// @return ulog_status
+ulog_status ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size);
 
 /// @brief Logs the message
 /// @param level - Debug level
@@ -215,7 +227,7 @@ typedef void (*ulog_lock_fn)(bool lock, void *lock_arg);
 /// @brief  Sets the lock function and user data
 /// @param function - Lock function
 /// @param lock_arg - User data
-void ulog_set_lock(ulog_lock_fn function, void *lock_arg);
+void ulog_lock_set_fn(ulog_lock_fn function, void *lock_arg);
 
 /* ============================================================================
    Feature: Runtime Config
@@ -241,12 +253,12 @@ typedef void (*ulog_prefix_fn)(ulog_event *ev, char *prefix,
 
 /// @brief Sets the prefix function
 /// @param function - Prefix function
-void ulog_set_prefix_fn(ulog_prefix_fn function);
+void ulog_prefix_set_fn(ulog_prefix_fn function);
 
 #endif  // ULOG_FEATURE_CUSTOM_PREFIX
 
 /* ============================================================================
-   Feature: Extra Outputs
+   Feature: User Callbacks
 ============================================================================ */
 #if ULOG_FEATURE_EXTRA_OUTPUTS
 
@@ -255,14 +267,15 @@ void ulog_set_prefix_fn(ulog_prefix_fn function);
 /// @param arg - Optional argument that will be added to the event to be
 ///              processed by the callback
 /// @param level - Debug level
-/// @return 0 if success, -1 if failed
-int ulog_add_callback(ulog_log_fn function, void *arg, int level);
+/// @return ulog_status
+ulog_status ulog_user_callback_add(ulog_log_fn function, void *arg,
+                                   ulog_level level);
 
 /// @brief Add file callback
 /// @param fp - File pointer
 /// @param level - Debug level
-/// @return 0 if success, -1 if failed
-int ulog_add_fp(FILE *fp, int level);
+/// @return ulog_status
+ulog_status ulog_user_callback_add_fp(FILE *fp, ulog_level level);
 
 #endif  // ULOG_FEATURE_EXTRA_OUTPUTS
 
@@ -281,38 +294,43 @@ int ulog_add_fp(FILE *fp, int level);
 #define logt_fatal(TOPIC_NAME, ...) ulog_log(ULOG_LEVEL_FATAL, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
 // clang-format on
 
+typedef int ulog_topic_id;
+enum {
+    ULOG_TOPIC_ID_INVALID = -1,
+};
+
 /// @brief Adds a topic
 /// @param topic_name - Topic name. "" and NULL are not valid
 /// @param enable
-/// @return Topic ID if success, -1 if failed
-int ulog_add_topic(const char *topic_name, bool enable);
+/// @return Topic ID if success, ULOG_TOPIC_ID_INVALID if failed
+ulog_topic_id ulog_topic_add(const char *topic_name, bool enable);
 
 /// @brief Sets the debug level of a given topic
 /// @param topic_name - Topic name. "" and NULL are not valid
 /// @param level - Debug level
-/// @return 0 if success, -1 if failed
-int ulog_set_topic_level(const char *topic_name, int level);
+/// @return ulog_status
+ulog_status ulog_topic_level_set(const char *topic_name, ulog_level level);
 
 /// @brief Gets the topic ID
 /// @param topic_name - Topic name. "" and NULL are not valid
-/// @return  Topic ID if success, -1 if failed, TOPIC_NOT_FOUND if not found
-int ulog_get_topic_id(const char *topic_name);
+/// @return  Topic ID if success, ULOG_TOPIC_ID_INVALID if failed
+ulog_topic_id ulog_topic_get_id(const char *topic_name);
 
 /// @brief Enables the topic
 /// @param topic_name - Topic name. "" and NULL are not valid
-/// @return 0 if success, -1 if failed
-int ulog_enable_topic(const char *topic_name);
+/// @return ulog_status
+ulog_status ulog_topic_enable(const char *topic_name);
 
 /// @brief Disables the topic
 /// @param topic_name - Topic name. "" and NULL are not valid
-/// @return 0 if success, -1 if failed
-int ulog_disable_topic(const char *topic_name);
+/// @return ULOG_OK if success, ULOG_ERR_GENERIC if failed
+ulog_status ulog_topic_disable(const char *topic_name);
 
 /// @brief Enables all topics
-int ulog_enable_all_topics(void);
+ulog_status ulog_topic_enable_all(void);
 
 /// @brief Disables all topics
-int ulog_disable_all_topics(void);
+ulog_status ulog_topic_disable_all(void);
 
 #endif  // ULOG_FEATURE_TOPICS
 

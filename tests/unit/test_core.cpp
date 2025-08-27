@@ -13,7 +13,7 @@ struct TestFixture {
     TestFixture() {
         // Per-test setup
         if (!callback_is_set) {
-            ulog_add_callback(ut_callback, nullptr, ULOG_LEVEL_TRACE);
+            ulog_user_callback_add(ut_callback, nullptr, ULOG_LEVEL_TRACE);
             callback_is_set = true;
         }
         ulog_set_quiet(false);
@@ -41,7 +41,7 @@ TEST_CASE_FIXTURE(TestFixture, "Default level") {
 }
 
 TEST_CASE_FIXTURE(TestFixture, "Base") {
-    ulog_set_level(ULOG_LEVEL_TRACE);
+    ulog_level_set(ULOG_LEVEL_TRACE);
 
     log_trace("This is a TRACE message: %d", 123);
     log_debug("This is a DEBUG message: %s", "test");
@@ -56,7 +56,7 @@ TEST_CASE_FIXTURE(TestFixture, "Base") {
 }
 
 TEST_CASE_FIXTURE(TestFixture, "Levels") {
-    ulog_set_level(ULOG_LEVEL_INFO);
+    ulog_level_set(ULOG_LEVEL_INFO);
 
     log_trace("This TRACE should not be processed.");
     CHECK(ut_callback_get_message_count() == 0);
@@ -87,7 +87,7 @@ TEST_CASE_FIXTURE(TestFixture, "File Output") {
     const char *filename = "test_output.log";
     FILE *fp             = fopen(filename, "w");
     REQUIRE(fp != nullptr);
-    ulog_add_fp(fp, ULOG_LEVEL_INFO);
+    ulog_user_callback_add_fp(fp, ULOG_LEVEL_INFO);
 
     log_info("This is an INFO message to file.");
     fclose(fp);

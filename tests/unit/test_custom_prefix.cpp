@@ -11,11 +11,11 @@ static void test_prefix(ulog_event *ev, char *prefix, size_t prefix_size) {
 
 struct PrefixTestFixture {
     PrefixTestFixture() {
-        ulog_set_level(ULOG_LEVEL_TRACE);
+        ulog_level_set(ULOG_LEVEL_TRACE);
         ulog_set_quiet(false);
-        ulog_add_callback(ut_callback, nullptr, ULOG_LEVEL_TRACE);
+        ulog_user_callback_add(ut_callback, nullptr, ULOG_LEVEL_TRACE);
         ut_callback_reset();
-        ulog_set_prefix_fn(test_prefix);
+        ulog_prefix_set_fn(test_prefix);
     }
     ~PrefixTestFixture() = default;
 };
