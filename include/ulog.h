@@ -7,6 +7,7 @@
 //
 // Original implementation by rxi: https://github.com/rxi
 // Modified by Andrei Gramakov: https://agramakov.me, mail@agramakov.me
+// Also modified by many beautiful contributors from GitHub
 //
 // Copyright (c) 2025 Andrei Gramakov. All rights reserved.
 //
