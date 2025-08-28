@@ -573,7 +573,7 @@ ulog_output ulog_output_add(ulog_output_callback_fn callback, void *arg,
                             ulog_level level) {
     for (int i = 0; i < OUTPUT_TOTAL_NUM; i++) {
         if (output_data.outputs[i].callback == NULL) {
-            output_data.outputs[i] = (output_t){callback, arg, level, true};
+            output_data.outputs[i] = (output_t){callback, arg, level};
             return i;
         }
     }
