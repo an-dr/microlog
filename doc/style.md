@@ -12,7 +12,7 @@
 
 ### Types
 
-- **Structs, Enums, Unions, Typedefs:** Always a typedef - `snake_case` with prefix `feature_name_` and the `_t` suffix. Example:
+- **Structs, Enums, Unions, Typedefs:** Always a typedef - `snake_case` with prefix `feature_name_` and without `_t` suffix. Example:
 
 ```c
 typedef struct {
@@ -28,7 +28,7 @@ typedef union {
 ```
 
 - **Enum Constants:** `ALL_CAPS` with prefix.
-    - Example: `typedef enum { LOG_TARGET_BUFFER, LOG_TARGET_STREAM } log_target_t;`
+    - Example: `typedef enum { LOG_TARGET_BUFFER, LOG_TARGET_STREAM } log_target;`
 
 ### Functions
 
