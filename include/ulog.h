@@ -145,6 +145,7 @@ typedef enum {
     ULOG_STATUS_BAD_ARGUMENT = -2,
 } ulog_status;
 
+
 typedef enum  ulog_level_enum { 
     ULOG_LEVEL_TRACE = 0,
     ULOG_LEVEL_DEBUG,
@@ -153,6 +154,7 @@ typedef enum  ulog_level_enum {
     ULOG_LEVEL_ERROR,
     ULOG_LEVEL_FATAL,
 } ulog_level;
+#define ULOG_LEVELS_TOTAL  6
        
 #define ulog_trace(...) ulog_log(ULOG_LEVEL_TRACE, __FILE__, __LINE__, NULL, __VA_ARGS__)
 #define ulog_debug(...) ulog_log(ULOG_LEVEL_DEBUG, __FILE__, __LINE__, NULL, __VA_ARGS__)

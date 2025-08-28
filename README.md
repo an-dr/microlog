@@ -200,15 +200,12 @@ Most of the library features are configured compile time to reduce the code size
 
 The default log level is `ULOG_LEVEL_TRACE`, such that nothing is ignored.
 
-There are two ways to modify it so that all logs below the given level will not be written to `stderr`:
-
-- at compile time by defining `ULOG_DEFAULT_LOG_LEVEL` - this is particularly useful when one wants to configure the log level according to a configuration (debug or release for instance) without modifying the source code,
-- at run time by using the `ulog_output_set_level()` function.
+To modify it use the `ulog_output_set_level()` function.
 
 The example below shows how to configure log level to `ULOG_LEVEL_INFO`:
 
 ```c
-ulog_output_set_level(ULOG_LEVEL_INFO);
+ulog_output_set_level(ULOG_OUTPUT_STDOUT, ULOG_LEVEL_INFO);
 ```
 
 To get the name of the log level use `ulog_level_to_string`:
@@ -306,24 +303,6 @@ ulog_output_set_level(ULOG_LEVEL_INFO);
 ulog_topic_level_set("storage", ULOG_LEVEL_WARN);
 
 // Only "storage" topic generates log
-logt_info("network", "Connected to server");
-logt_info("storage", "No free space");
-```
-
-For example - with `ULOG_DEFAULT_LOG_LEVEL` set to `ULOG_LEVEL_INFO`:
-
-```c
-// By default, both topic logging levels are set to ULOG_LEVEL_INFO
-ulog_topic_add("network", true);
-ulog_topic_add("storage", true);
-
-// Only "storage" topic generates log
-logt_debug("network", "Connected to server");
-logt_warn("storage", "No free space");
-
-ulog_topic_level_set("storage", ULOG_LEVEL_WARN);
-
-// Both topics generate log as global logging level is set to ULOG_LEVEL_TRACE
 logt_info("network", "Connected to server");
 logt_info("storage", "No free space");
 ```

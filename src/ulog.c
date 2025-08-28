@@ -404,25 +404,18 @@ void ulog_level_config(bool use_short_levels) {
 
 // Private
 // ================
-#ifndef ULOG_DEFAULT_LOG_LEVEL
-#define ULOG_DEFAULT_LOG_LEVEL ULOG_LEVEL_TRACE
-#endif
-
-typedef struct {
-    ulog_level level;
-} levels_data_t;
-
-static levels_data_t levels_data = {
-    .level = ULOG_DEFAULT_LOG_LEVEL,
-};
 
 // clang-format off
-#define LEVELS_USE_LONG     0
-#define LEVELS_USE_SHORT    1
-#define LEVELS_TOTAL        6
+enum{
+    LEVELS_STYLE_LONG,
+    LEVELS_STYLE_SHORT,
+    LEVELS_STYLE_NUM
+};
+
+#define LEVELS_MIN_VALUE    0
 
 /// @brief Level strings
-static const char *levels_strings[][LEVELS_TOTAL] = {
+static const char *levels_strings[LEVELS_STYLE_NUM][ULOG_LEVELS_TOTAL] = {
      {"TRACE",  "DEBUG",    "INFO",     "WARN",     "ERROR",    "FATAL"}
 #if ULOG_FEATURE_EMOJI_LEVELS
     ,{"⚪",     "🔵",       "🟢",       "🟡",       "🔴",       "💥"}
@@ -434,7 +427,7 @@ static const char *levels_strings[][LEVELS_TOTAL] = {
 // clang-format on
 
 static bool levels_is_allowed(ulog_level msg_level, ulog_level log_verbosity) {
-    if (msg_level < log_verbosity || msg_level < ULOG_LEVEL_TRACE) {
+    if (msg_level < log_verbosity || msg_level < LEVELS_MIN_VALUE) {
         return false;  // Level is higher than the configured level, not allowed
     }
     return true;  // Level is allowed
@@ -444,13 +437,13 @@ static void levels_print(print_target *tgt, ulog_event *ev) {
 #if ULOG_FEATURE_SHORT_LEVELS || ULOG_FEATURE_EMOJI_LEVELS
     if (levels_cfg_is_short()) {
         print_to_target(tgt, "%-1s ",
-                        levels_strings[LEVELS_USE_SHORT][ev->level]);
+                        levels_strings[LEVELS_STYLE_SHORT][ev->level]);
     } else {
         print_to_target(tgt, "%-5s ",
-                        levels_strings[LEVELS_USE_LONG][ev->level]);
+                        levels_strings[LEVELS_STYLE_LONG][ev->level]);
     }
 #else
-    print_to_target(tgt, "%-1s ", levels_strings[LEVELS_USE_LONG][ev->level]);
+    print_to_target(tgt, "%-1s ", levels_strings[LEVELS_STYLE_LONG][ev->level]);
 #endif  // ULOG_FEATURE_SHORT_LEVELS || ULOG_FEATURE_EMOJI_LEVELS
 }
 
@@ -459,10 +452,10 @@ static void levels_print(print_target *tgt, ulog_event *ev) {
 
 /// @brief Returns the string representation of the level
 const char *ulog_level_to_string(ulog_level level) {
-    if (level < 0 || level >= LEVELS_TOTAL) {
+    if (level < 0 || level >= ULOG_LEVELS_TOTAL) {
         return "?";  // Return a default string for invalid levels
     }
-    return levels_strings[LEVELS_USE_LONG][level];
+    return levels_strings[LEVELS_STYLE_LONG][level];
 }
 
 /* ============================================================================
@@ -477,6 +470,7 @@ const char *ulog_level_to_string(ulog_level level) {
 #define OUTPUT_EXTRA_NUM 0
 #endif  // ULOG_FEATURE_EXTRA_OUTPUTS
 
+#define OUTPUT_STDOUT_DEFAULT_LEVEL ULOG_LEVEL_TRACE
 #define OUTPUT_TOTAL_NUM (1 + OUTPUT_EXTRA_NUM)  // stdout + extra
 
 // Forward declarations for data initialization
@@ -493,7 +487,7 @@ typedef struct {
 } output_data_t;
 
 static output_data_t output_data = {
-    .outputs = {{output_stdout_callback, NULL, ULOG_LEVEL_TRACE}}};
+    .outputs = {{output_stdout_callback, NULL, OUTPUT_STDOUT_DEFAULT_LEVEL}}};
 
 static void output_handle_single(ulog_event *ev, output_t *output) {
     if (levels_is_allowed(ev->level, output->level)) {
@@ -531,7 +525,7 @@ static void output_stdout_callback(ulog_event *ev, void *arg) {
 // ================
 
 ulog_status ulog_output_set_level(ulog_output output, ulog_level level) {
-    if (level < ULOG_LEVEL_TRACE || level > ULOG_LEVEL_FATAL) {
+    if (level < LEVELS_MIN_VALUE || level >= ULOG_LEVELS_TOTAL) {
         return ULOG_STATUS_BAD_ARGUMENT;
     }
     if (output < ULOG_OUTPUT_ALL || output >= OUTPUT_TOTAL_NUM) {
@@ -630,6 +624,7 @@ void ulog_topic_config(bool enabled) {
 // ================
 #define TOPIC_DYNAMIC (ULOG_TOPICS_NUM < 0)
 #define TOPIC_STATIC_NUM ULOG_TOPICS_NUM
+#define TOPIC_LEVEL_DEFAULT ULOG_LEVEL_TRACE
 
 typedef struct {
     ulog_topic_id id;
@@ -889,7 +884,7 @@ static ulog_topic_id topic_add(const char *topic_name, bool enable) {
             topic_data.topics[i].id      = i;
             topic_data.topics[i].name    = topic_name;
             topic_data.topics[i].enabled = enable;
-            topic_data.topics[i].level   = ULOG_LEVEL_TRACE;
+            topic_data.topics[i].level   = TOPIC_LEVEL_DEFAULT;
             return i;
         }
         // If the topic already exists
@@ -975,7 +970,7 @@ static void *topic_allocate(int id, const char *topic_name, bool enable) {
         t->id      = id;
         t->name    = topic_name;
         t->enabled = enable;
-        t->level   = ULOG_LEVEL_TRACE;
+        t->level   = TOPIC_LEVEL_DEFAULT;
         t->next    = NULL;
     }
     return t;
@@ -1162,16 +1157,10 @@ void ulog_log(ulog_level level, const char *file, int line, const char *topic,
 
     lock_lock();
 
-    // Skip if level is lower than sets
-    bool is_log_allowed = levels_is_allowed(level, levels_data.level);
-    if (!is_log_allowed) {
-        lock_unlock();
-        return;
-    }
-
     // Try to get topic ID and check if logging is allowed for this topic
     int topic_id = -1;
     if (!is_str_empty(topic)) {
+        bool is_log_allowed = false;
         topic_process(topic, level, &is_log_allowed, &topic_id);
         if (!is_log_allowed) {
             lock_unlock();
