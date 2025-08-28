@@ -32,14 +32,14 @@ extern "C" {
 | Feature                    | Feature Default | Compilation Options          |
 |----------------------------|-----------------|------------------------------|
 | ULOG_FEATURE_COLOR         | ON              | ULOG_NO_COLOR                |
-| ULOG_FEATURE_CUSTOM_PREFIX | OFF             | ULOG_CUSTOM_PREFIX_SIZE      |
+| ULOG_FEATURE_PREFIX        | OFF             | ULOG_PREFIX_SIZE             |
 | ULOG_FEATURE_EMOJI_LEVELS  | OFF             | ULOG_USE_EMOJI               |
 | ULOG_FEATURE_EXTRA_OUTPUTS | OFF             | ULOG_EXTRA_OUTPUTS           |
 | ULOG_FEATURE_FILE_STRING   | ON              | ULOG_HIDE_FILE_STRING        |
 | ULOG_FEATURE_SHORT_LEVELS  | OFF             | ULOG_SHORT_LEVEL_STRINGS     |
 | ULOG_FEATURE_TIME          | OFF             | ULOG_HAVE_TIME               |
 | ULOG_FEATURE_TOPICS        | OFF             | ULOG_TOPICS_NUM              |
-| ULOG_FEATURE_DYNAMIC_CONFIG  | OFF             | ULOG_RUNTIME_MODE            |
+| ULOG_FEATURE_DYNAMIC_CONFIG| OFF             | ULOG_DYNAMIC_CONFIG            |
 
 
 ============================================================================ */
@@ -51,10 +51,10 @@ extern "C" {
 #endif
 
 
-#if defined(ULOG_CUSTOM_PREFIX_SIZE) && (ULOG_CUSTOM_PREFIX_SIZE > 0)
-    #define ULOG_FEATURE_CUSTOM_PREFIX true
+#if defined(ULOG_PREFIX_SIZE) && (ULOG_PREFIX_SIZE > 0)
+    #define ULOG_FEATURE_PREFIX true
 #else
-    #define ULOG_FEATURE_CUSTOM_PREFIX false
+    #define ULOG_FEATURE_PREFIX false
 #endif
 
 
@@ -105,11 +105,11 @@ extern "C" {
 #endif
 
 
-#ifdef ULOG_RUNTIME_MODE
+#ifdef ULOG_DYNAMIC_CONFIG
 #define ULOG_FEATURE_DYNAMIC_CONFIG true
 // Undef all ULOG_FEATURE_* macros to avoid conflicts
 #undef ULOG_FEATURE_COLOR
-#undef ULOG_FEATURE_CUSTOM_PREFIX
+#undef ULOG_FEATURE_PREFIX
 #undef ULOG_FEATURE_EXTRA_OUTPUTS
 #undef ULOG_FEATURE_FILE_STRING
 #undef ULOG_FEATURE_SHORT_LEVELS
@@ -118,8 +118,8 @@ extern "C" {
 
 // Configure features based on runtime config
 #define ULOG_FEATURE_COLOR true
-#define ULOG_FEATURE_CUSTOM_PREFIX true
-#define ULOG_CUSTOM_PREFIX_SIZE 64
+#define ULOG_FEATURE_PREFIX true
+#define ULOG_PREFIX_SIZE 64
 #define ULOG_FEATURE_EXTRA_OUTPUTS true
 #define ULOG_EXTRA_OUTPUTS 8
 #define ULOG_FEATURE_FILE_STRING true
@@ -182,20 +182,9 @@ typedef enum {
     ULOG_STATUS_BAD_ARGUMENT = -2,
 } ulog_status;
 
-typedef int ulog_output;
-enum {
-    ULOG_OUTPUT_INVALID = -1,
-    ULOG_OUTPUT_ALL     = 0,
-    ULOG_OUTPUT_STDOUT  = 1,
-};
 
 /// @brief Returns the string representation of the level
 const char *ulog_level_to_string(ulog_level level);
-
-/// @brief Sets the debug level
-/// @param level - Debug level
-/// @return ulog_status
-ulog_status ulog_output_set_level(ulog_output output, ulog_level level);
 
 /// @brief Write event content to a buffer as a log message
 /// @param ev - Event
@@ -240,9 +229,9 @@ void ulog_topic_config(bool enabled);
 #endif  // ULOG_FEATURE_DYNAMIC_CONFIG
 
 /* ============================================================================
-   Feature: Custom Prefix
+   Feature: Prefix
 ============================================================================ */
-#if ULOG_FEATURE_CUSTOM_PREFIX
+#if ULOG_FEATURE_PREFIX
 
 typedef void (*ulog_prefix_fn)(ulog_event *ev, char *prefix,
                                size_t prefix_size);
@@ -251,13 +240,26 @@ typedef void (*ulog_prefix_fn)(ulog_event *ev, char *prefix,
 /// @param function - Prefix function
 void ulog_prefix_set_fn(ulog_prefix_fn function);
 
-#endif  // ULOG_FEATURE_CUSTOM_PREFIX
+#endif  // ULOG_FEATURE_PREFIX
 
 /* ============================================================================
    Feature: Output
 ============================================================================ */
 
+typedef int ulog_output;
+enum {
+    ULOG_OUTPUT_INVALID = -1,
+    ULOG_OUTPUT_ALL     = 0,
+    ULOG_OUTPUT_STDOUT  = 1,
+};
+
 typedef void (*ulog_output_callback_fn)(ulog_event *ev, void *arg);
+
+/// @brief Sets the debug level
+/// @param level - Debug level
+/// @return ulog_status
+ulog_status ulog_output_set_level(ulog_output output, ulog_level level);
+
 
 #if ULOG_FEATURE_EXTRA_OUTPUTS
 
@@ -284,7 +286,6 @@ ulog_output ulog_output_add_file(FILE *fp, ulog_level level);
 #if ULOG_FEATURE_TOPICS
 
 // clang-format off
-#define TOPIC_NOT_FOUND 0x7FFFFFFF
 #define logt_trace(TOPIC_NAME, ...) ulog_log(ULOG_LEVEL_TRACE, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
 #define logt_debug(TOPIC_NAME, ...) ulog_log(ULOG_LEVEL_DEBUG, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
 #define logt_info(TOPIC_NAME, ...) ulog_log(ULOG_LEVEL_INFO, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
@@ -307,7 +308,7 @@ ulog_topic_id ulog_topic_add(const char *topic_name, bool enable);
 /// @brief Sets the debug level of a given topic
 /// @param topic_name - Topic name. "" and NULL are not valid
 /// @param level - Debug level
-/// @return ulog_status
+/// @return ULOG_STATUS_OK if success, ULOG_STATUS_ERROR if topic not found
 ulog_status ulog_topic_level_set(const char *topic_name, ulog_level level);
 
 /// @brief Gets the topic ID
@@ -317,7 +318,7 @@ ulog_topic_id ulog_topic_get_id(const char *topic_name);
 
 /// @brief Enables the topic
 /// @param topic_name - Topic name. "" and NULL are not valid
-/// @return ulog_status
+/// @return ULOG_STATUS_OK if success, ULOG_STATUS_ERROR if failed
 ulog_status ulog_topic_enable(const char *topic_name);
 
 /// @brief Disables the topic

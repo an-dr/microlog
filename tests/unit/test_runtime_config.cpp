@@ -19,29 +19,29 @@ struct TestFixture {
     ~TestFixture() = default;
 };
 
-TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Custom Prefix") {
-    // Enable custom prefix
+TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Prefix") {
+    // Enable prefix
     ulog_prefix_config(true);
 
     // Log a message
-    log_info("Test message with custom prefix");
+    log_info("Test message with prefix");
 
     // Check the last callback message
     const char *last_message = ut_callback_get_last_message();
     REQUIRE(last_message != nullptr);
     REQUIRE(strstr(last_message, "[PREFIX]") != nullptr);
-    REQUIRE(strstr(last_message, "Test message with custom prefix") != nullptr);
+    REQUIRE(strstr(last_message, "Test message with prefix") != nullptr);
 
     ulog_prefix_config(false);
 
     // Log a message
-    log_info("Test message without custom prefix");
+    log_info("Test message without prefix");
 
     // Check the last callback message
     last_message = ut_callback_get_last_message();
     REQUIRE(last_message != nullptr);
     REQUIRE(strstr(last_message, "[PREFIX]") == nullptr);
-    REQUIRE(strstr(last_message, "Test message without custom prefix") !=
+    REQUIRE(strstr(last_message, "Test message without prefix") !=
             nullptr);
 }
 

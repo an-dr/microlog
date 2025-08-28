@@ -203,14 +203,14 @@ static void color_print_end(print_target *tgt) {
 /* ============================================================================
    Feature: Prefix Config (`prefix_cfg_*`, depends on: - )
 ============================================================================ */
-#if ULOG_FEATURE_CUSTOM_PREFIX && ULOG_FEATURE_DYNAMIC_CONFIG
+#if ULOG_FEATURE_PREFIX && ULOG_FEATURE_DYNAMIC_CONFIG
 
 typedef struct {
     bool enabled;
 } prefix_cfg_t;
 
 static prefix_cfg_t prefix_cfg = {
-    .enabled = ULOG_FEATURE_CUSTOM_PREFIX,
+    .enabled = ULOG_FEATURE_PREFIX,
 };
 
 // Private
@@ -230,19 +230,19 @@ void ulog_prefix_config(bool enabled) {
 }
 
 #else  // ULOG_FEATURE_DYNAMIC_CONFIG
-#define prefix_cfg_is_enabled() (ULOG_FEATURE_CUSTOM_PREFIX)
+#define prefix_cfg_is_enabled() (ULOG_FEATURE_PREFIX)
 #endif  // ULOG_FEATURE_DYNAMIC_CONFIG
 
 /* ============================================================================
    Feature: Prefix (`prefix_*`, depends on: Print, Prefix Config)
 ============================================================================ */
-#if ULOG_FEATURE_CUSTOM_PREFIX
+#if ULOG_FEATURE_PREFIX
 
 // Private
 // ================
 typedef struct {
     ulog_prefix_fn function;
-    char prefix[ULOG_CUSTOM_PREFIX_SIZE];
+    char prefix[ULOG_PREFIX_SIZE];
 } prefix_data_t;
 
 static prefix_data_t prefix_data = {
@@ -254,7 +254,7 @@ static void prefix_print(print_target *tgt, ulog_event *ev) {
     if (prefix_data.function == NULL || !prefix_cfg_is_enabled()) {
         return;
     }
-    prefix_data.function(ev, prefix_data.prefix, ULOG_CUSTOM_PREFIX_SIZE);
+    prefix_data.function(ev, prefix_data.prefix, ULOG_PREFIX_SIZE);
     print_to_target(tgt, "%s", prefix_data.prefix);
 }
 
@@ -267,9 +267,9 @@ void ulog_prefix_set_fn(ulog_prefix_fn function) {
 
 // Disabled Private
 // ================
-#else  // ULOG_FEATURE_CUSTOM_PREFIX
+#else  // ULOG_FEATURE_PREFIX
 #define prefix_print(tgt, ev) (void)(tgt), (void)(ev)
-#endif  // ULOG_FEATURE_CUSTOM_PREFIX
+#endif  // ULOG_FEATURE_PREFIX
 
 /* ============================================================================
    Feature: Time Config (`time_cfg_*`, depends on: - )
@@ -693,14 +693,14 @@ static void topic_print(print_target *tgt, ulog_event *ev) {
 /// @brief Sets the topic level
 /// @param topic - Topic ID
 /// @param level - Log level to set
-/// @return 0 on success, -1 if topic not found
-static int topic_set_level(int topic, ulog_level level) {
+/// @return ULOG_STATUS_OK if success, ULOG_STATUS_ERROR if topic not found
+static ulog_status topic_set_level(int topic, ulog_level level) {
     topic_t *t = topic_get(topic);
     if (t != NULL) {
         t->level = level;
-        return 0;
+        return ULOG_STATUS_OK;
     }
-    return -1;
+    return ULOG_STATUS_ERROR;
 }
 
 /// @brief Checks if the topic is loggable
@@ -1036,7 +1036,7 @@ void ulog_source_location_config(bool enabled) {
 
 /* ============================================================================
    Core Feature: Log (`log_*`, depends on: Print, Levels, Callbacks,
-                      Extra Outputs, Custom Prefix, Topics, Time, Color,
+                      Extra Outputs, Prefix, Topics, Time, Color,
                       Locking, File Path)
 ============================================================================ */
 
@@ -1085,9 +1085,9 @@ static void log_print_event(print_target *tgt, ulog_event *ev, bool full_time,
 
     bool append_space = true;
     (void)append_space;  // May be unused if no prefix and time
-#if ULOG_FEATURE_CUSTOM_PREFIX
+#if ULOG_FEATURE_PREFIX
     if (prefix_data.function != NULL) {
-        append_space = false;  // Custom prefix does not need leading space
+        append_space = false;  // Prefix does not need leading space
     }
 #endif
 

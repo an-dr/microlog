@@ -30,11 +30,11 @@ int main(int argc, char *argv[]) {
 
 #endif  // ULOG_FEATURE_EXTRA_OUTPUTS
 
-    /* Custom Prefix ==================================== */
+    /* Prefix ==================================== */
 
-#if ULOG_FEATURE_CUSTOM_PREFIX
+#if ULOG_FEATURE_PREFIX
     ulog_prefix_set_fn(update_prefix);
-#endif  // ULOG_FEATURE_CUSTOM_PREFIX
+#endif  // ULOG_FEATURE_PREFIX
 
     /* Core Logging ===================================== */
     log_trace("Trace message %d", 1);

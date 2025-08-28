@@ -45,21 +45,21 @@ The project is based on several core principles:
         - [Use](#use)
     - [User Manual](#user-manual)
         - [Basics](#basics)
-        - [Runtime Mode](#runtime-mode)
+        - [Dynamic Config](#dynamic-config)
         - [Log Verbosity](#log-verbosity)
         - [Thread-safety](#thread-safety)
         - [Log Topics](#log-topics)
-            - [Log Topics - Runtime Configuration](#log-topics---runtime-configuration)
+            - [Log Topics - Dynamic Config](#log-topics---dynamic-config)
         - [Extra Outputs](#extra-outputs)
             - [File Output](#file-output)
             - [Custom Output](#custom-output)
-            - [Extra Outputs - Runtime Configuration](#extra-outputs---runtime-configuration)
+            - [Extra Outputs - Dynamic Config](#extra-outputs---dynamic-config)
         - [Custom Log Prefix](#custom-log-prefix)
-            - [Custom Log Prefix - Runtime Configuration](#custom-log-prefix---runtime-configuration)
+            - [Custom Log Prefix - Dynamic Config](#custom-log-prefix---dynamic-config)
         - [Timestamp](#timestamp)
-            - [Timestamp - Runtime Configuration](#timestamp---runtime-configuration)
+            - [Timestamp - Dynamic Config](#timestamp---dynamic-config)
         - [Other Customization](#other-customization)
-            - [Other Customization - Runtime Configuration](#other-customization---runtime-configuration)
+            - [Other Customization - Dynamic Config](#other-customization---dynamic-config)
         - [Feature Flags](#feature-flags)
     - [Contributing](#contributing)
     - [License](#license)
@@ -112,6 +112,7 @@ exe = executable(
 
 - Download CPM (https://github.com/cpm-cmake/CPM.cmake)
 - Add microlog to your projects CMAKE file:
+
 ```cmake
 include(cpm/CPM.cmake)
 CPMAddPackage("gh:an-dr/microlog@6.4.5")
@@ -181,13 +182,13 @@ Note: You might want to adjust the compiler argument  `-fmacro-prefix-map=OLD_PA
 add_global_arguments('-fmacro-prefix-map=../=',language: 'c')
 ```
 
-### Runtime Mode
+### Dynamic Config
 
-Most of the library features are configured compile time to reduce the code size and complexity. However, if the code size is not a concern, you can enable runtime configuration by defining `ULOG_FEATURE_DYNAMIC_CONFIG`. When the feature is enables all other features are enabled too in some default mode described in bellow. All runtime configuration functions are prefixed with `ulog_configure_*`. The default configuration is following:
+Most of the library features are configured compile time to reduce the code size and complexity. However, if the code size is not a concern, you can enable Dynamic Config by defining `ULOG_FEATURE_DYNAMIC_CONFIG`. When the feature is enables all other features are enabled too in some default mode described in bellow. All Dynamic Config functions are prefixed with `ulog_configure_*`. The default configuration is following:
 
 | Feature       | Default Configuration                   |
 | ------------- | --------------------------------------  |
-| Custom prefix | ☑️ visible, ULOG_CUSTOM_PREFIX_SIZE: 64 |
+| Prefix        | ☑️ visible, ULOG_PREFIX_SIZE: 64        |
 | Extra Outputs | ULOG_EXTRA_OUTPUTS : 8                  |
 | Time          | ☑️ visible                              |
 | File String   | ☑️ visible                              |
@@ -327,9 +328,9 @@ logt_info("network", "Connected to server");
 logt_info("storage", "No free space");
 ```
 
-#### Log Topics - Runtime Configuration
+#### Log Topics - Dynamic Config
 
-If runtime configuration enabled topics are created runtime in the **dynamic allocation mode**.
+If Dynamic Config enabled topics are created runtime in the **dynamic allocation mode**.
 
 Configuration functions:
 
@@ -377,15 +378,15 @@ void arduino_callback(ulog_event *ev, void *arg) {
 ulog_output_add(arduino_callback, NULL, ULOG_LEVEL_INFO);
 ```
 
-#### Extra Outputs - Runtime Configuration
+#### Extra Outputs - Dynamic Config
 
-In the runtime configuration mode, `ULOG_EXTRA_OUTPUTS` is set to 8.
+In the Dynamic Config mode, `ULOG_EXTRA_OUTPUTS` is set to 8.
 
 ### Custom Log Prefix
 
-Sets a custom prefix function. The function is called with the log level and should return a string that will be printed right before the log level. It can be used to add custom data to the log messages, e.g. millisecond time.
+Sets a prefix function. The function is called with the log level and should return a string that will be printed right before the log level. It can be used to add custom data to the log messages, e.g. millisecond time.
 
-Requires `ULOG_CUSTOM_PREFIX_SIZE` to be more than 0.
+Requires `ULOG_PREFIX_SIZE` to be more than 0.
 
 ```c
 void update_prefix(ulog_event *ev, char *prefix, size_t prefix_size) {
@@ -404,13 +405,13 @@ The output will be:
 19:51:42, 105 ms ERROR src/main.c:38: Error message
 ```
 
-#### Custom Log Prefix - Runtime Configuration
+#### Custom Log Prefix - Dynamic Config
 
-If runtime configuration enabled, `ULOG_FEATURE_CUSTOM_PREFIX_CFG_SIZE` is set to 64.
+If Dynamic Config enabled, `ULOG_FEATURE_PREFIX_CFG_SIZE` is set to 64.
 
-Functions to configure the custom prefix:
+Functions to configure the prefix:
 
-- `void ulog_prefix_config(bool enabled)` - will enable or disable custom prefix in the log output.
+- `void ulog_prefix_config(bool enabled)` - will enable or disable prefix in the log output.
 
 
 ### Timestamp
@@ -429,7 +430,7 @@ console:
 20:18:26 TRACE src/main.c:11: Hello world
 ```
 
-#### Timestamp - Runtime Configuration
+#### Timestamp - Dynamic Config
 
 Functions to configure the timestamp:
 
@@ -444,7 +445,7 @@ The following defines can be used to customize the library's output:
 - `ULOG_SHORT_LEVEL_STRINGS` - Use short level strings, e.g. "T" for "TRACE", "I" for "INFO".
 - `ULOG_USE_EMOJI` - Use emojis for log levels (⚪, 🟢, 🔵, 🟡, 🟠, 🔴, 💥). Overrides `ULOG_SHORT_LEVEL_STRINGS`. WARNING: not all compilers and terminals support emojis.
 
-#### Other Customization - Runtime Configuration
+#### Other Customization - Dynamic Config
 
 Configuration functions:
 
@@ -459,12 +460,12 @@ All feature states can be read using the following public macros. The macros are
 
 | Compilation Options          | Flag (true/false)            |         Default |
 |------------------------------|------------------------------|-----------------|
-| `ULOG_CUSTOM_PREFIX_SIZE`    | `ULOG_FEATURE_CUSTOM_PREFIX` | ❌ false        |
+| `ULOG_PREFIX_SIZE`           | `ULOG_FEATURE_PREFIX`        | ❌ false        |
 | `ULOG_EXTRA_OUTPUTS`         | `ULOG_FEATURE_EXTRA_OUTPUTS` | ❌ false        |
 | `ULOG_HAVE_TIME`             | `ULOG_FEATURE_TIME`          | ❌ false        |
 | `ULOG_HIDE_FILE_STRING`      | `ULOG_FEATURE_FILE_STRING`   | ✅ true         |
 | `ULOG_NO_COLOR`              | `ULOG_FEATURE_COLOR`         | ✅ true         |
-| `ULOG_RUNTIME_MODE`          | `ULOG_FEATURE_DYNAMIC_CONFIG`  | ❌ false        |
+| `ULOG_DYNAMIC_CONFIG`        | `ULOG_FEATURE_DYNAMIC_CONFIG`| ❌ false        |
 | `ULOG_SHORT_LEVEL_STRINGS`   | `ULOG_FEATURE_SHORT_LEVELS`  | ❌ false        |
 | `ULOG_TOPICS_NUM`            | `ULOG_FEATURE_TOPICS`        | ❌ false        |
 | `ULOG_USE_EMOJI`             | `ULOG_FEATURE_EMOJI_LEVELS`  | ❌ false        |
