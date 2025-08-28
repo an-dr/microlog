@@ -15,7 +15,7 @@ add_global_arguments('-DULOG_HAVE_TIME', language : ['cpp', 'c'])
 # add_global_arguments('-DULOG_USE_EMOJI', language : ['cpp', 'c'])
 add_global_arguments('-DULOG_EXTRA_OUTPUTS=2', language : ['cpp', 'c'])
 add_global_arguments('-DULOG_TOPICS_NUM=-1', language : ['cpp', 'c'])
-add_global_arguments('-DDYNAMIC_CONFIG', language : ['cpp', 'c'])
+add_global_arguments('-DULOG_DYNAMIC_CONFIG', language : ['cpp', 'c'])
 
 # To fix paths in the log messages
 add_project_arguments('-fmacro-prefix-map=../=',language: ['cpp', 'c'])
