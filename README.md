@@ -202,12 +202,12 @@ The default log level is `ULOG_LEVEL_TRACE`, such that nothing is ignored.
 There are two ways to modify it so that all logs below the given level will not be written to `stderr`:
 
 - at compile time by defining `ULOG_DEFAULT_LOG_LEVEL` - this is particularly useful when one wants to configure the log level according to a configuration (debug or release for instance) without modifying the source code,
-- at run time by using the `ulog_level_set()` function.
+- at run time by using the `ulog_output_set_level()` function.
 
 The example below shows how to configure log level to `ULOG_LEVEL_INFO`:
 
 ```c
-ulog_level_set(ULOG_LEVEL_INFO);
+ulog_output_set_level(ULOG_LEVEL_INFO);
 ```
 
 To get the name of the log level use `ulog_level_to_string`:
@@ -215,13 +215,6 @@ To get the name of the log level use `ulog_level_to_string`:
 ```c
 const char *level = ulog_level_to_string(ULOG_LEVEL_INFO);
 ptrintf("Level: %s\n", level);
-```
-
-Quiet-mode can be enabled by passing `true` to the `ulog_set_quiet()` function.
-While this mode is enabled the library will not output anything to `stderr`, but will continue to write to files and callbacks if any are set.
-
-```c
-ulog_set_quiet(true);
 ```
 
 ### Thread-safety
@@ -295,7 +288,7 @@ logt_trace("network", "Disconnected from server");
 logt_fatal("video", "No signal");
 ```
 
-By default, the logging level of each topic is set to `ULOG_LEVEL_TRACE`. It is possible to alter this behavior by calling `ulog_topic_level_set()`. All topics below the level set by `ulog_level_set()` (`ULOG_LEVEL_TRACE` by default) will not generate log.
+By default, the logging level of each topic is set to `ULOG_LEVEL_TRACE`. It is possible to alter this behavior by calling `ulog_topic_level_set()`. All topics below the level set by `ulog_output_set_level()` (`ULOG_LEVEL_TRACE` by default) will not generate log.
 
 For example:
 
@@ -308,7 +301,7 @@ ulog_topic_add("storage", true);
 logt_info("network", "Connected to server");
 logt_warn("storage", "No free space");
 
-ulog_level_set(ULOG_LEVEL_INFO);
+ulog_output_set_level(ULOG_LEVEL_INFO);
 ulog_topic_level_set("storage", ULOG_LEVEL_WARN);
 
 // Only "storage" topic generates log

@@ -464,14 +464,6 @@ const char *ulog_level_to_string(ulog_level level) {
     return levels_strings[LEVELS_USE_LONG][level];
 }
 
-/// @brief Sets the debug level
-void ulog_level_set(ulog_level level) {
-    if (level < ULOG_LEVEL_TRACE || level > ULOG_LEVEL_FATAL) {
-        return;  // Invalid level, do nothing
-    }
-    levels_data.level = level;
-}
-
 /* ============================================================================
    Core Feature: Callbacks (`cb_*`, depends on: Print, Log, Levels)
 ============================================================================ */
@@ -538,9 +530,16 @@ static void cb_stdout(ulog_event *ev, void *arg) {
 // Public
 // ================
 
-void ulog_set_quiet(bool enable) {
-    // Disable stdout callback if quiet mode is enabled
-    cb_data.callbacks[CB_STDOUT_ID].is_enabled = !enable;
+ulog_status ulog_output_set_level(ulog_output output, ulog_level level) {
+    if (level < ULOG_LEVEL_TRACE || level > ULOG_LEVEL_FATAL) {
+        return ULOG_STATUS_BAD_ARGUMENT;
+    }
+    if (output < 0 || output >= CB_TOTAL_NUM) {
+        return ULOG_STATUS_BAD_ARGUMENT;
+    }
+
+    levels_data.level = level;  // TODO: Implement per-output level setting
+    return ULOG_STATUS_OK;
 }
 
 /* ============================================================================
@@ -563,10 +562,10 @@ ulog_status ulog_user_callback_add(ulog_log_fn function, void *arg,
     for (int i = 0; i < CB_TOTAL_NUM; i++) {
         if (cb_data.callbacks[i].function == NULL) {
             cb_data.callbacks[i] = (cb_t){function, arg, level, true};
-            return ULOG_OK;
+            return ULOG_STATUS_OK;
         }
     }
-    return ULOG_ERR_GENERIC;
+    return ULOG_STATUS_ERROR;
 }
 
 /// @brief Add file callback
@@ -721,26 +720,26 @@ static bool topic_is_loggable(topic_t *t, ulog_level level) {
 
 /// @brief Enables the topic
 /// @param topic - Topic ID
-/// @return ULOG_OK on success, ULOG_ERR_GENERIC if topic not found
+/// @return ULOG_STATUS_OK on success, ULOG_STATUS_ERROR if topic not found
 static ulog_status topic_enable(int topic) {
     topic_t *t = topic_get(topic);
     if (t != NULL) {
         t->enabled = true;
-        return ULOG_OK;
+        return ULOG_STATUS_OK;
     }
-    return ULOG_ERR_GENERIC;
+    return ULOG_STATUS_ERROR;
 }
 
 /// @brief Disables the topic
 /// @param topic - Topic ID
-/// @return ULOG_OK on success, ULOG_ERR_GENERIC if topic not found
+/// @return ULOG_STATUS_OK on success, ULOG_STATUS_ERROR if topic not found
 static ulog_status topic_disable(int topic) {
     topic_t *t = topic_get(topic);
     if (t != NULL) {
         t->enabled = false;
-        return ULOG_OK;
+        return ULOG_STATUS_OK;
     }
-    return ULOG_ERR_GENERIC;
+    return ULOG_STATUS_ERROR;
 }
 
 /// @brief Processes the topic
@@ -782,7 +781,7 @@ ulog_status ulog_topic_level_set(const char *topic_name, ulog_level level) {
     if (ulog_topic_add(topic_name, true) != -1) {
         return topic_set_level(ulog_topic_get_id(topic_name), level);
     }
-    return ULOG_ERR_GENERIC;
+    return ULOG_STATUS_ERROR;
 }
 
 ulog_status ulog_topic_enable(const char *topic_name) {
@@ -836,7 +835,7 @@ ulog_status topic_enable_all(void) {
         }
         topic_data.topics[i].enabled = true;
     }
-    return ULOG_OK;
+    return ULOG_STATUS_OK;
 }
 
 ulog_status topic_disable_all(void) {
@@ -846,7 +845,7 @@ ulog_status topic_disable_all(void) {
         }
         topic_data.topics[i].enabled = false;
     }
-    return ULOG_OK;
+    return ULOG_STATUS_OK;
 }
 
 ulog_topic_id topic_str_to_id(const char *str) {
@@ -922,14 +921,14 @@ static ulog_status topic_enable_all(void) {
     for (topic_t *t = topic_get_first(); t != NULL; t = topic_get_next(t)) {
         t->enabled = true;
     }
-    return ULOG_OK;
+    return ULOG_STATUS_OK;
 }
 
 static ulog_status topic_disable_all(void) {
     for (topic_t *t = topic_get_first(); t != NULL; t = topic_get_next(t)) {
         t->enabled = false;
     }
-    return ULOG_OK;
+    return ULOG_STATUS_OK;
 }
 
 ulog_topic_id topic_str_to_id(const char *str) {
@@ -1139,12 +1138,12 @@ void log_fill_event(ulog_event *ev, const char *message, ulog_level level,
 
 ulog_status ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size) {
     if (out == NULL || out_size == 0) {
-        return ULOG_ERR_BAD_ARG;
+        return ULOG_STATUS_BAD_ARGUMENT;
     }
     print_target tgt = {.type       = LOG_TARGET_BUFFER,
                         .dsc.buffer = {out, 0, out_size}};
     log_print_event(&tgt, ev, false, false, false);
-    return ULOG_OK;
+    return ULOG_STATUS_OK;
 }
 
 void ulog_log(ulog_level level, const char *file, int line, const char *topic,

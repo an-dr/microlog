@@ -16,7 +16,6 @@ struct TestFixture {
             ulog_user_callback_add(ut_callback, nullptr, ULOG_LEVEL_TRACE);
             callback_is_set = true;
         }
-        ulog_set_quiet(false);
         ut_callback_reset();
     }
 
@@ -41,7 +40,7 @@ TEST_CASE_FIXTURE(TestFixture, "Default level") {
 }
 
 TEST_CASE_FIXTURE(TestFixture, "Base") {
-    ulog_level_set(ULOG_LEVEL_TRACE);
+    ulog_output_set_level(ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
 
     log_trace("This is a TRACE message: %d", 123);
     log_debug("This is a DEBUG message: %s", "test");
@@ -56,7 +55,7 @@ TEST_CASE_FIXTURE(TestFixture, "Base") {
 }
 
 TEST_CASE_FIXTURE(TestFixture, "Levels") {
-    ulog_level_set(ULOG_LEVEL_INFO);
+    ulog_output_set_level(ULOG_OUTPUT_ALL, ULOG_LEVEL_INFO);
 
     log_trace("This TRACE should not be processed.");
     CHECK(ut_callback_get_message_count() == 0);
@@ -70,17 +69,6 @@ TEST_CASE_FIXTURE(TestFixture, "Levels") {
     CHECK(ut_callback_get_message_count() == 3);
     log_fatal("This FATAL should be processed.");
     CHECK(ut_callback_get_message_count() == 4);
-}
-
-TEST_CASE_FIXTURE(TestFixture, "Quiet Mode") {
-    ulog_set_quiet(true);
-    log_info(
-        "This message will trigger extra callbacks, stdout should be quiet.");
-    CHECK(ut_callback_get_message_count() == 1);
-
-    ulog_set_quiet(false);
-    log_info("This message will trigger extra callbacks, stdout is not quiet.");
-    CHECK(ut_callback_get_message_count() == 2);
 }
 
 TEST_CASE_FIXTURE(TestFixture, "File Output") {

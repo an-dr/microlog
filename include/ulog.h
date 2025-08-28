@@ -144,7 +144,7 @@ typedef enum  ulog_level_enum {
     ULOG_LEVEL_INFO,
     ULOG_LEVEL_WARN,
     ULOG_LEVEL_ERROR,
-    ULOG_LEVEL_FATAL
+    ULOG_LEVEL_FATAL,
 } ulog_level;
        
 #define log_trace(...) ulog_log(ULOG_LEVEL_TRACE, __FILE__, __LINE__, NULL, __VA_ARGS__)
@@ -177,15 +177,16 @@ typedef struct {
 } ulog_event;
 
 typedef enum {
-    ULOG_OK          = 0,
-    ULOG_ERR_GENERIC = -1,
-    ULOG_ERR_BAD_ARG = -2,
+    ULOG_STATUS_OK           = 0,
+    ULOG_STATUS_ERROR        = -1,
+    ULOG_STATUS_BAD_ARGUMENT = -2,
 } ulog_status;
 
 typedef int ulog_output;
 enum {
     ULOG_OUTPUT_INVALID = -1,
-    ULOG_OUTPUT_STDOUT  = 0,
+    ULOG_OUTPUT_ALL     = 0,
+    ULOG_OUTPUT_STDOUT  = 1,
 };
 
 typedef void (*ulog_log_fn)(ulog_event *ev, void *arg);
@@ -195,13 +196,10 @@ const char *ulog_level_to_string(ulog_level level);
 
 /// @brief Sets the debug level
 /// @param level - Debug level
-void ulog_level_set(ulog_level level);
+/// @return ulog_status
+ulog_status ulog_output_set_level(ulog_output output, ulog_level level);
 
-/// @brief Disables logging to stdout
-/// @param enable - Quiet mode
-void ulog_set_quiet(bool enable);  // TODO: ulog_disable_stdout/enable_stdout?
-
-/// @brief Write eve\nt content to a buffer as a log message
+/// @brief Write event content to a buffer as a log message
 /// @param ev - Event
 /// @param out_buf - Output buffer
 /// @param out_buf_size - Output buffer size
@@ -323,7 +321,7 @@ ulog_status ulog_topic_enable(const char *topic_name);
 
 /// @brief Disables the topic
 /// @param topic_name - Topic name. "" and NULL are not valid
-/// @return ULOG_OK if success, ULOG_ERR_GENERIC if failed
+/// @return ULOG_STATUS_OK if success, ULOG_STATUS_ERROR if failed
 ulog_status ulog_topic_disable(const char *topic_name);
 
 /// @brief Enables all topics
