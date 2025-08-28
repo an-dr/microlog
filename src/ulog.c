@@ -132,7 +132,7 @@ void ulog_lock_set_fn(ulog_lock_fn function, void *lock_arg) {
 /* ============================================================================
    Feature: Color Config (`color_cfg_*`, depends on: - )
 ============================================================================ */
-#if ULOG_FEATURE_COLOR && ULOG_FEATURE_RUNTIME_MODE
+#if ULOG_FEATURE_COLOR && ULOG_FEATURE_DYNAMIC_CONFIG
 
 typedef struct {
     bool enabled;
@@ -152,15 +152,15 @@ bool color_cfg_is_enabled(void) {
 // Public
 // ================
 
-void ulog_configure_color(bool enabled) {
+void ulog_color_config(bool enabled) {
     lock_lock();  // Lock the configuration
     color_cfg.enabled = enabled;
     lock_unlock();  // Unlock the configuration
 }
 
-#else  // ULOG_FEATURE_RUNTIME_MODE
+#else  // ULOG_FEATURE_DYNAMIC_CONFIG
 #define color_cfg_is_enabled() (ULOG_FEATURE_COLOR)
-#endif  // ULOG_FEATURE_RUNTIME_MODE
+#endif  // ULOG_FEATURE_DYNAMIC_CONFIG
 
 /* ============================================================================
    Feature: Color (`color_*`, depends on: Print, Color Config)
@@ -203,7 +203,7 @@ static void color_print_end(print_target *tgt) {
 /* ============================================================================
    Feature: Prefix Config (`prefix_cfg_*`, depends on: - )
 ============================================================================ */
-#if ULOG_FEATURE_CUSTOM_PREFIX && ULOG_FEATURE_RUNTIME_MODE
+#if ULOG_FEATURE_CUSTOM_PREFIX && ULOG_FEATURE_DYNAMIC_CONFIG
 
 typedef struct {
     bool enabled;
@@ -223,15 +223,15 @@ bool prefix_cfg_is_enabled(void) {
 // Public
 // ================
 
-void ulog_configure_prefix(bool enabled) {
+void ulog_prefix_config(bool enabled) {
     lock_lock();  // Lock the configuration
     prefix_cfg.enabled = enabled;
     lock_unlock();  // Unlock the configuration
 }
 
-#else  // ULOG_FEATURE_RUNTIME_MODE
+#else  // ULOG_FEATURE_DYNAMIC_CONFIG
 #define prefix_cfg_is_enabled() (ULOG_FEATURE_CUSTOM_PREFIX)
-#endif  // ULOG_FEATURE_RUNTIME_MODE
+#endif  // ULOG_FEATURE_DYNAMIC_CONFIG
 
 /* ============================================================================
    Feature: Prefix (`prefix_*`, depends on: Print, Prefix Config)
@@ -274,7 +274,7 @@ void ulog_prefix_set_fn(ulog_prefix_fn function) {
 /* ============================================================================
    Feature: Time Config (`time_cfg_*`, depends on: - )
 ============================================================================ */
-#if ULOG_FEATURE_TIME && ULOG_FEATURE_RUNTIME_MODE
+#if ULOG_FEATURE_TIME && ULOG_FEATURE_DYNAMIC_CONFIG
 
 typedef struct {
     bool enabled;
@@ -294,15 +294,15 @@ bool time_cfg_is_enabled(void) {
 // Public
 // ================
 
-void ulog_configure_time(bool enabled) {
+void ulog_time_config(bool enabled) {
     lock_lock();  // Lock the configuration
     time_cfg.enabled = enabled;
     lock_unlock();  // Unlock the configuration
 }
 
-#else  // ULOG_FEATURE_RUNTIME_MODE
+#else  // ULOG_FEATURE_DYNAMIC_CONFIG
 #define time_cfg_is_enabled() (ULOG_FEATURE_TIME)
-#endif  // ULOG_FEATURE_RUNTIME_MODE
+#endif  // ULOG_FEATURE_DYNAMIC_CONFIG
 
 /* ============================================================================
    Feature: Time (`time_*`, depends on: Time, Print)
@@ -367,7 +367,7 @@ static void time_print_full(print_target *tgt, ulog_event *ev,
 /* ============================================================================
    Feature: Levels Config (`levels_cfg_*`, depends on: - )
 ============================================================================ */
-#if ULOG_FEATURE_RUNTIME_MODE
+#if ULOG_FEATURE_DYNAMIC_CONFIG
 
 typedef struct {
     bool short_levels;  // Use short level strings
@@ -387,15 +387,15 @@ bool levels_cfg_is_short(void) {
 // Public
 // ================
 
-void ulog_configure_levels(bool use_short_levels) {
+void ulog_level_config(bool use_short_levels) {
     lock_lock();  // Lock the configuration
     levels_cfg.short_levels = use_short_levels;
     lock_unlock();  // Unlock the configuration
 }
 
-#else  // ULOG_FEATURE_RUNTIME_MODE
+#else  // ULOG_FEATURE_DYNAMIC_CONFIG
 #define levels_cfg_is_short() (ULOG_FEATURE_SHORT_LEVELS)
-#endif  // ULOG_FEATURE_RUNTIME_MODE
+#endif  // ULOG_FEATURE_DYNAMIC_CONFIG
 
 /* ============================================================================
    Core Feature: Levels  (`levels_*`, depends on: Levels Config, Print)
@@ -578,7 +578,7 @@ ulog_output ulog_output_add_file(FILE *fp, ulog_level level) {
 /* ============================================================================
    Feature: Topics Config (`topic_cfg_*`, depends on: - )
 ============================================================================ */
-#if ULOG_FEATURE_TOPICS && ULOG_FEATURE_RUNTIME_MODE
+#if ULOG_FEATURE_TOPICS && ULOG_FEATURE_DYNAMIC_CONFIG
 
 typedef struct {
     bool enabled;
@@ -598,15 +598,15 @@ bool topic_cfg_is_enabled(void) {
 // Public
 // ================
 
-void ulog_configure_topics(bool enabled) {
+void ulog_topic_config(bool enabled) {
     lock_lock();  // Lock the configuration
     topic_cfg.enabled = enabled;
     lock_unlock();  // Unlock the configuration
 }
 
-#else  // ULOG_FEATURE_RUNTIME_MODE
+#else  // ULOG_FEATURE_DYNAMIC_CONFIG
 #define topic_cfg_is_enabled() (ULOG_FEATURE_TOPICS)
-#endif  // ULOG_FEATURE_RUNTIME_MODE
+#endif  // ULOG_FEATURE_DYNAMIC_CONFIG
 
 /* ============================================================================
    Feature: Topics (`topic_*`, depends on: Topics Config, Print, Levels)
@@ -616,7 +616,6 @@ void ulog_configure_topics(bool enabled) {
 
 // Private
 // ================
-#define TOPIC_ID_NO_TOPIC -1
 #define TOPIC_DYNAMIC (ULOG_TOPICS_NUM < 0)
 #define TOPIC_STATIC_NUM ULOG_TOPICS_NUM
 
@@ -1005,7 +1004,7 @@ static ulog_topic_id topic_add(const char *topic_name, bool enable) {
 /* ============================================================================
    Feature: File Path Config (`file_path_cfg_*`, depends on: - )
 ============================================================================ */
-#if ULOG_FEATURE_FILE_STRING && ULOG_FEATURE_RUNTIME_MODE
+#if ULOG_FEATURE_FILE_STRING && ULOG_FEATURE_DYNAMIC_CONFIG
 
 typedef struct {
     bool enabled;
@@ -1025,15 +1024,15 @@ bool file_path_cfg_is_enabled(void) {
 // Public
 // ================
 
-void ulog_configure_file_string(bool enabled) {
+void ulog_source_location_config(bool enabled) {
     lock_lock();  // Lock the configuration
     file_path_cfg.enabled = enabled;
     lock_unlock();  // Unlock the configuration
 }
 
-#else  // ULOG_FEATURE_RUNTIME_MODE
+#else  // ULOG_FEATURE_DYNAMIC_CONFIG
 #define file_path_cfg_is_enabled() (ULOG_FEATURE_FILE_STRING)
-#endif  // ULOG_FEATURE_RUNTIME_MODE
+#endif  // ULOG_FEATURE_DYNAMIC_CONFIG
 
 /* ============================================================================
    Core Feature: Log (`log_*`, depends on: Print, Levels, Callbacks,

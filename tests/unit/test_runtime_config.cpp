@@ -21,7 +21,7 @@ struct TestFixture {
 
 TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Custom Prefix") {
     // Enable custom prefix
-    ulog_configure_prefix(true);
+    ulog_prefix_config(true);
 
     // Log a message
     log_info("Test message with custom prefix");
@@ -32,7 +32,7 @@ TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Custom Prefix") {
     REQUIRE(strstr(last_message, "[PREFIX]") != nullptr);
     REQUIRE(strstr(last_message, "Test message with custom prefix") != nullptr);
 
-    ulog_configure_prefix(false);
+    ulog_prefix_config(false);
 
     // Log a message
     log_info("Test message without custom prefix");
@@ -47,14 +47,14 @@ TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Custom Prefix") {
 
 TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Color") {
     // Test color enable/disable
-    ulog_configure_color(true);
+    ulog_color_config(true);
     log_error("Test message with color");
 
     const char *last_message = ut_callback_get_last_message();
     REQUIRE(last_message != nullptr);
     REQUIRE(strstr(last_message, "Test message with color") != nullptr);
 
-    ulog_configure_color(false);
+    ulog_color_config(false);
     log_error("Test message without color");
 
     last_message = ut_callback_get_last_message();
@@ -64,7 +64,7 @@ TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Color") {
 
 TEST_CASE_FIXTURE(TestFixture, "Runtime Config - File String") {
     // Test file string enable/disable
-    ulog_configure_file_string(true);
+    ulog_source_location_config(true);
     log_info("Test message with file string");
 
     const char *last_message = ut_callback_get_last_message();
@@ -72,7 +72,7 @@ TEST_CASE_FIXTURE(TestFixture, "Runtime Config - File String") {
     REQUIRE(strstr(last_message, "test_runtime_config.cpp") != nullptr);
     REQUIRE(strstr(last_message, "Test message with file string") != nullptr);
 
-    ulog_configure_file_string(false);
+    ulog_source_location_config(false);
     log_info("Test message without file string");
 
     last_message = ut_callback_get_last_message();
@@ -84,7 +84,7 @@ TEST_CASE_FIXTURE(TestFixture, "Runtime Config - File String") {
 
 TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Short Level Strings") {
     // Test short level strings enable/disable
-    ulog_configure_levels(true);  // Use correct function name
+    ulog_level_config(true);  // Use correct function name
     log_info("Test message with short level");
 
     const char *last_message = ut_callback_get_last_message();
@@ -92,7 +92,7 @@ TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Short Level Strings") {
     REQUIRE(strstr(last_message, "I ") != nullptr);  // Short for INFO
     REQUIRE(strstr(last_message, "Test message with short level") != nullptr);
 
-    ulog_configure_levels(false);  // Use correct function name
+    ulog_level_config(false);  // Use correct function name
     log_info("Test message with long level");
 
     last_message = ut_callback_get_last_message();
@@ -103,7 +103,7 @@ TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Short Level Strings") {
 
 TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Time") {
     // Test time enable/disable
-    ulog_configure_time(true);
+    ulog_time_config(true);
     log_warn("Test message with time");
 
     const char *last_message = ut_callback_get_last_message();
@@ -114,7 +114,7 @@ TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Time") {
     REQUIRE(has_time);
     REQUIRE(strstr(last_message, "Test message with time") != nullptr);
 
-    ulog_configure_time(false);
+    ulog_time_config(false);
     log_warn("Test message without time");
 
     last_message = ut_callback_get_last_message();
@@ -127,7 +127,7 @@ TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Topics") {
     ulog_topic_add("test_runtime_topic", true);
 
     // Test topics enable/disable
-    ulog_configure_topics(true);
+    ulog_topic_config(true);
     logt_info("test_runtime_topic", "Test message with topic shown");
 
     const char *last_message = ut_callback_get_last_message();
@@ -135,7 +135,7 @@ TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Topics") {
     REQUIRE(strstr(last_message, "[test_runtime_topic]") != nullptr);
     REQUIRE(strstr(last_message, "Test message with topic shown") != nullptr);
 
-    ulog_configure_topics(false);
+    ulog_topic_config(false);
     logt_info("test_runtime_topic", "Test message with topic hidden");
 
     last_message = ut_callback_get_last_message();

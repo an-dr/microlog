@@ -39,7 +39,7 @@ extern "C" {
 | ULOG_FEATURE_SHORT_LEVELS  | OFF             | ULOG_SHORT_LEVEL_STRINGS     |
 | ULOG_FEATURE_TIME          | OFF             | ULOG_HAVE_TIME               |
 | ULOG_FEATURE_TOPICS        | OFF             | ULOG_TOPICS_NUM              |
-| ULOG_FEATURE_RUNTIME_MODE  | OFF             | ULOG_RUNTIME_MODE            |
+| ULOG_FEATURE_DYNAMIC_CONFIG  | OFF             | ULOG_RUNTIME_MODE            |
 
 
 ============================================================================ */
@@ -106,7 +106,7 @@ extern "C" {
 
 
 #ifdef ULOG_RUNTIME_MODE
-#define ULOG_FEATURE_RUNTIME_MODE true
+#define ULOG_FEATURE_DYNAMIC_CONFIG true
 // Undef all ULOG_FEATURE_* macros to avoid conflicts
 #undef ULOG_FEATURE_COLOR
 #undef ULOG_FEATURE_CUSTOM_PREFIX
@@ -129,7 +129,7 @@ extern "C" {
 #define ULOG_TOPICS_NUM -1
 
 #else
-#define ULOG_FEATURE_RUNTIME_MODE false
+#define ULOG_FEATURE_DYNAMIC_CONFIG false
 #endif
 
 // clang-format on
@@ -228,16 +228,16 @@ void ulog_lock_set_fn(ulog_lock_fn function, void *lock_arg);
 /* ============================================================================
    Feature: Runtime Config
 ============================================================================ */
-#if ULOG_FEATURE_RUNTIME_MODE
+#if ULOG_FEATURE_DYNAMIC_CONFIG
 
-void ulog_configure_color(bool enabled);
-void ulog_configure_prefix(bool enabled);
-void ulog_configure_file_string(bool enabled);
-void ulog_configure_time(bool enabled);
-void ulog_configure_levels(bool use_short_levels);
-void ulog_configure_topics(bool enabled);
+void ulog_color_config(bool enabled);
+void ulog_prefix_config(bool enabled);
+void ulog_source_location_config(bool enabled);
+void ulog_time_config(bool enabled);
+void ulog_level_config(bool use_short_levels);
+void ulog_topic_config(bool enabled);
 
-#endif  // ULOG_FEATURE_RUNTIME_MODE
+#endif  // ULOG_FEATURE_DYNAMIC_CONFIG
 
 /* ============================================================================
    Feature: Custom Prefix

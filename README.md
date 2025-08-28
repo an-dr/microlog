@@ -183,7 +183,7 @@ add_global_arguments('-fmacro-prefix-map=../=',language: 'c')
 
 ### Runtime Mode
 
-Most of the library features are configured compile time to reduce the code size and complexity. However, if the code size is not a concern, you can enable runtime configuration by defining `ULOG_FEATURE_RUNTIME_MODE`. When the feature is enables all other features are enabled too in some default mode described in bellow. All runtime configuration functions are prefixed with `ulog_configure_*`. The default configuration is following:
+Most of the library features are configured compile time to reduce the code size and complexity. However, if the code size is not a concern, you can enable runtime configuration by defining `ULOG_FEATURE_DYNAMIC_CONFIG`. When the feature is enables all other features are enabled too in some default mode described in bellow. All runtime configuration functions are prefixed with `ulog_configure_*`. The default configuration is following:
 
 | Feature       | Default Configuration                   |
 | ------------- | --------------------------------------  |
@@ -333,7 +333,7 @@ If runtime configuration enabled topics are created runtime in the **dynamic all
 
 Configuration functions:
 
-- `void ulog_configure_topics(bool enabled)` - will show or hide topics in the log output when printing using `logt_xxx` macros.
+- `void ulog_topic_config(bool enabled)` - will show or hide topics in the log output when printing using `logt_xxx` macros.
 
 ### Extra Outputs
 
@@ -410,7 +410,7 @@ If runtime configuration enabled, `ULOG_FEATURE_CUSTOM_PREFIX_CFG_SIZE` is set t
 
 Functions to configure the custom prefix:
 
-- `void ulog_configure_prefix(bool enabled)` - will enable or disable custom prefix in the log output.
+- `void ulog_prefix_config(bool enabled)` - will enable or disable custom prefix in the log output.
 
 
 ### Timestamp
@@ -433,7 +433,7 @@ console:
 
 Functions to configure the timestamp:
 
-- `void ulog_configure_time(bool enabled)` - will enable or disable time in the log output.
+- `void ulog_time_config(bool enabled)` - will enable or disable time in the log output.
 
 ### Other Customization
 
@@ -448,10 +448,10 @@ The following defines can be used to customize the library's output:
 
 Configuration functions:
 
-- `void ulog_configure_color(bool enabled)` - will enable or disable ANSI color escape codes when printing to stdout.
-- `void ulog_configure_file_string(bool enabled)` - will show or hide file and line in the log output.
+- `void ulog_color_config(bool enabled)` - will enable or disable ANSI color escape codes when printing to stdout.
+- `void ulog_source_location_config(bool enabled)` - will show or hide file and line in the log output.
 - `void ulog_configure_short_level_strings(bool enabled)` - will enable or disable short level strings, e.g. "T" for "TRACE", "I" for "INFO".
-- `void ulog_configure_time(bool enabled)` - will enable or disable time in the log output.
+- `void ulog_time_config(bool enabled)` - will enable or disable time in the log output.
 
 ### Feature Flags
 
@@ -464,7 +464,7 @@ All feature states can be read using the following public macros. The macros are
 | `ULOG_HAVE_TIME`             | `ULOG_FEATURE_TIME`          | ❌ false        |
 | `ULOG_HIDE_FILE_STRING`      | `ULOG_FEATURE_FILE_STRING`   | ✅ true         |
 | `ULOG_NO_COLOR`              | `ULOG_FEATURE_COLOR`         | ✅ true         |
-| `ULOG_RUNTIME_MODE`          | `ULOG_FEATURE_RUNTIME_MODE`  | ❌ false        |
+| `ULOG_RUNTIME_MODE`          | `ULOG_FEATURE_DYNAMIC_CONFIG`  | ❌ false        |
 | `ULOG_SHORT_LEVEL_STRINGS`   | `ULOG_FEATURE_SHORT_LEVELS`  | ❌ false        |
 | `ULOG_TOPICS_NUM`            | `ULOG_FEATURE_TOPICS`        | ❌ false        |
 | `ULOG_USE_EMOJI`             | `ULOG_FEATURE_EMOJI_LEVELS`  | ❌ false        |
