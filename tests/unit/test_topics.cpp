@@ -1,5 +1,6 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest/doctest.h"
+
 #include "ulog.h"
 #include "ut_callback.h"
 
@@ -24,9 +25,9 @@ bool TestFixture::callback_is_set = false;
 
 TEST_CASE_FIXTURE(TestFixture, "Topics: Enable/Disable and Levels") {
     ulog_topic_add("testtopic", true);
-    
+
     logt_trace("testtopic",
-              "Topic enabled - At default topic level - should appear");
+               "Topic enabled - At default topic level - should appear");
     CHECK(ut_callback_get_message_count() == 1);
 
     logt_error("testtopic", "Above default topic level - should appear");

@@ -1,7 +1,8 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include "doctest/doctest.h"
+
 #include <cstring>
 #include <time.h>
-#include "doctest/doctest.h"
 #include "ulog.h"
 #include "ut_callback.h"
 

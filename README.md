@@ -441,7 +441,7 @@ Functions to configure the timestamp:
 The following defines can be used to customize the library's output:
 
 - `ULOG_NO_COLOR` - Do not use ANSI color escape codes when printing to stdout.
-- `ULOG_HIDE_FILE_STRING` - Hide the file name and line number.
+- `ULOG_HIDE_SOURCE_LOCATION` - Hide the file name and line number.
 - `ULOG_SHORT_LEVEL_STRINGS` - Use short level strings, e.g. "T" for "TRACE", "I" for "INFO".
 - `ULOG_USE_EMOJI` - Use emojis for log levels (⚪, 🟢, 🔵, 🟡, 🟠, 🔴, 💥). Overrides `ULOG_SHORT_LEVEL_STRINGS`. WARNING: not all compilers and terminals support emojis.
 
@@ -458,17 +458,17 @@ Configuration functions:
 
 All feature states can be read using the following public macros. The macros are defined based on the compilation options described above, please do not modify them directly!
 
-| Compilation Options          | Flag (true/false)            |         Default |
-|------------------------------|------------------------------|-----------------|
-| `ULOG_PREFIX_SIZE`           | `ULOG_FEATURE_PREFIX`        | ❌ false        |
-| `ULOG_EXTRA_OUTPUTS`         | `ULOG_FEATURE_EXTRA_OUTPUTS` | ❌ false        |
-| `ULOG_HAVE_TIME`             | `ULOG_FEATURE_TIME`          | ❌ false        |
-| `ULOG_HIDE_FILE_STRING`      | `ULOG_FEATURE_FILE_STRING`   | ✅ true         |
-| `ULOG_NO_COLOR`              | `ULOG_FEATURE_COLOR`         | ✅ true         |
-| `ULOG_DYNAMIC_CONFIG`        | `ULOG_FEATURE_DYNAMIC_CONFIG`| ❌ false        |
-| `ULOG_SHORT_LEVEL_STRINGS`   | `ULOG_FEATURE_SHORT_LEVELS`  | ❌ false        |
-| `ULOG_TOPICS_NUM`            | `ULOG_FEATURE_TOPICS`        | ❌ false        |
-| `ULOG_USE_EMOJI`             | `ULOG_FEATURE_EMOJI_LEVELS`  | ❌ false        |
+| Compilation Options          | Flag (true/false)             |         Default |
+|------------------------------|-------------------------------|-----------------|
+| `ULOG_PREFIX_SIZE`           | `ULOG_FEATURE_PREFIX`         | ❌ false        |
+| `ULOG_EXTRA_OUTPUTS`         | `ULOG_FEATURE_EXTRA_OUTPUTS`  | ❌ false        |
+| `ULOG_HAVE_TIME`             | `ULOG_FEATURE_TIME`           | ❌ false        |
+| `ULOG_HIDE_SOURCE_LOCATION`  | `ULOG_FEATURE_SOURCE_LOCATION`| ✅ true         |
+| `ULOG_NO_COLOR`              | `ULOG_FEATURE_COLOR`          | ✅ true         |
+| `ULOG_DYNAMIC_CONFIG`        | `ULOG_FEATURE_DYNAMIC_CONFIG` | ❌ false        |
+| `ULOG_SHORT_LEVEL_STRINGS`   | `ULOG_FEATURE_SHORT_LEVELS`   | ❌ false        |
+| `ULOG_TOPICS_NUM`            | `ULOG_FEATURE_TOPICS`         | ❌ false        |
+| `ULOG_USE_EMOJI`             | `ULOG_FEATURE_EMOJI_LEVELS`   | ❌ false        |
 
 ## Contributing
 

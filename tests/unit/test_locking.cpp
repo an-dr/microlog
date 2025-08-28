@@ -1,10 +1,11 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest/doctest.h"
-#include "ulog.h"
-#include "ut_callback.h"
+
+#include <algorithm>
 #include <string>
 #include <vector>
-#include <algorithm>
+#include "ulog.h"
+#include "ut_callback.h"
 
 static std::vector<std::string> lock_events;
 void dummy_lock(bool lock, void *arg) {

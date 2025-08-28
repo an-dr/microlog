@@ -30,9 +30,9 @@ set(ULOG_CONFIG_TEST_TOPICS ${ULOG_CONFIG_BASE}
                             "-DULOG_DEFAULT_LOG_LEVEL=ULOG_LEVEL_WARN"
                             "-DULOG_TOPICS_NUM=2"
                             )
-                            
-set(ULOG_CONFIG_TEST_RUNTIME_CONFIG "-DULOG_DYNAMIC_CONFIG")
-                     
+
+set(ULOG_CONFIG_TEST_DYNAMIC_CONFIG "-DULOG_DYNAMIC_CONFIG")
+
 # --- Core Tests ---
 add_executable(test_core)
 target_sources(test_core PRIVATE ${ULOG_SRC} 
@@ -88,11 +88,11 @@ target_include_directories(test_time_np PRIVATE ${ULOG_INCLUDE_DIR})
 target_compile_definitions(test_time_np PRIVATE ${ULOG_CONFIG_NO_PREFIX})
 add_test(NAME TimeTestNoPrefix COMMAND test_time_np)
 
-# --- Runtime Config Test ---
-add_executable(test_runtime_config)
-target_sources(test_runtime_config PRIVATE ${ULOG_SRC} 
+# --- Dynamic Config Test ---
+add_executable(test_dynamic_config)
+target_sources(test_dynamic_config PRIVATE ${ULOG_SRC} 
                                             ut_callback.c 
-                                            test_runtime_config.cpp)
-target_include_directories(test_runtime_config PRIVATE ${ULOG_INCLUDE_DIR})
-target_compile_definitions(test_runtime_config PRIVATE ${ULOG_CONFIG_TEST_RUNTIME_CONFIG})
-add_test(NAME RuntimeConfigTest COMMAND test_runtime_config)
+                                            test_dynamic_config.cpp)
+target_include_directories(test_dynamic_config PRIVATE ${ULOG_INCLUDE_DIR})
+target_compile_definitions(test_dynamic_config PRIVATE ${ULOG_CONFIG_TEST_DYNAMIC_CONFIG})
+add_test(NAME DynamicConfigTest COMMAND test_dynamic_config)

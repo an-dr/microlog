@@ -1,8 +1,9 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest/doctest.h"
+
+#include <cstring>
 #include "ulog.h"
 #include "ut_callback.h"
-#include <cstring>
 
 static void test_prefix(ulog_event *ev, char *prefix, size_t prefix_size) {
     (void)ev;

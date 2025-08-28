@@ -1003,16 +1003,16 @@ static ulog_topic_id topic_add(const char *topic_name, bool enable) {
 #endif  // ULOG_FEATURE_TOPICS && TOPIC_DYNAMIC == true
 
 /* ============================================================================
-   Feature: File Path Config (`file_path_cfg_*`, depends on: - )
+   Feature: Source Location Config (`file_path_cfg_*`, depends on: - )
 ============================================================================ */
-#if ULOG_FEATURE_FILE_STRING && ULOG_FEATURE_DYNAMIC_CONFIG
+#if ULOG_FEATURE_SOURCE_LOCATION && ULOG_FEATURE_DYNAMIC_CONFIG
 
 typedef struct {
     bool enabled;
 } file_path_cfg_t;
 
 static file_path_cfg_t file_path_cfg = {
-    .enabled = ULOG_FEATURE_FILE_STRING,
+    .enabled = ULOG_FEATURE_SOURCE_LOCATION,
 };
 
 // Private
@@ -1032,7 +1032,7 @@ void ulog_source_location_config(bool enabled) {
 }
 
 #else  // ULOG_FEATURE_DYNAMIC_CONFIG
-#define file_path_cfg_is_enabled() (ULOG_FEATURE_FILE_STRING)
+#define file_path_cfg_is_enabled() (ULOG_FEATURE_SOURCE_LOCATION)
 #endif  // ULOG_FEATURE_DYNAMIC_CONFIG
 
 /* ============================================================================
@@ -1113,12 +1113,12 @@ void log_fill_event(ulog_event *ev, const char *message, ulog_level level,
     ev->message = message;
     ev->level   = level;
 
-#if ULOG_FEATURE_FILE_STRING
+#if ULOG_FEATURE_SOURCE_LOCATION
     ev->file = file;
     ev->line = line;
 #else
     (void)(file), (void)(line);  // Unused if file string is disabled
-#endif  // ULOG_FEATURE_FILE_STRING
+#endif  // ULOG_FEATURE_SOURCE_LOCATION
 
 #if ULOG_FEATURE_TOPICS
     ev->topic = topic_id;

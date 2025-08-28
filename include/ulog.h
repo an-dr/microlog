@@ -30,18 +30,17 @@ extern "C" {
    Configuration options
 ===============================================================================
 
-| Feature                    | Feature Default | Compilation Options          |
-|----------------------------|-----------------|------------------------------|
-| ULOG_FEATURE_COLOR         | ON              | ULOG_NO_COLOR                |
-| ULOG_FEATURE_PREFIX        | OFF             | ULOG_PREFIX_SIZE             |
-| ULOG_FEATURE_EMOJI_LEVELS  | OFF             | ULOG_USE_EMOJI               |
-| ULOG_FEATURE_EXTRA_OUTPUTS | OFF             | ULOG_EXTRA_OUTPUTS           |
-| ULOG_FEATURE_FILE_STRING   | ON              | ULOG_HIDE_FILE_STRING        |
-| ULOG_FEATURE_SHORT_LEVELS  | OFF             | ULOG_SHORT_LEVEL_STRINGS     |
-| ULOG_FEATURE_TIME          | OFF             | ULOG_HAVE_TIME               |
-| ULOG_FEATURE_TOPICS        | OFF             | ULOG_TOPICS_NUM              |
-| ULOG_FEATURE_DYNAMIC_CONFIG| OFF             | ULOG_DYNAMIC_CONFIG            |
-
+| Feature                     | Feature Default | Compilation Options         |
+|-----------------------------|-----------------|-----------------------------|
+| ULOG_FEATURE_COLOR          | ON              | ULOG_NO_COLOR               |
+| ULOG_FEATURE_PREFIX         | OFF             | ULOG_PREFIX_SIZE            |
+| ULOG_FEATURE_EMOJI_LEVELS   | OFF             | ULOG_USE_EMOJI              |
+| ULOG_FEATURE_EXTRA_OUTPUTS  | OFF             | ULOG_EXTRA_OUTPUTS          |
+| ULOG_FEATURE_SOURCE_LOCATION| ON              | ULOG_HIDE_SOURCE_LOCATION   |
+| ULOG_FEATURE_SHORT_LEVELS   | OFF             | ULOG_SHORT_LEVEL_STRINGS    |
+| ULOG_FEATURE_TIME           | OFF             | ULOG_HAVE_TIME              |
+| ULOG_FEATURE_TOPICS         | OFF             | ULOG_TOPICS_NUM             |
+| ULOG_FEATURE_DYNAMIC_CONFIG | OFF             | ULOG_DYNAMIC_CONFIG         |
 
 ============================================================================ */
 // clang-format off
@@ -84,10 +83,10 @@ extern "C" {
 #endif
 
 
-#ifdef ULOG_HIDE_FILE_STRING
-    #define ULOG_FEATURE_FILE_STRING false
+#ifdef ULOG_HIDE_SOURCE_LOCATION
+    #define ULOG_FEATURE_SOURCE_LOCATION false
 #else
-    #define ULOG_FEATURE_FILE_STRING true
+    #define ULOG_FEATURE_SOURCE_LOCATION true
 #endif
 
 
@@ -112,7 +111,7 @@ extern "C" {
 #undef ULOG_FEATURE_COLOR
 #undef ULOG_FEATURE_PREFIX
 #undef ULOG_FEATURE_EXTRA_OUTPUTS
-#undef ULOG_FEATURE_FILE_STRING
+#undef ULOG_FEATURE_SOURCE_LOCATION
 #undef ULOG_FEATURE_SHORT_LEVELS
 #undef ULOG_FEATURE_TIME
 #undef ULOG_FEATURE_TOPICS
@@ -123,7 +122,7 @@ extern "C" {
 #define ULOG_PREFIX_SIZE 64
 #define ULOG_FEATURE_EXTRA_OUTPUTS true
 #define ULOG_EXTRA_OUTPUTS 8
-#define ULOG_FEATURE_FILE_STRING true
+#define ULOG_FEATURE_SOURCE_LOCATION true
 #define ULOG_FEATURE_SHORT_LEVELS true
 #define ULOG_FEATURE_TIME true
 #define ULOG_FEATURE_TOPICS true
@@ -139,6 +138,13 @@ extern "C" {
    Core Functionality
 ============================================================================ */
 // clang-format off
+
+typedef enum {
+    ULOG_STATUS_OK           = 0,
+    ULOG_STATUS_ERROR        = -1,
+    ULOG_STATUS_BAD_ARGUMENT = -2,
+} ulog_status;
+
 typedef enum  ulog_level_enum { 
     ULOG_LEVEL_TRACE = 0,
     ULOG_LEVEL_DEBUG,
@@ -162,27 +168,20 @@ typedef struct {
     va_list message_format_args;  // Format arguments
 
 #if ULOG_FEATURE_TOPICS
-    int topic;
+    int topic;  // TODO: ulog_topic_id
 #endif
 
 #if ULOG_FEATURE_TIME
     struct tm *time;
 #endif
 
-#if ULOG_FEATURE_FILE_STRING
+#if ULOG_FEATURE_SOURCE_LOCATION
     const char *file;  // Event file name
     int line;          // Event line number
-#endif                 // ULOG_FEATURE_FILE_STRING
+#endif                 // ULOG_FEATURE_SOURCE_LOCATION
 
-    int level;  // Event debug level
+    ulog_level level;  // Event debug level
 } ulog_event;
-
-typedef enum {
-    ULOG_STATUS_OK           = 0,
-    ULOG_STATUS_ERROR        = -1,
-    ULOG_STATUS_BAD_ARGUMENT = -2,
-} ulog_status;
-
 
 /// @brief Returns the string representation of the level
 const char *ulog_level_to_string(ulog_level level);
@@ -260,7 +259,6 @@ typedef void (*ulog_output_callback_fn)(ulog_event *ev, void *arg);
 /// @param level - Debug level
 /// @return ulog_status
 ulog_status ulog_output_set_level(ulog_output output, ulog_level level);
-
 
 #if ULOG_FEATURE_EXTRA_OUTPUTS
 
