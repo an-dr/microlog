@@ -443,7 +443,7 @@ static void levels_print(print_target *tgt, ulog_event *ev) {
                         levels_strings[LEVELS_STYLE_LONG][ev->level]);
     }
 #else
-    print_to_target(tgt, "%-1s ", levels_strings[LEVELS_STYLE_LONG][ev->level]);
+    print_to_target(tgt, "%-1s ", levels_strings[LEVELS_STYLE_SHORT][ev->level]);
 #endif  // ULOG_FEATURE_SHORT_LEVELS || ULOG_FEATURE_EMOJI_LEVELS
 }
 

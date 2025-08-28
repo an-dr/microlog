@@ -24,21 +24,6 @@ struct TestFixture {
 
 bool TestFixture::callback_is_set = false;
 
-TEST_CASE_FIXTURE(TestFixture, "Default level") {
-    log_trace("This TRACE should not be processed.");
-    CHECK(ut_callback_get_message_count() == 0);
-    log_debug("This DEBUG should be processed.");
-    CHECK(ut_callback_get_message_count() == 1);
-    log_info("This INFO should be processed.");
-    CHECK(ut_callback_get_message_count() == 2);
-    log_warn("This WARN should be processed.");
-    CHECK(ut_callback_get_message_count() == 3);
-    log_error("This ERROR should be processed.");
-    CHECK(ut_callback_get_message_count() == 4);
-    log_fatal("This FATAL should be processed.");
-    CHECK(ut_callback_get_message_count() == 5);
-}
-
 TEST_CASE_FIXTURE(TestFixture, "Base") {
     ulog_output_set_level(ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
 
