@@ -154,12 +154,20 @@ typedef enum  ulog_level_enum {
     ULOG_LEVEL_FATAL,
 } ulog_level;
        
-#define log_trace(...) ulog_log(ULOG_LEVEL_TRACE, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define log_debug(...) ulog_log(ULOG_LEVEL_DEBUG, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define log_info(...) ulog_log(ULOG_LEVEL_INFO, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define log_warn(...) ulog_log(ULOG_LEVEL_WARN, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define log_error(...) ulog_log(ULOG_LEVEL_ERROR, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define log_fatal(...) ulog_log(ULOG_LEVEL_FATAL, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define ulog_trace(...) ulog_log(ULOG_LEVEL_TRACE, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define ulog_debug(...) ulog_log(ULOG_LEVEL_DEBUG, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define ulog_info(...)  ulog_log(ULOG_LEVEL_INFO, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define ulog_warn(...)  ulog_log(ULOG_LEVEL_WARN, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define ulog_error(...) ulog_log(ULOG_LEVEL_ERROR, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define ulog_fatal(...) ulog_log(ULOG_LEVEL_FATAL, __FILE__, __LINE__, NULL, __VA_ARGS__)
+// Aliases
+#define log_trace(...) ulog_trace(__VA_ARGS__)
+#define log_debug(...) ulog_debug(__VA_ARGS__)
+#define log_info(...)  ulog_info(__VA_ARGS__)
+#define log_warn(...)  ulog_warn(__VA_ARGS__)
+#define log_error(...) ulog_error(__VA_ARGS__)
+#define log_fatal(...) ulog_fatal(__VA_ARGS__)
+
 // clang-format on
 
 /// @brief Event structure
@@ -285,12 +293,19 @@ ulog_output ulog_output_add_file(FILE *fp, ulog_level level);
 #if ULOG_FEATURE_TOPICS
 
 // clang-format off
-#define logt_trace(TOPIC_NAME, ...) ulog_log(ULOG_LEVEL_TRACE, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_debug(TOPIC_NAME, ...) ulog_log(ULOG_LEVEL_DEBUG, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_info(TOPIC_NAME, ...) ulog_log(ULOG_LEVEL_INFO, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_warn(TOPIC_NAME, ...) ulog_log(ULOG_LEVEL_WARN, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_error(TOPIC_NAME, ...) ulog_log(ULOG_LEVEL_ERROR, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_fatal(TOPIC_NAME, ...) ulog_log(ULOG_LEVEL_FATAL, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define ulog_topic_trace(TOPIC_NAME, ...) ulog_log(ULOG_LEVEL_TRACE, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define ulog_topic_debug(TOPIC_NAME, ...) ulog_log(ULOG_LEVEL_DEBUG, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define ulog_topic_info(TOPIC_NAME, ...)  ulog_log(ULOG_LEVEL_INFO, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define ulog_topic_warn(TOPIC_NAME, ...)  ulog_log(ULOG_LEVEL_WARN, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define ulog_topic_error(TOPIC_NAME, ...) ulog_log(ULOG_LEVEL_ERROR, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define ulog_topic_fatal(TOPIC_NAME, ...) ulog_log(ULOG_LEVEL_FATAL, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+// Aliases
+#define logt_trace(...) ulog_topic_trace(__VA_ARGS__)
+#define logt_debug(...) ulog_topic_debug(__VA_ARGS__)
+#define logt_info(...)  ulog_topic_info(__VA_ARGS__)
+#define logt_warn(...)  ulog_topic_warn(__VA_ARGS__)
+#define logt_error(...) ulog_topic_error(__VA_ARGS__)
+#define logt_fatal(...) ulog_topic_fatal(__VA_ARGS__)
 // clang-format on
 
 typedef int ulog_topic_id;
