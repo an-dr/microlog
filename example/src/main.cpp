@@ -24,8 +24,8 @@ int main(int argc, char *argv[]) {
 #if ULOG_FEATURE_EXTRA_OUTPUTS
 
     FILE *fp = fopen("example.log", "w");
-    ulog_user_callback_add_fp(fp, ULOG_LEVEL_INFO);
-    ulog_user_callback_add(custom_callback,
+    ulog_output_add_file(fp, ULOG_LEVEL_INFO);
+    ulog_output_add(custom_callback,
                            (void *)"     - Custom Callback: ", ULOG_LEVEL_INFO);
 
 #endif  // ULOG_FEATURE_EXTRA_OUTPUTS

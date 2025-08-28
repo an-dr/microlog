@@ -24,7 +24,7 @@ struct TimeTestFixture {
     TimeTestFixture() {
         // Per-test setup
         if (!callback_is_set) {
-            ulog_user_callback_add(ut_callback, nullptr, ULOG_LEVEL_TRACE);
+            ulog_output_add(ut_callback, nullptr, ULOG_LEVEL_TRACE);
             callback_is_set = true;
         }
         ut_callback_reset();
@@ -107,7 +107,7 @@ void _check_file_time(bool prefix = false) {
 
     FILE *fp = fopen(filename.c_str(), "w");
     REQUIRE(fp != nullptr);
-    ulog_user_callback_add_fp(fp, ULOG_LEVEL_INFO);
+    ulog_output_add_file(fp, ULOG_LEVEL_INFO);
 
     time_t before, after;
     _get_time_bounds(before, after);

@@ -10,7 +10,7 @@ struct TestFixture {
     TestFixture() {
         // Per-test setup
         if (!callback_is_set) {
-            ulog_user_callback_add(ut_callback, nullptr, ULOG_LEVEL_TRACE);
+            ulog_output_add(ut_callback, nullptr, ULOG_LEVEL_TRACE);
             callback_is_set = true;
         }
         ulog_output_set_level(ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);

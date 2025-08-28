@@ -13,7 +13,7 @@ struct TestFixture {
     TestFixture() {
         // Per-test setup
         if (!callback_is_set) {
-            ulog_user_callback_add(ut_callback, nullptr, ULOG_LEVEL_TRACE);
+            ulog_output_add(ut_callback, nullptr, ULOG_LEVEL_TRACE);
             callback_is_set = true;
         }
         ut_callback_reset();
@@ -75,7 +75,7 @@ TEST_CASE_FIXTURE(TestFixture, "File Output") {
     const char *filename = "test_output.log";
     FILE *fp             = fopen(filename, "w");
     REQUIRE(fp != nullptr);
-    ulog_user_callback_add_fp(fp, ULOG_LEVEL_INFO);
+    ulog_output_add_file(fp, ULOG_LEVEL_INFO);
 
     log_info("This is an INFO message to file.");
     fclose(fp);

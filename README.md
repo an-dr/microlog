@@ -343,7 +343,7 @@ The feature is controlled by the following defines:
 
 #### File Output
 
-One or more file pointers where the log will be written can be provided to the library by using the `ulog_user_callback_add_fp()` function. The data written to the file output is of the following format (with the full time stamp):
+One or more file pointers where the log will be written can be provided to the library by using the `ulog_output_add_file()` function. The data written to the file output is of the following format (with the full time stamp):
 
 ```txt
 2047-03-11 20:18:26 TRACE src/main.c:11: Hello world
@@ -355,13 +355,13 @@ file pointer a value less-than-zero is returned.
 ```c
 FILE *fp = fopen("log.txt", "w");
 if (fp) {
-    ulog_user_callback_add_fp(fp, ULOG_LEVEL_INFO);
+    ulog_output_add_file(fp, ULOG_LEVEL_INFO);
 }
 ```
 
 #### Custom Output
 
-One or more callback functions which are called with the log data can be provided to the library by using the `ulog_user_callback_add()` function. Yo ucan use `ulog_event_to_cstr` to convert the `ulog_event` structure to a string.
+One or more callback functions which are called with the log data can be provided to the library by using the `ulog_output_add()` function. Yo ucan use `ulog_event_to_cstr` to convert the `ulog_event` structure to a string.
 
 ```c
 void arduino_callback(ulog_event *ev, void *arg) {
@@ -374,7 +374,7 @@ void arduino_callback(ulog_event *ev, void *arg) {
 
 . . .
 
-ulog_user_callback_add(arduino_callback, NULL, ULOG_LEVEL_INFO);
+ulog_output_add(arduino_callback, NULL, ULOG_LEVEL_INFO);
 ```
 
 #### Extra Outputs - Runtime Configuration

@@ -189,8 +189,6 @@ enum {
     ULOG_OUTPUT_STDOUT  = 1,
 };
 
-typedef void (*ulog_log_fn)(ulog_event *ev, void *arg);
-
 /// @brief Returns the string representation of the level
 const char *ulog_level_to_string(ulog_level level);
 
@@ -256,8 +254,11 @@ void ulog_prefix_set_fn(ulog_prefix_fn function);
 #endif  // ULOG_FEATURE_CUSTOM_PREFIX
 
 /* ============================================================================
-   Feature: User Callbacks
+   Feature: Output
 ============================================================================ */
+
+typedef void (*ulog_output_callback_fn)(ulog_event *ev, void *arg);
+
 #if ULOG_FEATURE_EXTRA_OUTPUTS
 
 /// @brief Adds a callback
@@ -265,15 +266,15 @@ void ulog_prefix_set_fn(ulog_prefix_fn function);
 /// @param arg - Optional argument that will be added to the event to be
 ///              processed by the callback
 /// @param level - Debug level
-/// @return ulog_status
-ulog_status ulog_user_callback_add(ulog_log_fn function, void *arg,
-                                   ulog_level level);
+/// @return ulog_output, on error - ULOG_OUTPUT_INVALID
+ulog_output ulog_output_add(ulog_output_callback_fn function, void *arg,
+                            ulog_level level);
 
 /// @brief Add file callback
 /// @param fp - File pointer
 /// @param level - Debug level
-/// @return ulog_status
-ulog_status ulog_user_callback_add_fp(FILE *fp, ulog_level level);
+/// @return ulog_output, on error - ULOG_OUTPUT_INVALID
+ulog_output ulog_output_add_file(FILE *fp, ulog_level level);
 
 #endif  // ULOG_FEATURE_EXTRA_OUTPUTS
 
