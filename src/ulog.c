@@ -406,9 +406,16 @@ void ulog_level_config(bool use_short_levels) {
 // ================
 
 // clang-format off
+
+// TODO: it is a mess! Fix
 enum{
+    
+#if ULOG_FEATURE_DYNAMIC_CONFIG
     LEVELS_STYLE_LONG,
     LEVELS_STYLE_SHORT,
+#endif
+
+    
     LEVELS_STYLE_NUM
 };
 
@@ -443,7 +450,7 @@ static void levels_print(print_target *tgt, ulog_event *ev) {
                         levels_strings[LEVELS_STYLE_LONG][ev->level]);
     }
 #else
-    print_to_target(tgt, "%-1s ", levels_strings[LEVELS_STYLE_SHORT][ev->level]);
+    print_to_target(tgt, "%-1s ", levels_strings[LEVELS_STYLE_LONG][ev->level]);
 #endif  // ULOG_FEATURE_SHORT_LEVELS || ULOG_FEATURE_EMOJI_LEVELS
 }
 

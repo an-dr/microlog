@@ -65,8 +65,16 @@ extern "C" {
 #endif
 
 
+
+#ifdef ULOG_SHORT_LEVEL_STRINGS
+    #define ULOG_FEATURE_SHORT_LEVELS true
+#else
+    #define ULOG_FEATURE_SHORT_LEVELS false
+#endif
+
 #ifdef ULOG_USE_EMOJI
     #define ULOG_FEATURE_EMOJI_LEVELS true
+    #define ULOG_FEATURE_SHORT_LEVELS true // emoji are type of short
     #if ULOG_SHORT_LEVEL_STRINGS
         #warning "ULOG_USE_EMOJI overrides ULOG_SHORT_LEVEL_STRINGS! Disable ULOG_SHORT_LEVEL_STRINGS"
     #endif
@@ -91,11 +99,6 @@ extern "C" {
 
 
 
-#ifdef ULOG_SHORT_LEVEL_STRINGS
-    #define ULOG_FEATURE_SHORT_LEVELS true
-#else
-    #define ULOG_FEATURE_SHORT_LEVELS false
-#endif
 
 
 #if defined(ULOG_TOPICS_NUM) && (ULOG_TOPICS_NUM >= 0 || ULOG_TOPICS_NUM == -1)
