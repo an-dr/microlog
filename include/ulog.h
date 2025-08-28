@@ -256,27 +256,28 @@ void ulog_prefix_set_fn(ulog_prefix_fn function);
 
 typedef int ulog_output;
 enum {
-    ULOG_OUTPUT_INVALID = -1,
-    ULOG_OUTPUT_ALL     = 0,
-    ULOG_OUTPUT_STDOUT  = 1,
+    ULOG_OUTPUT_INVALID = -0xBAD,
+    ULOG_OUTPUT_ALL     = -0x1,
+    ULOG_OUTPUT_STDOUT  = 0x0,
 };
 
 typedef void (*ulog_output_callback_fn)(ulog_event *ev, void *arg);
 
 /// @brief Sets the debug level
 /// @param level - Debug level
-/// @return ulog_status
+/// @return ULOG_STATUS_OK on success, ULOG_STATUS_ERROR if callback is not
+///         added, or ULOG_STATUS_BAD_ARGUMENT
 ulog_status ulog_output_set_level(ulog_output output, ulog_level level);
 
 #if ULOG_FEATURE_EXTRA_OUTPUTS
 
 /// @brief Adds a callback
-/// @param function - Callback function
+/// @param callback - Callback function
 /// @param arg - Optional argument that will be added to the event to be
 ///              processed by the callback
 /// @param level - Debug level
 /// @return ulog_output, on error - ULOG_OUTPUT_INVALID
-ulog_output ulog_output_add(ulog_output_callback_fn function, void *arg,
+ulog_output ulog_output_add(ulog_output_callback_fn callback, void *arg,
                             ulog_level level);
 
 /// @brief Add file callback

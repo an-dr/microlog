@@ -466,7 +466,7 @@ const char *ulog_level_to_string(ulog_level level) {
 }
 
 /* ============================================================================
-   Core Feature: Callbacks (`output_*`, depends on: Print, Log, Levels)
+   Core Feature: Outputs (`output_*`, depends on: Print, Log, Levels)
 ============================================================================ */
 
 //  Private
@@ -483,21 +483,20 @@ const char *ulog_level_to_string(ulog_level level) {
 static void output_stdout_callback(ulog_event *ev, void *arg);
 
 typedef struct {
-    ulog_output_callback_fn function;
+    ulog_output_callback_fn callback;
     void *arg;
     ulog_level level;
-    bool is_enabled;  // Whether the callback is enabled or not
-} cb_t;
+} output_t;
 
 typedef struct {
-    cb_t callbacks[OUTPUT_TOTAL_NUM];  // 0 is for stdout callback
-} cb_data_t;
+    output_t outputs[OUTPUT_TOTAL_NUM];  // 0 is for stdout callback
+} output_data_t;
 
-static cb_data_t cb_data = {
-    .callbacks = {{output_stdout_callback, NULL, ULOG_LEVEL_TRACE, true}}};
+static output_data_t output_data = {
+    .outputs = {{output_stdout_callback, NULL, ULOG_LEVEL_TRACE}}};
 
-static void output_handle_single(ulog_event *ev, cb_t *cb) {
-    if (cb->is_enabled && levels_is_allowed(ev->level, cb->level)) {
+static void output_handle_single(ulog_event *ev, output_t *output) {
+    if (levels_is_allowed(ev->level, output->level)) {
 
         // Create event copy to avoid va_list issues
         ulog_event ev_copy = {0};
@@ -508,17 +507,17 @@ static void output_handle_single(ulog_event *ev, cb_t *cb) {
         // directly as on some platforms using the same va_list multiple times
         // can lead to undefined behavior.
         va_copy(ev_copy.message_format_args, ev->message_format_args);
-        cb->function(&ev_copy, cb->arg);
+        output->callback(&ev_copy, output->arg);
         va_end(ev_copy.message_format_args);
     }
 }
 
 static void output_handle_all(ulog_event *ev) {
-    // Processing the message for callbacks
+    // Processing the message for outputs
     for (int i = 0;
-         (i < OUTPUT_TOTAL_NUM) && (cb_data.callbacks[i].function != NULL);
+         (i < OUTPUT_TOTAL_NUM) && (output_data.outputs[i].callback != NULL);
          i++) {
-        output_handle_single(ev, &cb_data.callbacks[i]);
+        output_handle_single(ev, &output_data.outputs[i]);
     }
 }
 
@@ -535,16 +534,28 @@ ulog_status ulog_output_set_level(ulog_output output, ulog_level level) {
     if (level < ULOG_LEVEL_TRACE || level > ULOG_LEVEL_FATAL) {
         return ULOG_STATUS_BAD_ARGUMENT;
     }
-    if (output < 0 || output >= OUTPUT_TOTAL_NUM) {
+    if (output < ULOG_OUTPUT_ALL || output >= OUTPUT_TOTAL_NUM) {
         return ULOG_STATUS_BAD_ARGUMENT;
     }
 
-    levels_data.level = level;  // TODO: Implement per-output level setting
+    // Process all
+    if (output == ULOG_OUTPUT_ALL) {
+        for (int i = 0; i < OUTPUT_TOTAL_NUM; i++) {
+            output_data.outputs[i].level = level;
+        }
+        return ULOG_STATUS_OK;
+    }
+
+    // Process only one
+    if (output_data.outputs[output].callback == NULL) {
+        return ULOG_STATUS_ERROR;
+    }
+    output_data.outputs[output].level = level;
     return ULOG_STATUS_OK;
 }
 
 /* ============================================================================
-   Feature: User Callbacks (`output_*` depends on: Callbacks)
+   Feature: Extra Outputs (`output_*` depends on: Outputs)
 ============================================================================ */
 #if ULOG_FEATURE_EXTRA_OUTPUTS
 
@@ -558,11 +569,11 @@ static void output_file_callback(ulog_event *ev, void *arg) {
 // Public
 // ================
 
-ulog_output ulog_output_add(ulog_output_callback_fn function, void *arg,
+ulog_output ulog_output_add(ulog_output_callback_fn callback, void *arg,
                             ulog_level level) {
     for (int i = 0; i < OUTPUT_TOTAL_NUM; i++) {
-        if (cb_data.callbacks[i].function == NULL) {
-            cb_data.callbacks[i] = (cb_t){function, arg, level, true};
+        if (output_data.outputs[i].callback == NULL) {
+            output_data.outputs[i] = (output_t){callback, arg, level, true};
             return i;
         }
     }
@@ -1036,7 +1047,7 @@ void ulog_source_location_config(bool enabled) {
 #endif  // ULOG_FEATURE_DYNAMIC_CONFIG
 
 /* ============================================================================
-   Core Feature: Log (`log_*`, depends on: Print, Levels, Callbacks,
+   Core Feature: Log (`log_*`, depends on: Print, Levels, Outputs,
                       Extra Outputs, Prefix, Topics, Time, Color,
                       Locking, File Path)
 ============================================================================ */
