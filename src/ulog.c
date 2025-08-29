@@ -20,22 +20,22 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 /* ============================================================================
    Configuration options
 ===============================================================================
 
-| Feature                     | Feature Default | Compilation Options         |
-|-----------------------------|-----------------|-----------------------------|
-| ULOG_FEATURE_COLOR          | ON              | ULOG_NO_COLOR               |
-| ULOG_FEATURE_PREFIX         | OFF             | ULOG_PREFIX_SIZE            |
-| ULOG_FEATURE_EXTRA_OUTPUTS  | OFF             | ULOG_EXTRA_OUTPUTS          |
-| ULOG_FEATURE_SOURCE_LOCATION| ON              | ULOG_HIDE_SOURCE_LOCATION   |
-| ULOG_FEATURE_LEVELS_LONG    | ON              | ULOG_SHORT_LEVEL_STRINGS    |
-| ULOG_FEATURE_LEVELS_SHORT   | OFF             | ULOG_SHORT_LEVEL_STRINGS    |
-| ULOG_FEATURE_TIME           | OFF             | ULOG_HAVE_TIME              |
-| ULOG_FEATURE_TOPICS         | OFF             | ULOG_TOPICS_NUM             |
-| ULOG_FEATURE_DYNAMIC_CONFIG | OFF             | ULOG_DYNAMIC_CONFIG         |
+| Feature                          | Default | Compilation Options            |
+|----------------------------------|---------|--------------------------------|
+| ULOG_FEATURE_COLOR               | ON      | ULOG_NO_COLOR                  |
+| ULOG_FEATURE_PREFIX              | OFF     | ULOG_PREFIX_SIZE               |
+| ULOG_FEATURE_EXTRA_OUTPUTS       | OFF     | ULOG_EXTRA_OUTPUTS             |
+| ULOG_FEATURE_SOURCE_LOCATION     | ON      | ULOG_HIDE_SOURCE_LOCATION      |
+| ULOG_FEATURE_LEVELS_LONG         | ON      | ULOG_SHORT_LEVEL_STRINGS       |
+| ULOG_FEATURE_LEVELS_SHORT        | OFF     | ULOG_SHORT_LEVEL_STRINGS       |
+| ULOG_FEATURE_TIME                | OFF     | ULOG_HAVE_TIME                 |
+| ULOG_FEATURE_TOPICS              | OFF     | ULOG_TOPICS_NUM                |
+| ULOG_FEATURE_DYNAMIC_CONFIG      | OFF     | ULOG_DYNAMIC_CONFIG            |
+| ULOG_FEATURE_WARN_NOT_ENABLED    | ON      | ULOG_WARN_NOT_ENABLED          |
 
 ============================================================================ */
 // clang-format off
@@ -82,9 +82,11 @@
     #define ULOG_FEATURE_SOURCE_LOCATION true
 #endif
 
-
-
-
+#ifdef ULOG_WARN_NOT_ENABLED
+    #define ULOG_FEATURE_WARN_NOT_ENABLED true
+#else
+    #define ULOG_FEATURE_WARN_NOT_ENABLED false
+#endif
 
 #if defined(ULOG_TOPICS_NUM) && (ULOG_TOPICS_NUM >= 0 || ULOG_TOPICS_NUM == -1)
     #define ULOG_FEATURE_TOPICS true
@@ -124,7 +126,6 @@
 #endif
 
 // clang-format on
-
 
 /* ============================================================================
    Event
@@ -168,19 +169,13 @@ static inline bool is_str_empty(const char *str) {
     return (str == NULL) || (str[0] == '\0');
 }
 
-
 // Macro to log a warning when a feature is not enabled
 // Usage: _log_not_enabled("ULOG_FEATURE_TIME and ULOG_FEATURE_RUNTIME_MODE")
-// Output: 
-//   WARN src/main.c:42: 'ulog_configure_time' ignored: ULOG_FEATURE_TIME and ULOG_FEATURE_RUNTIME_MODE disabled
-#if ULOG_FEATURE_DISABLED_WARNING
+// Output:
+//   WARN src/main.c:42: 'ulog_configure_time' ignored: ULOG_FEATURE_TIME and
+//   ULOG_FEATURE_RUNTIME_MODE disabled
 #define _log_not_enabled(feature)                                              \
-    log_warn("'%s' ignored: %s disabled", __func__, feature)
-#else // ULOG_FEATURE_DISABLED_WARNING
-#define _log_not_enabled(feature) (void)(feature)
-#endif // ULOG_FEATURE_DISABLED_WARNING
-
-
+    log_warn("'%s' called with %s disabled", __func__, feature)
 
 /* ============================================================================
    Core Feature: Print (`print_*`, depends on: - )
@@ -301,7 +296,22 @@ void ulog_color_config(bool enabled) {
 }
 
 #else  // ULOG_FEATURE_DYNAMIC_CONFIG
+
+// Disabled Public
+// ================
+
+#if ULOG_FEATURE_WARN_NOT_ENABLED
+void ulog_color_config(bool enabled) {
+    (void)(enabled);
+    _log_not_enabled("ULOG_FEATURE_COLOR");
+}
+#endif  // ULOG_FEATURE_WARN_NOT_ENABLED
+
+// Disabled Private
+// ================
+
 #define color_cfg_is_enabled() (ULOG_FEATURE_COLOR)
+
 #endif  // ULOG_FEATURE_DYNAMIC_CONFIG
 
 /* ============================================================================
@@ -335,11 +345,14 @@ static void color_print_end(print_target *tgt) {
     print_to_target(tgt, "%s", COLOR_TERMINATOR);  // color end
 }
 
+#else  // ULOG_FEATURE_COLOR
+
 // Disabled Private
 // ================
-#else  // ULOG_FEATURE_COLOR
+
 #define color_print_start(tgt, ev) (void)(tgt), (void)(ev)
 #define color_print_end(tgt) (void)(tgt)
+
 #endif  // ULOG_FEATURE_COLOR
 
 /* ============================================================================
@@ -372,6 +385,20 @@ void ulog_prefix_config(bool enabled) {
 }
 
 #else  // ULOG_FEATURE_DYNAMIC_CONFIG
+
+// Disabled Public
+// ================
+
+#if ULOG_FEATURE_WARN_NOT_ENABLED
+void ulog_prefix_config(bool enabled) {
+    (void)(enabled);
+    _log_not_enabled("ULOG_FEATURE_PREFIX");
+}
+#endif  // ULOG_FEATURE_WARN_NOT_ENABLED
+
+// Disabled Private
+// ================
+
 #define prefix_cfg_is_enabled() (ULOG_FEATURE_PREFIX)
 #endif  // ULOG_FEATURE_DYNAMIC_CONFIG
 
@@ -407,9 +434,21 @@ void ulog_prefix_set_fn(ulog_prefix_fn function) {
     prefix_data.function = function;
 }
 
+#else  // ULOG_FEATURE_PREFIX
+
+// Disabled Public
+// ================
+
+#if ULOG_FEATURE_WARN_NOT_ENABLED
+void ulog_prefix_set_fn(ulog_prefix_fn function) {
+    (void)(function);
+    _log_not_enabled("ULOG_FEATURE_PREFIX");
+}
+#endif  // ULOG_FEATURE_WARN_NOT_ENABLED
+
 // Disabled Private
 // ================
-#else  // ULOG_FEATURE_PREFIX
+
 #define prefix_print(tgt, ev) (void)(tgt), (void)(ev)
 #endif  // ULOG_FEATURE_PREFIX
 
@@ -443,6 +482,20 @@ void ulog_time_config(bool enabled) {
 }
 
 #else  // ULOG_FEATURE_DYNAMIC_CONFIG
+
+// Disabled Public
+// ================
+
+#if ULOG_FEATURE_WARN_NOT_ENABLED
+void ulog_time_config(bool enabled) {
+    (void)(enabled);
+    _log_not_enabled("ULOG_FEATURE_TIME");
+}
+#endif  // ULOG_FEATURE_WARN_NOT_ENABLED
+
+// Disabled Private
+// ================
+
 #define time_cfg_is_enabled() (ULOG_FEATURE_TIME)
 #endif  // ULOG_FEATURE_DYNAMIC_CONFIG
 
@@ -500,9 +553,11 @@ static void time_print_full(print_target *tgt, ulog_event *ev,
 #define time_print_full(tgt, ev, append_space) (void)(0)
 #endif  // ULOG_FEATURE_EXTRA_OUTPUTS
 
+#else  // ULOG_FEATURE_TIME
+
 // Disabled Private
 // ================
-#else  // ULOG_FEATURE_TIME
+
 #define time_print_short(tgt, ev, append_space) (void)(0)
 #define time_print_full(tgt, ev, append_space) (void)(0)
 #define time_fill_current_time(ev) (void)(ev)
@@ -545,6 +600,22 @@ void ulog_level_config(bool use_short_levels) {
 }
 
 #else  // ULOG_FEATURE_DYNAMIC_CONFIG
+
+// Disabled Public
+// ================
+
+#if ULOG_FEATURE_WARN_NOT_ENABLED
+
+void ulog_level_config(bool use_short_levels) {
+    (void)(use_short_levels);
+    _log_not_enabled("ULOG_FEATURE_LEVELS_SHORT and ULOG_FEATURE_LEVELS_LONG");
+}
+
+#endif  // ULOG_FEATURE_WARN_NOT_ENABLED
+
+// Disabled Private
+// ================
+
 typedef enum { LEVELS_STYLE_DEFAULT = 0x0, LEVELS_STYLE_NUM } levels_cfg_style;
 #define levels_cfg_is_short() (ULOG_FEATURE_LEVELS_SHORT)
 #endif  // ULOG_FEATURE_DYNAMIC_CONFIG
@@ -733,6 +804,31 @@ ulog_output ulog_output_add_file(FILE *file, ulog_level level) {
     return ulog_output_add(output_file_callback, file, level);
 }
 
+#else  // ULOG_FEATURE_EXTRA_OUTPUTS
+
+// Disabled Public
+// ================
+
+#if ULOG_FEATURE_WARN_NOT_ENABLED
+
+ulog_output ulog_output_add(ulog_output_callback_fn callback, void *arg,
+                            ulog_level level) {
+    (void)(callback);
+    (void)(arg);
+    (void)(level);
+    _log_not_enabled("ULOG_FEATURE_EXTRA_OUTPUTS");
+    return ULOG_OUTPUT_INVALID;
+}
+
+ulog_output ulog_output_add_file(FILE *file, ulog_level level) {
+    (void)(file);
+    (void)(level);
+    _log_not_enabled("ULOG_FEATURE_EXTRA_OUTPUTS");
+    return ULOG_OUTPUT_INVALID;
+}
+
+#endif  // ULOG_FEATURE_WARN_NOT_ENABLED
+
 #endif  // ULOG_FEATURE_EXTRA_OUTPUTS
 
 /* ============================================================================
@@ -765,6 +861,22 @@ void ulog_topic_config(bool enabled) {
 }
 
 #else  // ULOG_FEATURE_DYNAMIC_CONFIG
+
+// Disabled Public
+// ================
+
+#if ULOG_FEATURE_WARN_NOT_ENABLED
+
+void ulog_topic_config(bool enabled) {
+    (void)(enabled);
+    _log_not_enabled("ULOG_FEATURE_TOPICS and ULOG_FEATURE_DYNAMIC_CONFIG");
+}
+
+#endif  // ULOG_FEATURE_WARN_NOT_ENABLED
+
+// Disabled Private
+// ================
+
 #define topic_cfg_is_enabled() (ULOG_FEATURE_TOPICS)
 #endif  // ULOG_FEATURE_DYNAMIC_CONFIG
 
@@ -975,6 +1087,58 @@ ulog_topic_id ulog_topic_add(const char *topic_name, bool enable) {
 
 #else  // ULOG_FEATURE_TOPICS
 
+// Disabled Public
+// ================
+
+#if ULOG_FEATURE_WARN_NOT_ENABLED
+
+ulog_status ulog_topic_level_set(const char *topic_name, ulog_level level) {
+    (void)(topic_name);
+    (void)(level);
+    _log_not_enabled("ULOG_FEATURE_TOPICS");
+    return ULOG_STATUS_ERROR;
+}
+
+ulog_status ulog_topic_enable(const char *topic_name) {
+    (void)(topic_name);
+    _log_not_enabled("ULOG_FEATURE_TOPICS");
+    return ULOG_STATUS_ERROR;
+}
+
+ulog_status ulog_topic_disable(const char *topic_name) {
+    (void)(topic_name);
+    _log_not_enabled("ULOG_FEATURE_TOPICS");
+    return ULOG_STATUS_ERROR;
+}
+
+ulog_status ulog_topic_enable_all(void) {
+    _log_not_enabled("ULOG_FEATURE_TOPICS");
+    return ULOG_STATUS_ERROR;
+}
+
+ulog_status ulog_topic_disable_all(void) {
+    _log_not_enabled("ULOG_FEATURE_TOPICS");
+    return ULOG_STATUS_ERROR;
+}
+
+ulog_topic_id ulog_topic_get_id(const char *topic_name) {
+    (void)(topic_name);
+    _log_not_enabled("ULOG_FEATURE_TOPICS");
+    return ULOG_TOPIC_ID_INVALID;
+}
+
+ulog_topic_id ulog_topic_add(const char *topic_name, bool enable) {
+    (void)(topic_name);
+    (void)(enable);
+    _log_not_enabled("ULOG_FEATURE_TOPICS");
+    return ULOG_TOPIC_ID_INVALID;
+}
+
+#endif  // ULOG_FEATURE_WARN_NOT_ENABLED
+
+// Disabled Private
+// ================
+
 #define topic_print(tgt, ev) (void)(tgt), (void)(ev)
 #define topic_process(topic, level, is_log_allowed, topic_id)                  \
     (void)(topic), (void)(level), (void)(is_log_allowed), (void)(topic_id)
@@ -1048,7 +1212,7 @@ static ulog_topic_id topic_add(const char *topic_name, bool enable) {
             return i;
         }
     }
-    lock_unlock();  // Unlock the configuration
+    lock_unlock();                 // Unlock the configuration
     return ULOG_TOPIC_ID_INVALID;  // No space for new topics
 }
 #endif  // ULOG_FEATURE_TOPICS && TOPIC_DYNAMIC == false
@@ -1200,6 +1364,22 @@ void ulog_source_location_config(bool enabled) {
 }
 
 #else  // ULOG_FEATURE_DYNAMIC_CONFIG
+
+// Disabled Public
+// ================
+
+#if ULOG_FEATURE_WARN_NOT_ENABLED
+
+void ulog_source_location_config(bool enabled) {
+    (void)(enabled);
+    _log_not_enabled("ULOG_FEATURE_SOURCE_LOCATION");
+}
+
+#endif  // ULOG_FEATURE_WARN_NOT_ENABLED
+
+// Disabled Private
+// ================
+
 #define src_loc_cfg_is_enabled() (ULOG_FEATURE_SOURCE_LOCATION)
 #endif  // ULOG_FEATURE_DYNAMIC_CONFIG
 
