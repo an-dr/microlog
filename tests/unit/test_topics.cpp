@@ -14,7 +14,7 @@ struct TestFixture {
             ulog_output_add(ut_callback, nullptr, ULOG_LEVEL_TRACE);
             callback_is_set = true;
         }
-        ulog_output_set_level(ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
+        ulog_output_level_set(ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
         ut_callback_reset();
     }
 

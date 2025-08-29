@@ -264,7 +264,7 @@ typedef void (*ulog_output_callback_fn)(ulog_event *ev, void *arg);
 /// @param level - Debug level
 /// @return ULOG_STATUS_OK on success, ULOG_STATUS_ERROR if callback is not
 ///         added, or ULOG_STATUS_BAD_ARGUMENT
-ulog_status ulog_output_set_level(ulog_output output, ulog_level level);
+ulog_status ulog_output_level_set(ulog_output output, ulog_level level);
 
 #if ULOG_FEATURE_EXTRA_OUTPUTS
 
@@ -278,10 +278,10 @@ ulog_output ulog_output_add(ulog_output_callback_fn callback, void *arg,
                             ulog_level level);
 
 /// @brief Add file callback
-/// @param fp - File pointer
+/// @param file - File pointer
 /// @param level - Debug level
 /// @return ulog_output, on error - ULOG_OUTPUT_INVALID
-ulog_output ulog_output_add_file(FILE *fp, ulog_level level);
+ulog_output ulog_output_add_file(FILE *file, ulog_level level);
 
 #endif  // ULOG_FEATURE_EXTRA_OUTPUTS
 

@@ -200,12 +200,12 @@ Most of the library features are configured compile time to reduce the code size
 
 The default log level is `ULOG_LEVEL_TRACE`, such that nothing is ignored.
 
-To modify it use the `ulog_output_set_level()` function.
+To modify it use the `ulog_output_level_set()` function.
 
 The example below shows how to configure log level to `ULOG_LEVEL_INFO`:
 
 ```c
-ulog_output_set_level(ULOG_OUTPUT_STDOUT, ULOG_LEVEL_INFO);
+ulog_output_level_set(ULOG_OUTPUT_STDOUT, ULOG_LEVEL_INFO);
 ```
 
 To get the name of the log level use `ulog_level_to_string`:
@@ -286,7 +286,7 @@ logt_trace("network", "Disconnected from server");
 logt_fatal("video", "No signal");
 ```
 
-By default, the logging level of each topic is set to `ULOG_LEVEL_TRACE`. It is possible to alter this behavior by calling `ulog_topic_level_set()`. All topics below the level set by `ulog_output_set_level()` (`ULOG_LEVEL_TRACE` by default) will not generate log.
+By default, the logging level of each topic is set to `ULOG_LEVEL_TRACE`. It is possible to alter this behavior by calling `ulog_topic_level_set()`. All topics below the level set by `ulog_output_level_set()` (`ULOG_LEVEL_TRACE` by default) will not generate log.
 
 For example:
 
@@ -299,7 +299,7 @@ ulog_topic_add("storage", true);
 logt_info("network", "Connected to server");
 logt_warn("storage", "No free space");
 
-ulog_output_set_level(ULOG_LEVEL_INFO);
+ulog_output_level_set(ULOG_LEVEL_INFO);
 ulog_topic_level_set("storage", ULOG_LEVEL_WARN);
 
 // Only "storage" topic generates log

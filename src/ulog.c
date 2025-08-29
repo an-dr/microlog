@@ -530,7 +530,7 @@ static void output_stdout_callback(ulog_event *ev, void *arg) {
 // Public
 // ================
 
-ulog_status ulog_output_set_level(ulog_output output, ulog_level level) {
+ulog_status ulog_output_level_set(ulog_output output, ulog_level level) {
     if (level < LEVELS_MIN_VALUE || level >= ULOG_LEVELS_TOTAL) {
         return ULOG_STATUS_BAD_ARGUMENT;
     }
@@ -581,8 +581,8 @@ ulog_output ulog_output_add(ulog_output_callback_fn callback, void *arg,
 }
 
 /// @brief Add file callback
-ulog_output ulog_output_add_file(FILE *fp, ulog_level level) {
-    return ulog_output_add(output_file_callback, fp, level);
+ulog_output ulog_output_add_file(FILE *file, ulog_level level) {
+    return ulog_output_add(output_file_callback, file, level);
 }
 
 #endif  // ULOG_FEATURE_EXTRA_OUTPUTS

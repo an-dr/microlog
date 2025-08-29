@@ -25,7 +25,7 @@ struct TestFixture {
 bool TestFixture::callback_is_set = false;
 
 TEST_CASE_FIXTURE(TestFixture, "Base") {
-    ulog_output_set_level(ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
+    ulog_output_level_set(ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
 
     log_trace("This is a TRACE message: %d", 123);
     log_debug("This is a DEBUG message: %s", "test");
@@ -40,7 +40,7 @@ TEST_CASE_FIXTURE(TestFixture, "Base") {
 }
 
 TEST_CASE_FIXTURE(TestFixture, "Levels") {
-    ulog_output_set_level(ULOG_OUTPUT_ALL, ULOG_LEVEL_INFO);
+    ulog_output_level_set(ULOG_OUTPUT_ALL, ULOG_LEVEL_INFO);
 
     log_trace("This TRACE should not be processed.");
     CHECK(ut_callback_get_message_count() == 0);

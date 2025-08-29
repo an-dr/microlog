@@ -33,7 +33,7 @@ typedef union {
 ### Functions
 
 - **Public Functions:** `ulog_` prefix, `snake_case`.
-    - Example: `ulog_output_set_level`, `ulog_log`
+    - Example: `ulog_output_level_set`, `ulog_log`
 - **Private (static) Functions:** `snake_case`, with prefix `feature_name_`.
     - Example: `color_print_start`, `color_print_end`, `levels_print`
 
