@@ -20,9 +20,136 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if ULOG_FEATURE_TIME
-#include <time.h>
+
+/* ============================================================================
+   Configuration options
+===============================================================================
+
+| Feature                     | Feature Default | Compilation Options         |
+|-----------------------------|-----------------|-----------------------------|
+| ULOG_FEATURE_COLOR          | ON              | ULOG_NO_COLOR               |
+| ULOG_FEATURE_PREFIX         | OFF             | ULOG_PREFIX_SIZE            |
+| ULOG_FEATURE_EXTRA_OUTPUTS  | OFF             | ULOG_EXTRA_OUTPUTS          |
+| ULOG_FEATURE_SOURCE_LOCATION| ON              | ULOG_HIDE_SOURCE_LOCATION   |
+| ULOG_FEATURE_LEVELS_LONG    | ON              | ULOG_SHORT_LEVEL_STRINGS    |
+| ULOG_FEATURE_LEVELS_SHORT   | OFF             | ULOG_SHORT_LEVEL_STRINGS    |
+| ULOG_FEATURE_TIME           | OFF             | ULOG_HAVE_TIME              |
+| ULOG_FEATURE_TOPICS         | OFF             | ULOG_TOPICS_NUM             |
+| ULOG_FEATURE_DYNAMIC_CONFIG | OFF             | ULOG_DYNAMIC_CONFIG         |
+
+============================================================================ */
+// clang-format off
+#ifdef ULOG_NO_COLOR
+    #define ULOG_FEATURE_COLOR false
+#else
+    #define ULOG_FEATURE_COLOR true
 #endif
+
+
+#if defined(ULOG_PREFIX_SIZE) && (ULOG_PREFIX_SIZE > 0)
+    #define ULOG_FEATURE_PREFIX true
+#else
+    #define ULOG_FEATURE_PREFIX false
+#endif
+
+
+#ifdef ULOG_HAVE_TIME
+    #define ULOG_FEATURE_TIME true
+#else
+    #define ULOG_FEATURE_TIME false
+#endif
+
+
+
+#ifdef ULOG_SHORT_LEVEL_STRINGS
+    #define ULOG_FEATURE_LEVELS_LONG  false
+    #define ULOG_FEATURE_LEVELS_SHORT true
+#else
+    #define ULOG_FEATURE_LEVELS_LONG  true
+    #define ULOG_FEATURE_LEVELS_SHORT false
+#endif
+
+#if defined(ULOG_EXTRA_OUTPUTS) && (ULOG_EXTRA_OUTPUTS > 0)
+    #define ULOG_FEATURE_EXTRA_OUTPUTS true
+#else
+    #define ULOG_FEATURE_EXTRA_OUTPUTS false
+#endif
+
+
+#ifdef ULOG_HIDE_SOURCE_LOCATION
+    #define ULOG_FEATURE_SOURCE_LOCATION false
+#else
+    #define ULOG_FEATURE_SOURCE_LOCATION true
+#endif
+
+
+
+
+
+#if defined(ULOG_TOPICS_NUM) && (ULOG_TOPICS_NUM >= 0 || ULOG_TOPICS_NUM == -1)
+    #define ULOG_FEATURE_TOPICS true
+#else
+    #define ULOG_FEATURE_TOPICS false
+#endif
+
+
+#ifdef ULOG_DYNAMIC_CONFIG
+#define ULOG_FEATURE_DYNAMIC_CONFIG true
+// Undef all ULOG_FEATURE_* macros to avoid conflicts
+#undef ULOG_FEATURE_COLOR
+#undef ULOG_FEATURE_PREFIX
+#undef ULOG_FEATURE_EXTRA_OUTPUTS
+#undef ULOG_EXTRA_OUTPUTS
+#undef ULOG_FEATURE_SOURCE_LOCATION
+#undef ULOG_FEATURE_LEVELS_SHORT
+#undef ULOG_FEATURE_LEVELS_LONG
+#undef ULOG_FEATURE_TIME
+#undef ULOG_FEATURE_TOPICS
+
+// Configure features based on runtime config
+#define ULOG_FEATURE_COLOR true
+#define ULOG_FEATURE_PREFIX true
+#define ULOG_PREFIX_SIZE 64
+#define ULOG_FEATURE_EXTRA_OUTPUTS true
+#define ULOG_EXTRA_OUTPUTS 8
+#define ULOG_FEATURE_SOURCE_LOCATION true
+#define ULOG_FEATURE_LEVELS_LONG true
+#define ULOG_FEATURE_LEVELS_SHORT true
+#define ULOG_FEATURE_TIME true
+#define ULOG_FEATURE_TOPICS true
+#define ULOG_TOPICS_NUM -1
+
+#else
+#define ULOG_FEATURE_DYNAMIC_CONFIG false
+#endif
+
+// clang-format on
+
+
+/* ============================================================================
+   Event
+============================================================================ */
+
+/// @brief Event structure
+struct ulog_event {
+    const char *message;          // Message format string
+    va_list message_format_args;  // Format arguments
+
+#if ULOG_FEATURE_TOPICS
+    ulog_topic_id topic;
+#endif
+
+#if ULOG_FEATURE_TIME
+    struct tm *time;
+#endif
+
+#if ULOG_FEATURE_SOURCE_LOCATION
+    const char *file;  // Event file name
+    int line;          // Event line number
+#endif                 // ULOG_FEATURE_SOURCE_LOCATION
+
+    ulog_level level;  // Event debug level
+};
 
 /* ============================================================================
    Tools
@@ -40,6 +167,20 @@
 static inline bool is_str_empty(const char *str) {
     return (str == NULL) || (str[0] == '\0');
 }
+
+
+// Macro to log a warning when a feature is not enabled
+// Usage: _log_not_enabled("ULOG_FEATURE_TIME and ULOG_FEATURE_RUNTIME_MODE")
+// Output: 
+//   WARN src/main.c:42: 'ulog_configure_time' ignored: ULOG_FEATURE_TIME and ULOG_FEATURE_RUNTIME_MODE disabled
+#if ULOG_FEATURE_DISABLED_WARNING
+#define _log_not_enabled(feature)                                              \
+    log_warn("'%s' ignored: %s disabled", __func__, feature)
+#else // ULOG_FEATURE_DISABLED_WARNING
+#define _log_not_enabled(feature) (void)(feature)
+#endif // ULOG_FEATURE_DISABLED_WARNING
+
+
 
 /* ============================================================================
    Core Feature: Print (`print_*`, depends on: - )
@@ -309,6 +450,8 @@ void ulog_time_config(bool enabled) {
    Feature: Time (`time_*`, depends on: Time, Print)
 ============================================================================ */
 #if ULOG_FEATURE_TIME
+
+#include <time.h>
 
 #define TIME_SHORT_BUF_SIZE 10  // HH:MM:SS(8) + 1 space + null
 #define TIME_FULL_BUF_SIZE 21   // YYYY-MM-DD HH:MM:SS(19) + 1 space + null
