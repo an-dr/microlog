@@ -15,7 +15,7 @@ void dummy_lock(bool lock, void *arg) {
 
 struct LockingTestFixture {
     LockingTestFixture() {
-        ulog_output_level_set(ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
+        ulog_output_level_set_all(ULOG_LEVEL_TRACE);
         ulog_output_add(ut_callback, nullptr, ULOG_LEVEL_TRACE);
         ut_callback_reset();
         ulog_lock_set_fn(dummy_lock, nullptr);

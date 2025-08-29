@@ -12,7 +12,7 @@ static void test_prefix(ulog_event *ev, char *prefix, size_t prefix_size) {
 
 struct TestFixture {
     TestFixture() {
-        ulog_output_level_set(ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
+        ulog_output_level_set_all(ULOG_LEVEL_TRACE);
         ulog_output_add(ut_callback, nullptr, ULOG_LEVEL_TRACE);
         ut_callback_reset();
         ulog_prefix_set_fn(test_prefix);
