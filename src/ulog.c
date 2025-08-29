@@ -128,31 +128,6 @@
 // clang-format on
 
 /* ============================================================================
-   Event
-============================================================================ */
-
-/// @brief Event structure
-struct ulog_event {
-    const char *message;          // Message format string
-    va_list message_format_args;  // Format arguments
-
-#if ULOG_FEATURE_TOPICS
-    ulog_topic_id topic;
-#endif
-
-#if ULOG_FEATURE_TIME
-    struct tm *time;
-#endif
-
-#if ULOG_FEATURE_SOURCE_LOCATION
-    const char *file;  // Event file name
-    int line;          // Event line number
-#endif                 // ULOG_FEATURE_SOURCE_LOCATION
-
-    ulog_level level;  // Event debug level
-};
-
-/* ============================================================================
    Tools
 ============================================================================ */
 
@@ -224,11 +199,33 @@ static void print_to_target(print_target *tgt, const char *format, ...) {
 }
 
 /* ============================================================================
-   Prototypes
+   Core Feature: Events
 ============================================================================ */
 
-static void log_print_event(print_target *tgt, ulog_event *ev, bool full_time,
-                            bool color, bool new_line);
+// Private
+// ================
+
+/// @brief Event structure
+struct ulog_event {
+    const char *message;          // Message format string
+    va_list message_format_args;  // Format arguments
+
+#if ULOG_FEATURE_TOPICS
+    ulog_topic_id topic;
+#endif
+
+#if ULOG_FEATURE_TIME
+    struct tm *time;
+#endif
+
+#if ULOG_FEATURE_SOURCE_LOCATION
+    const char *file;  // Event file name
+    int line;          // Event line number
+#endif                 // ULOG_FEATURE_SOURCE_LOCATION
+
+    ulog_level level;  // Event debug level
+};
+
 
 /* ============================================================================
    Core Functionality: Lock (Depends on: - )
@@ -693,8 +690,10 @@ const char *ulog_level_to_string(ulog_level level) {
 #define OUTPUT_STDOUT_DEFAULT_LEVEL ULOG_LEVEL_TRACE
 #define OUTPUT_TOTAL_NUM (1 + OUTPUT_EXTRA_NUM)  // stdout + extra
 
-// Forward declarations for data initialization
+// Prototypes
 static void output_stdout_callback(ulog_event *ev, void *arg);
+static void log_print_event(print_target *tgt, ulog_event *ev, bool full_time,
+                            bool color, bool new_line);
 
 typedef struct {
     ulog_output_callback_fn callback;
