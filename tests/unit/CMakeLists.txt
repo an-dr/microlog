@@ -13,7 +13,7 @@ add_link_options(--coverage -fprofile-arcs -ftest-coverage)
 # Microlog configs
 set(ULOG_CONFIG_BASE "-DULOG_EXTRA_OUTPUTS=8" 
                      "-DULOG_HAVE_TIME"
-                     "-DULOG_CUSTOM_PREFIX_SIZE=16"
+                     "-DULOG_PREFIX_SIZE=16"
                      )
 
 set(ULOG_CONFIG_NO_PREFIX "-DULOG_EXTRA_OUTPUTS=8" 
@@ -30,9 +30,9 @@ set(ULOG_CONFIG_TEST_TOPICS ${ULOG_CONFIG_BASE}
                             "-DULOG_DEFAULT_LOG_LEVEL=ULOG_LEVEL_WARN"
                             "-DULOG_TOPICS_NUM=2"
                             )
-                            
-set(ULOG_CONFIG_TEST_RUNTIME_CONFIG "-DULOG_RUNTIME_MODE")
-                     
+
+set(ULOG_CONFIG_TEST_DYNAMIC_CONFIG "-DULOG_DYNAMIC_CONFIG")
+
 # --- Core Tests ---
 add_executable(test_core)
 target_sources(test_core PRIVATE ${ULOG_SRC} 
@@ -52,14 +52,14 @@ target_include_directories(test_locking PRIVATE ${ULOG_INCLUDE_DIR})
 target_compile_definitions(test_locking PRIVATE ${ULOG_CONFIG_BASE})
 add_test(NAME LockingTest COMMAND test_locking)
 
-# --- Custom Prefix Test ---
-add_executable(test_custom_prefix)
-target_sources(test_custom_prefix PRIVATE ${ULOG_SRC} 
+# --- Prefix Test ---
+add_executable(test_prefix)
+target_sources(test_prefix PRIVATE ${ULOG_SRC} 
                                           ut_callback.c 
-                                          test_custom_prefix.cpp)
-target_include_directories(test_custom_prefix PRIVATE ${ULOG_INCLUDE_DIR})
-target_compile_definitions(test_custom_prefix PRIVATE ${ULOG_CONFIG_BASE})
-add_test(NAME CustomPrefixTest COMMAND test_custom_prefix)
+                                          test_prefix.cpp)
+target_include_directories(test_prefix PRIVATE ${ULOG_INCLUDE_DIR})
+target_compile_definitions(test_prefix PRIVATE ${ULOG_CONFIG_BASE})
+add_test(NAME CustomPrefixTest COMMAND test_prefix)
 
 # --- Topics Test ---
 add_executable(test_topics)
@@ -88,11 +88,11 @@ target_include_directories(test_time_np PRIVATE ${ULOG_INCLUDE_DIR})
 target_compile_definitions(test_time_np PRIVATE ${ULOG_CONFIG_NO_PREFIX})
 add_test(NAME TimeTestNoPrefix COMMAND test_time_np)
 
-# --- Runtime Config Test ---
-add_executable(test_runtime_config)
-target_sources(test_runtime_config PRIVATE ${ULOG_SRC} 
+# --- Dynamic Config Test ---
+add_executable(test_dynamic_config)
+target_sources(test_dynamic_config PRIVATE ${ULOG_SRC} 
                                             ut_callback.c 
-                                            test_runtime_config.cpp)
-target_include_directories(test_runtime_config PRIVATE ${ULOG_INCLUDE_DIR})
-target_compile_definitions(test_runtime_config PRIVATE ${ULOG_CONFIG_TEST_RUNTIME_CONFIG})
-add_test(NAME RuntimeConfigTest COMMAND test_runtime_config)
+                                            test_dynamic_config.cpp)
+target_include_directories(test_dynamic_config PRIVATE ${ULOG_INCLUDE_DIR})
+target_compile_definitions(test_dynamic_config PRIVATE ${ULOG_CONFIG_TEST_DYNAMIC_CONFIG})
+add_test(NAME DynamicConfigTest COMMAND test_dynamic_config)

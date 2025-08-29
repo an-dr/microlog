@@ -12,7 +12,7 @@
 
 ### Types
 
-- **Structs, Enums, Unions, Typedefs:** Always a typedef - `snake_case` with prefix `feature_name_` and the `_t` suffix. Example:
+- **Structs, Enums, Unions, Typedefs:** Always a typedef - `snake_case` with prefix `feature_name_` and without `_t` suffix. Example:
 
 ```c
 typedef struct {
@@ -28,12 +28,12 @@ typedef union {
 ```
 
 - **Enum Constants:** `ALL_CAPS` with prefix.
-    - Example: `typedef enum { LOG_TARGET_BUFFER, LOG_TARGET_STREAM } log_target_t;`
+    - Example: `typedef enum { LOG_TARGET_BUFFER, LOG_TARGET_STREAM } log_target;`
 
 ### Functions
 
 - **Public Functions:** `ulog_` prefix, `snake_case`.
-    - Example: `ulog_set_level`, `ulog_log`
+    - Example: `ulog_output_level_set`, `ulog_log`
 - **Private (static) Functions:** `snake_case`, with prefix `feature_name_`.
     - Example: `color_print_start`, `color_print_end`, `levels_print`
 
@@ -43,7 +43,7 @@ typedef union {
 - **Local Variables:** `snake_case`, short is widely used or very tiny scope, otherwise full meaningful words.
     - Example: `tgt`, `ev`, `buf`, `format`, `out_topic_id`
 - **Constants/Macros:** `ALL_CAPS` with underscores, always with a feature prefix if private, or `ULOG_` prefix for public constants.
-    - Example: `COLORS_RED`, `ULOG_DEFAULT_LOG_LEVEL`
+    - Example: `COLORS_RED`, `ULOG_HAVE_TIME`
 
 ### Parameters
 

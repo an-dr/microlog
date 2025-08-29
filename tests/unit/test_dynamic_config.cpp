@@ -1,6 +1,7 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#include <cstring>
 #include "doctest/doctest.h"
+
+#include <cstring>
 #include "ulog.h"
 #include "ut_callback.h"
 
@@ -11,51 +12,49 @@ static void test_prefix(ulog_event *ev, char *prefix, size_t prefix_size) {
 
 struct TestFixture {
     TestFixture() {
-        ulog_set_level(ULOG_LEVEL_TRACE);
-        ulog_set_quiet(false);
-        ulog_add_callback(ut_callback, nullptr, ULOG_LEVEL_TRACE);
+        ulog_output_level_set_all(ULOG_LEVEL_TRACE);
+        ulog_output_add(ut_callback, nullptr, ULOG_LEVEL_TRACE);
         ut_callback_reset();
-        ulog_set_prefix_fn(test_prefix);
+        ulog_prefix_set_fn(test_prefix);
     }
     ~TestFixture() = default;
 };
 
-TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Custom Prefix") {
-    // Enable custom prefix
-    ulog_configure_prefix(true);
+TEST_CASE_FIXTURE(TestFixture, "Dynamic Config - Prefix") {
+    // Enable prefix
+    ulog_prefix_config(true);
 
     // Log a message
-    log_info("Test message with custom prefix");
+    log_info("Test message with prefix");
 
     // Check the last callback message
     const char *last_message = ut_callback_get_last_message();
     REQUIRE(last_message != nullptr);
     REQUIRE(strstr(last_message, "[PREFIX]") != nullptr);
-    REQUIRE(strstr(last_message, "Test message with custom prefix") != nullptr);
+    REQUIRE(strstr(last_message, "Test message with prefix") != nullptr);
 
-    ulog_configure_prefix(false);
+    ulog_prefix_config(false);
 
     // Log a message
-    log_info("Test message without custom prefix");
+    log_info("Test message without prefix");
 
     // Check the last callback message
     last_message = ut_callback_get_last_message();
     REQUIRE(last_message != nullptr);
     REQUIRE(strstr(last_message, "[PREFIX]") == nullptr);
-    REQUIRE(strstr(last_message, "Test message without custom prefix") !=
-            nullptr);
+    REQUIRE(strstr(last_message, "Test message without prefix") != nullptr);
 }
 
-TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Color") {
+TEST_CASE_FIXTURE(TestFixture, "Dynamic Config - Color") {
     // Test color enable/disable
-    ulog_configure_color(true);
+    ulog_color_config(true);
     log_error("Test message with color");
 
     const char *last_message = ut_callback_get_last_message();
     REQUIRE(last_message != nullptr);
     REQUIRE(strstr(last_message, "Test message with color") != nullptr);
 
-    ulog_configure_color(false);
+    ulog_color_config(false);
     log_error("Test message without color");
 
     last_message = ut_callback_get_last_message();
@@ -63,29 +62,29 @@ TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Color") {
     REQUIRE(strstr(last_message, "Test message without color") != nullptr);
 }
 
-TEST_CASE_FIXTURE(TestFixture, "Runtime Config - File String") {
+TEST_CASE_FIXTURE(TestFixture, "Dynamic Config - File String") {
     // Test file string enable/disable
-    ulog_configure_file_string(true);
+    ulog_source_location_config(true);
     log_info("Test message with file string");
 
     const char *last_message = ut_callback_get_last_message();
     REQUIRE(last_message != nullptr);
-    REQUIRE(strstr(last_message, "test_runtime_config.cpp") != nullptr);
+    REQUIRE(strstr(last_message, "test_dynamic_config.cpp") != nullptr);
     REQUIRE(strstr(last_message, "Test message with file string") != nullptr);
 
-    ulog_configure_file_string(false);
+    ulog_source_location_config(false);
     log_info("Test message without file string");
 
     last_message = ut_callback_get_last_message();
     REQUIRE(last_message != nullptr);
-    REQUIRE(strstr(last_message, "test_runtime_config.cpp") == nullptr);
+    REQUIRE(strstr(last_message, "test_dynamic_config.cpp") == nullptr);
     REQUIRE(strstr(last_message, "Test message without file string") !=
             nullptr);
 }
 
-TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Short Level Strings") {
+TEST_CASE_FIXTURE(TestFixture, "Dynamic Config - Short Level Strings") {
     // Test short level strings enable/disable
-    ulog_configure_levels(true);  // Use correct function name
+    ulog_level_config(true);  // Use correct function name
     log_info("Test message with short level");
 
     const char *last_message = ut_callback_get_last_message();
@@ -93,7 +92,7 @@ TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Short Level Strings") {
     REQUIRE(strstr(last_message, "I ") != nullptr);  // Short for INFO
     REQUIRE(strstr(last_message, "Test message with short level") != nullptr);
 
-    ulog_configure_levels(false);  // Use correct function name
+    ulog_level_config(false);  // Use correct function name
     log_info("Test message with long level");
 
     last_message = ut_callback_get_last_message();
@@ -102,9 +101,9 @@ TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Short Level Strings") {
     REQUIRE(strstr(last_message, "Test message with long level") != nullptr);
 }
 
-TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Time") {
+TEST_CASE_FIXTURE(TestFixture, "Dynamic Config - Time") {
     // Test time enable/disable
-    ulog_configure_time(true);
+    ulog_time_config(true);
     log_warn("Test message with time");
 
     const char *last_message = ut_callback_get_last_message();
@@ -115,7 +114,7 @@ TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Time") {
     REQUIRE(has_time);
     REQUIRE(strstr(last_message, "Test message with time") != nullptr);
 
-    ulog_configure_time(false);
+    ulog_time_config(false);
     log_warn("Test message without time");
 
     last_message = ut_callback_get_last_message();
@@ -123,24 +122,24 @@ TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Time") {
     REQUIRE(strstr(last_message, "Test message without time") != nullptr);
 }
 
-TEST_CASE_FIXTURE(TestFixture, "Runtime Config - Topics") {
+TEST_CASE_FIXTURE(TestFixture, "Dynamic Config - Topics") {
     // Add a test topic first
-    ulog_add_topic("test_runtime_topic", true);
+    ulog_topic_add("test_dynamic_cfg_topic", true);
 
     // Test topics enable/disable
-    ulog_configure_topics(true);
-    logt_info("test_runtime_topic", "Test message with topic shown");
+    ulog_topic_config(true);
+    logt_info("test_dynamic_cfg_topic", "Test message with topic shown");
 
     const char *last_message = ut_callback_get_last_message();
     REQUIRE(last_message != nullptr);
-    REQUIRE(strstr(last_message, "[test_runtime_topic]") != nullptr);
+    REQUIRE(strstr(last_message, "[test_dynamic_cfg_topic]") != nullptr);
     REQUIRE(strstr(last_message, "Test message with topic shown") != nullptr);
 
-    ulog_configure_topics(false);
-    logt_info("test_runtime_topic", "Test message with topic hidden");
+    ulog_topic_config(false);
+    logt_info("test_dynamic_cfg_topic", "Test message with topic hidden");
 
     last_message = ut_callback_get_last_message();
     REQUIRE(last_message != nullptr);
-    REQUIRE(strstr(last_message, "[test_runtime_topic]") == nullptr);
+    REQUIRE(strstr(last_message, "[test_dynamic_cfg_topic]") == nullptr);
     REQUIRE(strstr(last_message, "Test message with topic hidden") != nullptr);
 }
