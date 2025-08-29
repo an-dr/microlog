@@ -370,19 +370,25 @@ static void time_print_full(print_target *tgt, ulog_event *ev,
 ============================================================================ */
 #if ULOG_FEATURE_DYNAMIC_CONFIG
 
+typedef enum {
+    LEVELS_STYLE_DEFAULT = 0x0,
+    LEVELS_STYLE_SHORT,
+    LEVELS_STYLE_NUM
+} levels_cfg_style;
+
 typedef struct {
-    bool short_levels;  // Use short level strings
+    levels_cfg_style levels_cfg_style;  // Use short level strings
 } levels_cfg_t;
 
 static levels_cfg_t levels_cfg = {
-    .short_levels = ULOG_FEATURE_SHORT_LEVELS || ULOG_FEATURE_EMOJI_LEVELS,
+    .levels_cfg_style = LEVELS_STYLE_DEFAULT,
 };
 
 // Private
 // ================
 
 bool levels_cfg_is_short(void) {
-    return levels_cfg.short_levels;
+    return levels_cfg.levels_cfg_style == LEVELS_STYLE_SHORT;
 }
 
 // Public
@@ -390,12 +396,14 @@ bool levels_cfg_is_short(void) {
 
 void ulog_level_config(bool use_short_levels) {
     lock_lock();  // Lock the configuration
-    levels_cfg.short_levels = use_short_levels;
+    levels_cfg.levels_cfg_style =
+        use_short_levels ? LEVELS_STYLE_SHORT : LEVELS_STYLE_DEFAULT;
     lock_unlock();  // Unlock the configuration
 }
 
 #else  // ULOG_FEATURE_DYNAMIC_CONFIG
-#define levels_cfg_is_short() (ULOG_FEATURE_SHORT_LEVELS)
+typedef enum { LEVELS_STYLE_DEFAULT = 0x0, LEVELS_STYLE_NUM } levels_cfg_style;
+#define levels_cfg_is_short() (ULOG_FEATURE_LEVELS_SHORT)
 #endif  // ULOG_FEATURE_DYNAMIC_CONFIG
 
 /* ============================================================================
@@ -404,34 +412,21 @@ void ulog_level_config(bool use_short_levels) {
 
 // Private
 // ================
-
-// clang-format off
-
-// TODO: it is a mess! Fix
-enum{
-    
-#if ULOG_FEATURE_DYNAMIC_CONFIG
-    LEVELS_STYLE_LONG,
-    LEVELS_STYLE_SHORT,
-#endif
-
-    
-    LEVELS_STYLE_NUM
-};
-
-#define LEVELS_MIN_VALUE    0
+#define LEVELS_MIN_VALUE 0
 
 /// @brief Level strings
 static const char *levels_strings[LEVELS_STYLE_NUM][ULOG_LEVELS_TOTAL] = {
-     {"TRACE",  "DEBUG",    "INFO",     "WARN",     "ERROR",    "FATAL"}
-#if ULOG_FEATURE_EMOJI_LEVELS
-    ,{"⚪",     "🔵",       "🟢",       "🟡",       "🔴",       "💥"}
+
+#if ULOG_FEATURE_LEVELS_LONG
+    {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"}
 #endif
-#if !ULOG_FEATURE_EMOJI_LEVELS && ULOG_FEATURE_SHORT_LEVELS
-    ,{"T",      "D",        "I",        "W",        "E",        "F"}
+
+#if ULOG_FEATURE_LEVELS_SHORT
+    ,
+    {"T", "D", "I", "W", "E", "F"}
 #endif
+
 };
-// clang-format on
 
 static bool levels_is_allowed(ulog_level msg_level, ulog_level log_verbosity) {
     if (msg_level < log_verbosity || msg_level < LEVELS_MIN_VALUE) {
@@ -441,17 +436,21 @@ static bool levels_is_allowed(ulog_level msg_level, ulog_level log_verbosity) {
 }
 
 static void levels_print(print_target *tgt, ulog_event *ev) {
-#if ULOG_FEATURE_SHORT_LEVELS || ULOG_FEATURE_EMOJI_LEVELS
+#if ULOG_FEATURE_LEVELS_LONG && ULOG_FEATURE_LEVELS_SHORT
     if (levels_cfg_is_short()) {
         print_to_target(tgt, "%-1s ",
                         levels_strings[LEVELS_STYLE_SHORT][ev->level]);
     } else {
         print_to_target(tgt, "%-5s ",
-                        levels_strings[LEVELS_STYLE_LONG][ev->level]);
+                        levels_strings[LEVELS_STYLE_DEFAULT][ev->level]);
     }
+#elif ULOG_FEATURE_LEVELS_SHORT
+    print_to_target(tgt, "%-1s ",
+                    levels_strings[LEVELS_STYLE_DEFAULT][ev->level]);
 #else
-    print_to_target(tgt, "%-1s ", levels_strings[LEVELS_STYLE_LONG][ev->level]);
-#endif  // ULOG_FEATURE_SHORT_LEVELS || ULOG_FEATURE_EMOJI_LEVELS
+    print_to_target(tgt, "%-5s ",
+                    levels_strings[LEVELS_STYLE_DEFAULT][ev->level]);
+#endif  // ULOG_FEATURE_LEVELS_SHORT
 }
 
 // Public
@@ -459,10 +458,10 @@ static void levels_print(print_target *tgt, ulog_event *ev) {
 
 /// @brief Returns the string representation of the level
 const char *ulog_level_to_string(ulog_level level) {
-    if (level < 0 || level >= ULOG_LEVELS_TOTAL) {
+    if (level < LEVELS_MIN_VALUE || level >= ULOG_LEVELS_TOTAL) {
         return "?";  // Return a default string for invalid levels
     }
-    return levels_strings[LEVELS_STYLE_LONG][level];
+    return levels_strings[LEVELS_STYLE_DEFAULT][level];
 }
 
 /* ============================================================================

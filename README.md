@@ -422,7 +422,6 @@ The following defines can be used to customize the library's output:
 - `ULOG_NO_COLOR` - Do not use ANSI color escape codes when printing to stdout.
 - `ULOG_HIDE_SOURCE_LOCATION` - Hide the file name and line number.
 - `ULOG_SHORT_LEVEL_STRINGS` - Use short level strings, e.g. "T" for "TRACE", "I" for "INFO".
-- `ULOG_USE_EMOJI` - Use emojis for log levels (⚪, 🟢, 🔵, 🟡, 🟠, 🔴, 💥). Overrides `ULOG_SHORT_LEVEL_STRINGS`. WARNING: not all compilers and terminals support emojis.
 
 #### Other Customization - Dynamic Config
 
@@ -445,9 +444,8 @@ All feature states can be read using the following public macros. The macros are
 | `ULOG_HIDE_SOURCE_LOCATION`  | `ULOG_FEATURE_SOURCE_LOCATION`| ✅ true         |
 | `ULOG_NO_COLOR`              | `ULOG_FEATURE_COLOR`          | ✅ true         |
 | `ULOG_DYNAMIC_CONFIG`        | `ULOG_FEATURE_DYNAMIC_CONFIG` | ❌ false        |
-| `ULOG_SHORT_LEVEL_STRINGS`   | `ULOG_FEATURE_SHORT_LEVELS`   | ❌ false        |
+| `ULOG_SHORT_LEVEL_STRINGS`   | `ULOG_FEATURE_LEVELS_SHORT`   | ❌ false        |
 | `ULOG_TOPICS_NUM`            | `ULOG_FEATURE_TOPICS`         | ❌ false        |
-| `ULOG_USE_EMOJI`             | `ULOG_FEATURE_EMOJI_LEVELS`   | ❌ false        |
 
 ## Contributing
 

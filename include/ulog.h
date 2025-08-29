@@ -34,10 +34,10 @@ extern "C" {
 |-----------------------------|-----------------|-----------------------------|
 | ULOG_FEATURE_COLOR          | ON              | ULOG_NO_COLOR               |
 | ULOG_FEATURE_PREFIX         | OFF             | ULOG_PREFIX_SIZE            |
-| ULOG_FEATURE_EMOJI_LEVELS   | OFF             | ULOG_USE_EMOJI              |
 | ULOG_FEATURE_EXTRA_OUTPUTS  | OFF             | ULOG_EXTRA_OUTPUTS          |
 | ULOG_FEATURE_SOURCE_LOCATION| ON              | ULOG_HIDE_SOURCE_LOCATION   |
-| ULOG_FEATURE_SHORT_LEVELS   | OFF             | ULOG_SHORT_LEVEL_STRINGS    |
+| ULOG_FEATURE_LEVELS_LONG    | ON              | ULOG_SHORT_LEVEL_STRINGS    |
+| ULOG_FEATURE_LEVELS_SHORT   | OFF             | ULOG_SHORT_LEVEL_STRINGS    |
 | ULOG_FEATURE_TIME           | OFF             | ULOG_HAVE_TIME              |
 | ULOG_FEATURE_TOPICS         | OFF             | ULOG_TOPICS_NUM             |
 | ULOG_FEATURE_DYNAMIC_CONFIG | OFF             | ULOG_DYNAMIC_CONFIG         |
@@ -67,22 +67,12 @@ extern "C" {
 
 
 #ifdef ULOG_SHORT_LEVEL_STRINGS
-    #define ULOG_FEATURE_SHORT_LEVELS true
+    #define ULOG_FEATURE_LEVELS_LONG  false
+    #define ULOG_FEATURE_LEVELS_SHORT true
 #else
-    #define ULOG_FEATURE_SHORT_LEVELS false
+    #define ULOG_FEATURE_LEVELS_LONG  true
+    #define ULOG_FEATURE_LEVELS_SHORT false
 #endif
-
-#ifdef ULOG_USE_EMOJI
-    #define ULOG_FEATURE_EMOJI_LEVELS true
-    #define ULOG_FEATURE_SHORT_LEVELS true // emoji are type of short
-    #if ULOG_SHORT_LEVEL_STRINGS
-        #warning "ULOG_USE_EMOJI overrides ULOG_SHORT_LEVEL_STRINGS! Disable ULOG_SHORT_LEVEL_STRINGS"
-    #endif
-#else
-    #define ULOG_FEATURE_EMOJI_LEVELS false
-#endif
-
-
 
 #if defined(ULOG_EXTRA_OUTPUTS) && (ULOG_EXTRA_OUTPUTS > 0)
     #define ULOG_FEATURE_EXTRA_OUTPUTS true
@@ -115,7 +105,8 @@ extern "C" {
 #undef ULOG_FEATURE_PREFIX
 #undef ULOG_FEATURE_EXTRA_OUTPUTS
 #undef ULOG_FEATURE_SOURCE_LOCATION
-#undef ULOG_FEATURE_SHORT_LEVELS
+#undef ULOG_FEATURE_LEVELS_SHORT
+#undef ULOG_FEATURE_LEVELS_LONG
 #undef ULOG_FEATURE_TIME
 #undef ULOG_FEATURE_TOPICS
 
@@ -126,7 +117,8 @@ extern "C" {
 #define ULOG_FEATURE_EXTRA_OUTPUTS true
 #define ULOG_EXTRA_OUTPUTS 8
 #define ULOG_FEATURE_SOURCE_LOCATION true
-#define ULOG_FEATURE_SHORT_LEVELS false
+#define ULOG_FEATURE_LEVELS_LONG true
+#define ULOG_FEATURE_LEVELS_SHORT true
 #define ULOG_FEATURE_TIME true
 #define ULOG_FEATURE_TOPICS true
 #define ULOG_TOPICS_NUM -1
