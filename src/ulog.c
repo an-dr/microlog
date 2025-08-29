@@ -534,23 +534,25 @@ ulog_status ulog_output_level_set(ulog_output output, ulog_level level) {
     if (level < LEVELS_MIN_VALUE || level >= ULOG_LEVELS_TOTAL) {
         return ULOG_STATUS_BAD_ARGUMENT;
     }
-    if (output < ULOG_OUTPUT_ALL || output >= OUTPUT_TOTAL_NUM) {
+    if (output < ULOG_OUTPUT_STDOUT || output >= OUTPUT_TOTAL_NUM) {
         return ULOG_STATUS_BAD_ARGUMENT;
     }
 
-    // Process all
-    if (output == ULOG_OUTPUT_ALL) {
-        for (int i = 0; i < OUTPUT_TOTAL_NUM; i++) {
-            output_data.outputs[i].level = level;
-        }
-        return ULOG_STATUS_OK;
-    }
-
-    // Process only one
     if (output_data.outputs[output].callback == NULL) {
         return ULOG_STATUS_ERROR;
     }
     output_data.outputs[output].level = level;
+    return ULOG_STATUS_OK;
+}
+
+ulog_status ulog_output_level_set_all(ulog_level level) {
+    if (level < LEVELS_MIN_VALUE || level >= ULOG_LEVELS_TOTAL) {
+        return ULOG_STATUS_BAD_ARGUMENT;
+    }
+
+    for (int i = 0; i < OUTPUT_TOTAL_NUM; i++) {
+        output_data.outputs[i].level = level;
+    }
     return ULOG_STATUS_OK;
 }
 
@@ -571,12 +573,15 @@ static void output_file_callback(ulog_event *ev, void *arg) {
 
 ulog_output ulog_output_add(ulog_output_callback_fn callback, void *arg,
                             ulog_level level) {
+    lock_lock();  // Lock the configuration
     for (int i = 0; i < OUTPUT_TOTAL_NUM; i++) {
         if (output_data.outputs[i].callback == NULL) {
             output_data.outputs[i] = (output_t){callback, arg, level};
+            lock_unlock();  // Unlock the configuration
             return i;
         }
     }
+    lock_unlock();  // Unlock the configuration
     return ULOG_OUTPUT_INVALID;
 }
 
@@ -883,7 +888,7 @@ static ulog_topic_id topic_add(const char *topic_name, bool enable) {
     if (is_str_empty(topic_name)) {
         return ULOG_TOPIC_ID_INVALID;
     }
-
+    lock_lock();  // Lock the configuration
     for (int i = 0; i < TOPIC_STATIC_NUM; i++) {
         // If there is an empty slot
         if (is_str_empty(topic_data.topics[i].name)) {
@@ -891,13 +896,16 @@ static ulog_topic_id topic_add(const char *topic_name, bool enable) {
             topic_data.topics[i].name    = topic_name;
             topic_data.topics[i].enabled = enable;
             topic_data.topics[i].level   = TOPIC_LEVEL_DEFAULT;
+            lock_unlock();  // Unlock the configuration
             return i;
         }
         // If the topic already exists
         else if (strcmp(topic_data.topics[i].name, topic_name) == 0) {
+            lock_unlock();  // Unlock the configuration
             return i;
         }
     }
+    lock_unlock();  // Unlock the configuration
     return ULOG_TOPIC_ID_INVALID;  // No space for new topics
 }
 #endif  // ULOG_FEATURE_TOPICS && TOPIC_DYNAMIC == false
@@ -995,43 +1003,48 @@ static ulog_topic_id topic_add(const char *topic_name, bool enable) {
     }
 
     // If the beginning is empty
+    lock_lock();
     topic_t *t = topic_get_last();
     if (t == NULL) {
         topic_data.topics = (topic_t *)topic_allocate(0, topic_name, enable);
         if (topic_data.topics != NULL) {
+            lock_unlock();
             return 0;
         }
+        lock_unlock();
         return ULOG_TOPIC_ID_INVALID;
     }
 
     // If the beginning is not empty
     t->next = topic_allocate(t->id + 1, topic_name, enable);
     if (t->next) {
+        lock_unlock();
         return t->id + 1;
     }
+    lock_unlock();
     return ULOG_TOPIC_ID_INVALID;
 }
 
 #endif  // ULOG_FEATURE_TOPICS && TOPIC_DYNAMIC == true
 
 /* ============================================================================
-   Feature: Source Location Config (`file_path_cfg_*`, depends on: - )
+   Feature: Source Location Config (`src_loc_cfg_*`, depends on: - )
 ============================================================================ */
 #if ULOG_FEATURE_SOURCE_LOCATION && ULOG_FEATURE_DYNAMIC_CONFIG
 
 typedef struct {
     bool enabled;
-} file_path_cfg_t;
+} src_loc_cfg_t;
 
-static file_path_cfg_t file_path_cfg = {
+static src_loc_cfg_t src_loc_cfg = {
     .enabled = ULOG_FEATURE_SOURCE_LOCATION,
 };
 
 // Private
 // ================
 
-bool file_path_cfg_is_enabled(void) {
-    return file_path_cfg.enabled;
+bool src_loc_cfg_is_enabled(void) {
+    return src_loc_cfg.enabled;
 }
 
 // Public
@@ -1039,23 +1052,19 @@ bool file_path_cfg_is_enabled(void) {
 
 void ulog_source_location_config(bool enabled) {
     lock_lock();  // Lock the configuration
-    file_path_cfg.enabled = enabled;
+    src_loc_cfg.enabled = enabled;
     lock_unlock();  // Unlock the configuration
 }
 
 #else  // ULOG_FEATURE_DYNAMIC_CONFIG
-#define file_path_cfg_is_enabled() (ULOG_FEATURE_SOURCE_LOCATION)
+#define src_loc_cfg_is_enabled() (ULOG_FEATURE_SOURCE_LOCATION)
 #endif  // ULOG_FEATURE_DYNAMIC_CONFIG
 
 /* ============================================================================
    Core Feature: Log (`log_*`, depends on: Print, Levels, Outputs,
                       Extra Outputs, Prefix, Topics, Time, Color,
-                      Locking, File Path)
+                      Locking, Source Location)
 ============================================================================ */
-
-typedef struct {
-    bool show_file_string;  // Show file and line in the log message
-} log_data_t;
 
 // Private
 // ================
@@ -1065,7 +1074,7 @@ typedef struct {
 /// @param ev - Event
 static void log_print_message(print_target *tgt, ulog_event *ev) {
 
-    if (file_path_cfg_is_enabled()) {
+    if (src_loc_cfg_is_enabled()) {
         print_to_target(tgt, "%s:%d: ", ev->file, ev->line);  // file and line
     }
 

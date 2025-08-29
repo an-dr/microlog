@@ -140,7 +140,6 @@ typedef enum {
     ULOG_STATUS_BAD_ARGUMENT = -2,
 } ulog_status;
 
-
 typedef enum  ulog_level_enum { 
     ULOG_LEVEL_TRACE = 0,
     ULOG_LEVEL_DEBUG,
@@ -253,8 +252,7 @@ void ulog_prefix_set_fn(ulog_prefix_fn function);
 
 typedef int ulog_output;
 enum {
-    ULOG_OUTPUT_INVALID = -0xBAD,
-    ULOG_OUTPUT_ALL     = -0x1,
+    ULOG_OUTPUT_INVALID = -0x1,
     ULOG_OUTPUT_STDOUT  = 0x0,
 };
 
@@ -265,6 +263,12 @@ typedef void (*ulog_output_callback_fn)(ulog_event *ev, void *arg);
 /// @return ULOG_STATUS_OK on success, ULOG_STATUS_ERROR if callback is not
 ///         added, or ULOG_STATUS_BAD_ARGUMENT
 ulog_status ulog_output_level_set(ulog_output output, ulog_level level);
+
+/// @brief Sets the debug level
+/// @param level - Debug level
+/// @return ULOG_STATUS_OK on success, ULOG_STATUS_ERROR if callback is not
+///         added, or ULOG_STATUS_BAD_ARGUMENT
+ulog_status ulog_output_level_set_all(ulog_level level);
 
 #if ULOG_FEATURE_EXTRA_OUTPUTS
 
