@@ -76,6 +76,12 @@ const char *ulog_level_to_string(ulog_level level);
 /// @return ulog_status
 ulog_status ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size);
 
+ulog_status ulog_event_get_message(ulog_event *ev, uint8_t *buffer, size_t buffer_size);
+ulog_topic_id ulog_event_get_topic(ulog_event *ev);
+int ulog_event_get_line(ulog_event *ev);
+const char *ulog_event_get_file(ulog_event *ev);
+ulog_level ulog_event_get_level(ulog_event *ev);
+
 /// @brief Logs the message
 /// @param level - Debug level
 /// @param file - File name

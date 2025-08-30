@@ -226,7 +226,8 @@ struct ulog_event {
     ulog_level level;  // Event debug level
 };
 
-ulog_status ulog_event_get_message(ulog_event *ev, uint8_t*buffer, size_t buffer_size) {
+ulog_status ulog_event_get_message(ulog_event *ev, uint8_t *buffer,
+                                   size_t buffer_size) {
     if (buffer == NULL || buffer_size == 0) {
         return ULOG_STATUS_INVALID_ARG;
     }
@@ -238,9 +239,43 @@ ulog_status ulog_event_get_message(ulog_event *ev, uint8_t*buffer, size_t buffer
     return ULOG_STATUS_OK;
 }
 
+#if ULOG_FEATURE_TOPICS
+ulog_topic_id ulog_event_get_topic(ulog_event *ev) {
+    if (ev == NULL) {
+        return ULOG_TOPIC_INVALID;  // Invalid topic
+    }
+    return ev->topic;
+}
+#endif  // ULOG_FEATURE_TOPICS
+
+#if ULOG_FEATURE_TIME
+struct tm *ulog_event_get_time(ulog_event *ev) {
+    if (ev == NULL) {
+        return NULL;
+    }
+    return ev->time;
+}
+#endif  // ULOG_FEATURE_TIME
+
+#if ULOG_FEATURE_SOURCE_LOCATION
+const char *ulog_event_get_file(ulog_event *ev) {
+    if (ev == NULL) {
+        return NULL;
+    }
+    return ev->file;
+}
+
+int ulog_event_get_line(ulog_event *ev) {
+    if (ev == NULL) {
+        return -1;
+    }
+    return ev->line;
+}
+#endif  // ULOG_FEATURE_SOURCE_LOCATION
+
 ulog_level ulog_event_get_level(ulog_event *ev) {
     if (ev == NULL) {
-        return ULOG_LEVEL_TRACE; // Invalid level
+        return ULOG_LEVEL_TRACE;  // Invalid level
     }
     return ev->level;
 }
