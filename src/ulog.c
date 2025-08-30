@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+// clang-format off
 /* ============================================================================
    Configuration options
 ===============================================================================
@@ -37,8 +38,21 @@
 | ULOG_FEATURE_DYNAMIC_CONFIG      | OFF     | ULOG_DYNAMIC_CONFIG            |
 | ULOG_FEATURE_WARN_NOT_ENABLED    | ON      | ULOG_WARN_NOT_ENABLED          |
 
+| Config knob                 | Derived macro(s)            | Purpose                          |
+| --------------------------- | --------------------------- | -------------------------------- |
+| `ULOG_CFG_COLOR`            | `ULOG_HAS_COLOR`            | Compile ANSI color paths         |
+| `ULOG_CFG_PREFIX_SIZE`      | `ULOG_HAS_PREFIX`           | Enable prefix buffer logic       |
+| `ULOG_CFG_EXTRA_OUTPUTS`    | `ULOG_HAS_EXTRA_OUTPUTS`    | Extra backends compiled          |
+| `ULOG_CFG_SOURCE_LOCATION`  | `ULOG_HAS_SOURCE_LOCATION`  | Include file\:line               |
+| `ULOG_CFG_LEVEL_STR_STYLE`  | `ULOG_LEVEL_STR_IS_SHORT`   | Short level tags switch          |
+|                             | `ULOG_LEVEL_STR_IS_LONG`    | Long level tags switch           |
+| `ULOG_CFG_TIME`             | `ULOG_HAS_TIME`             | Timestamps available             |
+| `ULOG_CFG_TOPICS_NUM`       | `ULOG_HAS_TOPICS`           | Topic system compiled            |
+| `ULOG_CFG_DYNAMIC_CONFIG`   | `ULOG_HAS_DYNAMIC_CONFIG`   | Runtime toggles allowed          |
+| `ULOG_CFG_WARN_NOT_ENABLED` | `ULOG_HAS_WARN_NOT_ENABLED` | Emit “feature not enabled” stubs |
+
 ============================================================================ */
-// clang-format off
+
 #ifdef ULOG_NO_COLOR
     #define ULOG_FEATURE_COLOR false
 #else

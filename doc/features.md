@@ -330,3 +330,15 @@ All feature states can be read using the following public macros. The macros are
 | `ULOG_DYNAMIC_CONFIG`       | `ULOG_FEATURE_DYNAMIC_CONFIG`  | ❌ false |
 | `ULOG_SHORT_LEVEL_STRINGS`  | `ULOG_FEATURE_LEVELS_SHORT`    | ❌ false |
 | `ULOG_TOPICS_NUM`           | `ULOG_FEATURE_TOPICS`          | ❌ false |
+
+| Knob                          | Type | Default                 | Description                                                                 |
+| ----------------------------- | ---- | ----------------------- | --------------------------------------------------------------------------- |
+| `ULOG_CFG_COLOR`              | bool | 1                       | Enable ANSI color output                                                    |
+| `ULOG_CFG_PREFIX_SIZE`        | uint | 0                       | Prefix buffer size (0 disables)                                             |
+| `ULOG_CFG_EXTRA_OUTPUTS`      | bool | 0                       | Enable additional output backends                                           |
+| `ULOG_CFG_SOURCE_LOCATION`    | bool | 1                       | Include file and line information                                           |
+| `ULOG_CFG_LEVEL_STR_STYLE`    | enum | LONG                    | Style of level strings:`LONG` or `SHORT`                                    |
+| `ULOG_CFG_TIME`               | bool | 0                       | Include timestamp in log output                                             |
+| `ULOG_CFG_TOPICS_NUM`         | uint | 0                       | Number of topic slots (0 disables topics)                                   |
+| `ULOG_CFG_DYNAMIC_CONFIG`     | bool | 0                       | Allow runtime configuration changes                                         |
+| `ULOG_CFG_WARN_NOT_ENABLED`   | bool | 1                       | Compile stub functions that emit warnings when a feature is not enabled     |
