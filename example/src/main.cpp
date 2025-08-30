@@ -21,20 +21,14 @@ int main(int argc, char *argv[]) {
 
     /* Extra Outputs =============================== */
 
-#if ULOG_FEATURE_EXTRA_OUTPUTS
 
     FILE *fp = fopen("example.log", "w");
     ulog_output_add_file(fp, ULOG_LEVEL_INFO);
     ulog_output_add(custom_callback,
                            (void *)"     - Custom Callback: ", ULOG_LEVEL_INFO);
 
-#endif  // ULOG_FEATURE_EXTRA_OUTPUTS
-
     /* Prefix ==================================== */
-
-#if ULOG_FEATURE_PREFIX
     ulog_prefix_set_fn(update_prefix);
-#endif  // ULOG_FEATURE_PREFIX
 
     /* Core Logging ===================================== */
     log_trace("Trace message %d", 1);
@@ -47,7 +41,6 @@ int main(int argc, char *argv[]) {
     /* Topics =========================================== */
     printf("\n");
 
-#if ULOG_FEATURE_TOPICS
 
     ulog_topic_add("Bluetooth", true);
     ulog_topic_add("Audio", false);
@@ -71,8 +64,6 @@ int main(int argc, char *argv[]) {
     logt_info("Bluetooth", "Bluetooth message 2");
     // logt_info("Indication",
     //          "Indication message 2 (level lower than global level)");
-
-#endif  // ULOG_FEATURE_TOPICS
 
     return 0;
 }

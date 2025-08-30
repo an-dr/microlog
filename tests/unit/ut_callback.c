@@ -9,7 +9,7 @@ static char last_message_buffer[UT_LOG_BUFFER_SIZE] = {0};
 void ut_callback(ulog_event *ev, void *arg) {
     (void)arg;  // Userdata is now 'arg', mark as unused if not used.
 
-    if (!ev || !ev->message) {
+    if (!ev) {
         last_message_buffer[0] = '\0';
         return;
     }
