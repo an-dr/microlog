@@ -226,6 +226,24 @@ struct ulog_event {
     ulog_level level;  // Event debug level
 };
 
+ulog_status ulog_event_get_message(ulog_event *ev, uint8_t*buffer, size_t buffer_size) {
+    if (buffer == NULL || buffer_size == 0) {
+        return ULOG_STATUS_INVALID_ARG;
+    }
+
+    print_target tgt = {.type       = LOG_TARGET_BUFFER,
+                        .dsc.buffer = {buffer, 0, buffer_size}};
+
+    log_print_message(&tgt, ev);
+    return ULOG_STATUS_OK;
+}
+
+ulog_level ulog_event_get_level(ulog_event *ev) {
+    if (ev == NULL) {
+        return ULOG_LEVEL_TRACE; // Invalid level
+    }
+    return ev->level;
+}
 
 /* ============================================================================
    Core Functionality: Lock (Depends on: - )
