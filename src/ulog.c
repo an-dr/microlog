@@ -205,6 +205,8 @@ static void print_to_target(print_target *tgt, const char *format, ...) {
 // Private
 // ================
 
+static void log_print_message(print_target *tgt, ulog_event *ev);
+
 /// @brief Event structure
 struct ulog_event {
     const char *message;          // Message format string
@@ -226,7 +228,7 @@ struct ulog_event {
     ulog_level level;  // Event debug level
 };
 
-ulog_status ulog_event_get_message(ulog_event *ev, uint8_t *buffer,
+ulog_status ulog_event_get_message(ulog_event *ev, char *buffer,
                                    size_t buffer_size) {
     if (buffer == NULL || buffer_size == 0) {
         return ULOG_STATUS_INVALID_ARG;
@@ -242,7 +244,7 @@ ulog_status ulog_event_get_message(ulog_event *ev, uint8_t *buffer,
 #if ULOG_FEATURE_TOPICS
 ulog_topic_id ulog_event_get_topic(ulog_event *ev) {
     if (ev == NULL) {
-        return ULOG_TOPIC_INVALID;  // Invalid topic
+        return ULOG_TOPIC_ID_INVALID;  // Invalid topic
     }
     return ev->topic;
 }
