@@ -21,119 +21,108 @@
 #include <string.h>
 
 // clang-format off
-/* ============================================================================
+/* ============================================================================================================================================
    Configuration options
-===============================================================================
+===============================================================================================================================================
 
-| Feature                          | Default | Compilation Options            |
-|----------------------------------|---------|--------------------------------|
-| ULOG_FEATURE_COLOR               | ON      | ULOG_NO_COLOR                  |
-| ULOG_FEATURE_PREFIX              | OFF     | ULOG_PREFIX_SIZE               |
-| ULOG_FEATURE_EXTRA_OUTPUTS       | OFF     | ULOG_EXTRA_OUTPUTS             |
-| ULOG_FEATURE_SOURCE_LOCATION     | ON      | ULOG_HIDE_SOURCE_LOCATION      |
-| ULOG_FEATURE_LEVELS_LONG         | ON      | ULOG_SHORT_LEVEL_STRINGS       |
-| ULOG_FEATURE_LEVELS_SHORT        | OFF     | ULOG_SHORT_LEVEL_STRINGS       |
-| ULOG_FEATURE_TIME                | OFF     | ULOG_HAVE_TIME                 |
-| ULOG_FEATURE_TOPICS              | OFF     | ULOG_TOPICS_NUM                |
-| ULOG_FEATURE_DYNAMIC_CONFIG      | OFF     | ULOG_DYNAMIC_CONFIG            |
-| ULOG_FEATURE_WARN_NOT_ENABLED    | ON      | ULOG_WARN_NOT_ENABLED          |
+| Config knob                   | Derived macro(s)           | Expansion                                            | Purpose                  |
+| ----------------------------- | -------------------------- | ---------------------------------------------------- | ------------------------ |
+| `ULOG_BUILD_COLOR`            | `ULOG_HAS_COLOR`           | `(ULOG_CFG_COLOR)`                                   | Compile color code paths |
+| `ULOG_BUILD_PREFIX_SIZE`      | `ULOG_HAS_PREFIX`          | `(ULOG_CFG_PREFIX_SIZE > 0)`                         | Prefix buffer logic      |
+| `ULOG_BUILD_EXTRA_OUTPUTS`    | `ULOG_HAS_EXTRA_OUTPUTS`   | `(ULOG_CFG_EXTRA_OUTPUTS)`                           | Extra output backends    |
+| `ULOG_BUILD_SOURCE_LOCATION`  | `ULOG_HAS_SOURCE_LOCATION` | `(ULOG_CFG_SOURCE_LOCATION)`                         | File\:line output        |
+| `ULOG_BUILD_LEVEL_STR_STYLE`  | `ULOG_LEVEL_STR_IS_SHORT`  | `(ULOG_CFG_LEVEL_STR_STYLE == ULOG_LEVEL_STR_SHORT)` | Short level tags         |
+|                               | `ULOG_LEVEL_STR_IS_LONG`   | `(!ULOG_LEVEL_STR_IS_SHORT)`                         | Long level tags          |
+| `ULOG_BUILD_TIME`             | `ULOG_HAS_TIME`            | `(ULOG_CFG_TIME)`                                    | Timestamp support        |
+| `ULOG_BUILD_TOPICS_NUM`       | `ULOG_HAS_TOPICS`          | `(ULOG_CFG_TOPICS_NUM > 0)`                          | Topic filtering logic    |
+| `ULOG_BUILD_DYNAMIC_CONFIG`   | `ULOG_HAS_DYNAMIC_CONFIG`  | `(ULOG_CFG_DYNAMIC_CONFIG)`                          | Runtime toggles          |
+| `ULOG_BUILD_WARN_NOT_ENABLED` | `ULOG_HAS_WARN_NOT_ENABLED`| `(ULOG_CFG_WARN_NOT_ENABLED)`                        | Warning stubs            |
 
-| Config knob                 | Derived macro(s)            | Purpose                          |
-| --------------------------- | --------------------------- | -------------------------------- |
-| `ULOG_CFG_COLOR`            | `ULOG_HAS_COLOR`            | Compile ANSI color paths         |
-| `ULOG_CFG_PREFIX_SIZE`      | `ULOG_HAS_PREFIX`           | Enable prefix buffer logic       |
-| `ULOG_CFG_EXTRA_OUTPUTS`    | `ULOG_HAS_EXTRA_OUTPUTS`    | Extra backends compiled          |
-| `ULOG_CFG_SOURCE_LOCATION`  | `ULOG_HAS_SOURCE_LOCATION`  | Include file\:line               |
-| `ULOG_CFG_LEVEL_STR_STYLE`  | `ULOG_LEVEL_STR_IS_SHORT`   | Short level tags switch          |
-|                             | `ULOG_LEVEL_STR_IS_LONG`    | Long level tags switch           |
-| `ULOG_CFG_TIME`             | `ULOG_HAS_TIME`             | Timestamps available             |
-| `ULOG_CFG_TOPICS_NUM`       | `ULOG_HAS_TOPICS`           | Topic system compiled            |
-| `ULOG_CFG_DYNAMIC_CONFIG`   | `ULOG_HAS_DYNAMIC_CONFIG`   | Runtime toggles allowed          |
-| `ULOG_CFG_WARN_NOT_ENABLED` | `ULOG_HAS_WARN_NOT_ENABLED` | Emit “feature not enabled” stubs |
+============================================================================================================================================= */
 
-============================================================================ */
-
-#ifdef ULOG_NO_COLOR
-    #define ULOG_FEATURE_COLOR false
+#ifndef ULOG_BUILD_COLOR
+    #define ULOG_FEATURE_COLOR 0
 #else
-    #define ULOG_FEATURE_COLOR true
+    #define ULOG_FEATURE_COLOR (ULOG_BUILD_COLOR==1)
 #endif
 
 
-#if defined(ULOG_PREFIX_SIZE) && (ULOG_PREFIX_SIZE > 0)
-    #define ULOG_FEATURE_PREFIX true
+#ifndef ULOG_BUILD_PREFIX_SIZE
+    #define ULOG_FEATURE_PREFIX 0
 #else
-    #define ULOG_FEATURE_PREFIX false
+    #define ULOG_FEATURE_PREFIX (ULOG_BUILD_PREFIX_SIZE > 0)
 #endif
 
 
-#ifdef ULOG_HAVE_TIME
-    #define ULOG_FEATURE_TIME true
+#ifndef ULOG_BUILD_TIME
+    #define ULOG_FEATURE_TIME 0
 #else
-    #define ULOG_FEATURE_TIME false
+    #define ULOG_FEATURE_TIME (ULOG_BUILD_TIME==1)
 #endif
 
 
-
-#ifdef ULOG_SHORT_LEVEL_STRINGS
-    #define ULOG_FEATURE_LEVELS_LONG  false
-    #define ULOG_FEATURE_LEVELS_SHORT true
+#ifndef ULOG_BUILD_LEVEL_STR_STYLE
+    #define ULOG_FEATURE_LEVEL_LONG  0
+    #define ULOG_FEATURE_LEVEL_SHORT 1
 #else
-    #define ULOG_FEATURE_LEVELS_LONG  true
-    #define ULOG_FEATURE_LEVELS_SHORT false
-#endif
-
-#if defined(ULOG_EXTRA_OUTPUTS) && (ULOG_EXTRA_OUTPUTS > 0)
-    #define ULOG_FEATURE_EXTRA_OUTPUTS true
-#else
-    #define ULOG_FEATURE_EXTRA_OUTPUTS false
+    #define ULOG_FEATURE_LEVEL_LONG  (ULOG_BUILD_LEVEL_STR_STYLE == ULOG_LEVEL_STYLE_LONG)
+    #define ULOG_FEATURE_LEVEL_SHORT (ULOG_BUILD_LEVEL_STR_STYLE == ULOG_LEVEL_STYLE_SHORT)
 #endif
 
 
-#ifdef ULOG_HIDE_SOURCE_LOCATION
-    #define ULOG_FEATURE_SOURCE_LOCATION false
+#ifndef ULOG_BUILD_EXTRA_OUTPUTS
+    #define ULOG_FEATURE_EXTRA_OUTPUTS 0
 #else
-    #define ULOG_FEATURE_SOURCE_LOCATION true
-#endif
-
-#ifdef ULOG_WARN_NOT_ENABLED
-    #define ULOG_FEATURE_WARN_NOT_ENABLED true
-#else
-    #define ULOG_FEATURE_WARN_NOT_ENABLED false
-#endif
-
-#if defined(ULOG_TOPICS_NUM) && (ULOG_TOPICS_NUM >= 0 || ULOG_TOPICS_NUM == -1)
-    #define ULOG_FEATURE_TOPICS true
-#else
-    #define ULOG_FEATURE_TOPICS false
+    #define ULOG_FEATURE_EXTRA_OUTPUTS (ULOG_BUILD_EXTRA_OUTPUTS > 0)
 #endif
 
 
-#ifdef ULOG_DYNAMIC_CONFIG
+#ifndef ULOG_BUILD_SOURCE_LOCATION
+    #define ULOG_FEATURE_SOURCE_LOCATION 1
+#else
+    #define ULOG_FEATURE_SOURCE_LOCATION 0
+#endif
+
+
+#ifndef ULOG_BUILD_WARN_NOT_ENABLED
+    #define ULOG_FEATURE_WARN_NOT_ENABLED 1
+#else
+    #define ULOG_FEATURE_WARN_NOT_ENABLED (ULOG_BUILD_WARN_NOT_ENABLED==1)
+#endif
+
+
+#ifndef ULOG_BUILD_TOPICS_NUM
+    #define ULOG_FEATURE_TOPICS 0
+#else
+    #define ULOG_FEATURE_TOPICS (ULOG_BUILD_TOPICS_NUM > 0 || ULOG_BUILD_TOPICS_NUM == -1)
+#endif
+
+
+#ifdef ULOG_BUILD_DYNAMIC_CONFIG
 #define ULOG_FEATURE_DYNAMIC_CONFIG true
 // Undef all ULOG_FEATURE_* macros to avoid conflicts
 #undef ULOG_FEATURE_COLOR
 #undef ULOG_FEATURE_PREFIX
 #undef ULOG_FEATURE_EXTRA_OUTPUTS
-#undef ULOG_EXTRA_OUTPUTS
+#undef ULOG_BUILD_EXTRA_OUTPUTS
 #undef ULOG_FEATURE_SOURCE_LOCATION
-#undef ULOG_FEATURE_LEVELS_SHORT
-#undef ULOG_FEATURE_LEVELS_LONG
+#undef ULOG_FEATURE_LEVEL_SHORT
+#undef ULOG_FEATURE_LEVEL_LONG
 #undef ULOG_FEATURE_TIME
 #undef ULOG_FEATURE_TOPICS
 
 // Configure features based on runtime config
 #define ULOG_FEATURE_COLOR true
 #define ULOG_FEATURE_PREFIX true
-#define ULOG_PREFIX_SIZE 64
+#define ULOG_BUILD_PREFIX_SIZE 64
 #define ULOG_FEATURE_EXTRA_OUTPUTS true
-#define ULOG_EXTRA_OUTPUTS 8
+#define ULOG_BUILD_EXTRA_OUTPUTS 8
 #define ULOG_FEATURE_SOURCE_LOCATION true
-#define ULOG_FEATURE_LEVELS_LONG true
-#define ULOG_FEATURE_LEVELS_SHORT true
+#define ULOG_FEATURE_LEVEL_LONG true
+#define ULOG_FEATURE_LEVEL_SHORT true
 #define ULOG_FEATURE_TIME true
 #define ULOG_FEATURE_TOPICS true
-#define ULOG_TOPICS_NUM -1
+#define ULOG_BUILD_TOPICS_NUM -1
 
 #else
 #define ULOG_FEATURE_DYNAMIC_CONFIG false
@@ -477,7 +466,7 @@ void ulog_prefix_config(bool enabled) {
 // ================
 typedef struct {
     ulog_prefix_fn function;
-    char prefix[ULOG_PREFIX_SIZE];
+    char prefix[ULOG_BUILD_PREFIX_SIZE];
 } prefix_data_t;
 
 static prefix_data_t prefix_data = {
@@ -489,7 +478,7 @@ static void prefix_print(print_target *tgt, ulog_event *ev) {
     if (prefix_data.function == NULL || !prefix_cfg_is_enabled()) {
         return;
     }
-    prefix_data.function(ev, prefix_data.prefix, ULOG_PREFIX_SIZE);
+    prefix_data.function(ev, prefix_data.prefix, ULOG_BUILD_PREFIX_SIZE);
     print_to_target(tgt, "%s", prefix_data.prefix);
 }
 
@@ -630,29 +619,29 @@ static void time_print_full(print_target *tgt, ulog_event *ev,
 #endif  // ULOG_FEATURE_TIME
 
 /* ============================================================================
-   Feature: Levels Config (`levels_cfg_*`, depends on: - )
+   Feature: Level Config (`level_cfg_*`, depends on: - )
 ============================================================================ */
 #if ULOG_FEATURE_DYNAMIC_CONFIG
 
 typedef enum {
-    LEVELS_STYLE_DEFAULT = 0x0,
-    LEVELS_STYLE_SHORT,
-    LEVELS_STYLE_NUM
-} levels_cfg_style;
+    LEVEL_STYLE_DEFAULT = 0x0,
+    LEVEL_STYLE_SHORT,
+    LEVEL_STYLE_NUM
+} level_cfg_style;
 
 typedef struct {
-    levels_cfg_style levels_cfg_style;  // Use short level strings
-} levels_cfg_t;
+    level_cfg_style level_cfg_style;  // Use short level strings
+} level_cfg_t;
 
-static levels_cfg_t levels_cfg = {
-    .levels_cfg_style = LEVELS_STYLE_DEFAULT,
+static level_cfg_t level_cfg = {
+    .level_cfg_style = LEVEL_STYLE_DEFAULT,
 };
 
 // Private
 // ================
 
-bool levels_cfg_is_short(void) {
-    return levels_cfg.levels_cfg_style == LEVELS_STYLE_SHORT;
+bool level_cfg_is_short(void) {
+    return level_cfg.level_cfg_style == LEVEL_STYLE_SHORT;
 }
 
 // Public
@@ -660,8 +649,8 @@ bool levels_cfg_is_short(void) {
 
 void ulog_level_config(bool use_short_levels) {
     lock_lock();  // Lock the configuration
-    levels_cfg.levels_cfg_style =
-        use_short_levels ? LEVELS_STYLE_SHORT : LEVELS_STYLE_DEFAULT;
+    level_cfg.level_cfg_style =
+        use_short_levels ? LEVEL_STYLE_SHORT : LEVEL_STYLE_DEFAULT;
     lock_unlock();  // Unlock the configuration
 }
 
@@ -674,7 +663,7 @@ void ulog_level_config(bool use_short_levels) {
 
 void ulog_level_config(bool use_short_levels) {
     (void)(use_short_levels);
-    _log_not_enabled("ULOG_FEATURE_LEVELS_SHORT and ULOG_FEATURE_LEVELS_LONG");
+    _log_not_enabled("ULOG_FEATURE_LEVEL_SHORT and ULOG_FEATURE_LEVEL_LONG");
 }
 
 #endif  // ULOG_FEATURE_WARN_NOT_ENABLED
@@ -682,55 +671,55 @@ void ulog_level_config(bool use_short_levels) {
 // Disabled Private
 // ================
 
-typedef enum { LEVELS_STYLE_DEFAULT = 0x0, LEVELS_STYLE_NUM } levels_cfg_style;
-#define levels_cfg_is_short() (ULOG_FEATURE_LEVELS_SHORT)
+typedef enum { LEVEL_STYLE_DEFAULT = 0x0, LEVEL_STYLE_NUM } level_cfg_style;
+#define level_cfg_is_short() (ULOG_FEATURE_LEVEL_SHORT)
 #endif  // ULOG_FEATURE_DYNAMIC_CONFIG
 
 /* ============================================================================
-   Core Feature: Levels  (`levels_*`, depends on: Levels Config, Print)
+   Core Feature: Level  (`level_*`, depends on: Levels Config, Print)
 ============================================================================ */
 
 // Private
 // ================
-#define LEVELS_MIN_VALUE 0
+#define LEVEL_MIN_VALUE 0
 
 /// @brief Level strings
-static const char *levels_strings[LEVELS_STYLE_NUM][ULOG_LEVELS_TOTAL] = {
+static const char *level_strings[LEVEL_STYLE_NUM][ULOG_LEVEL_TOTAL] = {
 
-#if ULOG_FEATURE_LEVELS_LONG
+#if ULOG_FEATURE_LEVEL_LONG
     {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"}
 #endif
 
-#if ULOG_FEATURE_LEVELS_SHORT
+#if ULOG_FEATURE_LEVEL_SHORT
     ,
     {"T", "D", "I", "W", "E", "F"}
 #endif
 
 };
 
-static bool levels_is_allowed(ulog_level msg_level, ulog_level log_verbosity) {
-    if (msg_level < log_verbosity || msg_level < LEVELS_MIN_VALUE) {
+static bool level_is_allowed(ulog_level msg_level, ulog_level log_verbosity) {
+    if (msg_level < log_verbosity || msg_level < LEVEL_MIN_VALUE) {
         return false;  // Level is higher than the configured level, not allowed
     }
     return true;  // Level is allowed
 }
 
-static void levels_print(print_target *tgt, ulog_event *ev) {
-#if ULOG_FEATURE_LEVELS_LONG && ULOG_FEATURE_LEVELS_SHORT
-    if (levels_cfg_is_short()) {
+static void level_print(print_target *tgt, ulog_event *ev) {
+#if ULOG_FEATURE_LEVEL_LONG && ULOG_FEATURE_LEVEL_SHORT
+    if (level_cfg_is_short()) {
         print_to_target(tgt, "%-1s ",
-                        levels_strings[LEVELS_STYLE_SHORT][ev->level]);
+                        level_strings[LEVEL_STYLE_SHORT][ev->level]);
     } else {
         print_to_target(tgt, "%-5s ",
-                        levels_strings[LEVELS_STYLE_DEFAULT][ev->level]);
+                        level_strings[LEVEL_STYLE_DEFAULT][ev->level]);
     }
-#elif ULOG_FEATURE_LEVELS_SHORT
+#elif ULOG_FEATURE_LEVEL_SHORT
     print_to_target(tgt, "%-1s ",
-                    levels_strings[LEVELS_STYLE_DEFAULT][ev->level]);
+                    level_strings[LEVEL_STYLE_DEFAULT][ev->level]);
 #else
     print_to_target(tgt, "%-5s ",
-                    levels_strings[LEVELS_STYLE_DEFAULT][ev->level]);
-#endif  // ULOG_FEATURE_LEVELS_SHORT
+                    level_strings[LEVEL_STYLE_DEFAULT][ev->level]);
+#endif  // ULOG_FEATURE_LEVEL_SHORT
 }
 
 // Public
@@ -738,20 +727,20 @@ static void levels_print(print_target *tgt, ulog_event *ev) {
 
 /// @brief Returns the string representation of the level
 const char *ulog_level_to_string(ulog_level level) {
-    if (level < LEVELS_MIN_VALUE || level >= ULOG_LEVELS_TOTAL) {
+    if (level < LEVEL_MIN_VALUE || level >= ULOG_LEVEL_TOTAL) {
         return "?";  // Return a default string for invalid levels
     }
-    return levels_strings[LEVELS_STYLE_DEFAULT][level];
+    return level_strings[LEVEL_STYLE_DEFAULT][level];
 }
 
 /* ============================================================================
-   Core Feature: Outputs (`output_*`, depends on: Print, Log, Levels)
+   Core Feature: Outputs (`output_*`, depends on: Print, Log, Level)
 ============================================================================ */
 
 //  Private
 // ================
 #if ULOG_FEATURE_EXTRA_OUTPUTS
-#define OUTPUT_EXTRA_NUM ULOG_EXTRA_OUTPUTS
+#define OUTPUT_EXTRA_NUM ULOG_BUILD_EXTRA_OUTPUTS
 #else
 #define OUTPUT_EXTRA_NUM 0
 #endif  // ULOG_FEATURE_EXTRA_OUTPUTS
@@ -778,7 +767,7 @@ static output_data_t output_data = {
     .outputs = {{output_stdout_callback, NULL, OUTPUT_STDOUT_DEFAULT_LEVEL}}};
 
 static void output_handle_single(ulog_event *ev, output_t *output) {
-    if (levels_is_allowed(ev->level, output->level)) {
+    if (level_is_allowed(ev->level, output->level)) {
 
         // Create event copy to avoid va_list issues
         ulog_event ev_copy = {0};
@@ -813,7 +802,7 @@ static void output_stdout_callback(ulog_event *ev, void *arg) {
 // ================
 
 ulog_status ulog_output_level_set(ulog_output output, ulog_level level) {
-    if (level < LEVELS_MIN_VALUE || level >= ULOG_LEVELS_TOTAL) {
+    if (level < LEVEL_MIN_VALUE || level >= ULOG_LEVEL_TOTAL) {
         return ULOG_STATUS_BAD_ARGUMENT;
     }
     if (output < ULOG_OUTPUT_STDOUT || output >= OUTPUT_TOTAL_NUM) {
@@ -828,7 +817,7 @@ ulog_status ulog_output_level_set(ulog_output output, ulog_level level) {
 }
 
 ulog_status ulog_output_level_set_all(ulog_level level) {
-    if (level < LEVELS_MIN_VALUE || level >= ULOG_LEVELS_TOTAL) {
+    if (level < LEVEL_MIN_VALUE || level >= ULOG_LEVEL_TOTAL) {
         return ULOG_STATUS_BAD_ARGUMENT;
     }
 
@@ -956,8 +945,8 @@ void ulog_topic_config(bool enabled) {
 
 // Private
 // ================
-#define TOPIC_DYNAMIC (ULOG_TOPICS_NUM < 0)
-#define TOPIC_STATIC_NUM ULOG_TOPICS_NUM
+#define TOPIC_DYNAMIC (ULOG_BUILD_TOPICS_NUM < 0)
+#define TOPIC_STATIC_NUM ULOG_BUILD_TOPICS_NUM
 #define TOPIC_LEVEL_DEFAULT ULOG_LEVEL_TRACE
 
 typedef struct {
@@ -1052,7 +1041,7 @@ static bool topic_is_loggable(topic_t *t, ulog_level level) {
     if (t == NULL) {
         return false;  // Topic not found, cannot log
     }
-    if (!t->enabled || !levels_is_allowed(level, t->level)) {
+    if (!t->enabled || !level_is_allowed(level, t->level)) {
         return false;  // Topic is disabled, cannot log
     }
     return true;
@@ -1452,7 +1441,7 @@ void ulog_source_location_config(bool enabled) {
 #endif  // ULOG_FEATURE_DYNAMIC_CONFIG
 
 /* ============================================================================
-   Core Feature: Log (`log_*`, depends on: Print, Levels, Outputs,
+   Core Feature: Log (`log_*`, depends on: Print, Level, Outputs,
                       Extra Outputs, Prefix, Topics, Time, Color,
                       Locking, Source Location)
 ============================================================================ */
@@ -1509,7 +1498,7 @@ static void log_print_event(print_target *tgt, ulog_event *ev, bool full_time,
 
     prefix_print(tgt, ev);
     topic_print(tgt, ev);
-    levels_print(tgt, ev);
+    level_print(tgt, ev);
     log_print_message(tgt, ev);
 
     color ? color_print_end(tgt) : (void)0;

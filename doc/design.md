@@ -13,7 +13,7 @@ All logging is happening via `ulog_log` function. `logt_*` and `log_*` macros ar
 3. There are 2 main internal callbacks and N user callbacks:
    - `output_stdout_callback(...)` - it is responsible for printing the log message to the console.
    - `cb_file(...)` - this callback is responsible for writing the log message to a file. To enable it user must use `ulog_output_add_file(...)` function to register a file pointer.
-   - User callbacks are configurable via `ULOG_EXTRA_OUTPUTS` define and `ulog_output_add(...)` function. User can register any number of callbacks and they will be called in the order they were registered.
+   - User callbacks are configurable via `ULOG_BUILD_EXTRA_OUTPUTS` define and `ulog_output_add(...)` function. User can register any number of callbacks and they will be called in the order they were registered.
 4. `output_stdout_callback(...)` and `cb_file(...)` will use `log_print_event(...)` function to format the message and print it. The function logic is configurable via a set of defines.
 5. `log_print_event(...)` accepts a `ulog_event` and a `print_target` objects. The target can be a stream or a buffer.
 6. The actual printing is done via `vprint(...)` and `print(...)` functions accepting a `print_target` and a formatted string using a printf-like interface. It uses `vsnprintf(...)` and `vfprintf(...)` to print the message to the target.

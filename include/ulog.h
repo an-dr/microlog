@@ -49,7 +49,16 @@ typedef enum  ulog_level_enum {
     ULOG_LEVEL_ERROR,      ///< Error messages for failures
     ULOG_LEVEL_FATAL,      ///< Critical errors that may terminate program
 } ulog_level;
-#define ULOG_LEVELS_TOTAL  6  ///< Total number of log levels
+#define ULOG_LEVEL_TOTAL  6  ///< Total number of log levels
+
+#define ULOG_LEVEL_STYLE_LONG  0   /// Use long level strings (TRACE, DEBUG, etc.)
+#define ULOG_LEVEL_STYLE_SHORT 1   /// Use short level strings (T, D, I, W, E, F)
+
+typedef enum {
+    ULOG_LEVEL_CFG_STYLE_DEFAULT = 0x0,
+    ULOG_LEVEL_CFG_STYLE_SHORT,
+    ULOG_LEVEL_CFG_STYLE_NUM
+} ulog_level_cfg_style;
 
 /// @brief Topic identifier type
 typedef int ulog_topic_id;
@@ -178,32 +187,36 @@ typedef void (*ulog_lock_fn)(bool lock, void *lock_arg);
 void ulog_lock_set_fn(ulog_lock_fn function, void *lock_arg);
 
 /* ============================================================================
-   Feature: Runtime Config
+   Feature: Dynamic Config
 ============================================================================ */
 
-/// @brief Enable or disable colored output (requires ULOG_FEATURE_COLOR)
+/// @brief Enable or disable colored output (requires
+/// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param enabled True to enable colors, false to disable
 void ulog_color_config(bool enabled);
 
-/// @brief Enable or disable custom prefix (requires ULOG_FEATURE_PREFIX)
+/// @brief Enable or disable custom prefix (requires
+/// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param enabled True to enable prefix, false to disable
 void ulog_prefix_config(bool enabled);
 
 /// @brief Enable or disable source location in logs (requires
-/// ULOG_FEATURE_SOURCE_LOCATION)
+/// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param enabled True to show file:line, false to hide
 void ulog_source_location_config(bool enabled);
 
-/// @brief Enable or disable timestamps in logs (requires ULOG_FEATURE_TIME)
+/// @brief Enable or disable timestamps in logs (requires
+/// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param enabled True to show timestamps, false to hide
 void ulog_time_config(bool enabled);
 
-/// @brief Configure level string format (requires ULOG_FEATURE_LEVELS_SHORT)
+/// @brief Configure level string format (requires ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param use_short_levels True to use short level strings (T/D/I/W/E/F), false
 ///                         for long (TRACE/DEBUG/...)
 void ulog_level_config(bool use_short_levels);
 
-/// @brief Enable or disable topic support (requires ULOG_FEATURE_TOPICS)
+/// @brief Enable or disable topic support (requires
+/// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param enabled True to enable topics, false to disable
 void ulog_topic_config(bool enabled);
 
@@ -212,6 +225,7 @@ void ulog_topic_config(bool enabled);
 ============================================================================ */
 
 /// @brief Callback function type for generating custom log prefixes
+/// (requires: ULOG_BUILD_PREFIX_SIZE>0 or ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param ev Log event containing level, file, line, etc.
 /// @param prefix Buffer to write the prefix string to
 /// @param prefix_size Size of the prefix buffer
@@ -219,7 +233,7 @@ typedef void (*ulog_prefix_fn)(ulog_event *ev, char *prefix,
                                size_t prefix_size);
 
 /// @brief Sets the custom prefix generation function (requires
-///        ULOG_FEATURE_PREFIX)
+///        ULOG_BUILD_PREFIX_SIZE>0 or ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param function Callback function to generate prefix, or NULL to disable
 void ulog_prefix_set_fn(ulog_prefix_fn function);
 
@@ -251,7 +265,8 @@ ulog_status ulog_output_level_set(ulog_output output, ulog_level level);
 /// @return ULOG_STATUS_OK on success, ULOG_STATUS_BAD_ARGUMENT if invalid level
 ulog_status ulog_output_level_set_all(ulog_level level);
 
-/// @brief Adds a custom output callback (requires ULOG_FEATURE_EXTRA_OUTPUTS)
+/// @brief Adds a custom output callback (requires ULOG_BUILD_EXTRA_OUTPUTS>0
+/// or ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param callback Function to handle log events
 /// @param arg User argument passed to the callback function
 /// @param level Minimum log level for this output
@@ -259,7 +274,8 @@ ulog_status ulog_output_level_set_all(ulog_level level);
 ulog_output ulog_output_add(ulog_output_callback_fn callback, void *arg,
                             ulog_level level);
 
-/// @brief Adds a file output (requires ULOG_FEATURE_EXTRA_OUTPUTS)
+/// @brief Adds a file output (requires ULOG_BUILD_EXTRA_OUTPUTS>0 or
+/// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param file File pointer to write logs to (must remain valid)
 /// @param level Minimum log level for this file output
 /// @return Output handle on success, ULOG_OUTPUT_INVALID on error
@@ -270,32 +286,32 @@ ulog_output ulog_output_add_file(FILE *file, ulog_level level);
 ============================================================================ */
 
 // clang-format off
-/// @brief Log a TRACE level message with topic
+/// @brief Log a TRACE level message with topic (requires ULOG_BUILD_TOPICS!=0 or ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param TOPIC_NAME Topic name string
 /// @param ... Format string and arguments (printf-style)
 #define ulog_topic_trace(TOPIC_NAME, ...) ulog_log(ULOG_LEVEL_TRACE, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
 
-/// @brief Log a DEBUG level message with topic
+/// @brief Log a DEBUG level message with topic (requires ULOG_BUILD_TOPICS!=0 or ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param TOPIC_NAME Topic name string
 /// @param ... Format string and arguments (printf-style)
 #define ulog_topic_debug(TOPIC_NAME, ...) ulog_log(ULOG_LEVEL_DEBUG, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
 
-/// @brief Log an INFO level message with topic
+/// @brief Log an INFO level message with topic (requires ULOG_BUILD_TOPICS!=0 or ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param TOPIC_NAME Topic name string
 /// @param ... Format string and arguments (printf-style)
 #define ulog_topic_info(TOPIC_NAME, ...)  ulog_log(ULOG_LEVEL_INFO, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
 
-/// @brief Log a WARN level message with topic
+/// @brief Log a WARN level message with topic (requires ULOG_BUILD_TOPICS!=0 or ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param TOPIC_NAME Topic name string
 /// @param ... Format string and arguments (printf-style)
 #define ulog_topic_warn(TOPIC_NAME, ...)  ulog_log(ULOG_LEVEL_WARN, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
 
-/// @brief Log an ERROR level message with topic
+/// @brief Log an ERROR level message with topic (requires ULOG_BUILD_TOPICS!=0 or ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param TOPIC_NAME Topic name string
 /// @param ... Format string and arguments (printf-style)
 #define ulog_topic_error(TOPIC_NAME, ...) ulog_log(ULOG_LEVEL_ERROR, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
 
-/// @brief Log a FATAL level message with topic
+/// @brief Log a FATAL level message with topic (requires ULOG_BUILD_TOPICS!=0 or ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param TOPIC_NAME Topic name string
 /// @param ... Format string and arguments (printf-style)
 #define ulog_topic_fatal(TOPIC_NAME, ...) ulog_log(ULOG_LEVEL_FATAL, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
@@ -320,38 +336,45 @@ ulog_output ulog_output_add_file(FILE *file, ulog_level level);
 #define logt_fatal(...) ulog_topic_fatal(__VA_ARGS__)
 // clang-format on
 
-/// @brief Adds a topic (requires ULOG_FEATURE_TOPICS)
+/// @brief Adds a topic  (requires ULOG_BUILD_TOPICS!=0 or
+/// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param topic_name Topic name string (empty or NULL names are invalid)
 /// @param enable Whether to enable the topic immediately
 /// @return Topic ID on success, ULOG_TOPIC_ID_INVALID on failure
 ulog_topic_id ulog_topic_add(const char *topic_name, bool enable);
 
-/// @brief Sets the minimum log level for a topic (requires ULOG_FEATURE_TOPICS)
+/// @brief Sets the minimum log level for a topic  (requires
+/// ULOG_BUILD_TOPICS!=0 or ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param topic_name Topic name string (empty or NULL names are invalid)
 /// @param level Minimum log level for this topic
 /// @return ULOG_STATUS_OK on success, ULOG_STATUS_ERROR if topic not found
 ulog_status ulog_topic_level_set(const char *topic_name, ulog_level level);
 
-/// @brief Gets the ID of a topic by name (requires ULOG_FEATURE_TOPICS)
+/// @brief Gets the ID of a topic by name  (requires ULOG_BUILD_TOPICS!=0 or
+/// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param topic_name Topic name string (empty or NULL names are invalid)
 /// @return Topic ID on success, ULOG_TOPIC_ID_INVALID if not found
 ulog_topic_id ulog_topic_get_id(const char *topic_name);
 
-/// @brief Enables a topic for logging (requires ULOG_FEATURE_TOPICS)
+/// @brief Enables a topic for logging  (requires ULOG_BUILD_TOPICS!=0 or
+/// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param topic_name Topic name string (empty or NULL names are invalid)
 /// @return ULOG_STATUS_OK on success, ULOG_STATUS_ERROR if topic not found
 ulog_status ulog_topic_enable(const char *topic_name);
 
-/// @brief Disables a topic from logging (requires ULOG_FEATURE_TOPICS)
+/// @brief Disables a topic from logging  (requires ULOG_BUILD_TOPICS!=0 or
+/// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param topic_name Topic name string (empty or NULL names are invalid)
 /// @return ULOG_STATUS_OK on success, ULOG_STATUS_ERROR if topic not found
 ulog_status ulog_topic_disable(const char *topic_name);
 
-/// @brief Enables all existing topics (requires ULOG_FEATURE_TOPICS)
+/// @brief Enables all existing topics  (requires ULOG_BUILD_TOPICS!=0 or
+/// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @return ULOG_STATUS_OK on success, ULOG_STATUS_ERROR on failure
 ulog_status ulog_topic_enable_all(void);
 
-/// @brief Disables all existing topics (requires ULOG_FEATURE_TOPICS)
+/// @brief Disables all existing topics  (requires ULOG_BUILD_TOPICS!=0 or
+/// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @return ULOG_STATUS_OK on success, ULOG_STATUS_ERROR on failure
 ulog_status ulog_topic_disable_all(void);
 

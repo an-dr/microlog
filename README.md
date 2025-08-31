@@ -70,7 +70,7 @@ find_package(microlog 1.2.3 REQUIRED)
 add_executable(example_package example.cpp)
 target_link_libraries(example_package PRIVATE microlog::microlog)
 
-add_compile_definitions(ULOG_NO_COLOR) # configuration
+add_compile_definitions(ULOG_BUILD_COLOR=1) # configuration
 ```
 
 **Option 3 - Meson Package**:
@@ -80,7 +80,7 @@ add_compile_definitions(ULOG_NO_COLOR) # configuration
 - Add to your dependencies:
 
 ```meson
-add_global_arguments('-DULOG_NO_COLOR', language: ['cpp', 'c']) # configuration
+add_global_arguments('-DULOG_BUILD_COLOR=1', language: ['cpp', 'c']) # configuration
 
 exe = executable(
     meson.project_name(),
@@ -103,7 +103,7 @@ CPMAddPackage("gh:an-dr/microlog@6.4.5")
 target_link_libraries(${PROJECT_NAME} PUBLIC microlog)
 target_compile_definitions( microlog
         INTERFACE
-        ULOG_NO_COLOR) # configuration
+        ULOG_BUILD_COLOR=1) # configuration
 ```
 
 ### Use
