@@ -100,7 +100,7 @@ TEST_CASE_FIXTURE(TestFixture, "Topics: Cannot create duplicate") {
 }
 
 TEST_CASE_FIXTURE(TestFixture,
-                  "Topics: Cannot create more than ULOG_TOPICS_NUM topics") {
+                  "Topics: Cannot create more than ULOG_BUILD_TOPICS_NUM topics") {
     int res;
 
     res = ulog_topic_add("testtopic_3", true);

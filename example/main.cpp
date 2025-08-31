@@ -3,11 +3,12 @@
 
 void update_prefix(ulog_event *ev, char *prefix, size_t prefix_size) {
     static int count = 0;
-    snprintf(prefix, prefix_size, ", %d ms ", count++);
+    snprintf(prefix, prefix_size, ".%03d ms ", count++);
 }
 
-void custom_callback(ulog_event *ev, void *arg) {
-    printf("%s", (const char *)arg);
+void user_output(ulog_event *ev, void *arg) {
+    static int count = 0;
+    printf("[%s:%d] ", (const char *)arg, count++);
     static char buffer[128];
     ulog_event_to_cstr(ev, buffer, sizeof(buffer));
     printf("%s\n", buffer);
@@ -21,20 +22,13 @@ int main(int argc, char *argv[]) {
 
     /* Extra Outputs =============================== */
 
-#if ULOG_FEATURE_EXTRA_OUTPUTS
-
     FILE *fp = fopen("example.log", "w");
     ulog_output_add_file(fp, ULOG_LEVEL_INFO);
-    ulog_output_add(custom_callback,
-                           (void *)"     - Custom Callback: ", ULOG_LEVEL_INFO);
-
-#endif  // ULOG_FEATURE_EXTRA_OUTPUTS
+    ulog_output_add(user_output,
+                    (void *)"User Output", ULOG_LEVEL_INFO);
 
     /* Prefix ==================================== */
-
-#if ULOG_FEATURE_PREFIX
     ulog_prefix_set_fn(update_prefix);
-#endif  // ULOG_FEATURE_PREFIX
 
     /* Core Logging ===================================== */
     log_trace("Trace message %d", 1);
@@ -47,32 +41,27 @@ int main(int argc, char *argv[]) {
     /* Topics =========================================== */
     printf("\n");
 
-#if ULOG_FEATURE_TOPICS
-
     ulog_topic_add("Bluetooth", true);
-    ulog_topic_add("Audio", false);
     ulog_topic_add("Serial", false);
-
-    // logt_fatal("Serial", "Serial message 0");
-
+    ulog_topic_add("Audio", false);
+    ulog_topic_warn("Audio", "Audio message 1 (disabled)");
+    
     ulog_topic_enable_all();
-    logt_trace("Bluetooth", "Bluetooth message 1");
-    logt_debug("Indication", "Indication message 1");
-    logt_info("Audio", "Audio message");
-    logt_warn("Serial", "Serial message 1");
-    logt_error("Serial", "Serial message 2");
+    
+    ulog_topic_debug("Bluetooth", "Bluetooth message 1");
+    ulog_topic_info("Indication", "Indication message 1 (only in dynamic topics)");
+    ulog_topic_warn("Audio", "Audio message 2");
+    ulog_topic_error("Serial", "Serial message 1");
+    ulog_topic_fatal("Serial", "Serial message 2");
 
     ulog_topic_disable("Serial");
-    // logt_warn("Serial", "Serial message 3 (disabled)");
+    ulog_topic_warn("Serial", "Serial message 3 (disabled)");
 
     ulog_output_level_set_all(ULOG_LEVEL_INFO);
     ulog_topic_level_set("Bluetooth", ULOG_LEVEL_WARN);
-    ulog_topic_level_set("Indication", ULOG_LEVEL_DEBUG);
-    logt_info("Bluetooth", "Bluetooth message 2");
-    // logt_info("Indication",
-    //          "Indication message 2 (level lower than global level)");
-
-#endif  // ULOG_FEATURE_TOPICS
+    
+    ulog_topic_info("Bluetooth", "Bluetooth message 2 (lower than topic level)");
+    ulog_topic_debug("Serial", "Serial message 3 (lower than global level)");
 
     return 0;
 }

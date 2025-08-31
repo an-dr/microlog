@@ -5,7 +5,6 @@ find_package(microlog 7.0.0 REQUIRED)
 
 add_executable(example_package example.cpp)
 
-add_compile_definitions(ULOG_NO_COLOR)
 target_link_libraries(example_package PRIVATE microlog::microlog)
 
 install(TARGETS example_package)

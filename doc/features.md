@@ -17,10 +17,9 @@
     - [Timestamp - Dynamic Config](#timestamp---dynamic-config)
     - [Other Customization](#other-customization)
     - [Other Customization - Dynamic Config](#other-customization---dynamic-config)
-    - [Feature Flags](#feature-flags)
+    - [Build Options](#build-options)
 
 This document describes the features of the logging library.
-
 
 ## Core
 
@@ -47,18 +46,18 @@ Resulting in a line with the given format printed to stdout:
 INFO src/main.c:11: Hello world
 ```
 
-Part of features are configured compile-time. You can use defines in the compiler options, e.g. `-DULOG_NO_COLOR`.
+Part of features are configured compile-time. You can use defines in the compiler options, e.g. `-DULOG_BUILD_COLOR=1`.
 
 For CMake projects, you can use the `add_compile_definitions` function.
 
 ```cmake
-add_compile_definitions(ULOG_NO_COLOR)
+add_compile_definitions(ULOG_BUILD_COLOR=1)
 ```
 
 For Meson projects, you can use the `meson` command.
 
 ```meson
-add_global_arguments('-DULOG_NO_COLOR', language: 'c')
+add_global_arguments('-DULOG_BUILD_COLOR=1', language: 'c')
 ```
 
 Note: You might want to adjust the compiler argument  `-fmacro-prefix-map=OLD_PATH=NEW_PATH` to to get the right file paths, e.g. for meson:
@@ -69,17 +68,18 @@ add_global_arguments('-fmacro-prefix-map=../=',language: 'c')
 
 ## Dynamic Config
 
-Most of the library features are configured compile time to reduce the code size and complexity. However, if the code size is not a concern, you can enable Dynamic Config by defining `ULOG_FEATURE_DYNAMIC_CONFIG`. When the feature is enables all other features are enabled too in some default mode described in bellow. All Dynamic Config functions are prefixed with `ulog_configure_*`. The default configuration is following:
+Most of the library features are configured compile time to reduce the code size and complexity. However, if the code size is not a concern, you can enable Dynamic Config by defining `ULOG_BUILD_DYNAMIC_CONFIG=1`. When the feature is enables all other features are enabled too in some default mode described in bellow. All Dynamic Config functions named like: `ulog_FEATURE_config`. The default configuration is following:
 
-| Feature       | Default Configuration           |
-| ------------- | ------------------------------- |
-| Prefix        | ☑️ visible, ULOG_PREFIX_SIZE: 64 |
-| Extra Outputs | ULOG_EXTRA_OUTPUTS : 8          |
-| Time          | ☑️ visible                       |
-| File String   | ☑️ visible                       |
-| Color         | ☑️ visible                       |
-| Short Levels  | ⬜ disabled                      |
-| Topics        | ☑️ visible, dynamic allocation   |
+| Build Config                | Default Value                  |
+| --------------------------- | ------------------------------ |
+| ULOG_BUILD_PREFIX_SIZE      | 64                             |
+| ULOG_BUILD_EXTRA_OUTPUTS    | 8                              |
+| ULOG_BUILD_TIME             | 1                              |
+| ULOG_BUILD_SOURCE_LOCATION  | 1                              |
+| ULOG_BUILD_COLOR            | 1                              |
+| ULOG_BUILD_LEVEL_STYLE      | ULOG_LEVEL_STYLE_LONG + _SHORT |
+| ULOG_BUILD_TOPICS_NUM       | -1                             |
+| ULOG_BUILD_WARN_NOT_ENABLED | 0                              |
 
 ## Log Verbosity
 
@@ -123,14 +123,14 @@ ulog_lock_set_fn(lock_function, mutex);
 
 ## Log Topics
 
-The feature is controlled by `ULOG_TOPICS_NUM`. It allows to filter log messages by subsystems, e.g. "network", "storage", etc.
+The feature is controlled by `ULOG_BUILD_TOPICS_NUM`. It allows to filter log messages by subsystems, e.g. "network", "storage", etc.
 
 There are two mechanism of working with the topics:
 
 - `dynamic` - slower, but new topic will be added automatically
 - `static` - faster, but you need to define all topic using `ulog_topic_add`
 
-If you want to use dynamic topics, you need to define `ULOG_TOPICS_NUM` to be -1. Otherwise, you need to define the number of topics for static allocation.
+If you want to use dynamic topics, you need to define `ULOG_BUILD_TOPICS_NUM` to be -1. Otherwise, you need to define the number of topics for static allocation.
 
 Printing the log message with the topic is done by the set of function-like macros similar to log_xxx, but with the topic as the first argument:
 
@@ -204,7 +204,7 @@ Configuration functions:
 
 The feature is controlled by the following define:
 
-- `ULOG_EXTRA_OUTPUTS` - The maximum number of extra logging outputs that can be added. Each extra output requires some memory. When it is 0, the entire extra output code for `ulog_output_add_file()` and `ulog_output_add()` is not compiled. Default is 0.
+- `ULOG_BUILD_EXTRA_OUTPUTS` - The maximum number of extra logging outputs that can be added. Each extra output requires some memory. When it is 0, the entire extra output code for `ulog_output_add_file()` and `ulog_output_add()` is not compiled. Default is 0.
 
 ### File Output
 
@@ -244,13 +244,13 @@ ulog_output_add(arduino_callback, NULL, ULOG_LEVEL_INFO);
 
 ## Outputs - Dynamic Config
 
-In the Dynamic Config mode, `ULOG_EXTRA_OUTPUTS` is set to 8.
+In the Dynamic Config mode, `ULOG_BUILD_EXTRA_OUTPUTS` is set to 8.
 
 ## Custom Log Prefix
 
 Sets a prefix function. The function is called with the log level and should return a string that will be printed right before the log level. It can be used to add custom data to the log messages, e.g. millisecond time.
 
-Requires `ULOG_PREFIX_SIZE` to be more than 0.
+Requires `ULOG_BUILD_PREFIX_SIZE` to be more than 0.
 
 ```c
 void update_prefix(ulog_event *ev, char *prefix, size_t prefix_size) {
@@ -271,7 +271,7 @@ The output will be:
 
 ## Custom Log Prefix - Dynamic Config
 
-If Dynamic Config enabled, `ULOG_FEATURE_PREFIX_CFG_SIZE` is set to 64.
+If Dynamic Config enabled, `ULOG_BUILD_PREFIX_SIZE` is set to 64.
 
 Functions to configure the prefix:
 
@@ -279,7 +279,7 @@ Functions to configure the prefix:
 
 ## Timestamp
 
-The feature is controlled by `ULOG_HAVE_TIME`. You platform must support time.h.
+The feature is controlled by `ULOG_BUILD_TIME=<0/1>`. You platform must support time.h.
 
 The time to the file output will be written with the date, while time to the console will be written with the time only.
 
@@ -303,9 +303,9 @@ Functions to configure the timestamp:
 
 The following defines can be used to customize the library's output:
 
-- `ULOG_NO_COLOR` - Do not use ANSI color escape codes when printing to stdout.
-- `ULOG_HIDE_SOURCE_LOCATION` - Hide the file name and line number.
-- `ULOG_SHORT_LEVEL_STRINGS` - Use short level strings, e.g. "T" for "TRACE", "I" for "INFO".
+- `ULOG_BUILD_COLOR=<0/1>` - Use ANSI color escape codes when printing to stdout.
+- `ULOG_BUILD_SOURCE_LOCATION=<0/1>` - Hide or show the file name and line number.
+- `ULOG_BUILD_LEVEL_STYLE=<ULOG_LEVEL_STYLE_LONG/ULOG_LEVEL_STYLE_SHORT>` - Use short level strings, e.g. "T" for "TRACE", "I" for "INFO".
 
 ## Other Customization - Dynamic Config
 
@@ -316,17 +316,18 @@ Configuration functions:
 - `void ulog_configure_short_level_strings(bool enabled)` - will enable or disable short level strings, e.g. "T" for "TRACE", "I" for "INFO".
 - `void ulog_time_config(bool enabled)` - will enable or disable time in the log output.
 
-## Feature Flags
+## Build Options
 
 All feature states can be read using the following public macros. The macros are defined based on the compilation options described above, please do not modify them directly!
 
-| Compilation Options         | Flag (true/false)              | Default |
-| --------------------------- | ------------------------------ | ------- |
-| `ULOG_PREFIX_SIZE`          | `ULOG_FEATURE_PREFIX`          | ❌ false |
-| `ULOG_EXTRA_OUTPUTS`        | `ULOG_FEATURE_EXTRA_OUTPUTS`   | ❌ false |
-| `ULOG_HAVE_TIME`            | `ULOG_FEATURE_TIME`            | ❌ false |
-| `ULOG_HIDE_SOURCE_LOCATION` | `ULOG_FEATURE_SOURCE_LOCATION` | ✅ true  |
-| `ULOG_NO_COLOR`             | `ULOG_FEATURE_COLOR`           | ✅ true  |
-| `ULOG_DYNAMIC_CONFIG`       | `ULOG_FEATURE_DYNAMIC_CONFIG`  | ❌ false |
-| `ULOG_SHORT_LEVEL_STRINGS`  | `ULOG_FEATURE_LEVELS_SHORT`    | ❌ false |
-| `ULOG_TOPICS_NUM`           | `ULOG_FEATURE_TOPICS`          | ❌ false |
+| Build Option                | Default               | Dependent Macro(s)         | Purpose                  |
+| --------------------------- | --------------------- | -------------------------- | ------------------------ |
+| ULOG_BUILD_COLOR            | 0                     | ULOG_HAS_COLOR             | Compile color code paths |
+| ULOG_BUILD_PREFIX_SIZE      | 0                     | ULOG_HAS_PREFIX            | Prefix buffer logic      |
+| ULOG_BUILD_EXTRA_OUTPUTS    | 0                     | ULOG_HAS_EXTRA_OUTPUTS     | Extra output backends    |
+| ULOG_BUILD_SOURCE_LOCATION  | 1                     | ULOG_HAS_SOURCE_LOCATION   | File\:line output        |
+| ULOG_BUILD_LEVEL_STYLE      | ULOG_LEVEL_STYLE_LONG | ULOG_LEVEL_HAS_SHORT/_LONG | Level style              |
+| ULOG_BUILD_TIME             | 0                     | ULOG_HAS_TIME              | Timestamp support        |
+| ULOG_BUILD_TOPICS_NUM       | 0                     | ULOG_HAS_TOPICS            | Topic filtering logic    |
+| ULOG_BUILD_DYNAMIC_CONFIG   | 0                     | ULOG_HAS_DYNAMIC_CONFIG    | Runtime toggles          |
+| ULOG_BUILD_WARN_NOT_ENABLED | 1                     | ULOG_HAS_WARN_NOT_ENABLED  | Warning stubs            |

@@ -18,13 +18,13 @@ The example is shown below:
 /* ============================================================================
    Feature: Prefix (`prefix_*`, depends on: Print)
 ============================================================================ */
-#if ULOG_FEATURE_PREFIX
+#if ULOG_HAS_PREFIX
 
 // Private
 // ================
 typedef struct {
     ulog_prefix_fn function;
-    char prefix[ULOG_FEATURE_PREFIX_SIZE];
+    char prefix[ULOG_BUILD_PREFIX_SIZE];
 } prefix_data_t;
  
 static prefix_data_t prefix_data = {
@@ -34,7 +34,7 @@ static prefix_data_t prefix_data = {
 
 static void prefix_print(print_target *tgt, ulog_event *ev) {
     if (prefix_data.function != NULL) {
-        prefix_data.function(ev, prefix_data.prefix, ULOG_FEATURE_PREFIX_SIZE);
+        prefix_data.function(ev, prefix_data.prefix, ULOG_BUILD_PREFIX_SIZE);
         print_to_target(tgt, "%s", prefix_data.prefix);
     }
 }
@@ -48,9 +48,9 @@ void ulog_prefix_set_fn(ulog_prefix_fn function) {
 
 // Disabled Private
 // ================
-#else  // ULOG_FEATURE_PREFIX
+#else  // ULOG_HAS_PREFIX
 #define prefix_print(tgt, ev) (void)(tgt), (void)(ev)
-#endif  // ULOG_FEATURE_PREFIX
+#endif  // ULOG_HAS_PREFIX
 
 
 For code style and naming conventions, see [style.md](style.md).

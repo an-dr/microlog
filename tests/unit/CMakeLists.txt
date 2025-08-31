@@ -11,27 +11,27 @@ add_compile_options(--coverage -fprofile-arcs -ftest-coverage -g -O0 -Wall)
 add_link_options(--coverage -fprofile-arcs -ftest-coverage)
 
 # Microlog configs
-set(ULOG_CONFIG_BASE "-DULOG_EXTRA_OUTPUTS=8" 
-                     "-DULOG_HAVE_TIME"
-                     "-DULOG_PREFIX_SIZE=16"
+set(ULOG_CONFIG_BASE "-DULOG_BUILD_EXTRA_OUTPUTS=8" 
+                     "-DULOG_BUILD_TIME=1"
+                     "-DULOG_BUILD_PREFIX_SIZE=16"
                      )
 
-set(ULOG_CONFIG_NO_PREFIX "-DULOG_EXTRA_OUTPUTS=8" 
-                                "-DULOG_HAVE_TIME"
-                                "-DULOG_TOPICS_NUM=8"
+set(ULOG_CONFIG_NO_PREFIX "-DULOG_BUILD_EXTRA_OUTPUTS=8" 
+                                "-DULOG_BUILD_TIME=1"
+                                "-DULOG_BUILD_TOPICS_NUM=8"
                                 )
 
 set(ULOG_CONFIG_TEST_CORE ${ULOG_CONFIG_BASE}
                           "-DULOG_DEFAULT_LOG_LEVEL=ULOG_LEVEL_DEBUG"
-                          "-DULOG_TOPICS_NUM=-1"
+                          "-DULOG_BUILD_TOPICS_NUM=-1"
                           )
 
 set(ULOG_CONFIG_TEST_TOPICS ${ULOG_CONFIG_BASE}
                             "-DULOG_DEFAULT_LOG_LEVEL=ULOG_LEVEL_WARN"
-                            "-DULOG_TOPICS_NUM=2"
+                            "-DULOG_BUILD_TOPICS_NUM=2"
                             )
 
-set(ULOG_CONFIG_TEST_DYNAMIC_CONFIG "-DULOG_DYNAMIC_CONFIG")
+set(ULOG_CONFIG_TEST_DYNAMIC_CONFIG "-DULOG_BUILD_DYNAMIC_CONFIG=1")
 
 # --- Core Tests ---
 add_executable(test_core)
