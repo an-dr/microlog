@@ -21,24 +21,23 @@
 #include <string.h>
 
 // clang-format off
-/* ============================================================================================================================================
-   Configuration options
-===============================================================================================================================================
+/* ====================================================================================================================
+   Build Options
+=======================================================================================================================
 
-| Config knob                   | Derived macro(s)           | Expansion                                            | Purpose                  |
-| ----------------------------- | -------------------------- | ---------------------------------------------------- | ------------------------ |
-| `ULOG_BUILD_COLOR`            | `ULOG_HAS_COLOR`           | `(ULOG_CFG_COLOR)`                                   | Compile color code paths |
-| `ULOG_BUILD_PREFIX_SIZE`      | `ULOG_HAS_PREFIX`          | `(ULOG_CFG_PREFIX_SIZE > 0)`                         | Prefix buffer logic      |
-| `ULOG_BUILD_EXTRA_OUTPUTS`    | `ULOG_HAS_EXTRA_OUTPUTS`   | `(ULOG_CFG_EXTRA_OUTPUTS)`                           | Extra output backends    |
-| `ULOG_BUILD_SOURCE_LOCATION`  | `ULOG_HAS_SOURCE_LOCATION` | `(ULOG_CFG_SOURCE_LOCATION)`                         | File\:line output        |
-| `ULOG_BUILD_LEVEL_STR_STYLE`  | `ULOG_LEVEL_STR_IS_SHORT`  | `(ULOG_CFG_LEVEL_STR_STYLE == ULOG_LEVEL_STR_SHORT)` | Short level tags         |
-|                               | `ULOG_LEVEL_STR_IS_LONG`   | `(!ULOG_LEVEL_STR_IS_SHORT)`                         | Long level tags          |
-| `ULOG_BUILD_TIME`             | `ULOG_HAS_TIME`            | `(ULOG_CFG_TIME)`                                    | Timestamp support        |
-| `ULOG_BUILD_TOPICS_NUM`       | `ULOG_HAS_TOPICS`          | `(ULOG_CFG_TOPICS_NUM > 0)`                          | Topic filtering logic    |
-| `ULOG_BUILD_DYNAMIC_CONFIG`   | `ULOG_HAS_DYNAMIC_CONFIG`  | `(ULOG_CFG_DYNAMIC_CONFIG)`                          | Runtime toggles          |
-| `ULOG_BUILD_WARN_NOT_ENABLED` | `ULOG_HAS_WARN_NOT_ENABLED`| `(ULOG_CFG_WARN_NOT_ENABLED)`                        | Warning stubs            |
+| Build Option                | Default               | Dependent Macro(s)            | Purpose                  |
+| --------------------------- | --------------------- | ----------------------------- | ------------------------ |
+| ULOG_BUILD_COLOR            | 0                     | ULOG_HAS_COLOR                | Compile color code paths |
+| ULOG_BUILD_PREFIX_SIZE      | 0                     | ULOG_HAS_PREFIX               | Prefix buffer logic      |
+| ULOG_BUILD_EXTRA_OUTPUTS    | 0                     | ULOG_HAS_EXTRA_OUTPUTS        | Extra output backends    |
+| ULOG_BUILD_SOURCE_LOCATION  | 1                     | ULOG_HAS_SOURCE_LOCATION      | File\:line output        |
+| ULOG_BUILD_LEVEL_STYLE      | ULOG_LEVEL_STYLE_LONG | ULOG_LEVEL_HAS_SHORT/_LONG    | Level style              |
+| ULOG_BUILD_TIME             | 0                     | ULOG_HAS_TIME                 | Timestamp support        |
+| ULOG_BUILD_TOPICS_NUM       | 0                     | ULOG_HAS_TOPICS               | Topic filtering logic    |
+| ULOG_BUILD_DYNAMIC_CONFIG   | 0                     | ULOG_HAS_DYNAMIC_CONFIG       | Runtime toggles          |
+| ULOG_BUILD_WARN_NOT_ENABLED | 1                     | ULOG_HAS_WARN_NOT_ENABLED     | Warning stubs            |
 
-============================================================================================================================================= */
+===================================================================================================================== */
 
 #ifndef ULOG_BUILD_COLOR
     #define ULOG_HAS_COLOR 0
@@ -61,12 +60,12 @@
 #endif
 
 
-#ifndef ULOG_BUILD_LEVEL_STR_STYLE
+#ifndef ULOG_BUILD_LEVEL_STYLE
     #define ULOG_HAS_LEVEL_LONG  1
     #define ULOG_HAS_LEVEL_SHORT 0
 #else
-    #define ULOG_HAS_LEVEL_LONG  (ULOG_BUILD_LEVEL_STR_STYLE == ULOG_LEVEL_STYLE_LONG)
-    #define ULOG_HAS_LEVEL_SHORT (ULOG_BUILD_LEVEL_STR_STYLE == ULOG_LEVEL_STYLE_SHORT)
+    #define ULOG_HAS_LEVEL_LONG  (ULOG_BUILD_LEVEL_STYLE == ULOG_LEVEL_STYLE_LONG)
+    #define ULOG_HAS_LEVEL_SHORT (ULOG_BUILD_LEVEL_STYLE == ULOG_LEVEL_STYLE_SHORT)
 #endif
 
 

@@ -5,7 +5,7 @@ add_project_arguments('-fmacro-prefix-map=../=', language: ['cpp', 'c'])
 
 # Build options. Uncomment to enable.
 # add_global_arguments('-DULOG_BUILD_SOURCE_LOCATION=1', language : ['cpp', 'c'])
-# add_global_arguments('-DULOG_BUILD_LEVEL_STR_STYLE=ULOG_LEVEL_STYLE_SHORT', language : ['cpp', 'c'])
+# add_global_arguments('-DULOG_BUILD_LEVEL_STYLE=ULOG_LEVEL_STYLE_SHORT', language : ['cpp', 'c'])
 # add_global_arguments('-DULOG_BUILD_DYNAMIC_CONFIG=1', language: ['cpp', 'c'])
 add_global_arguments('-DULOG_BUILD_COLOR=1', language : ['cpp', 'c'])
 add_global_arguments('-DULOG_BUILD_TIME=1', language: ['cpp', 'c'])

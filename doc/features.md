@@ -17,7 +17,7 @@
     - [Timestamp - Dynamic Config](#timestamp---dynamic-config)
     - [Other Customization](#other-customization)
     - [Other Customization - Dynamic Config](#other-customization---dynamic-config)
-    - [Feature Flags](#feature-flags)
+    - [Build Options](#build-options)
 
 This document describes the features of the logging library.
 
@@ -70,15 +70,15 @@ add_global_arguments('-fmacro-prefix-map=../=',language: 'c')
 
 Most of the library features are configured compile time to reduce the code size and complexity. However, if the code size is not a concern, you can enable Dynamic Config by defining `ULOG_FEATURE_DYNAMIC_CONFIG`. When the feature is enables all other features are enabled too in some default mode described in bellow. All Dynamic Config functions are prefixed with `ulog_configure_*`. The default configuration is following:
 
-| Feature       | Default Configuration              |
-| ------------- | ---------------------------------- |
+| Feature       | Default Configuration                 |
+| ------------- | ------------------------------------- |
 | Prefix        | ☑️ visible, ULOG_BUILD_PREFIX_SIZE: 64 |
-| Extra Outputs | ULOG_BUILD_EXTRA_OUTPUTS : 8             |
-| Time          | ☑️ visible                       |
-| File String   | ☑️ visible                       |
-| Color         | ☑️ visible                       |
-| Short Levels  | ⬜ disabled                        |
-| Topics        | ☑️ visible, dynamic allocation   |
+| Extra Outputs | ULOG_BUILD_EXTRA_OUTPUTS : 8          |
+| Time          | ☑️ visible                             |
+| File String   | ☑️ visible                             |
+| Color         | ☑️ visible                             |
+| Short Levels  | ⬜ disabled                            |
+| Topics        | ☑️ visible, dynamic allocation         |
 
 ## Log Verbosity
 
@@ -304,7 +304,7 @@ The following defines can be used to customize the library's output:
 
 - `ULOG_BUILD_COLOR=<0/1>` - Use ANSI color escape codes when printing to stdout.
 - `ULOG_BUILD_SOURCE_LOCATION=<0/1>` - Hide or show the file name and line number.
-- `ULOG_BUILD_LEVEL_STR_STYLE=<ULOG_LEVEL_STYLE_LONG/ULOG_LEVEL_STYLE_SHORT>` - Use short level strings, e.g. "T" for "TRACE", "I" for "INFO".
+- `ULOG_BUILD_LEVEL_STYLE=<ULOG_LEVEL_STYLE_LONG/ULOG_LEVEL_STYLE_SHORT>` - Use short level strings, e.g. "T" for "TRACE", "I" for "INFO".
 
 ## Other Customization - Dynamic Config
 
@@ -315,18 +315,18 @@ Configuration functions:
 - `void ulog_configure_short_level_strings(bool enabled)` - will enable or disable short level strings, e.g. "T" for "TRACE", "I" for "INFO".
 - `void ulog_time_config(bool enabled)` - will enable or disable time in the log output.
 
-## Feature Flags
+## Build Options
 
 All feature states can be read using the following public macros. The macros are defined based on the compilation options described above, please do not modify them directly!
 
-| Knob                        | Type | Default                 | Allowed values                                                        | Description                                                                                                                                                  |
-| --------------------------- | ---- | ----------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `ULOG_CFG_COLOR`            | bool | `1`                     | `0` = disabled<br /> `1` = enabled                                    | Compile color output support                                                                                                                                 |
-| `ULOG_CFG_PREFIX_SIZE`      | uint | `0`                     | `0` = disabled<br /> `>0` = buffer size                               | Reserve space for log prefix                                                                                                                                 |
-| `ULOG_CFG_EXTRA_OUTPUTS`    | bool | `0`                     | `0` / `1`                                                             | Enable additional output backends                                                                                                                            |
-| `ULOG_CFG_SOURCE_LOCATION`  | bool | `1`                     | `0` / `1`                                                             | Include file\:line in output                                                                                                                                 |
-| `ULOG_CFG_LEVEL_STR_STYLE`  | enum | `ULOG_LEVEL_STYLE_LONG` | `ULOG_LEVEL_STYLE_LONG` (0),<br />`ULOG_LEVEL_STYLE_SHORT` (1)        | Selects long or short level strings                                                                                                                          |
-| `ULOG_CFG_TIME`             | bool | `0`                     | `0` / `1`                                                             | Include timestamp in log messages                                                                                                                            |
-| `ULOG_CFG_TOPICS_NUM`       | uint | `0`                     | `0` = disabled,<br />`>0` = number of topics,<br />`-1` = unlimited   | Enable topic filtering with given number of slots.<br />If the value is -1 - the topics will be dynamically allocated. Also, it is a bit slower.             |
-| `ULOG_CFG_DYNAMIC_CONFIG`   | bool | `0`                     | `0` / `1`                                                             | Allow runtime enable/disable of features.<br />It configures all other build arguments to specific values. <br />See the Dynamic Config section for details. |
-| `ULOG_CFG_WARN_NOT_ENABLED` | bool | `1`                     | `0` / `1`                                                             | Compile warning stubs for disabled features                                                                                                                  |
+| Build Option                | Default               | Dependent Macro(s)            | Purpose                  |
+| --------------------------- | --------------------- | ----------------------------- | ------------------------ |
+| ULOG_BUILD_COLOR            | 0                     | ULOG_HAS_COLOR                | Compile color code paths |
+| ULOG_BUILD_PREFIX_SIZE      | 0                     | ULOG_HAS_PREFIX               | Prefix buffer logic      |
+| ULOG_BUILD_EXTRA_OUTPUTS    | 0                     | ULOG_HAS_EXTRA_OUTPUTS        | Extra output backends    |
+| ULOG_BUILD_SOURCE_LOCATION  | 1                     | ULOG_HAS_SOURCE_LOCATION      | File\:line output        |
+| ULOG_BUILD_LEVEL_STYLE      | ULOG_LEVEL_STYLE_LONG | ULOG_LEVEL_HAS_SHORT/_LONG    | Level style              |
+| ULOG_BUILD_TIME             | 0                     | ULOG_HAS_TIME                 | Timestamp support        |
+| ULOG_BUILD_TOPICS_NUM       | 0                     | ULOG_HAS_TOPICS               | Topic filtering logic    |
+| ULOG_BUILD_DYNAMIC_CONFIG   | 0                     | ULOG_HAS_DYNAMIC_CONFIG       | Runtime toggles          |
+| ULOG_BUILD_WARN_NOT_ENABLED | 1                     | ULOG_HAS_WARN_NOT_ENABLED     | Warning stubs            |
