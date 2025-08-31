@@ -62,8 +62,8 @@
 
 
 #ifndef ULOG_BUILD_LEVEL_STR_STYLE
-    #define ULOG_HAS_LEVEL_LONG  0
-    #define ULOG_HAS_LEVEL_SHORT 1
+    #define ULOG_HAS_LEVEL_LONG  1
+    #define ULOG_HAS_LEVEL_SHORT 0
 #else
     #define ULOG_HAS_LEVEL_LONG  (ULOG_BUILD_LEVEL_STR_STYLE == ULOG_LEVEL_STYLE_LONG)
     #define ULOG_HAS_LEVEL_SHORT (ULOG_BUILD_LEVEL_STR_STYLE == ULOG_LEVEL_STYLE_SHORT)
@@ -233,7 +233,7 @@ struct ulog_event {
 ulog_status ulog_event_get_message(ulog_event *ev, char *buffer,
                                    size_t buffer_size) {
     if (buffer == NULL || buffer_size == 0) {
-        return ULOG_STATUS_INVALID_ARG;
+        return ULOG_STATUS_INVALID_ARGUMENT;
     }
 
     print_target tgt = {.type       = LOG_TARGET_BUFFER,
@@ -686,12 +686,11 @@ typedef enum { LEVEL_STYLE_DEFAULT = 0x0, LEVEL_STYLE_NUM } level_cfg_style;
 static const char *level_strings[LEVEL_STYLE_NUM][ULOG_LEVEL_TOTAL] = {
 
 #if ULOG_HAS_LEVEL_LONG
-    {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"}
+    {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"},
 #endif
 
 #if ULOG_HAS_LEVEL_SHORT
-    ,
-    {"T", "D", "I", "W", "E", "F"}
+    {"T", "D", "I", "W", "E", "F"},
 #endif
 
 };
@@ -802,10 +801,10 @@ static void output_stdout_callback(ulog_event *ev, void *arg) {
 
 ulog_status ulog_output_level_set(ulog_output output, ulog_level level) {
     if (level < LEVEL_MIN_VALUE || level >= ULOG_LEVEL_TOTAL) {
-        return ULOG_STATUS_BAD_ARGUMENT;
+        return ULOG_STATUS_INVALID_ARGUMENT;
     }
     if (output < ULOG_OUTPUT_STDOUT || output >= OUTPUT_TOTAL_NUM) {
-        return ULOG_STATUS_BAD_ARGUMENT;
+        return ULOG_STATUS_INVALID_ARGUMENT;
     }
 
     if (output_data.outputs[output].callback == NULL) {
@@ -817,7 +816,7 @@ ulog_status ulog_output_level_set(ulog_output output, ulog_level level) {
 
 ulog_status ulog_output_level_set_all(ulog_level level) {
     if (level < LEVEL_MIN_VALUE || level >= ULOG_LEVEL_TOTAL) {
-        return ULOG_STATUS_BAD_ARGUMENT;
+        return ULOG_STATUS_INVALID_ARGUMENT;
     }
 
     for (int i = 0; i < OUTPUT_TOTAL_NUM; i++) {
@@ -1538,7 +1537,7 @@ void log_fill_event(ulog_event *ev, const char *message, ulog_level level,
 
 ulog_status ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size) {
     if (out == NULL || out_size == 0) {
-        return ULOG_STATUS_BAD_ARGUMENT;
+        return ULOG_STATUS_INVALID_ARGUMENT;
     }
     print_target tgt = {.type       = LOG_TARGET_BUFFER,
                         .dsc.buffer = {out, 0, out_size}};

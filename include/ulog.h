@@ -34,10 +34,9 @@ extern "C" {
 
 /// @brief Status codes for ulog operations
 typedef enum {
-    ULOG_STATUS_OK           = 0,   ///< Operation completed successfully
-    ULOG_STATUS_ERROR        = -1,  ///< General error occurred
-    ULOG_STATUS_BAD_ARGUMENT = -2,  ///< Invalid argument provided
-    ULOG_STATUS_INVALID_ARG  = -3,  ///< Invalid argument provided (alias)
+    ULOG_STATUS_OK                  = 0,   ///< Operation completed successfully
+    ULOG_STATUS_ERROR               = -1,  ///< General error occurred
+    ULOG_STATUS_INVALID_ARGUMENT    = -2,  ///< Invalid argument provided
 } ulog_status;
 
 /// @brief Log levels in ascending order of severity
@@ -123,7 +122,7 @@ typedef struct ulog_event ulog_event;
 /// @param ev Event to convert
 /// @param out Output buffer to write to
 /// @param out_size Size of the output buffer
-/// @return ULOG_STATUS_OK on success, ULOG_STATUS_BAD_ARGUMENT if invalid
+/// @return ULOG_STATUS_OK on success, ULOG_STATUS_INVALID_ARGUMENT if invalid
 /// parameters
 ulog_status ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size);
 
@@ -131,7 +130,7 @@ ulog_status ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size);
 /// @param ev Event to extract message from
 /// @param buffer Output buffer to write the message to
 /// @param buffer_size Size of the output buffer
-/// @return ULOG_STATUS_OK on success, ULOG_STATUS_INVALID_ARG if invalid
+/// @return ULOG_STATUS_OK on success, ULOG_STATUS_INVALID_ARGUMENT if invalid
 /// parameters
 ulog_status ulog_event_get_message(ulog_event *ev, char *buffer,
                                    size_t buffer_size);
@@ -256,13 +255,14 @@ typedef void (*ulog_output_callback_fn)(ulog_event *ev, void *arg);
 /// @brief Sets the minimum log level for a specific output
 /// @param output Output handle to configure
 /// @param level Minimum log level for this output
-/// @return ULOG_STATUS_OK on success, ULOG_STATUS_BAD_ARGUMENT if invalid
+/// @return ULOG_STATUS_OK on success, ULOG_STATUS_INVALID_ARGUMENT if invalid
 ///         parameters, ULOG_STATUS_ERROR if output not found
 ulog_status ulog_output_level_set(ulog_output output, ulog_level level);
 
 /// @brief Sets the minimum log level for all outputs
 /// @param level Minimum log level for all outputs
-/// @return ULOG_STATUS_OK on success, ULOG_STATUS_BAD_ARGUMENT if invalid level
+/// @return ULOG_STATUS_OK on success, ULOG_STATUS_INVALID_ARGUMENT if invalid
+/// level
 ulog_status ulog_output_level_set_all(ulog_level level);
 
 /// @brief Adds a custom output callback (requires ULOG_BUILD_EXTRA_OUTPUTS>0
