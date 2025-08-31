@@ -18,29 +18,32 @@
 
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* ============================================================================
-   Core Functionality
+   Core: Status
 ============================================================================ */
-// clang-format off
 
 /// @brief Status codes for ulog operations
 typedef enum {
-    ULOG_STATUS_OK                  = 0,   ///< Operation completed successfully
-    ULOG_STATUS_ERROR               = -1,  ///< General error occurred
-    ULOG_STATUS_INVALID_ARGUMENT    = -2,  ///< Invalid argument provided
+    ULOG_STATUS_OK               = 0,   ///< Operation completed successfully
+    ULOG_STATUS_ERROR            = -1,  ///< General error occurred
+    ULOG_STATUS_INVALID_ARGUMENT = -2,  ///< Invalid argument provided
 } ulog_status;
 
+/* ============================================================================
+   Core: Level
+============================================================================ */
+
 /// @brief Log levels in ascending order of severity
-typedef enum  ulog_level_enum { 
+typedef enum ulog_level_enum {
     ULOG_LEVEL_TRACE = 0,  ///< Most verbose level for tracing execution
     ULOG_LEVEL_DEBUG,      ///< Debug information for developers
     ULOG_LEVEL_INFO,       ///< General information messages
@@ -48,10 +51,10 @@ typedef enum  ulog_level_enum {
     ULOG_LEVEL_ERROR,      ///< Error messages for failures
     ULOG_LEVEL_FATAL,      ///< Critical errors that may terminate program
 } ulog_level;
-#define ULOG_LEVEL_TOTAL  6  ///< Total number of log levels
+#define ULOG_LEVEL_TOTAL 6  ///< Total number of log levels
 
-#define ULOG_LEVEL_STYLE_LONG  0   /// Use long level strings (TRACE, DEBUG, etc.)
-#define ULOG_LEVEL_STYLE_SHORT 1   /// Use short level strings (T, D, I, W, E, F)
+#define ULOG_LEVEL_STYLE_LONG 0  /// Use long level strings (TRACE, DEBUG, etc.)
+#define ULOG_LEVEL_STYLE_SHORT 1  /// Use short level strings (T, D, I, W, E, F)
 
 typedef enum {
     ULOG_LEVEL_CFG_STYLE_DEFAULT = 0x0,
@@ -59,17 +62,25 @@ typedef enum {
     ULOG_LEVEL_CFG_STYLE_NUM
 } ulog_level_cfg_style;
 
+/// @brief Returns the string representation of the log level
+/// @param level Log level to convert
+/// @return String representation of the level, or "?" for invalid levels
+const char *ulog_level_to_string(ulog_level level);
+
+/* ============================================================================
+   Feature: Topics (1/2)
+============================================================================ */
+
 /// @brief Topic identifier type
 typedef int ulog_topic_id;
 enum {
     ULOG_TOPIC_ID_INVALID = -1,  ///< Invalid topic ID
 };
 
-
-/// @brief Returns the string representation of the log level
-/// @param level Log level to convert
-/// @return String representation of the level, or "?" for invalid levels
-const char *ulog_level_to_string(ulog_level level);
+/* ============================================================================
+   Core: Log
+============================================================================ */
+// clang-format off
 
 /// @brief Log a TRACE level message
 /// @param ... Format string and arguments (printf-style)
@@ -114,6 +125,20 @@ const char *ulog_level_to_string(ulog_level level);
 #define log_fatal(...) ulog_fatal(__VA_ARGS__)
 
 // clang-format on
+
+/// @brief Main logging function - typically called through macros
+/// @param level Log level for this message
+/// @param file Source file name (usually __FILE__)
+/// @param line Source line number (usually __LINE__)
+/// @param topic Topic name string, or NULL for no topic
+/// @param message Printf-style format string
+/// @param ... Format arguments for the message
+void ulog_log(ulog_level level, const char *file, int line, const char *topic,
+              const char *message, ...);
+
+/* ============================================================================
+   Core: Events
+============================================================================ */
 
 /// @brief Event structure (opaque)
 typedef struct ulog_event ulog_event;
@@ -161,18 +186,8 @@ ulog_level ulog_event_get_level(ulog_event *ev);
 ///         or time feature disabled
 struct tm *ulog_event_get_time(ulog_event *ev);
 
-/// @brief Main logging function - typically called through macros
-/// @param level Log level for this message
-/// @param file Source file name (usually __FILE__)
-/// @param line Source line number (usually __LINE__)
-/// @param topic Topic name string, or NULL for no topic
-/// @param message Printf-style format string
-/// @param ... Format arguments for the message
-void ulog_log(ulog_level level, const char *file, int line, const char *topic,
-              const char *message, ...);
-
 /* ============================================================================
-   Core Functionality: Thread Safety
+   Core: Thread Safety
 ============================================================================ */
 
 /// @brief Lock function type for thread synchronization
@@ -282,7 +297,7 @@ ulog_output ulog_output_add(ulog_output_callback_fn callback, void *arg,
 ulog_output ulog_output_add_file(FILE *file, ulog_level level);
 
 /* ============================================================================
-   Feature: Log Topics
+   Feature: Topics (2/2)
 ============================================================================ */
 
 // clang-format off
