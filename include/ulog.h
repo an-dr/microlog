@@ -156,7 +156,7 @@ const char *ulog_event_get_file(ulog_event *ev);
 /// @return Log level, or ULOG_LEVEL_TRACE if event is NULL
 ulog_level ulog_event_get_level(ulog_event *ev);
 
-/// @brief Get the timestamp from an event (requires ULOG_FEATURE_TIME)
+/// @brief Get the timestamp from an event (requires ULOG_BUILD_TIME=1)
 /// @param ev Event to get timestamp from
 /// @return Pointer to struct tm with time information, or NULL if event is NULL
 ///         or time feature disabled

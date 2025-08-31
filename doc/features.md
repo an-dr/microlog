@@ -270,7 +270,7 @@ The output will be:
 
 ## Custom Log Prefix - Dynamic Config
 
-If Dynamic Config enabled, `ULOG_FEATURE_PREFIX_CFG_SIZE` is set to 64.
+If Dynamic Config enabled, `ULOG_BUILD_PREFIX_SIZE` is set to 64.
 
 Functions to configure the prefix:
 
