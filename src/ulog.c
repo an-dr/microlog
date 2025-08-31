@@ -79,7 +79,7 @@
 #ifndef ULOG_BUILD_SOURCE_LOCATION
     #define ULOG_HAS_SOURCE_LOCATION 1
 #else
-    #define ULOG_HAS_SOURCE_LOCATION 0
+    #define ULOG_HAS_SOURCE_LOCATION (ULOG_BUILD_SOURCE_LOCATION == 1)
 #endif
 
 
@@ -927,7 +927,7 @@ void ulog_topic_config(bool enabled) {
 
 void ulog_topic_config(bool enabled) {
     (void)(enabled);
-    _log_not_enabled("ULOG_HAS_DYNAMIC_CONFIG");
+    _log_not_enabled("ULOG_BUILD_DYNAMIC_CONFIG");
 }
 
 #endif  // ULOG_HAS_WARN_NOT_ENABLED

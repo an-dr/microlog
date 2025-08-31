@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
     ulog_output_level_set_all(ULOG_LEVEL_INFO);
     ulog_topic_level_set("Bluetooth", ULOG_LEVEL_WARN);
     
-    ulog_topic_info("Bluetooth", "Bluetooth message 2 (lover than topic level)");
+    ulog_topic_info("Bluetooth", "Bluetooth message 2 (lower than topic level)");
     ulog_topic_debug("Serial", "Serial message 3 (lower than global level)");
 
     return 0;
