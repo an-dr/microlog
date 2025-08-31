@@ -97,34 +97,38 @@
 #endif
 
 
-#ifdef ULOG_BUILD_DYNAMIC_CONFIG
-#define ULOG_FEATURE_DYNAMIC_CONFIG 1
-// Undef all ULOG_FEATURE_* macros to avoid conflicts
-#undef ULOG_HAS_COLOR
-#undef ULOG_HAS_PREFIX
-#undef ULOG_HAS_EXTRA_OUTPUTS
-#undef ULOG_BUILD_EXTRA_OUTPUTS
-#undef ULOG_HAS_SOURCE_LOCATION
-#undef ULOG_HAS_LEVEL_SHORT
-#undef ULOG_HAS_LEVEL_LONG
-#undef ULOG_HAS_TIME
-#undef ULOG_HAS_TOPICS
-
-// Configure features based on runtime config
-#define ULOG_HAS_COLOR 1
-#define ULOG_HAS_PREFIX 1
-#define ULOG_BUILD_PREFIX_SIZE 64
-#define ULOG_HAS_EXTRA_OUTPUTS 1
-#define ULOG_BUILD_EXTRA_OUTPUTS 8
-#define ULOG_HAS_SOURCE_LOCATION 1
-#define ULOG_HAS_LEVEL_LONG 1
-#define ULOG_HAS_LEVEL_SHORT 1
-#define ULOG_HAS_TIME 1
-#define ULOG_HAS_TOPICS 1
-#define ULOG_BUILD_TOPICS_NUM -1
-
+#ifndef ULOG_BUILD_DYNAMIC_CONFIG
+    #define ULOG_HAS_DYNAMIC_CONFIG 0
 #else
-#define ULOG_FEATURE_DYNAMIC_CONFIG false
+    #define ULOG_HAS_DYNAMIC_CONFIG 1
+    
+    // Undef macros to avoid conflicts
+    #undef ULOG_BUILD_EXTRA_OUTPUTS
+    #undef ULOG_BUILD_PREFIX_SIZE
+    #undef ULOG_BUILD_TOPICS_NUM
+    #undef ULOG_HAS_COLOR
+    #undef ULOG_HAS_EXTRA_OUTPUTS
+    #undef ULOG_HAS_LEVEL_LONG
+    #undef ULOG_HAS_LEVEL_SHORT
+    #undef ULOG_HAS_PREFIX
+    #undef ULOG_HAS_SOURCE_LOCATION
+    #undef ULOG_HAS_TIME
+    #undef ULOG_HAS_TOPICS
+    #undef ULOG_HAS_WARN_NOT_ENABLED
+    
+    // Configure features based on runtime config
+    #define ULOG_BUILD_EXTRA_OUTPUTS 8
+    #define ULOG_BUILD_PREFIX_SIZE 64
+    #define ULOG_BUILD_TOPICS_NUM -1
+    #define ULOG_HAS_COLOR 1
+    #define ULOG_HAS_EXTRA_OUTPUTS 1
+    #define ULOG_HAS_LEVEL_LONG 1
+    #define ULOG_HAS_LEVEL_SHORT 1
+    #define ULOG_HAS_PREFIX 1
+    #define ULOG_HAS_SOURCE_LOCATION 1
+    #define ULOG_HAS_TIME 1
+    #define ULOG_HAS_TOPICS 1
+    #define ULOG_HAS_WARN_NOT_ENABLED 0
 #endif
 
 // clang-format on
@@ -322,7 +326,7 @@ void ulog_lock_set_fn(ulog_lock_fn function, void *lock_arg) {
 /* ============================================================================
    Feature: Color Config (`color_cfg_*`, depends on: - )
 ============================================================================ */
-#if ULOG_FEATURE_DYNAMIC_CONFIG
+#if ULOG_HAS_DYNAMIC_CONFIG
 
 typedef struct {
     bool enabled;
@@ -348,7 +352,7 @@ void ulog_color_config(bool enabled) {
     lock_unlock();  // Unlock the configuration
 }
 
-#else  // ULOG_FEATURE_DYNAMIC_CONFIG
+#else  // ULOG_HAS_DYNAMIC_CONFIG
 
 // Disabled Public
 // ================
@@ -365,7 +369,7 @@ void ulog_color_config(bool enabled) {
 
 #define color_cfg_is_enabled() (ULOG_HAS_COLOR)
 
-#endif  // ULOG_FEATURE_DYNAMIC_CONFIG
+#endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
    Feature: Color (`color_*`, depends on: Print, Color Config)
@@ -411,7 +415,7 @@ static void color_print_end(print_target *tgt) {
 /* ============================================================================
    Feature: Prefix Config (`prefix_cfg_*`, depends on: - )
 ============================================================================ */
-#if ULOG_FEATURE_DYNAMIC_CONFIG
+#if ULOG_HAS_DYNAMIC_CONFIG
 
 typedef struct {
     bool enabled;
@@ -437,7 +441,7 @@ void ulog_prefix_config(bool enabled) {
     lock_unlock();  // Unlock the configuration
 }
 
-#else  // ULOG_FEATURE_DYNAMIC_CONFIG
+#else  // ULOG_HAS_DYNAMIC_CONFIG
 
 // Disabled Public
 // ================
@@ -453,7 +457,7 @@ void ulog_prefix_config(bool enabled) {
 // ================
 
 #define prefix_cfg_is_enabled() (ULOG_HAS_PREFIX)
-#endif  // ULOG_FEATURE_DYNAMIC_CONFIG
+#endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
    Feature: Prefix (`prefix_*`, depends on: Print, Prefix Config)
@@ -508,7 +512,7 @@ void ulog_prefix_set_fn(ulog_prefix_fn function) {
 /* ============================================================================
    Feature: Time Config (`time_cfg_*`, depends on: - )
 ============================================================================ */
-#if ULOG_FEATURE_DYNAMIC_CONFIG
+#if ULOG_HAS_DYNAMIC_CONFIG
 
 typedef struct {
     bool enabled;
@@ -534,7 +538,7 @@ void ulog_time_config(bool enabled) {
     lock_unlock();  // Unlock the configuration
 }
 
-#else  // ULOG_FEATURE_DYNAMIC_CONFIG
+#else  // ULOG_HAS_DYNAMIC_CONFIG
 
 // Disabled Public
 // ================
@@ -550,7 +554,7 @@ void ulog_time_config(bool enabled) {
 // ================
 
 #define time_cfg_is_enabled() (ULOG_HAS_TIME)
-#endif  // ULOG_FEATURE_DYNAMIC_CONFIG
+#endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
    Feature: Time (`time_*`, depends on: Time, Print)
@@ -619,7 +623,7 @@ static void time_print_full(print_target *tgt, ulog_event *ev,
 /* ============================================================================
    Feature: Level Config (`level_cfg_*`, depends on: - )
 ============================================================================ */
-#if ULOG_FEATURE_DYNAMIC_CONFIG
+#if ULOG_HAS_DYNAMIC_CONFIG
 
 typedef enum {
     LEVEL_STYLE_DEFAULT = 0x0,
@@ -652,7 +656,7 @@ void ulog_level_config(bool use_short_levels) {
     lock_unlock();  // Unlock the configuration
 }
 
-#else  // ULOG_FEATURE_DYNAMIC_CONFIG
+#else  // ULOG_HAS_DYNAMIC_CONFIG
 
 // Disabled Public
 // ================
@@ -671,7 +675,7 @@ void ulog_level_config(bool use_short_levels) {
 
 typedef enum { LEVEL_STYLE_DEFAULT = 0x0, LEVEL_STYLE_NUM } level_cfg_style;
 #define level_cfg_is_short() (ULOG_HAS_LEVEL_SHORT)
-#endif  // ULOG_FEATURE_DYNAMIC_CONFIG
+#endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
    Core Feature: Level  (`level_*`, depends on: Levels Config, Print)
@@ -888,7 +892,7 @@ ulog_output ulog_output_add_file(FILE *file, ulog_level level) {
 /* ============================================================================
    Feature: Topics Config (`topic_cfg_*`, depends on: - )
 ============================================================================ */
-#if ULOG_FEATURE_DYNAMIC_CONFIG
+#if ULOG_HAS_DYNAMIC_CONFIG
 
 typedef struct {
     bool enabled;
@@ -914,7 +918,7 @@ void ulog_topic_config(bool enabled) {
     lock_unlock();  // Unlock the configuration
 }
 
-#else  // ULOG_FEATURE_DYNAMIC_CONFIG
+#else  // ULOG_HAS_DYNAMIC_CONFIG
 
 // Disabled Public
 // ================
@@ -923,7 +927,7 @@ void ulog_topic_config(bool enabled) {
 
 void ulog_topic_config(bool enabled) {
     (void)(enabled);
-    _log_not_enabled("ULOG_HAS_TOPICS and ULOG_FEATURE_DYNAMIC_CONFIG");
+    _log_not_enabled("ULOG_HAS_DYNAMIC_CONFIG");
 }
 
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
@@ -932,7 +936,7 @@ void ulog_topic_config(bool enabled) {
 // ================
 
 #define topic_cfg_is_enabled() (ULOG_HAS_TOPICS)
-#endif  // ULOG_FEATURE_DYNAMIC_CONFIG
+#endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
    Feature: Topics (`topic_*`, depends on: Topics Config, Print, Levels)
@@ -1391,7 +1395,7 @@ static ulog_topic_id topic_add(const char *topic_name, bool enable) {
 /* ============================================================================
    Feature: Source Location Config (`src_loc_cfg_*`, depends on: - )
 ============================================================================ */
-#if ULOG_FEATURE_DYNAMIC_CONFIG
+#if ULOG_HAS_DYNAMIC_CONFIG
 
 typedef struct {
     bool enabled;
@@ -1417,7 +1421,7 @@ void ulog_source_location_config(bool enabled) {
     lock_unlock();  // Unlock the configuration
 }
 
-#else  // ULOG_FEATURE_DYNAMIC_CONFIG
+#else  // ULOG_HAS_DYNAMIC_CONFIG
 
 // Disabled Public
 // ================
@@ -1435,7 +1439,7 @@ void ulog_source_location_config(bool enabled) {
 // ================
 
 #define src_loc_cfg_is_enabled() (ULOG_HAS_SOURCE_LOCATION)
-#endif  // ULOG_FEATURE_DYNAMIC_CONFIG
+#endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
    Core Feature: Log (`log_*`, depends on: Print, Level, Outputs,
