@@ -126,7 +126,7 @@ Output:
 INFO  src/main.cpp:4: Hello, World
 ```
 
-[See the example for more features in action.](example/src/main.cpp)
+[See the example for more features in action.](example/main.cpp)
 
 The full and detailed feature description is [here](doc/features.md).
 

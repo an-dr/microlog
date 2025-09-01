@@ -1498,8 +1498,8 @@ static void log_print_event(print_target *tgt, ulog_event *ev, bool full_time,
               : time_print_short(tgt, ev, append_space);
 
     prefix_print(tgt, ev);
-    topic_print(tgt, ev);
     level_print(tgt, ev);
+    topic_print(tgt, ev);
     log_print_message(tgt, ev);
 
     color ? color_print_end(tgt) : (void)0;
