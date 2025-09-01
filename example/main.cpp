@@ -5,24 +5,24 @@ It demonstrates basic logging functionality using C interface.
 The output to console looks like this (with possible variations based on 
 build configuration):
 
-    23:55:59.000 ms TRACE main.cpp:37: Trace message 1
-    23:55:59.001 ms DEBUG main.cpp:41: Debug message 0x2
-    23:55:59.002 ms INFO  main.cpp:42: Info message 3.000000
-    [User Output:0] 23:55:59.004 ms INFO  main.cpp:42: Info message 3.000000
-    23:55:59.005 ms WARN  main.cpp:43: Warning message 4
-    [User Output:1] 23:55:59.007 ms WARN  main.cpp:43: Warning message 4
-    23:55:59.008 ms ERROR main.cpp:44: Error message Five
-    [User Output:2] 23:55:59.010 ms ERROR main.cpp:44: Error message Five
-    23:55:59.011 ms FATAL main.cpp:45: Fatal message 6
-    [User Output:3] 23:55:59.013 ms FATAL main.cpp:45: Fatal message 6
+    18:35:28.000 ms TRACE main.cpp:71: Trace message 1
+    18:35:28.001 ms DEBUG main.cpp:75: Debug message 0x2
+    18:35:28.002 ms INFO  main.cpp:76: Info message 3.000000
+    [User Output:0] 18:35:28.004 ms INFO  main.cpp:76: Info message 3.000000
+    18:35:28.005 ms WARN  main.cpp:77: Warning message 4
+    [User Output:1] 18:35:28.007 ms WARN  main.cpp:77: Warning message 4
+    18:35:28.008 ms ERROR main.cpp:78: Error message Five
+    [User Output:2] 18:35:28.010 ms ERROR main.cpp:78: Error message Five
+    18:35:28.011 ms FATAL main.cpp:79: Fatal message 6
+    [User Output:3] 18:35:28.013 ms FATAL main.cpp:79: Fatal message 6
 
-    23:55:59.014 ms [Bluetooth] DEBUG main.cpp:57: Bluetooth message 1
-    23:55:59.015 ms [Audio] WARN  main.cpp:62: Audio message 2
-    [User Output:4] 23:55:59.017 ms [Audio] WARN  main.cpp:62: Audio message 2
-    23:55:59.018 ms [Serial] ERROR main.cpp:63: Serial message 1
-    [User Output:5] 23:55:59.020 ms [Serial] ERROR main.cpp:63: Serial message 1
-    23:55:59.021 ms [Serial] FATAL main.cpp:64: Serial message 2
-    [User Output:6] 23:55:59.023 ms [Serial] FATAL main.cpp:64: Serial message 2
+    18:35:28.014 ms DEBUG [Bluetooth] main.cpp:91: Bluetooth message 1
+    18:35:28.015 ms WARN  [Audio] main.cpp:96: Audio message 2
+    [User Output:4] 18:35:28.017 ms WARN  [Audio] main.cpp:96: Audio message 2
+    18:35:28.018 ms ERROR [Serial] main.cpp:97: Serial message 1
+    [User Output:5] 18:35:28.020 ms ERROR [Serial] main.cpp:97: Serial message 1
+    18:35:28.021 ms FATAL [Serial] main.cpp:98: Serial message 2
+    [User Output:6] 18:35:28.023 ms FATAL [Serial] main.cpp:98: Serial message 2
 */
 
 #include <cstdio>
