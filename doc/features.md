@@ -26,6 +26,17 @@ This document describes the features of the logging library.
 The library provides printf-like macros for logging:
 
 ```c
+ulog_trace(const char *fmt, ...);
+ulog_debug(const char *fmt, ...);
+ulog_info(const char *fmt, ...);
+ulog_warn(const char *fmt, ...);
+ulog_error(const char *fmt, ...);
+ulog_fatal(const char *fmt, ...);
+```
+
+The macros support aliases:
+
+```c
 log_trace(const char *fmt, ...);
 log_debug(const char *fmt, ...);
 log_info(const char *fmt, ...);
@@ -37,13 +48,13 @@ log_fatal(const char *fmt, ...);
 Each function takes a printf format string followed by additional arguments:
 
 ```c
-log_info("Hello %s", "world")
+ulog_info("Info message %f", 3.0)
 ```
 
 Resulting in a line with the given format printed to stdout:
 
-```
-INFO src/main.c:11: Hello world
+```txt
+INFO  src/main.c:66: Info message 3.000000
 ```
 
 Part of features are configured compile-time. You can use defines in the compiler options, e.g. `-DULOG_BUILD_COLOR=1`.
@@ -70,16 +81,16 @@ add_global_arguments('-fmacro-prefix-map=../=',language: 'c')
 
 Most of the library features are configured compile time to reduce the code size and complexity. However, if the code size is not a concern, you can enable Dynamic Config by defining `ULOG_BUILD_DYNAMIC_CONFIG=1`. When the feature is enables all other features are enabled too in some default mode described in bellow. All Dynamic Config functions named like: `ulog_FEATURE_config`. The default configuration is following:
 
-| Build Config                | Default Value                  |
-| --------------------------- | ------------------------------ |
-| ULOG_BUILD_PREFIX_SIZE      | 64                             |
-| ULOG_BUILD_EXTRA_OUTPUTS    | 8                              |
-| ULOG_BUILD_TIME             | 1                              |
-| ULOG_BUILD_SOURCE_LOCATION  | 1                              |
-| ULOG_BUILD_COLOR            | 1                              |
-| ULOG_BUILD_LEVEL_STYLE      | ULOG_LEVEL_STYLE_LONG + _SHORT |
-| ULOG_BUILD_TOPICS_NUM       | -1                             |
-| ULOG_BUILD_WARN_NOT_ENABLED | 0                              |
+| Build Config                | Default Value                   |
+| --------------------------- | ------------------------------- |
+| ULOG_BUILD_PREFIX_SIZE      | 64                              |
+| ULOG_BUILD_EXTRA_OUTPUTS    | 8                               |
+| ULOG_BUILD_TIME             | 1                               |
+| ULOG_BUILD_SOURCE_LOCATION  | 1                               |
+| ULOG_BUILD_COLOR            | 1                               |
+| ULOG_BUILD_LEVEL_STYLE      | ULOG_LEVEL_STYLE_LONG + \_SHORT |
+| ULOG_BUILD_TOPICS_NUM       | -1                              |
+| ULOG_BUILD_WARN_NOT_ENABLED | 0                               |
 
 ## Log Verbosity
 
