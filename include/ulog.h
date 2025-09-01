@@ -53,14 +53,8 @@ typedef enum ulog_level_enum {
 } ulog_level;
 #define ULOG_LEVEL_TOTAL 6  ///< Total number of log levels
 
-#define ULOG_LEVEL_STYLE_LONG 0  /// Use long level strings (TRACE, DEBUG, etc.)
-#define ULOG_LEVEL_STYLE_SHORT 1  /// Use short level strings (T, D, I, W, E, F)
-
-typedef enum {
-    ULOG_LEVEL_CFG_STYLE_DEFAULT = 0x0,
-    ULOG_LEVEL_CFG_STYLE_SHORT,
-    ULOG_LEVEL_CFG_STYLE_NUM
-} ulog_level_cfg_style;
+#define ULOG_LEVEL_STYLE_LONG (0)   /// Use long level strings (DEBUG, etc.)
+#define ULOG_LEVEL_STYLE_SHORT (1)  /// Use short level strings (D, I, etc.)
 
 /// @brief Returns the string representation of the log level
 /// @param level Log level to convert
@@ -224,10 +218,17 @@ void ulog_source_location_config(bool enabled);
 /// @param enabled True to show timestamps, false to hide
 void ulog_time_config(bool enabled);
 
+/// @brief Log level configuration styles
+typedef enum {
+    ULOG_LEVEL_CONFIG_STYLE_DEFAULT =
+        ULOG_LEVEL_STYLE_LONG,  /// Use default style (e.g. `DEBUG`)
+    ULOG_LEVEL_CONFIG_STYLE_SHORT =
+        ULOG_LEVEL_STYLE_SHORT,  /// Use short style (e.g. `D`)
+} ulog_level_config_style;
+
 /// @brief Configure level string format (requires ULOG_BUILD_DYNAMIC_CONFIG=1)
-/// @param use_short_levels True to use short level strings (T/D/I/W/E/F), false
-///                         for long (TRACE/DEBUG/...)
-void ulog_level_config(bool use_short_levels);
+/// @param style Level configuration style
+void ulog_level_config(ulog_level_config_style style);
 
 /// @brief Enable or disable topic support (requires
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
