@@ -20,15 +20,15 @@ A simple customizable logging library. Features:
 
 In the default configuration it looks like this:
 
-<img src="doc/README/demo0.png" width="600">
+<img src="doc/README/demo0.png" width="800">
 
 ...but in can be very minimalistic
 
-<img src="doc/README/demo1.png" width="600">
+<img src="doc/README/demo1.png" width="800">
 
 ... or feature-rich:
 
-<img src="doc/README/demo2.png" width="600">
+<img src="doc/README/demo2.png" width="800">
 
 
 The project is based on several core principles:
