@@ -670,7 +670,7 @@ void ulog_level_config(ulog_level_config_style style) {
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
-   Core Feature: Level  (`level_*`, depends on: Levels Config, Print)
+   Core Feature: Levels  (`level_*`, depends on: Levels Config, Print)
 ============================================================================ */
 
 // Private
