@@ -43,7 +43,7 @@ This document describes the features of the logging library. There are optional 
 - **Level Style** - full or short severity level name
 - **Topics** - label based message filtering
 - **Dynamic Configuration** - run-time configuration of all features
-- **Non-Enabled Feature Warnings** - generate stubs for disabled features with warning message or just fail linking if the function is disabled.
+- **Warnings Stubs for Non-Enabled Features** - generate stubs for disabled features with warning message or just fail linking if the function is disabled.
 
 ## Core Features
 
