@@ -38,8 +38,12 @@ bool TimeTestFixture::callback_is_set = false;
 static void _get_time_bounds(time_t &before, time_t &after) {
     before = time(NULL);
     REQUIRE(before != (time_t)(-1));
-    log_info("Time test");
-    after = time(NULL);
+
+    // Ensure some time passes between before and after
+    do {
+        after = time(NULL);
+    } while (after == before);
+
     REQUIRE(after != (time_t)(-1));
 }
 
