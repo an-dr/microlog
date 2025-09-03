@@ -491,6 +491,9 @@ static void prefix_update(ulog_event *ev) {
 }
 
 static void prefix_print(print_target *tgt, ulog_event *ev) {
+    if (prefix_data.function == NULL || !prefix_config_is_enabled()) {
+        return;
+    }
     print_to_target(tgt, "%s", prefix_data.prefix);
 }
 
@@ -498,6 +501,9 @@ static void prefix_print(print_target *tgt, ulog_event *ev) {
 // ================
 
 void ulog_prefix_set_fn(ulog_prefix_fn function) {
+    if (function == NULL) {
+        return;  // Ignore NULL function
+    }
     prefix_data.function = function;
 }
 
@@ -780,6 +786,10 @@ static output_data_t output_data = {
     .outputs = {{output_stdout_callback, NULL, OUTPUT_STDOUT_DEFAULT_LEVEL}}};
 
 static void output_handle_single(ulog_event *ev, output_t *output) {
+    if (output->callback == NULL) {
+        return;  // Output has been removed, skip it
+    }
+    
     if (level_is_allowed(ev->level, output->level)) {
 
         // Create event copy to avoid va_list issues
@@ -875,6 +885,31 @@ ulog_output ulog_output_add_file(FILE *file, ulog_level level) {
     return ulog_output_add(output_file_callback, file, level);
 }
 
+/// @brief Remove an output from the logging system
+ulog_status ulog_output_remove(ulog_output output) {
+    if (output < 0 || output >= OUTPUT_TOTAL_NUM) {
+        return ULOG_STATUS_INVALID_ARGUMENT;
+    }
+    
+    if (output == ULOG_OUTPUT_STDOUT) {
+        return ULOG_STATUS_ERROR;  // Cannot remove stdout output
+    }
+    
+    lock_lock();
+    if (output_data.outputs[output].callback == NULL) {
+        lock_unlock();
+        return ULOG_STATUS_ERROR;  // Output not found or already removed
+    }
+    
+    // Mark output as removed by setting callback to NULL
+    output_data.outputs[output].callback = NULL;
+    output_data.outputs[output].arg = NULL;
+    output_data.outputs[output].level = ULOG_LEVEL_TRACE;
+    
+    lock_unlock();
+    return ULOG_STATUS_OK;
+}
+
 #else  // ULOG_HAS_EXTRA_OUTPUTS
 
 // Disabled Public
@@ -896,6 +931,12 @@ ulog_output ulog_output_add_file(FILE *file, ulog_level level) {
     (void)(level);
     warn_not_enabled("ULOG_BUILD_EXTRA_OUTPUTS");
     return ULOG_OUTPUT_INVALID;
+}
+
+ulog_status ulog_output_remove(ulog_output output) {
+    (void)(output);
+    warn_not_enabled("ULOG_BUILD_EXTRA_OUTPUTS");
+    return ULOG_STATUS_ERROR;
 }
 
 #endif  // ULOG_HAS_WARN_NOT_ENABLED

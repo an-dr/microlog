@@ -114,12 +114,17 @@ void _check_file_time(bool prefix = false) {
 
     FILE *fp = fopen(filename.c_str(), "w");
     REQUIRE(fp != nullptr);
-    ulog_output_add_file(fp, ULOG_LEVEL_INFO);
+    ulog_output file_output = ulog_output_add_file(fp, ULOG_LEVEL_INFO);
 
     time_t before, after;
     _get_time_bounds(before, after);
 
     fclose(fp);
+    
+    // Remove the file output to prevent use-after-free
+    if (file_output != ULOG_OUTPUT_INVALID) {
+        ulog_output_remove(file_output);
+    }
 
     // Check if the file was created
     fp = fopen(filename.c_str(), "r");

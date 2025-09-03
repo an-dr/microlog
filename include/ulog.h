@@ -297,6 +297,13 @@ ulog_output ulog_output_add(ulog_output_callback_fn callback, void *arg,
 /// @return Output handle on success, ULOG_OUTPUT_INVALID on error
 ulog_output ulog_output_add_file(FILE *file, ulog_level level);
 
+/// @brief Removes an output from the logging system (requires
+/// ULOG_BUILD_EXTRA_OUTPUTS>0 or ULOG_BUILD_DYNAMIC_CONFIG=1)
+/// @param output Output handle to remove
+/// @return ULOG_STATUS_OK on success, ULOG_STATUS_INVALID_ARGUMENT if invalid
+///         handle, ULOG_STATUS_ERROR if output not found
+ulog_status ulog_output_remove(ulog_output output);
+
 /* ============================================================================
    Feature: Topics (2/2)
 ============================================================================ */
