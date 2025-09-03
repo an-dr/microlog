@@ -483,11 +483,14 @@ static prefix_data_t prefix_data = {
     .prefix   = {0},
 };
 
-static void prefix_print(print_target *tgt, ulog_event *ev) {
+static void prefix_update(ulog_event *ev) {
     if (prefix_data.function == NULL || !prefix_config_is_enabled()) {
         return;
     }
     prefix_data.function(ev, prefix_data.prefix, ULOG_BUILD_PREFIX_SIZE);
+}
+
+static void prefix_print(print_target *tgt, ulog_event *ev) {
     print_to_target(tgt, "%s", prefix_data.prefix);
 }
 
@@ -514,6 +517,7 @@ void ulog_prefix_set_fn(ulog_prefix_fn function) {
 // ================
 
 #define prefix_print(tgt, ev) (void)(tgt), (void)(ev)
+#define prefix_update(ev) (void)(ev)
 #endif  // ULOG_HAS_PREFIX
 
 /* ============================================================================
@@ -1582,6 +1586,7 @@ void ulog_log(ulog_level level, const char *file, int line, const char *topic,
     log_fill_event(&ev, message, level, file, line, topic_id);
     va_start(ev.message_format_args, message);
 
+    prefix_update(&ev);
     output_handle_all(&ev);
 
     va_end(ev.message_format_args);
