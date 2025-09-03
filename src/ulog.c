@@ -22,7 +22,7 @@
 
 // clang-format off
 /* ====================================================================================================================
-   Build Options
+   Core Feature: Static Configuration
 =======================================================================================================================
 
 | Build Option                | Default               | Dependent Macro(s)            | Purpose                  |
@@ -158,7 +158,8 @@ static inline bool is_str_empty(const char *str) {
     log_warn("'%s' called with %s disabled", __func__, feature)
 
 /* ============================================================================
-   Core Feature: Print (`print_*`, depends on: - )
+   Core Feature: Print
+   (`print_*`, depends on: - )
 ============================================================================ */
 
 //  Private
@@ -175,22 +176,22 @@ typedef union {
     FILE *stream;
 } print_target_descriptor;
 
-typedef enum { LOG_TARGET_BUFFER, LOG_TARGET_STREAM } log_target_t;
+typedef enum { PRINT_TARGET_BUFFER, PRINT_TARGET_STREAM } print_target_type;
 
 typedef struct {
-    log_target_t type;
+    print_target_type type;
     print_target_descriptor dsc;
 } print_target;
 
 static void print_to_target_valist(print_target *tgt, const char *format,
                                    va_list args) {
-    if (tgt->type == LOG_TARGET_BUFFER) {
+    if (tgt->type == PRINT_TARGET_BUFFER) {
         char *buf   = tgt->dsc.buffer.data + tgt->dsc.buffer.curr_pos;
         size_t size = tgt->dsc.buffer.size - tgt->dsc.buffer.curr_pos;
         if (size > 0U) {
             tgt->dsc.buffer.curr_pos += vsnprintf(buf, size, format, args);
         }
-    } else if (tgt->type == LOG_TARGET_STREAM) {
+    } else if (tgt->type == PRINT_TARGET_STREAM) {
         FILE *stream = tgt->dsc.stream;
         vfprintf(stream, format, args);
     }
@@ -205,6 +206,7 @@ static void print_to_target(print_target *tgt, const char *format, ...) {
 
 /* ============================================================================
    Core Feature: Events
+   (`event_*`, depends on: Print)
 ============================================================================ */
 
 // Private
@@ -239,7 +241,7 @@ ulog_status ulog_event_get_message(ulog_event *ev, char *buffer,
         return ULOG_STATUS_INVALID_ARGUMENT;
     }
 
-    print_target tgt = {.type       = LOG_TARGET_BUFFER,
+    print_target tgt = {.type       = PRINT_TARGET_BUFFER,
                         .dsc.buffer = {buffer, 0, buffer_size}};
 
     log_print_message(&tgt, ev);
@@ -288,7 +290,8 @@ ulog_level ulog_event_get_level(ulog_event *ev) {
 }
 
 /* ============================================================================
-   Core Functionality: Lock (Depends on: - )
+   Core Functionality: Lock
+   (`lock_*`, depends on: - )
 ============================================================================ */
 
 // Private
@@ -324,7 +327,8 @@ void ulog_lock_set_fn(ulog_lock_fn function, void *lock_arg) {
     lock_data.args     = lock_arg;
 }
 /* ============================================================================
-   Feature: Color Config (`color_config_*`, depends on: - )
+   Optional Feature: Dynamic Configuration - Color
+   (`color_config_*`, depends on: - )
 ============================================================================ */
 #if ULOG_HAS_DYNAMIC_CONFIG
 
@@ -372,7 +376,8 @@ void ulog_color_config(bool enabled) {
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
-   Feature: Color (`color_*`, depends on: Print, Color Config)
+   Optional Feature: Color
+   (`color_*`, depends on: Print, Color Config)
 ============================================================================ */
 #if ULOG_HAS_COLOR
 
@@ -413,7 +418,8 @@ static void color_print_end(print_target *tgt) {
 #endif  // ULOG_HAS_COLOR
 
 /* ============================================================================
-   Feature: Prefix Config (`prefix_config_*`, depends on: - )
+   Optional Feature: Dynamic Configuration - Prefix
+   (`prefix_config_*`, depends on: - )
 ============================================================================ */
 #if ULOG_HAS_DYNAMIC_CONFIG
 
@@ -460,7 +466,8 @@ void ulog_prefix_config(bool enabled) {
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
-   Feature: Prefix (`prefix_*`, depends on: Print, Prefix Config)
+   Optional Feature: Prefix
+   (`prefix_*`, depends on: Print, Prefix Config)
 ============================================================================ */
 #if ULOG_HAS_PREFIX
 
@@ -510,7 +517,8 @@ void ulog_prefix_set_fn(ulog_prefix_fn function) {
 #endif  // ULOG_HAS_PREFIX
 
 /* ============================================================================
-   Feature: Time Config (`time_config_*`, depends on: - )
+   Optional Feature: Dynamic Configuration - Time
+   (`time_config_*`, depends on: - )
 ============================================================================ */
 #if ULOG_HAS_DYNAMIC_CONFIG
 
@@ -557,7 +565,8 @@ void ulog_time_config(bool enabled) {
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
-   Feature: Time (`time_*`, depends on: Time, Print)
+   Optional Feature: Time
+   (`time_*`, depends on: Time, Print)
 ============================================================================ */
 #if ULOG_HAS_TIME
 
@@ -621,7 +630,8 @@ static void time_print_full(print_target *tgt, ulog_event *ev,
 #endif  // ULOG_HAS_TIME
 
 /* ============================================================================
-   Feature: Level Config (`level_config_*`, depends on: - )
+   Optional Feature: Dynamic Configuration - Level
+   (`level_config_*`, depends on: - )
 ============================================================================ */
 #if ULOG_HAS_DYNAMIC_CONFIG
 
@@ -670,7 +680,8 @@ void ulog_level_config(ulog_level_config_style style) {
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
-   Core Feature: Levels  (`level_*`, depends on: Levels Config, Print)
+   Core Feature: Levels
+   (`level_*`, depends on: Levels Config, Print)
 ============================================================================ */
 
 // Private
@@ -731,7 +742,8 @@ const char *ulog_level_to_string(ulog_level level) {
 }
 
 /* ============================================================================
-   Core Feature: Outputs (`output_*`, depends on: Print, Log, Level)
+   Core Feature: Outputs
+   (`output_*`, depends on: Print, Log, Level)
 ============================================================================ */
 
 //  Private
@@ -791,7 +803,7 @@ static void output_handle_all(ulog_event *ev) {
 
 static void output_stdout_callback(ulog_event *ev, void *arg) {
     (void)(arg);  // Unused
-    print_target tgt = {.type = LOG_TARGET_STREAM, .dsc.stream = stdout};
+    print_target tgt = {.type = PRINT_TARGET_STREAM, .dsc.stream = stdout};
     log_print_event(&tgt, ev, false, true, true);
 }
 
@@ -825,14 +837,15 @@ ulog_status ulog_output_level_set_all(ulog_level level) {
 }
 
 /* ============================================================================
-   Feature: Extra Outputs (`output_*` depends on: Outputs)
+   Optional Feature: Extra Outputs
+   (`output_*` depends on: Outputs)
 ============================================================================ */
 #if ULOG_HAS_EXTRA_OUTPUTS
 
 //  Private
 // ================
 static void output_file_callback(ulog_event *ev, void *arg) {
-    print_target tgt = {.type = LOG_TARGET_STREAM, .dsc.stream = (FILE *)arg};
+    print_target tgt = {.type = PRINT_TARGET_STREAM, .dsc.stream = (FILE *)arg};
     log_print_event(&tgt, ev, true, false, true);
 }
 
@@ -886,7 +899,8 @@ ulog_output ulog_output_add_file(FILE *file, ulog_level level) {
 #endif  // ULOG_HAS_EXTRA_OUTPUTS
 
 /* ============================================================================
-   Feature: Topics Config (`topic_config_*`, depends on: - )
+   Optional Feature: Dynamic Configuration - Topics
+   (`topic_config_*`, depends on: - )
 ============================================================================ */
 #if ULOG_HAS_DYNAMIC_CONFIG
 
@@ -935,7 +949,8 @@ void ulog_topic_config(bool enabled) {
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
-   Feature: Topics (`topic_*`, depends on: Topics Config, Print, Levels)
+   Optional Feature: Topics
+   (`topic_*`, depends on: Topics Config, Print, Levels)
 ============================================================================ */
 
 #if ULOG_HAS_TOPICS
@@ -1200,7 +1215,8 @@ ulog_topic_id ulog_topic_add(const char *topic_name, bool enable) {
 #endif  // ULOG_HAS_TOPICS
 
 /* ============================================================================
-   Feature: Topics - Static Allocation (`topic_*`, depends on: Topics)
+   Optional Feature: Topics - Static Allocation
+   (`topic_*`, depends on: Topics)
 ============================================================================ */
 #if ULOG_HAS_TOPICS && TOPIC_DYNAMIC == false
 // Private
@@ -1272,7 +1288,8 @@ static ulog_topic_id topic_add(const char *topic_name, bool enable) {
 #endif  // ULOG_HAS_TOPICS && TOPIC_DYNAMIC == false
 
 /* ============================================================================
-   Feature: Topics - Dynamic Allocation (`topic_*`, depends on: Topics)
+   Optional Feature: Topics - Dynamic Allocation
+   (`topic_*`, depends on: Topics)
 ============================================================================ */
 
 #if ULOG_HAS_TOPICS && TOPIC_DYNAMIC == true
@@ -1389,7 +1406,8 @@ static ulog_topic_id topic_add(const char *topic_name, bool enable) {
 #endif  // ULOG_HAS_TOPICS && TOPIC_DYNAMIC == true
 
 /* ============================================================================
-   Feature: Source Location Config (`src_loc_config_*`, depends on: - )
+   Optional Feature: Dynamic Configuration - Source Location
+   (`src_loc_config_*`, depends on: - )
 ============================================================================ */
 #if ULOG_HAS_DYNAMIC_CONFIG
 
@@ -1438,9 +1456,9 @@ void ulog_source_location_config(bool enabled) {
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
-   Core Feature: Log (`log_*`, depends on: Print, Level, Outputs,
-                      Extra Outputs, Prefix, Topics, Time, Color,
-                      Locking, Source Location)
+   Core Feature: Log
+   (`log_*`, depends on: Print, Level, Outputs, Extra Outputs, Prefix, Topics,
+                         Time, Color, Locking, Source Location)
 ============================================================================ */
 
 // Private
@@ -1538,7 +1556,7 @@ ulog_status ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size) {
     if (out == NULL || out_size == 0) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }
-    print_target tgt = {.type       = LOG_TARGET_BUFFER,
+    print_target tgt = {.type       = PRINT_TARGET_BUFFER,
                         .dsc.buffer = {out, 0, out_size}};
     log_print_event(&tgt, ev, false, false, false);
     return ULOG_STATUS_OK;
