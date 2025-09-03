@@ -12,13 +12,17 @@
             - [File Output](#file-output)
             - [User Defined Output](#user-defined-output)
         - [Prefix](#prefix)
-        - [Timestamp](#timestamp)
-        - [Other Customization](#other-customization)
+        - [Time](#time)
+        - [Color](#color)
+        - [Source Location](#source-location)
+        - [Level Style](#level-style)
         - [Dynamic Configuration](#dynamic-configuration)
-            - [Log Topics - Dynamic Config](#log-topics---dynamic-config)
-            - [Outputs - Dynamic Config](#outputs---dynamic-config)
-            - [Custom Log Prefix - Dynamic Config](#custom-log-prefix---dynamic-config)
-            - [Timestamp - Dynamic Config](#timestamp---dynamic-config)
+            - [Topics Configuration](#topics-configuration)
+            - [Prefix Configuration](#prefix-configuration)
+            - [Time Configuration](#time-configuration)
+            - [Color Configuration](#color-configuration)
+            - [Source Location Configuration](#source-location-configuration)
+            - [Level Configuration](#level-configuration)
 
 This document describes the features of the logging library. There are optional and core features.
 
@@ -172,12 +176,16 @@ ulog_lock_set_fn(lock_function, mutex);
 
 ### Topics
 
+- Static configuration options: `ULOG_BUILD_TOPICS_NUM`
+- Values (int): `-1...INT_MAX`
+- Default: `0`.
+
 The feature is controlled by `ULOG_BUILD_TOPICS_NUM`. It allows to filter log messages by subsystems, e.g. "network", "storage", etc.
 
 There are two mechanism of working with the topics:
 
-- `dynamic` - slower, but new topic will be added automatically
-- `static` - faster, but you need to define all topic using `ulog_topic_add`
+- **Dynamic** allocation - slightly slower, but new topic will be added automatically
+- **Static** allocation - faster, but you need to define all topic using `ulog_topic_add`
 
 If you want to use dynamic topics, you need to define `ULOG_BUILD_TOPICS_NUM` to be -1. Otherwise, you need to define the number of topics for static allocation.
 
@@ -241,6 +249,10 @@ ulog_topic_debug("storage", "No free space"); // filtered out level DEBUG <INFO
 
 ### Extra Outputs
 
+- Static configuration options: `ULOG_BUILD_EXTRA_OUTPUTS`
+- Values (int): `0...INT_MAX`
+- Default: `0`.
+
 The feature is controlled by the following define:
 
 - `ULOG_BUILD_EXTRA_OUTPUTS` - The maximum number of extra logging outputs that can be added. Each extra output requires some memory. When it is 0, the only available output is STDOUT. Default is 0.
@@ -291,6 +303,10 @@ ulog_output_add(arduino_callback, NULL, ULOG_LEVEL_INFO);
 
 ### Prefix
 
+- Static configuration options: `ULOG_BUILD_PREFIX_SIZE`
+- Values (int): `0...INT_MAX`
+- Default: `0`.
+
 Sets a prefix function that can be used to customize the log output. The function is called with the log event and should fill a string (`prefix`) that will be printed right before the log level. It can be used to add custom data to the log messages, e.g. millisecond time.
 
 Requires `ULOG_BUILD_PREFIX_SIZE` to be more than 0.
@@ -309,9 +325,13 @@ The output will be:
 19:51:42, 005 ms ERROR src/main.c:38: Error message
 ```
 
-### Timestamp
+### Time
 
-Prints a time stamp in from of all log messages. Your platform must support time.h.
+- Static configuration options: `ULOG_BUILD_TIME`
+- Values (bool): <0/1>
+- Default: `0`.
+
+Prints a time stamp in from of all log messages. Your platform must support `time.h`.
 
 The time to the file output will be written with the date, while time to the console and other outputs will be written with the time only.
 
@@ -325,15 +345,50 @@ console:
 20:18:26 TRACE src/main.c:11: Hello world
 ```
 
-### Other Customization
+### Color
 
-The following defines can be used to customize the library's output:
+- Static configuration options: `ULOG_BUILD_COLOR`
+- Values (bool): `0/1`
+- Default: `0`.
 
-- `ULOG_BUILD_COLOR=<0/1>` - Use ANSI color escape codes when printing to stdout.
-- `ULOG_BUILD_SOURCE_LOCATION=<0/1>` - Hide or show the file name and line number.
-- `ULOG_BUILD_LEVEL_STYLE=<ULOG_LEVEL_STYLE_LONG/ULOG_LEVEL_STYLE_SHORT>` - Use short level strings, e.g. "T" for "TRACE", "I" for "INFO".
+Use ANSI color escape codes when printing to stdout. If the terminal supports, the output will be colorized.
+
+- TRACE - white
+- DEBUG - cyan
+- INFO - green
+- WARN - yellow
+- ERROR - red
+- FATAL - magenta
+
+![colors_demo](features/colors.png)
+
+### Source Location
+
+- Static configuration options: `ULOG_BUILD_SOURCE_LOCATION`
+- Values (bool): <0/1>
+- Default: `1`.
+
+Hide or show the file name and line number. See output examples below:
+
+- ULOG_BUILD_SOURCE_LOCATION=0: `TRACE Hello world`
+- ULOG_BUILD_SOURCE_LOCATION=1: `TRACE src/main.c:11: Hello world`
+
+### Level Style
+
+- Static configuration options: `ULOG_BUILD_LEVEL_STYLE`
+- Values (bool/enum): <0/1> <ULOG_LEVEL_STYLE_LONG/ULOG_LEVEL_STYLE_SHORT>
+- Default: `ULOG_LEVEL_STYLE_LONG`.
+
+Allows to use short level strings, e.g. "T" for "TRACE", "I" for "INFO":
+
+- ULOG_BUILD_LEVEL_STYLE=ULOG_LEVEL_STYLE_LONG: `TRACE src/main.c:11: Hello world`
+- ULOG_BUILD_LEVEL_STYLE=ULOG_LEVEL_STYLE_SHORT: `T src/main.c:11: Hello world`
 
 ### Dynamic Configuration
+
+- Static configuration options: `ULOG_BUILD_DYNAMIC_CONFIG`
+- Values (bool): `0/1`
+- Default: `0`.
 
 Most of the library features are configured compile time to reduce the code size and complexity. However, if the code size is not a concern, you can enable Dynamic Config by defining `ULOG_BUILD_DYNAMIC_CONFIG=1`. When the feature is enables all other features are enabled too in some default mode described in bellow. All Dynamic Config functions named like: `ulog_FEATURE_config`. The default configuration is following:
 
@@ -348,7 +403,7 @@ Most of the library features are configured compile time to reduce the code size
 | ULOG_BUILD_TOPICS_NUM       | -1                             |
 | ULOG_BUILD_WARN_NOT_ENABLED | 0                              |
 
-#### Log Topics - Dynamic Config
+#### Topics Configuration
 
 If Dynamic Config enabled topics are created runtime in the **dynamic allocation mode**.
 
@@ -356,27 +411,39 @@ Configuration functions:
 
 - `void ulog_topic_config(bool enabled)` - will show or hide topics in the log output when printing using `ulog_topic_xxx` macros.
 
-#### Outputs - Dynamic Config
+#### Prefix Configuration
 
-In the Dynamic Config mode, `ULOG_BUILD_EXTRA_OUTPUTS` is set to 8.
-
-#### Custom Log Prefix - Dynamic Config
-
-If Dynamic Config enabled, `ULOG_BUILD_PREFIX_SIZE` is set to 64.
+If Dynamic Config enabled, `ULOG_BUILD_PREFIX_SIZE` is set to 64, so the prefix will be limited to: 63 characters + 1 null terminator.
 
 Functions to configure the prefix:
 
 - `void ulog_prefix_config(bool enabled)` - will enable or disable prefix in the log output.
 
-#### Timestamp - Dynamic Config
+#### Time Configuration
 
 Functions to configure the timestamp:
 
 - `void ulog_time_config(bool enabled)` - will enable or disable time in the log output.
 
-Configuration functions:
+#### Color Configuration
+
+Functions to configure:
 
 - `void ulog_color_config(bool enabled)` - will enable or disable ANSI color escape codes when printing to stdout.
+
+#### Source Location Configuration
+
+Functions to configure:
+
 - `void ulog_source_location_config(bool enabled)` - will show or hide file and line in the log output.
-- `void ulog_configure_short_level_strings(bool enabled)` - will enable or disable short level strings, e.g. "T" for "TRACE", "I" for "INFO".
-- `void ulog_time_config(bool enabled)` - will enable or disable time in the log output.
+
+#### Level Configuration
+
+Functions to configure:
+
+- `void ulog_level_config(ulog_level_config_style style)` - will enable or disable short level strings, e.g. "T" for "TRACE", "I" for "INFO".
+
+The `style` argument can be one of the following values:
+
+- `ULOG_LEVEL_CONFIG_STYLE_DEFAULT`: long level strings (default)
+- `ULOG_LEVEL_CONFIG_STYLE_SHORT`: short level strings
