@@ -7,19 +7,18 @@
         - [Events](#events)
         - [Lock](#lock)
     - [Optional Features](#optional-features)
-        - [Dynamic Configuration](#dynamic-configuration)
         - [Topics](#topics)
-        - [Log Topics - Dynamic Config](#log-topics---dynamic-config)
         - [Extra Outputs](#extra-outputs)
             - [File Output](#file-output)
             - [User Defined Output](#user-defined-output)
-        - [Outputs - Dynamic Config](#outputs---dynamic-config)
-        - [Custom Log Prefix](#custom-log-prefix)
-        - [Custom Log Prefix - Dynamic Config](#custom-log-prefix---dynamic-config)
+        - [Prefix](#prefix)
         - [Timestamp](#timestamp)
-        - [Timestamp - Dynamic Config](#timestamp---dynamic-config)
         - [Other Customization](#other-customization)
-        - [Other Customization - Dynamic Config](#other-customization---dynamic-config)
+        - [Dynamic Configuration](#dynamic-configuration)
+            - [Log Topics - Dynamic Config](#log-topics---dynamic-config)
+            - [Outputs - Dynamic Config](#outputs---dynamic-config)
+            - [Custom Log Prefix - Dynamic Config](#custom-log-prefix---dynamic-config)
+            - [Timestamp - Dynamic Config](#timestamp---dynamic-config)
 
 This document describes the features of the logging library. There are optional and core features.
 
@@ -171,21 +170,6 @@ ulog_lock_set_fn(lock_function, mutex);
 
 ## Optional Features
 
-### Dynamic Configuration
-
-Most of the library features are configured compile time to reduce the code size and complexity. However, if the code size is not a concern, you can enable Dynamic Config by defining `ULOG_BUILD_DYNAMIC_CONFIG=1`. When the feature is enables all other features are enabled too in some default mode described in bellow. All Dynamic Config functions named like: `ulog_FEATURE_config`. The default configuration is following:
-
-| Build Config                | Default Value                  |
-| --------------------------- | ------------------------------ |
-| ULOG_BUILD_PREFIX_SIZE      | 64                             |
-| ULOG_BUILD_EXTRA_OUTPUTS    | 8                              |
-| ULOG_BUILD_TIME             | 1                              |
-| ULOG_BUILD_SOURCE_LOCATION  | 1                              |
-| ULOG_BUILD_COLOR            | 1                              |
-| ULOG_BUILD_LEVEL_STYLE      | ULOG_LEVEL_STYLE_LONG +\_SHORT |
-| ULOG_BUILD_TOPICS_NUM       | -1                             |
-| ULOG_BUILD_WARN_NOT_ENABLED | 0                              |
-
 ### Topics
 
 The feature is controlled by `ULOG_BUILD_TOPICS_NUM`. It allows to filter log messages by subsystems, e.g. "network", "storage", etc.
@@ -200,40 +184,38 @@ If you want to use dynamic topics, you need to define `ULOG_BUILD_TOPICS_NUM` to
 Printing the log message with the topic is done by the set of function-like macros similar to log_xxx, but with the topic as the first argument:
 
 ```c
-logt_trace(const char *topic_name, const char *fmt, ...)
-logt_debug(const char *topic_name, const char *fmt, ...)
-logt_info(const char *topic_name, const char *fmt, ...) 
-logt_warn(const char *topic_name, const char *fmt, ...) 
-logt_error(const char *topic_name, const char *fmt, ...)
-logt_fatal(const char *topic_name, const char *fmt, ...)
+ulog_topic_trace(const char *topic_name, const char *fmt, ...)  // or logt_trace(...)
+ulog_topic_debug(const char *topic_name, const char *fmt, ...)  // or logt_debug(...)
+ulog_topic_info(const char *topic_name, const char *fmt, ...)   // or logt_info(...)
+ulog_topic_warn(const char *topic_name, const char *fmt, ...)   // or logt_warn(...)
+ulog_topic_error(const char *topic_name, const char *fmt, ...)  // or logt_error(...)
+ulog_topic_fatal(const char *topic_name, const char *fmt, ...)  // or logt_fatal(...)
 ```
 
 In static mode you can decide whether enable or disable the topic during its definition. In dynamic mode all topics are disabled by default.
 
-For example:
+For example (static topics):
 
 ```c
-// Static topics
-
 ulog_topic_add("network", true); // enabled by default
 ulog_topic_add("storage", false); // disabled by default
 
-logt_info("network", "Connected to server");
+ulog_topic_info("network", "Connected to server");
 
 ulog_topic_enable("storage");
-logt_warn("storage", "No free space");
+ulog_topic_warn("storage", "No free space");
+```
 
-. . .
+or dynamic topics:
 
-// Dynamic topics
-
+```c
 // by default all topics are disabled
 ulog_topic_enable("storage");
-logt_error("storage", "No free space");
+ulog_topic_error("storage", "No free space");
 
-ulog_topic_enable_all(); 
-logt_trace("network", "Disconnected from server");
-logt_fatal("video", "No signal");
+ulog_topic_enable_all();
+ulog_topic_trace("network", "Disconnected from server");
+ulog_topic_fatal("video", "No signal");
 ```
 
 By default, the logging level of each topic is set to `ULOG_LEVEL_TRACE`. It is possible to alter this behavior by calling `ulog_topic_level_set()`. All topics below the level set by `ulog_output_level_set()` (`ULOG_LEVEL_TRACE` by default) will not generate log.
@@ -246,30 +228,22 @@ ulog_topic_add("network", true);
 ulog_topic_add("storage", true);
 
 // Both topics generate log as global logging level is set to ULOG_LEVEL_TRACE
-logt_info("network", "Connected to server");
-logt_warn("storage", "No free space");
+ulog_topic_info("network", "Connected to server");
+ulog_topic_warn("storage", "No free space");
 
-ulog_output_level_set(ULOG_LEVEL_INFO);
-ulog_topic_level_set("storage", ULOG_LEVEL_WARN);
+ulog_output_level_set_all(ULOG_LEVEL_INFO); // All outputs are set to INFO
+ulog_topic_level_set("storage", ULOG_LEVEL_WARN); // Storage is set to WARN
 
-// Only "storage" topic generates log
-logt_info("network", "Connected to server");
-logt_info("storage", "No free space");
+ulog_topic_info("storage", "No free space"); // generated
+ulog_topic_info("network", "Connected to server"); // filtered out topic
+ulog_topic_debug("storage", "No free space"); // filtered out level DEBUG <INFO
 ```
-
-### Log Topics - Dynamic Config
-
-If Dynamic Config enabled topics are created runtime in the **dynamic allocation mode**.
-
-Configuration functions:
-
-- `void ulog_topic_config(bool enabled)` - will show or hide topics in the log output when printing using `logt_xxx` macros.
 
 ### Extra Outputs
 
 The feature is controlled by the following define:
 
-- `ULOG_BUILD_EXTRA_OUTPUTS` - The maximum number of extra logging outputs that can be added. Each extra output requires some memory. When it is 0, the entire extra output code for `ulog_output_add_file()` and `ulog_output_add()` is not compiled. Default is 0.
+- `ULOG_BUILD_EXTRA_OUTPUTS` - The maximum number of extra logging outputs that can be added. Each extra output requires some memory. When it is 0, the only available output is STDOUT. Default is 0.
 
 #### File Output
 
@@ -277,15 +251,23 @@ One or more file pointers where the log will be written can be provided to the l
 
 ```txt
 2047-03-11 20:18:26 TRACE src/main.c:11: Hello world
+
+vs
+
+20:18:26 TRACE src/main.c:11: Hello world
 ```
 
-Any messages below the given `level` are ignored. If the library failed to add a
-file pointer a value less-than-zero is returned.
+To write to a file open a file and pass it to the `ulog_output_add_file` function.
 
 ```c
 FILE *fp = fopen("log.txt", "w");
 if (fp) {
-    ulog_output_add_file(fp, ULOG_LEVEL_INFO);
+    ulog_output file_output = ulog_output_add_file(fp, ULOG_LEVEL_INFO);
+    if (file_output != ULOG_OUTPUT_INVALID) {
+        ulog_topic_info("Outputs", "File output added");
+        ulog_output_level_set(file_output, ULOG_LEVEL_TRACE);
+        ulog_topic_trace("Outputs", "File output level set to TRACE");
+    }
 }
 ```
 
@@ -307,46 +289,31 @@ void arduino_callback(ulog_event *ev, void *arg) {
 ulog_output_add(arduino_callback, NULL, ULOG_LEVEL_INFO);
 ```
 
-### Outputs - Dynamic Config
+### Prefix
 
-In the Dynamic Config mode, `ULOG_BUILD_EXTRA_OUTPUTS` is set to 8.
-
-### Custom Log Prefix
-
-Sets a prefix function. The function is called with the log level and should return a string that will be printed right before the log level. It can be used to add custom data to the log messages, e.g. millisecond time.
+Sets a prefix function that can be used to customize the log output. The function is called with the log event and should fill a string (`prefix`) that will be printed right before the log level. It can be used to add custom data to the log messages, e.g. millisecond time.
 
 Requires `ULOG_BUILD_PREFIX_SIZE` to be more than 0.
 
 ```c
 void update_prefix(ulog_event *ev, char *prefix, size_t prefix_size) {
-    snprintf(prefix, prefix_size, ", %d ms", millis());
+    snprintf(prefix, prefix_size, ", %03d ms", millis());
 }
-
-. . .
-
+// . . .
 ulog_prefix_set_fn(prefix_fn);
-
 ```
 
 The output will be:
 
 ```txt
-19:51:42, 105 ms ERROR src/main.c:38: Error message
+19:51:42, 005 ms ERROR src/main.c:38: Error message
 ```
-
-### Custom Log Prefix - Dynamic Config
-
-If Dynamic Config enabled, `ULOG_BUILD_PREFIX_SIZE` is set to 64.
-
-Functions to configure the prefix:
-
-- `void ulog_prefix_config(bool enabled)` - will enable or disable prefix in the log output.
 
 ### Timestamp
 
-The feature is controlled by `ULOG_BUILD_TIME=<0/1>`. You platform must support time.h.
+Prints a time stamp in from of all log messages. Your platform must support time.h.
 
-The time to the file output will be written with the date, while time to the console will be written with the time only.
+The time to the file output will be written with the date, while time to the console and other outputs will be written with the time only.
 
 ```txt
 log.txt:
@@ -358,12 +325,6 @@ console:
 20:18:26 TRACE src/main.c:11: Hello world
 ```
 
-### Timestamp - Dynamic Config
-
-Functions to configure the timestamp:
-
-- `void ulog_time_config(bool enabled)` - will enable or disable time in the log output.
-
 ### Other Customization
 
 The following defines can be used to customize the library's output:
@@ -372,7 +333,46 @@ The following defines can be used to customize the library's output:
 - `ULOG_BUILD_SOURCE_LOCATION=<0/1>` - Hide or show the file name and line number.
 - `ULOG_BUILD_LEVEL_STYLE=<ULOG_LEVEL_STYLE_LONG/ULOG_LEVEL_STYLE_SHORT>` - Use short level strings, e.g. "T" for "TRACE", "I" for "INFO".
 
-### Other Customization - Dynamic Config
+### Dynamic Configuration
+
+Most of the library features are configured compile time to reduce the code size and complexity. However, if the code size is not a concern, you can enable Dynamic Config by defining `ULOG_BUILD_DYNAMIC_CONFIG=1`. When the feature is enables all other features are enabled too in some default mode described in bellow. All Dynamic Config functions named like: `ulog_FEATURE_config`. The default configuration is following:
+
+| Build Config                | Default Value                  |
+| --------------------------- | ------------------------------ |
+| ULOG_BUILD_PREFIX_SIZE      | 64                             |
+| ULOG_BUILD_EXTRA_OUTPUTS    | 8                              |
+| ULOG_BUILD_TIME             | 1                              |
+| ULOG_BUILD_SOURCE_LOCATION  | 1                              |
+| ULOG_BUILD_COLOR            | 1                              |
+| ULOG_BUILD_LEVEL_STYLE      | ULOG_LEVEL_STYLE_LONG +\_SHORT |
+| ULOG_BUILD_TOPICS_NUM       | -1                             |
+| ULOG_BUILD_WARN_NOT_ENABLED | 0                              |
+
+#### Log Topics - Dynamic Config
+
+If Dynamic Config enabled topics are created runtime in the **dynamic allocation mode**.
+
+Configuration functions:
+
+- `void ulog_topic_config(bool enabled)` - will show or hide topics in the log output when printing using `ulog_topic_xxx` macros.
+
+#### Outputs - Dynamic Config
+
+In the Dynamic Config mode, `ULOG_BUILD_EXTRA_OUTPUTS` is set to 8.
+
+#### Custom Log Prefix - Dynamic Config
+
+If Dynamic Config enabled, `ULOG_BUILD_PREFIX_SIZE` is set to 64.
+
+Functions to configure the prefix:
+
+- `void ulog_prefix_config(bool enabled)` - will enable or disable prefix in the log output.
+
+#### Timestamp - Dynamic Config
+
+Functions to configure the timestamp:
+
+- `void ulog_time_config(bool enabled)` - will enable or disable time in the log output.
 
 Configuration functions:
 
