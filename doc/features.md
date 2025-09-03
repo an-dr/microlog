@@ -418,6 +418,15 @@ Configuration functions:
 
 - `void ulog_topic_config(bool enabled)` - will show or hide topics in the log output when printing using `ulog_topic_xxx` macros.
 
+Example output with and without topics:
+
+```c
+ulog_topic_info("WORLD", "Hello");
+```
+
+- enabled=true:  `INFO  [WORLD] src/main.c:13: Hello`
+- enabled=false: `INFO  src/main.c:13: Hello`
+
 #### Prefix Configuration
 
 If Dynamic Config enabled, `ULOG_BUILD_PREFIX_SIZE` is set to 64, so the prefix will be limited to: 63 characters + 1 null terminator.

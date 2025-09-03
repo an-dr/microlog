@@ -1056,7 +1056,7 @@ static topic_t *topic_get(ulog_topic_id topic);
 static ulog_status topic_enable_all();
 
 /// @brief Disable all topics
-/// @returnulog_status
+/// @return ulog_status
 static ulog_status topic_disable_all();
 
 /// @brief Add a new topic
@@ -1299,7 +1299,7 @@ ulog_topic_id topic_str_to_id(const char *str) {
     return ULOG_TOPIC_ID_INVALID;  // Not found
 }
 
-static topic_t *topic_get(int topic) {
+static topic_t *topic_get(ulog_topic_id topic) {
     if (topic < TOPIC_STATIC_NUM && topic >= 0) {
         return &topic_data.topics[topic];
     }
