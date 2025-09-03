@@ -280,6 +280,8 @@ if (fp) {
         ulog_output_level_set(file_output, ULOG_LEVEL_TRACE);
         ulog_topic_trace("Outputs", "File output level set to TRACE");
     }
+    ulog_output_remove(file_output);  // For demo purposes
+    fclose(fp);  // For demo purposes
 }
 ```
 
@@ -298,7 +300,12 @@ void arduino_callback(ulog_event *ev, void *arg) {
 
 . . .
 
-ulog_output_add(arduino_callback, NULL, ULOG_LEVEL_INFO);
+ulog_output ard_output = ulog_output_add(arduino_callback, NULL, ULOG_LEVEL_INFO);
+if (ard_output != ULOG_OUTPUT_INVALID) {
+    ulog_info("Will be printed to Arduino serial");
+    ulog_output_remove(ard_output); // For demo purposes
+}
+
 ```
 
 ### Prefix
