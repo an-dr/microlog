@@ -45,6 +45,8 @@ static void _get_time_bounds(time_t &before, time_t &after) {
     } while (after == before);
 
     REQUIRE(after != (time_t)(-1));
+    
+    ulog_info("Current time updated");
 }
 
 static void _check_time_fields(int hh, int mm, int ss, const time_t &before,
