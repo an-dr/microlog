@@ -6,27 +6,30 @@
 A simple customizable logging library. Features:
 
 - **Log topics**
-    - To filter log messages by subsystems, e.g. "network", "storage", etc.
+  - To filter log messages by subsystems, e.g. "network", "storage", etc.
 - **Callbacks for custom output**
-    - E.g. files, serial ports, etc.
+  - E.g. multiplefiles, serial ports, etc.
 - **Thread-safety**
-    - Via external locking injection
+  - Via external locking injection
 - **Customizable log format**
-    - Color, custom dynamic data, emojis, etc.
+  - Color, custom dynamic data, optional info, etc.
 - **Support for embedded systems**
-    - Optional static memory allocation, optional color, no special dependencies
+  - Optional static memory allocation, optional color, no special dependencies
+- **Easy to install**
+  - Just two files, and support for many build systems
 
 In the default configuration it looks like this:
 
-<img src="doc/README/demo0.png" width="600">
+<img src="doc/README/demo0.png" width="800">
 
 ...but in can be very minimalistic
 
-<img src="doc/README/demo1.png" width="600">
+<img src="doc/README/demo1.png" width="800">
 
 ... or feature-rich:
 
-<img src="doc/README/demo2.png" width="600">
+<img src="doc/README/demo2.png" width="800">
+
 
 The project is based on several core principles:
 
@@ -41,15 +44,15 @@ The project is based on several core principles:
 - [microlog](#microlog)
     - [Table of Contents](#table-of-contents)
     - [Quick Start](#quick-start)
-        - [Install](#install)
-        - [Use](#use)
+        - [1. Install](#1-install)
+        - [2. Use](#2-use)
     - [Contributing](#contributing)
     - [License](#license)
     - [Credits](#credits)
 
 ## Quick Start
 
-### Install
+### 1. Install
 
 **Option 1 - Sources**:
 
@@ -60,8 +63,8 @@ The project is based on several core principles:
 
 - Download a CMake Package from [Releases](https://github.com/an-dr/microlog/releases)
 - Specify the install location:
-    - Specify package storage `cmake -B./build -DCMAKE_PREFIX_PATH="~/MyCmakePackages"` or
-    - Set `microlog_DIR` variable with path to the package `microlog_DIR=~/microlog-1.2.3-cmake`
+  - Specify package storage `cmake -B./build -DCMAKE_PREFIX_PATH="~/MyCmakePackages"` or
+  - Set `microlog_DIR` variable with path to the package `microlog_DIR=~/microlog-1.2.3-cmake`
 - Use in your project:
 
 ```cmake
@@ -106,19 +109,26 @@ target_compile_definitions( microlog
         ULOG_BUILD_COLOR=1) # configuration
 ```
 
-### Use
+### 2. Use
 
 ```cpp
 #include "ulog.h"
 
 int main() {
-    log_info("Test message from test package");
+    ulog_info("Hello, World");
     return 0;
 }
 ```
 
-The detailed feature description is [here](doc/features.md).
+Output:
 
+```log
+INFO  src/main.cpp:4: Hello, World
+```
+
+[See the example for more features in action: `example/main.cpp`](example/main.cpp)
+
+[See full and detailed feature description in `doc/features.md`](doc/features.md).
 
 ## Contributing
 
@@ -130,4 +140,4 @@ This library is free software; you can redistribute it and/or modify it under th
 
 ## Credits
 
-Based on <https://github.com/rxi/log.c.git>
+Based on [https://github.com/rxi/log.c.git](https://github.com/rxi/log.c.git)

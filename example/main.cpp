@@ -5,24 +5,24 @@ It demonstrates basic logging functionality using C interface.
 The output to console looks like this (with possible variations based on 
 build configuration):
 
-    23:55:59.000 ms TRACE main.cpp:37: Trace message 1
-    23:55:59.001 ms DEBUG main.cpp:41: Debug message 0x2
-    23:55:59.002 ms INFO  main.cpp:42: Info message 3.000000
-    [User Output:0] 23:55:59.004 ms INFO  main.cpp:42: Info message 3.000000
-    23:55:59.005 ms WARN  main.cpp:43: Warning message 4
-    [User Output:1] 23:55:59.007 ms WARN  main.cpp:43: Warning message 4
-    23:55:59.008 ms ERROR main.cpp:44: Error message Five
-    [User Output:2] 23:55:59.010 ms ERROR main.cpp:44: Error message Five
-    23:55:59.011 ms FATAL main.cpp:45: Fatal message 6
-    [User Output:3] 23:55:59.013 ms FATAL main.cpp:45: Fatal message 6
+18:50:32 [MsgID:000] TRACE main.cpp:71: Trace message 1
+18:50:32 [MsgID:001] DEBUG main.cpp:75: Debug message 0x2
+18:50:32 [MsgID:002] INFO  main.cpp:76: Info message 3.000000
+[Output msg count:0] 18:50:32 [MsgID:002] INFO  main.cpp:76: Info message 3.000000
+18:50:32 [MsgID:003] WARN  main.cpp:77: Warning message 4
+[Output msg count:1] 18:50:32 [MsgID:003] WARN  main.cpp:77: Warning message 4
+18:50:32 [MsgID:004] ERROR main.cpp:78: Error message Five
+[Output msg count:2] 18:50:32 [MsgID:004] ERROR main.cpp:78: Error message Five
+18:50:32 [MsgID:005] FATAL main.cpp:79: Fatal message 6
+[Output msg count:3] 18:50:32 [MsgID:005] FATAL main.cpp:79: Fatal message 6
 
-    23:55:59.014 ms [Bluetooth] DEBUG main.cpp:57: Bluetooth message 1
-    23:55:59.015 ms [Audio] WARN  main.cpp:62: Audio message 2
-    [User Output:4] 23:55:59.017 ms [Audio] WARN  main.cpp:62: Audio message 2
-    23:55:59.018 ms [Serial] ERROR main.cpp:63: Serial message 1
-    [User Output:5] 23:55:59.020 ms [Serial] ERROR main.cpp:63: Serial message 1
-    23:55:59.021 ms [Serial] FATAL main.cpp:64: Serial message 2
-    [User Output:6] 23:55:59.023 ms [Serial] FATAL main.cpp:64: Serial message 2
+18:50:32 [MsgID:006] DEBUG [Bluetooth] main.cpp:89: Bluetooth message 1
+18:50:32 [MsgID:007] WARN  [Audio] main.cpp:94: Audio message 2
+[Output msg count:4] 18:50:32 [MsgID:007] WARN  [Audio] main.cpp:94: Audio message 2
+18:50:32 [MsgID:008] ERROR [Serial] main.cpp:95: Serial message 1
+[Output msg count:5] 18:50:32 [MsgID:008] ERROR [Serial] main.cpp:95: Serial message 1
+18:50:32 [MsgID:009] FATAL [Serial] main.cpp:96: Serial message 2
+[Output msg count:6] 18:50:32 [MsgID:009] FATAL [Serial] main.cpp:96: Serial message 2
 */
 
 #include <cstdio>
@@ -33,7 +33,7 @@ build configuration):
 // In this example we use it to add ms
 void user_prefix(ulog_event *ev, char *prefix, size_t prefix_size) {
     static int count = 0; // count represents fake milliseconds
-    snprintf(prefix, prefix_size, ".%03d ms ", count++);
+    snprintf(prefix, prefix_size, " [MsgID:%03d] ", count++);
 }
 
 // This callback can be used to get a log string 
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
 
     FILE *fp = fopen("example.log", "w");
     ulog_output_add_file(fp, ULOG_LEVEL_INFO);
-    ulog_output_add(user_output, (void *)"User Output", ULOG_LEVEL_INFO);
+    ulog_output_add(user_output, (void *)"Output msg count", ULOG_LEVEL_INFO);
 
     /* Prefix ==================================== */
     ulog_prefix_set_fn(user_prefix);

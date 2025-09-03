@@ -28,7 +28,7 @@ typedef union {
 ```
 
 - **Enum Constants:** `ALL_CAPS` with prefix.
-    - Example: `typedef enum { LOG_TARGET_BUFFER, LOG_TARGET_STREAM } log_target;`
+    - Example: `typedef enum { PRINT_TARGET_BUFFER, PRINT_TARGET_STREAM } print_target_type;`
 
 ### Functions
 

@@ -22,7 +22,7 @@
 
 // clang-format off
 /* ====================================================================================================================
-   Build Options
+   Core Feature: Static Configuration
 =======================================================================================================================
 
 | Build Option                | Default               | Dependent Macro(s)            | Purpose                  |
@@ -151,14 +151,15 @@ static inline bool is_str_empty(const char *str) {
 }
 
 // Macro to log a warning when a feature is not enabled
-// Usage: _log_not_enabled("ULOG_BUILD_TIME")
+// Usage: warn_not_enabled("ULOG_BUILD_TIME")
 // Output:
 //   WARN src/main.c:42: 'ulog_configure_time' ignored: ULOG_BUILD_TIME disabled
-#define _log_not_enabled(feature)                                              \
+#define warn_not_enabled(feature)                                              \
     log_warn("'%s' called with %s disabled", __func__, feature)
 
 /* ============================================================================
-   Core Feature: Print (`print_*`, depends on: - )
+   Core Feature: Print
+   (`print_*`, depends on: - )
 ============================================================================ */
 
 //  Private
@@ -175,22 +176,22 @@ typedef union {
     FILE *stream;
 } print_target_descriptor;
 
-typedef enum { LOG_TARGET_BUFFER, LOG_TARGET_STREAM } log_target_t;
+typedef enum { PRINT_TARGET_BUFFER, PRINT_TARGET_STREAM } print_target_type;
 
 typedef struct {
-    log_target_t type;
+    print_target_type type;
     print_target_descriptor dsc;
 } print_target;
 
 static void print_to_target_valist(print_target *tgt, const char *format,
                                    va_list args) {
-    if (tgt->type == LOG_TARGET_BUFFER) {
+    if (tgt->type == PRINT_TARGET_BUFFER) {
         char *buf   = tgt->dsc.buffer.data + tgt->dsc.buffer.curr_pos;
         size_t size = tgt->dsc.buffer.size - tgt->dsc.buffer.curr_pos;
         if (size > 0U) {
             tgt->dsc.buffer.curr_pos += vsnprintf(buf, size, format, args);
         }
-    } else if (tgt->type == LOG_TARGET_STREAM) {
+    } else if (tgt->type == PRINT_TARGET_STREAM) {
         FILE *stream = tgt->dsc.stream;
         vfprintf(stream, format, args);
     }
@@ -205,6 +206,7 @@ static void print_to_target(print_target *tgt, const char *format, ...) {
 
 /* ============================================================================
    Core Feature: Events
+   (`event_*`, depends on: Print)
 ============================================================================ */
 
 // Private
@@ -239,7 +241,7 @@ ulog_status ulog_event_get_message(ulog_event *ev, char *buffer,
         return ULOG_STATUS_INVALID_ARGUMENT;
     }
 
-    print_target tgt = {.type       = LOG_TARGET_BUFFER,
+    print_target tgt = {.type       = PRINT_TARGET_BUFFER,
                         .dsc.buffer = {buffer, 0, buffer_size}};
 
     log_print_message(&tgt, ev);
@@ -288,7 +290,8 @@ ulog_level ulog_event_get_level(ulog_event *ev) {
 }
 
 /* ============================================================================
-   Core Functionality: Lock (Depends on: - )
+   Core Functionality: Lock
+   (`lock_*`, depends on: - )
 ============================================================================ */
 
 // Private
@@ -324,22 +327,23 @@ void ulog_lock_set_fn(ulog_lock_fn function, void *lock_arg) {
     lock_data.args     = lock_arg;
 }
 /* ============================================================================
-   Feature: Color Config (`color_cfg_*`, depends on: - )
+   Optional Feature: Dynamic Configuration - Color
+   (`color_config_*`, depends on: - )
 ============================================================================ */
 #if ULOG_HAS_DYNAMIC_CONFIG
 
 typedef struct {
     bool enabled;
-} color_cfg_t;
+} color_config;
 
-static color_cfg_t color_cfg = {
+static color_config color_cfg = {
     .enabled = (bool)ULOG_HAS_COLOR,
 };
 
 // Private
 // ================
 
-bool color_cfg_is_enabled(void) {
+bool color_config_is_enabled(void) {
     return color_cfg.enabled;
 }
 
@@ -360,19 +364,20 @@ void ulog_color_config(bool enabled) {
 #if ULOG_HAS_WARN_NOT_ENABLED
 void ulog_color_config(bool enabled) {
     (void)(enabled);
-    _log_not_enabled("ULOG_BUILD_COLOR");
+    warn_not_enabled("ULOG_BUILD_COLOR");
 }
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
 
 // Disabled Private
 // ================
 
-#define color_cfg_is_enabled() (ULOG_HAS_COLOR)
+#define color_config_is_enabled() (ULOG_HAS_COLOR)
 
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
-   Feature: Color (`color_*`, depends on: Print, Color Config)
+   Optional Feature: Color
+   (`color_*`, depends on: Print, Color Config)
 ============================================================================ */
 #if ULOG_HAS_COLOR
 
@@ -389,14 +394,14 @@ static const char *color_levels[] = {
 #define COLOR_TERMINATOR "\x1b[0m"
 
 static void color_print_start(print_target *tgt, ulog_event *ev) {
-    if (!color_cfg_is_enabled()) {
+    if (!color_config_is_enabled()) {
         return;  // Color is disabled, do not print color codes
     }
     print_to_target(tgt, "%s", color_levels[ev->level]);  // color start
 }
 
 static void color_print_end(print_target *tgt) {
-    if (!color_cfg_is_enabled()) {
+    if (!color_config_is_enabled()) {
         return;  // Color is disabled, do not print color codes
     }
     print_to_target(tgt, "%s", COLOR_TERMINATOR);  // color end
@@ -413,22 +418,23 @@ static void color_print_end(print_target *tgt) {
 #endif  // ULOG_HAS_COLOR
 
 /* ============================================================================
-   Feature: Prefix Config (`prefix_cfg_*`, depends on: - )
+   Optional Feature: Dynamic Configuration - Prefix
+   (`prefix_config_*`, depends on: - )
 ============================================================================ */
 #if ULOG_HAS_DYNAMIC_CONFIG
 
 typedef struct {
     bool enabled;
-} prefix_cfg_t;
+} prefix_config;
 
-static prefix_cfg_t prefix_cfg = {
+static prefix_config prefix_cfg = {
     .enabled = (bool)ULOG_HAS_PREFIX,
 };
 
 // Private
 // ================
 
-bool prefix_cfg_is_enabled(void) {
+bool prefix_config_is_enabled(void) {
     return prefix_cfg.enabled;
 }
 
@@ -449,18 +455,19 @@ void ulog_prefix_config(bool enabled) {
 #if ULOG_HAS_WARN_NOT_ENABLED
 void ulog_prefix_config(bool enabled) {
     (void)(enabled);
-    _log_not_enabled("ULOG_BUILD_DYNAMIC_CONFIG");
+    warn_not_enabled("ULOG_BUILD_DYNAMIC_CONFIG");
 }
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
 
 // Disabled Private
 // ================
 
-#define prefix_cfg_is_enabled() (ULOG_HAS_PREFIX)
+#define prefix_config_is_enabled() (ULOG_HAS_PREFIX)
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
-   Feature: Prefix (`prefix_*`, depends on: Print, Prefix Config)
+   Optional Feature: Prefix
+   (`prefix_*`, depends on: Print, Prefix Config)
 ============================================================================ */
 #if ULOG_HAS_PREFIX
 
@@ -476,11 +483,17 @@ static prefix_data_t prefix_data = {
     .prefix   = {0},
 };
 
-static void prefix_print(print_target *tgt, ulog_event *ev) {
-    if (prefix_data.function == NULL || !prefix_cfg_is_enabled()) {
+static void prefix_update(ulog_event *ev) {
+    if (prefix_data.function == NULL || !prefix_config_is_enabled()) {
         return;
     }
     prefix_data.function(ev, prefix_data.prefix, ULOG_BUILD_PREFIX_SIZE);
+}
+
+static void prefix_print(print_target *tgt, ulog_event *ev) {
+    if (prefix_data.function == NULL || !prefix_config_is_enabled()) {
+        return;
+    }
     print_to_target(tgt, "%s", prefix_data.prefix);
 }
 
@@ -488,6 +501,9 @@ static void prefix_print(print_target *tgt, ulog_event *ev) {
 // ================
 
 void ulog_prefix_set_fn(ulog_prefix_fn function) {
+    if (function == NULL) {
+        return;  // Ignore NULL function
+    }
     prefix_data.function = function;
 }
 
@@ -499,7 +515,7 @@ void ulog_prefix_set_fn(ulog_prefix_fn function) {
 #if ULOG_HAS_WARN_NOT_ENABLED
 void ulog_prefix_set_fn(ulog_prefix_fn function) {
     (void)(function);
-    _log_not_enabled("ULOG_BUILD_PREFIX_SIZE");
+    warn_not_enabled("ULOG_BUILD_PREFIX_SIZE");
 }
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
 
@@ -507,25 +523,27 @@ void ulog_prefix_set_fn(ulog_prefix_fn function) {
 // ================
 
 #define prefix_print(tgt, ev) (void)(tgt), (void)(ev)
+#define prefix_update(ev) (void)(ev)
 #endif  // ULOG_HAS_PREFIX
 
 /* ============================================================================
-   Feature: Time Config (`time_cfg_*`, depends on: - )
+   Optional Feature: Dynamic Configuration - Time
+   (`time_config_*`, depends on: - )
 ============================================================================ */
 #if ULOG_HAS_DYNAMIC_CONFIG
 
 typedef struct {
     bool enabled;
-} time_cfg_t;
+} time_config;
 
-static time_cfg_t time_cfg = {
+static time_config time_cfg = {
     .enabled = ULOG_HAS_TIME,
 };
 
 // Private
 // ================
 
-bool time_cfg_is_enabled(void) {
+bool time_config_is_enabled(void) {
     return time_cfg.enabled;
 }
 
@@ -546,18 +564,19 @@ void ulog_time_config(bool enabled) {
 #if ULOG_HAS_WARN_NOT_ENABLED
 void ulog_time_config(bool enabled) {
     (void)(enabled);
-    _log_not_enabled("ULOG_BUILD_TIME");
+    warn_not_enabled("ULOG_BUILD_TIME");
 }
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
 
 // Disabled Private
 // ================
 
-#define time_cfg_is_enabled() (ULOG_HAS_TIME)
+#define time_config_is_enabled() (ULOG_HAS_TIME)
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
-   Feature: Time (`time_*`, depends on: Time, Print)
+   Optional Feature: Time
+   (`time_*`, depends on: Time, Print)
 ============================================================================ */
 #if ULOG_HAS_TIME
 
@@ -585,7 +604,7 @@ static void time_fill_current_time(ulog_event *ev) {
 
 static void time_print_short(print_target *tgt, ulog_event *ev,
                              bool append_space) {
-    if (!time_cfg_is_enabled() || time_print_if_invalid(tgt, ev)) {
+    if (!time_config_is_enabled() || time_print_if_invalid(tgt, ev)) {
         return;  // If time is not valid or disabled, stop printing
     }
     char buf[TIME_SHORT_BUF_SIZE] = {0};
@@ -597,7 +616,7 @@ static void time_print_short(print_target *tgt, ulog_event *ev,
 #if ULOG_HAS_EXTRA_OUTPUTS
 static void time_print_full(print_target *tgt, ulog_event *ev,
                             bool append_space) {
-    if (!time_cfg_is_enabled() || time_print_if_invalid(tgt, ev)) {
+    if (!time_config_is_enabled() || time_print_if_invalid(tgt, ev)) {
         return;  // If time is not valid or disabled, stop printing
     }
     char buf[TIME_FULL_BUF_SIZE] = {0};
@@ -621,38 +640,32 @@ static void time_print_full(print_target *tgt, ulog_event *ev,
 #endif  // ULOG_HAS_TIME
 
 /* ============================================================================
-   Feature: Level Config (`level_cfg_*`, depends on: - )
+   Optional Feature: Dynamic Configuration - Level
+   (`level_config_*`, depends on: - )
 ============================================================================ */
 #if ULOG_HAS_DYNAMIC_CONFIG
 
-typedef enum {
-    LEVEL_STYLE_DEFAULT = 0x0,
-    LEVEL_STYLE_SHORT,
-    LEVEL_STYLE_NUM
-} level_cfg_style;
-
 typedef struct {
-    level_cfg_style level_cfg_style;  // Use short level strings
-} level_cfg_t;
+    ulog_level_config_style style;  // Use short level strings
+} level_config;
 
-static level_cfg_t level_cfg = {
-    .level_cfg_style = LEVEL_STYLE_DEFAULT,
+static level_config level_cfg = {
+    .style = ULOG_LEVEL_CONFIG_STYLE_DEFAULT,
 };
 
 // Private
 // ================
 
-bool level_cfg_is_short(void) {
-    return level_cfg.level_cfg_style == LEVEL_STYLE_SHORT;
+bool level_config_is_short(void) {
+    return level_cfg.style == ULOG_LEVEL_CONFIG_STYLE_SHORT;
 }
 
 // Public
 // ================
 
-void ulog_level_config(bool use_short_levels) {
+void ulog_level_config(ulog_level_config_style style) {
     lock_lock();  // Lock the configuration
-    level_cfg.level_cfg_style =
-        use_short_levels ? LEVEL_STYLE_SHORT : LEVEL_STYLE_DEFAULT;
+    level_cfg.style = style;
     lock_unlock();  // Unlock the configuration
 }
 
@@ -663,9 +676,9 @@ void ulog_level_config(bool use_short_levels) {
 
 #if ULOG_HAS_WARN_NOT_ENABLED
 
-void ulog_level_config(bool use_short_levels) {
-    (void)(use_short_levels);
-    _log_not_enabled("ULOG_BUILD_DYNAMIC_CONFIG");
+void ulog_level_config(ulog_level_config_style style) {
+    (void)(style);
+    warn_not_enabled("ULOG_BUILD_DYNAMIC_CONFIG");
 }
 
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
@@ -673,17 +686,19 @@ void ulog_level_config(bool use_short_levels) {
 // Disabled Private
 // ================
 
-typedef enum { LEVEL_STYLE_DEFAULT = 0x0, LEVEL_STYLE_NUM } level_cfg_style;
-#define level_cfg_is_short() (ULOG_HAS_LEVEL_SHORT)
+#define level_config_is_short() (ULOG_HAS_LEVEL_SHORT)
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
-   Core Feature: Level  (`level_*`, depends on: Levels Config, Print)
+   Core Feature: Levels
+   (`level_*`, depends on: Levels Config, Print)
 ============================================================================ */
 
 // Private
 // ================
 #define LEVEL_MIN_VALUE 0
+#define LEVEL_STYLE_NUM                                                        \
+    (ULOG_HAS_LEVEL_SHORT + ULOG_HAS_LEVEL_LONG)  // TODO: fragile
 
 /// @brief Level strings
 static const char *level_strings[LEVEL_STYLE_NUM][ULOG_LEVEL_TOTAL] = {
@@ -707,19 +722,21 @@ static bool level_is_allowed(ulog_level msg_level, ulog_level log_verbosity) {
 
 static void level_print(print_target *tgt, ulog_event *ev) {
 #if ULOG_HAS_LEVEL_LONG && ULOG_HAS_LEVEL_SHORT
-    if (level_cfg_is_short()) {
-        print_to_target(tgt, "%-1s ",
-                        level_strings[LEVEL_STYLE_SHORT][ev->level]);
+    if (level_config_is_short()) {
+        print_to_target(
+            tgt, "%-1s ",
+            level_strings[ULOG_LEVEL_CONFIG_STYLE_SHORT][ev->level]);
     } else {
-        print_to_target(tgt, "%-5s ",
-                        level_strings[LEVEL_STYLE_DEFAULT][ev->level]);
+        print_to_target(
+            tgt, "%-5s ",
+            level_strings[ULOG_LEVEL_CONFIG_STYLE_DEFAULT][ev->level]);
     }
 #elif ULOG_HAS_LEVEL_SHORT
     print_to_target(tgt, "%-1s ",
-                    level_strings[LEVEL_STYLE_DEFAULT][ev->level]);
+                    level_strings[ULOG_LEVEL_CONFIG_STYLE_DEFAULT][ev->level]);
 #else
     print_to_target(tgt, "%-5s ",
-                    level_strings[LEVEL_STYLE_DEFAULT][ev->level]);
+                    level_strings[ULOG_LEVEL_CONFIG_STYLE_DEFAULT][ev->level]);
 #endif  // ULOG_HAS_LEVEL_SHORT
 }
 
@@ -731,11 +748,12 @@ const char *ulog_level_to_string(ulog_level level) {
     if (level < LEVEL_MIN_VALUE || level >= ULOG_LEVEL_TOTAL) {
         return "?";  // Return a default string for invalid levels
     }
-    return level_strings[LEVEL_STYLE_DEFAULT][level];
+    return level_strings[ULOG_LEVEL_CONFIG_STYLE_DEFAULT][level];
 }
 
 /* ============================================================================
-   Core Feature: Outputs (`output_*`, depends on: Print, Log, Level)
+   Core Feature: Outputs
+   (`output_*`, depends on: Print, Log, Level)
 ============================================================================ */
 
 //  Private
@@ -768,6 +786,10 @@ static output_data_t output_data = {
     .outputs = {{output_stdout_callback, NULL, OUTPUT_STDOUT_DEFAULT_LEVEL}}};
 
 static void output_handle_single(ulog_event *ev, output_t *output) {
+    if (output->callback == NULL) {
+        return;  // Output has been removed, skip it
+    }
+    
     if (level_is_allowed(ev->level, output->level)) {
 
         // Create event copy to avoid va_list issues
@@ -795,7 +817,7 @@ static void output_handle_all(ulog_event *ev) {
 
 static void output_stdout_callback(ulog_event *ev, void *arg) {
     (void)(arg);  // Unused
-    print_target tgt = {.type = LOG_TARGET_STREAM, .dsc.stream = stdout};
+    print_target tgt = {.type = PRINT_TARGET_STREAM, .dsc.stream = stdout};
     log_print_event(&tgt, ev, false, true, true);
 }
 
@@ -829,14 +851,15 @@ ulog_status ulog_output_level_set_all(ulog_level level) {
 }
 
 /* ============================================================================
-   Feature: Extra Outputs (`output_*` depends on: Outputs)
+   Optional Feature: Extra Outputs
+   (`output_*` depends on: Outputs)
 ============================================================================ */
 #if ULOG_HAS_EXTRA_OUTPUTS
 
 //  Private
 // ================
 static void output_file_callback(ulog_event *ev, void *arg) {
-    print_target tgt = {.type = LOG_TARGET_STREAM, .dsc.stream = (FILE *)arg};
+    print_target tgt = {.type = PRINT_TARGET_STREAM, .dsc.stream = (FILE *)arg};
     log_print_event(&tgt, ev, true, false, true);
 }
 
@@ -862,6 +885,31 @@ ulog_output ulog_output_add_file(FILE *file, ulog_level level) {
     return ulog_output_add(output_file_callback, file, level);
 }
 
+/// @brief Remove an output from the logging system
+ulog_status ulog_output_remove(ulog_output output) {
+    if (output < 0 || output >= OUTPUT_TOTAL_NUM) {
+        return ULOG_STATUS_INVALID_ARGUMENT;
+    }
+    
+    if (output == ULOG_OUTPUT_STDOUT) {
+        return ULOG_STATUS_ERROR;  // Cannot remove stdout output
+    }
+    
+    lock_lock();
+    if (output_data.outputs[output].callback == NULL) {
+        lock_unlock();
+        return ULOG_STATUS_ERROR;  // Output not found or already removed
+    }
+    
+    // Mark output as removed by setting callback to NULL
+    output_data.outputs[output].callback = NULL;
+    output_data.outputs[output].arg = NULL;
+    output_data.outputs[output].level = ULOG_LEVEL_TRACE;
+    
+    lock_unlock();
+    return ULOG_STATUS_OK;
+}
+
 #else  // ULOG_HAS_EXTRA_OUTPUTS
 
 // Disabled Public
@@ -874,15 +922,21 @@ ulog_output ulog_output_add(ulog_output_callback_fn callback, void *arg,
     (void)(callback);
     (void)(arg);
     (void)(level);
-    _log_not_enabled("ULOG_BUILD_EXTRA_OUTPUTS");
+    warn_not_enabled("ULOG_BUILD_EXTRA_OUTPUTS");
     return ULOG_OUTPUT_INVALID;
 }
 
 ulog_output ulog_output_add_file(FILE *file, ulog_level level) {
     (void)(file);
     (void)(level);
-    _log_not_enabled("ULOG_BUILD_EXTRA_OUTPUTS");
+    warn_not_enabled("ULOG_BUILD_EXTRA_OUTPUTS");
     return ULOG_OUTPUT_INVALID;
+}
+
+ulog_status ulog_output_remove(ulog_output output) {
+    (void)(output);
+    warn_not_enabled("ULOG_BUILD_EXTRA_OUTPUTS");
+    return ULOG_STATUS_ERROR;
 }
 
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
@@ -890,22 +944,23 @@ ulog_output ulog_output_add_file(FILE *file, ulog_level level) {
 #endif  // ULOG_HAS_EXTRA_OUTPUTS
 
 /* ============================================================================
-   Feature: Topics Config (`topic_cfg_*`, depends on: - )
+   Optional Feature: Dynamic Configuration - Topics
+   (`topic_config_*`, depends on: - )
 ============================================================================ */
 #if ULOG_HAS_DYNAMIC_CONFIG
 
 typedef struct {
     bool enabled;
-} topic_cfg_t;
+} topic_config;
 
-static topic_cfg_t topic_cfg = {
+static topic_config topic_cfg = {
     .enabled = (bool)ULOG_HAS_TOPICS,
 };
 
 // Private
 // ================
 
-bool topic_cfg_is_enabled(void) {
+bool topic_config_is_enabled(void) {
     return topic_cfg.enabled;
 }
 
@@ -927,7 +982,7 @@ void ulog_topic_config(bool enabled) {
 
 void ulog_topic_config(bool enabled) {
     (void)(enabled);
-    _log_not_enabled("ULOG_BUILD_DYNAMIC_CONFIG");
+    warn_not_enabled("ULOG_BUILD_DYNAMIC_CONFIG");
 }
 
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
@@ -935,11 +990,12 @@ void ulog_topic_config(bool enabled) {
 // Disabled Private
 // ================
 
-#define topic_cfg_is_enabled() (ULOG_HAS_TOPICS)
+#define topic_config_is_enabled() (ULOG_HAS_TOPICS)
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
-   Feature: Topics (`topic_*`, depends on: Topics Config, Print, Levels)
+   Optional Feature: Topics
+   (`topic_*`, depends on: Topics Config, Print, Levels)
 ============================================================================ */
 
 #if ULOG_HAS_TOPICS
@@ -1000,7 +1056,7 @@ static topic_t *topic_get(ulog_topic_id topic);
 static ulog_status topic_enable_all();
 
 /// @brief Disable all topics
-/// @returnulog_status
+/// @return ulog_status
 static ulog_status topic_disable_all();
 
 /// @brief Add a new topic
@@ -1011,7 +1067,7 @@ static ulog_topic_id topic_add(const char *topic_name, bool enable);
 // === Common Topic Functions =================================================
 
 static void topic_print(print_target *tgt, ulog_event *ev) {
-    if (!topic_cfg_is_enabled()) {
+    if (!topic_config_is_enabled()) {
         return;  // Topics are disabled, do nothing
     }
 
@@ -1153,42 +1209,42 @@ ulog_topic_id ulog_topic_add(const char *topic_name, bool enable) {
 ulog_status ulog_topic_level_set(const char *topic_name, ulog_level level) {
     (void)(topic_name);
     (void)(level);
-    _log_not_enabled("ULOG_BUILD_TOPICS_NUM");
+    warn_not_enabled("ULOG_BUILD_TOPICS_NUM");
     return ULOG_STATUS_ERROR;
 }
 
 ulog_status ulog_topic_enable(const char *topic_name) {
     (void)(topic_name);
-    _log_not_enabled("ULOG_BUILD_TOPICS_NUM");
+    warn_not_enabled("ULOG_BUILD_TOPICS_NUM");
     return ULOG_STATUS_ERROR;
 }
 
 ulog_status ulog_topic_disable(const char *topic_name) {
     (void)(topic_name);
-    _log_not_enabled("ULOG_BUILD_TOPICS_NUM");
+    warn_not_enabled("ULOG_BUILD_TOPICS_NUM");
     return ULOG_STATUS_ERROR;
 }
 
 ulog_status ulog_topic_enable_all(void) {
-    _log_not_enabled("ULOG_BUILD_TOPICS_NUM");
+    warn_not_enabled("ULOG_BUILD_TOPICS_NUM");
     return ULOG_STATUS_ERROR;
 }
 
 ulog_status ulog_topic_disable_all(void) {
-    _log_not_enabled("ULOG_BUILD_TOPICS_NUM");
+    warn_not_enabled("ULOG_BUILD_TOPICS_NUM");
     return ULOG_STATUS_ERROR;
 }
 
 ulog_topic_id ulog_topic_get_id(const char *topic_name) {
     (void)(topic_name);
-    _log_not_enabled("ULOG_BUILD_TOPICS_NUM");
+    warn_not_enabled("ULOG_BUILD_TOPICS_NUM");
     return ULOG_TOPIC_ID_INVALID;
 }
 
 ulog_topic_id ulog_topic_add(const char *topic_name, bool enable) {
     (void)(topic_name);
     (void)(enable);
-    _log_not_enabled("ULOG_BUILD_TOPICS_NUM");
+    warn_not_enabled("ULOG_BUILD_TOPICS_NUM");
     return ULOG_TOPIC_ID_INVALID;
 }
 
@@ -1204,7 +1260,8 @@ ulog_topic_id ulog_topic_add(const char *topic_name, bool enable) {
 #endif  // ULOG_HAS_TOPICS
 
 /* ============================================================================
-   Feature: Topics - Static Allocation (`topic_*`, depends on: Topics)
+   Optional Feature: Topics - Static Allocation
+   (`topic_*`, depends on: Topics)
 ============================================================================ */
 #if ULOG_HAS_TOPICS && TOPIC_DYNAMIC == false
 // Private
@@ -1242,7 +1299,7 @@ ulog_topic_id topic_str_to_id(const char *str) {
     return ULOG_TOPIC_ID_INVALID;  // Not found
 }
 
-static topic_t *topic_get(int topic) {
+static topic_t *topic_get(ulog_topic_id topic) {
     if (topic < TOPIC_STATIC_NUM && topic >= 0) {
         return &topic_data.topics[topic];
     }
@@ -1276,7 +1333,8 @@ static ulog_topic_id topic_add(const char *topic_name, bool enable) {
 #endif  // ULOG_HAS_TOPICS && TOPIC_DYNAMIC == false
 
 /* ============================================================================
-   Feature: Topics - Dynamic Allocation (`topic_*`, depends on: Topics)
+   Optional Feature: Topics - Dynamic Allocation
+   (`topic_*`, depends on: Topics)
 ============================================================================ */
 
 #if ULOG_HAS_TOPICS && TOPIC_DYNAMIC == true
@@ -1393,22 +1451,23 @@ static ulog_topic_id topic_add(const char *topic_name, bool enable) {
 #endif  // ULOG_HAS_TOPICS && TOPIC_DYNAMIC == true
 
 /* ============================================================================
-   Feature: Source Location Config (`src_loc_cfg_*`, depends on: - )
+   Optional Feature: Dynamic Configuration - Source Location
+   (`src_loc_config_*`, depends on: - )
 ============================================================================ */
 #if ULOG_HAS_DYNAMIC_CONFIG
 
 typedef struct {
     bool enabled;
-} src_loc_cfg_t;
+} src_loc_config;
 
-static src_loc_cfg_t src_loc_cfg = {
+static src_loc_config src_loc_cfg = {
     .enabled = (bool)ULOG_HAS_SOURCE_LOCATION,
 };
 
 // Private
 // ================
 
-bool src_loc_cfg_is_enabled(void) {
+bool src_loc_config_is_enabled(void) {
     return src_loc_cfg.enabled;
 }
 
@@ -1430,7 +1489,7 @@ void ulog_source_location_config(bool enabled) {
 
 void ulog_source_location_config(bool enabled) {
     (void)(enabled);
-    _log_not_enabled("ULOG_BUILD_SOURCE_LOCATION");
+    warn_not_enabled("ULOG_BUILD_SOURCE_LOCATION");
 }
 
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
@@ -1438,13 +1497,13 @@ void ulog_source_location_config(bool enabled) {
 // Disabled Private
 // ================
 
-#define src_loc_cfg_is_enabled() (ULOG_HAS_SOURCE_LOCATION)
+#define src_loc_config_is_enabled() (ULOG_HAS_SOURCE_LOCATION)
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
-   Core Feature: Log (`log_*`, depends on: Print, Level, Outputs,
-                      Extra Outputs, Prefix, Topics, Time, Color,
-                      Locking, Source Location)
+   Core Feature: Log
+   (`log_*`, depends on: Print, Level, Outputs, Extra Outputs, Prefix, Topics,
+                         Time, Color, Locking, Source Location)
 ============================================================================ */
 
 // Private
@@ -1455,7 +1514,7 @@ void ulog_source_location_config(bool enabled) {
 /// @param ev - Event
 static void log_print_message(print_target *tgt, ulog_event *ev) {
 
-    if (src_loc_cfg_is_enabled()) {
+    if (src_loc_config_is_enabled()) {
         print_to_target(tgt, "%s:%d: ", ev->file, ev->line);  // file and line
     }
 
@@ -1498,8 +1557,8 @@ static void log_print_event(print_target *tgt, ulog_event *ev, bool full_time,
               : time_print_short(tgt, ev, append_space);
 
     prefix_print(tgt, ev);
-    topic_print(tgt, ev);
     level_print(tgt, ev);
+    topic_print(tgt, ev);
     log_print_message(tgt, ev);
 
     color ? color_print_end(tgt) : (void)0;
@@ -1542,7 +1601,7 @@ ulog_status ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size) {
     if (out == NULL || out_size == 0) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }
-    print_target tgt = {.type       = LOG_TARGET_BUFFER,
+    print_target tgt = {.type       = PRINT_TARGET_BUFFER,
                         .dsc.buffer = {out, 0, out_size}};
     log_print_event(&tgt, ev, false, false, false);
     return ULOG_STATUS_OK;
@@ -1568,6 +1627,7 @@ void ulog_log(ulog_level level, const char *file, int line, const char *topic,
     log_fill_event(&ev, message, level, file, line, topic_id);
     va_start(ev.message_format_args, message);
 
+    prefix_update(&ev);
     output_handle_all(&ev);
 
     va_end(ev.message_format_args);
