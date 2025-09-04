@@ -244,7 +244,7 @@ ulog_topic_level_set("storage", ULOG_LEVEL_WARN); // Storage is set to WARN
 
 ulog_topic_info("storage", "No free space"); // generated
 ulog_topic_info("network", "Connected to server"); // filtered out topic
-ulog_topic_debug("storage", "No free space"); // filtered out level DEBUG <INFO
+ulog_topic_debug("storage", "No free space"); // filtered out level DEBUG < INFO
 ```
 
 ### Extra Outputs
@@ -335,7 +335,7 @@ The output will be:
 ### Time
 
 - Static configuration options: `ULOG_BUILD_TIME`
-- Values (bool): <0/1>
+- Values (bool): `0/1`
 - Default: `0`.
 
 Prints a time stamp in from of all log messages. Your platform must support `time.h`.
@@ -372,7 +372,7 @@ Use ANSI color escape codes when printing to stdout. If the terminal supports, t
 ### Source Location
 
 - Static configuration options: `ULOG_BUILD_SOURCE_LOCATION`
-- Values (bool): <0/1>
+- Values (bool): `0/1`
 - Default: `1`.
 
 Hide or show the file name and line number. See output examples below:
@@ -383,7 +383,7 @@ Hide or show the file name and line number. See output examples below:
 ### Level Style
 
 - Static configuration options: `ULOG_BUILD_LEVEL_STYLE`
-- Values (bool/enum): <0/1> <ULOG_LEVEL_STYLE_LONG/ULOG_LEVEL_STYLE_SHORT>
+- Values (bool/enum): `0/1`, `ULOG_LEVEL_STYLE_LONG/ULOG_LEVEL_STYLE_SHORT`
 - Default: `ULOG_LEVEL_STYLE_LONG`.
 
 Allows to use short level strings, e.g. "T" for "TRACE", "I" for "INFO":
