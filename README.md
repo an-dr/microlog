@@ -130,6 +130,10 @@ INFO  src/main.cpp:4: Hello, World
 
 Contributions are welcome! Please read the [CONTRIBUTING.md](CONTRIBUTING.md) for details, I tried to keep it simple.
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for details.
+
 ## License
 
 This library is free software; you can redistribute it and/or modify it under the terms of the MIT license. See [LICENSE](LICENSE) for details.
