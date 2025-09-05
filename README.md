@@ -1,22 +1,18 @@
-# microlog
+# microlog - Extensible and configurable logging library for embedded and desktop applications
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Latest](https://img.shields.io/github/v/tag/an-dr/microlog?style=flat&filter=v*&label=Release)](https://github.com/an-dr/microlog/tags)
 [![Tests](https://github.com/an-dr/microlog/actions/workflows/workflow-tests.yml/badge.svg?branch=main)](https://github.com/an-dr/microlog/actions/workflows/workflow-tests.yml)
 
-A simple customizable logging library. Features:
+![main_pic](doc/README/diagram.drawio.svg)
 
-- **Log topics**
-  - To filter log messages by subsystems, e.g. "network", "storage", etc.
-- **Callbacks for custom output**
-  - E.g. multiplefiles, serial ports, etc.
-- **Thread-safety**
-  - Via external locking injection
-- **Customizable log format**
-  - Color, custom dynamic data, optional info, etc.
-- **Support for embedded systems**
-  - Optional static memory allocation, optional color, no special dependencies
-- **Easy to install**
-  - Just two files, and support for many build systems
+- **Easy to use** - simple API, works out of the box
+- **Advanced filtering** and log levels per **topic** or **output**
+- **Thread-safety** via external locking injection
+- **Customization** - only data you need
+- **Support for embedded systems** static allocation, small size
+- **Easy to install** two files for copy-paste and support for many build systems
+- **For everyone** - C and C++ support, works with any compiler, any platform, commercial or open-source use
 
 In the default configuration it looks like this:
 
@@ -41,7 +37,7 @@ The project is based on several core principles:
 
 ## Table of Contents
 
-- [microlog](#microlog)
+- [microlog - Extensible and configurable logging library for embedded and desktop applications](#microlog---extensible-and-configurable-logging-library-for-embedded-and-desktop-applications)
     - [Table of Contents](#table-of-contents)
     - [Quick Start](#quick-start)
         - [1. Install](#1-install)
@@ -133,6 +129,10 @@ INFO  src/main.cpp:4: Hello, World
 ## Contributing
 
 Contributions are welcome! Please read the [CONTRIBUTING.md](CONTRIBUTING.md) for details, I tried to keep it simple.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for details.
 
 ## License
 
