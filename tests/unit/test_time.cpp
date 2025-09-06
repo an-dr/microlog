@@ -138,7 +138,7 @@ void _check_file_time(bool prefix = false) {
 
     FILE *fp = fopen(filename.c_str(), "w");
     REQUIRE(fp != nullptr);
-    ulog_output file_output = ulog_output_add_file(fp, ULOG_LEVEL_INFO);
+    ulog_output_id file_output = ulog_output_add_file(fp, ULOG_LEVEL_INFO);
 
     time_t before, after;
     _get_time_bounds(before, after);

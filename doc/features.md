@@ -274,7 +274,7 @@ To write to a file open a file and pass it to the `ulog_output_add_file` functio
 ```c
 FILE *fp = fopen("log.txt", "w");
 if (fp) {
-    ulog_output file_output = ulog_output_add_file(fp, ULOG_LEVEL_INFO);
+    ulog_output_id file_output = ulog_output_add_file(fp, ULOG_LEVEL_INFO);
     if (file_output != ULOG_OUTPUT_INVALID) {
         ulog_topic_info("Outputs", "File output added");
         ulog_output_level_set(file_output, ULOG_LEVEL_TRACE);
@@ -300,7 +300,7 @@ void arduino_callback(ulog_event *ev, void *arg) {
 
 . . .
 
-ulog_output ard_output = ulog_output_add(arduino_callback, NULL, ULOG_LEVEL_INFO);
+ulog_output_id ard_output = ulog_output_add(arduino_callback, NULL, ULOG_LEVEL_INFO);
 if (ard_output != ULOG_OUTPUT_INVALID) {
     ulog_info("Will be printed to Arduino serial");
     ulog_output_remove(ard_output); // For demo purposes
