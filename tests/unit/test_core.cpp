@@ -27,12 +27,12 @@ bool TestFixture::callback_is_set = false;
 TEST_CASE_FIXTURE(TestFixture, "Base") {
     ulog_output_level_set_all(ULOG_LEVEL_TRACE);
 
-    log_trace("This is a TRACE message: %d", 123);
-    log_debug("This is a DEBUG message: %s", "test");
-    log_info("This is an INFO message: %.2f", 1.23);
-    log_warn("This is a WARN message");
-    log_error("This is an ERROR message: %x", 0xff);
-    log_fatal("This is a FATAL message");
+    ulog_trace("This is a TRACE message: %d", 123);
+    ulog_debug("This is a DEBUG message: %s", "test");
+    ulog_info("This is an INFO message: %.2f", 1.23);
+    ulog_warn("This is a WARN message");
+    ulog_error("This is an ERROR message: %x", 0xff);
+    ulog_fatal("This is a FATAL message");
 
     CHECK(ut_callback_get_message_count() == 6);
     CHECK(strstr(ut_callback_get_last_message(), "This is a FATAL message") !=
@@ -42,17 +42,17 @@ TEST_CASE_FIXTURE(TestFixture, "Base") {
 TEST_CASE_FIXTURE(TestFixture, "Levels") {
     ulog_output_level_set_all(ULOG_LEVEL_INFO);
 
-    log_trace("This TRACE should not be processed.");
+    ulog_trace("This TRACE should not be processed.");
     CHECK(ut_callback_get_message_count() == 0);
-    log_debug("This DEBUG should not be processed.");
+    ulog_debug("This DEBUG should not be processed.");
     CHECK(ut_callback_get_message_count() == 0);
-    log_info("This INFO should be processed.");
+    ulog_info("This INFO should be processed.");
     CHECK(ut_callback_get_message_count() == 1);
-    log_warn("This WARN should be processed.");
+    ulog_warn("This WARN should be processed.");
     CHECK(ut_callback_get_message_count() == 2);
-    log_error("This ERROR should be processed.");
+    ulog_error("This ERROR should be processed.");
     CHECK(ut_callback_get_message_count() == 3);
-    log_fatal("This FATAL should be processed.");
+    ulog_fatal("This FATAL should be processed.");
     CHECK(ut_callback_get_message_count() == 4);
 }
 
@@ -62,7 +62,7 @@ TEST_CASE_FIXTURE(TestFixture, "File Output") {
     REQUIRE(fp != nullptr);
     ulog_output_add_file(fp, ULOG_LEVEL_INFO);
 
-    log_info("This is an INFO message to file.");
+    ulog_info("This is an INFO message to file.");
     fclose(fp);
 
     // Check if the file was created and contains the expected message

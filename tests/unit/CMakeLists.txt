@@ -96,12 +96,3 @@ target_sources(test_dynamic_config PRIVATE ${ULOG_SRC}
 target_include_directories(test_dynamic_config PRIVATE ${ULOG_INCLUDE_DIR})
 target_compile_definitions(test_dynamic_config PRIVATE ${ULOG_CONFIG_TEST_DYNAMIC_CONFIG})
 add_test(NAME DynamicConfigTest COMMAND test_dynamic_config)
-
-# --- Output Test ---
-add_executable(test_output)
-target_sources(test_output PRIVATE ${ULOG_SRC} 
-                                   ut_callback.c 
-                                   test_output.cpp)
-target_include_directories(test_output PRIVATE ${ULOG_INCLUDE_DIR})
-target_compile_definitions(test_output PRIVATE ${ULOG_CONFIG_TEST_CORE})
-add_test(NAME OutputTest COMMAND test_output)

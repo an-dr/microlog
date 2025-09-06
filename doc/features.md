@@ -4,7 +4,6 @@
     - [Core Features](#core-features)
         - [Static Configuration](#static-configuration)
         - [Logging and Levels](#logging-and-levels)
-            - [Outputs](#outputs)
         - [Events](#events)
         - [Lock](#lock)
     - [Optional Features](#optional-features)
@@ -101,7 +100,7 @@ There are 7 log severity levels:
 The library provides macros for logging:
 
 ```c
-ulog_trace(const char *fmt, ...); // Basic logging
+ulog_trace(const char *fmt, ...);
 ulog_debug(const char *fmt, ...);
 ulog_info(const char *fmt, ...);
 ulog_warn(const char *fmt, ...);
@@ -115,31 +114,21 @@ Each function takes a printf format string followed by additional arguments:
 ulog_info("Info message %f", 3.0)
 ```
 
-There are other variations of the macros involving topics and outputs described in the following sections.
-
-- `ulog_*` - basic logging functions
-- `ulog_*_t` - topic variants (`t` = topic) for `ulog_topic_*`
-- `ulog_*_o` - output variants (`o` = output) for `ulog_output_*`
-- `ulog_*_to` - output or topic+output variants (`to` = topic+output) for `ulog_topic_output_*`
-
-#### Outputs
-
-By default, there is only one output - **stdout** (ID: `ULOG_OUTPUT_STDOUT`).
-
-When you have multiple outputs configured (see [Extra Outputs](#extra-outputs) section), you can log to specific outputs using the output-specific macros:
+The default log level is `ULOG_LEVEL_TRACE`, such that nothing is ignored. And by default there is only one available output - **stdout**. To configure its severity the user can use these two functions:
 
 ```c
-ulog_output_trace(output_id, "Message");   // or ulog_trace_o(output_id, "Message")
-ulog_output_debug(output_id, "Message");   // or ulog_debug_o(output_id, "Message")
-ulog_output_info(output_id, "Message");    // or ulog_info_o(output_id, "Message")
-ulog_output_warn(output_id, "Message");    // or ulog_warn_o(output_id, "Message")
-ulog_output_error(output_id, "Message");   // or ulog_error_o(output_id, "Message")
-ulog_output_fatal(output_id, "Message");   // or ulog_fatal_o(output_id, "Message")
+ulog_output_level_set(ULOG_OUTPUT_STDOUT, ULOG_LEVEL_INFO);
+
+// or
+
+ulog_output_level_set_all(ULOG_LEVEL_TRACE);
 ```
 
-Where `output_id` is the ID returned by `ulog_output_add()` or `ulog_output_add_file()`, or the predefined `ULOG_OUTPUT_STDOUT`. This allows you to route specific messages to particular outputs while respecting each output's individual level settings. For all outputs there is `ULOG_OUTPUT_ALL` ID.
+In this case the stdout-printed line will be:
 
-The default log level is `ULOG_LEVEL_TRACE`, such that nothing is ignored. And by default there is only one available output - **stdout**. To configure its severity the user can use these two functions:
+```txt
+INFO  src/main.c:66: Info message 3.000000
+```
 
 ### Events
 
@@ -195,15 +184,15 @@ The feature is controlled by `ULOG_BUILD_TOPICS_NUM`. It allows to filter log me
 
 There are two mechanism of working with the topics:
 
-- **Dynamic** allocation - slightly slower, but new topic will be added automatically
-- **Static** allocation - faster, but you need to define all topic using `ulog_topic_add`
+- **Dynamic** allocation - slightly slower than static allocation
+- **Static** allocation - faster
 
 If you want to use dynamic topics, you need to define `ULOG_BUILD_TOPICS_NUM` to be -1. Otherwise, you need to define the number of topics for static allocation.
 
 Printing the log message with the topic is done by the set of function-like macros similar to `ulog_xxx`, but with the topic as the first argument:
 
 ```c
-// Short variation of ulog_topic_* is ulog_*_t(...), e.g. ulog_trace_t(TOPIC, MESSAGE, ...)
+// Short variation of ulog_topic_* is ulog_t_*(...), e.g. ulog_t_trace(TOPIC, MESSAGE, ...)
 ulog_topic_trace(const char *topic_name, const char *fmt, ...)
 ulog_topic_debug(const char *topic_name, const char *fmt, ...)
 ulog_topic_info(const char *topic_name, const char *fmt, ...) 
@@ -211,22 +200,15 @@ ulog_topic_warn(const char *topic_name, const char *fmt, ...)
 ulog_topic_error(const char *topic_name, const char *fmt, ...)
 ulog_topic_fatal(const char *topic_name, const char *fmt, ...)
 
-// Short variation of ulog_topic_output_* is ulog_*_to, e.g. ulog_info_to(TOPIC, OUTPUT, MESSAGE, ...)
-ulog_topic_output_trace(const char *topic_name, ulog_output_id output_id, const char *fmt, ...)
-ulog_topic_output_debug(const char *topic_name, ulog_output_id output_id, const char *fmt, ...)
-ulog_topic_output_info(const char *topic_name, ulog_output_id output_id, const char *fmt, ...)
-ulog_topic_output_warn(const char *topic_name, ulog_output_id output_id, const char *fmt, ...)
-ulog_topic_output_error(const char *topic_name, ulog_output_id output_id, const char *fmt, ...)
-ulog_topic_output_fatal(const char *topic_name, ulog_output_id output_id, const char *fmt, ...)
 ```
 
-In static mode you can decide whether enable or disable the topic during its definition. In dynamic mode all topics are disabled by default.
+All topic must be added before usage via `ulog_topic_add`. At this step it is possible to select particular output for the topic (e.g. print topic `Credentials` only to a local file, or `Operator Info` only to `ULOG_OUTPUT_STDOUT`)
 
 For example (static topics):
 
 ```c
-ulog_topic_add("network", true); // enabled by default
-ulog_topic_add("storage", false); // disabled by default
+ulog_topic_add("network", ULOG_OUTPUT_ALL, true); // enabled by default
+ulog_topic_add("storage", ULOG_OUTPUT_ALL, false); // disabled by default
 
 ulog_topic_info("network", "Connected to server");
 
@@ -252,8 +234,8 @@ For example:
 
 ```c
 // By default, both topic logging levels are set to ULOG_LEVEL_TRACE
-ulog_topic_add("network", true);
-ulog_topic_add("storage", true);
+ulog_topic_add("network", ULOG_OUTPUT_ALL, true);
+ulog_topic_add("storage", ULOG_OUTPUT_ALL, true);
 
 // Both topics generate log as global logging level is set to ULOG_LEVEL_TRACE
 ulog_topic_info("network", "Connected to server");
@@ -272,8 +254,6 @@ ulog_topic_debug("storage", "No free space"); // filtered out level DEBUG < INFO
 - Static configuration options: `ULOG_BUILD_EXTRA_OUTPUTS`
 - Values (int): `0...INT32_MAX`
 - Default: `0`.
-
-Extra outputs allow you to direct log messages to multiple destinations simultaneously (files, custom callbacks, etc.). Once configured, you can use [output-specific logging macros](#outputs) to send messages to particular outputs, or continue using basic logging macros which send to all outputs.
 
 The feature is controlled by the following define:
 
@@ -294,19 +274,14 @@ vs
 To write to a file open a file and pass it to the `ulog_output_add_file` function.
 
 ```c
+ulog_topic_add("Outputs", ULOG_OUTPUT_ALL, true);
 FILE *fp = fopen("log.txt", "w");
 if (fp) {
     ulog_output_id file_output = ulog_output_add_file(fp, ULOG_LEVEL_INFO);
     if (file_output != ULOG_OUTPUT_INVALID) {
         ulog_topic_info("Outputs", "File output added");
         ulog_output_level_set(file_output, ULOG_LEVEL_TRACE);
-        
-        // Use output-specific macros to log only to this file
-        ulog_output_info(file_output, "This goes only to the file");
-        ulog_info_o(file_output, "Short alias - also only to file");
-        
-        // Regular macros go to ALL outputs (including this file)
-        ulog_info("This goes to all outputs");
+        ulog_topic_trace("Outputs", "File output level set to TRACE");
     }
     ulog_output_remove(file_output);  // For demo purposes
     fclose(fp);  // For demo purposes
@@ -331,11 +306,6 @@ void arduino_callback(ulog_event *ev, void *arg) {
 ulog_output_id ard_output = ulog_output_add(arduino_callback, NULL, ULOG_LEVEL_INFO);
 if (ard_output != ULOG_OUTPUT_INVALID) {
     ulog_info("Will be printed to Arduino serial");
-    
-    // Send specific messages only to Arduino output
-    ulog_output_warn(ard_output, "Arduino-specific warning");
-    ulog_warn_o(ard_output, "Short alias for Arduino warning");
-    
     ulog_output_remove(ard_output); // For demo purposes
 }
 ```

@@ -25,7 +25,7 @@ struct LockingTestFixture {
 };
 
 TEST_CASE_FIXTURE(LockingTestFixture, "Thread Safety: Locking") {
-    log_info("Lock test");
+    ulog_info("Lock test");
     CHECK(std::count(lock_events.begin(), lock_events.end(), "lock") >= 1);
     CHECK(std::count(lock_events.begin(), lock_events.end(), "unlock") >= 1);
 }

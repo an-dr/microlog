@@ -9,14 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Per-output logging via ulog_output_* macros (e.g. `ulog_output_info(...)`)
-- Printing of a specific topic to a specific output via `ulog_topic_output_*`
-- Consistent logging alias `ulog_info`/`_o`/`_t`/`_to` - for output, topic, and topic+output, e.g. `ulog_trace_to("My Topic", ULOG_OUTPUT_ALL, "Message")`
+- Support binding topic to a specific output via `ulog_topic_add(TOPIC, OUTPUT, ENABLED)`
 
 ### Changed
 
 - **BREAKING**: Standardized macro alias naming conventions for consistency
-  - Renamed topic aliases: `logt_*` → `ulog_*_t` (e.g., `logt_info` → `ulog_info_t`)
+  - Renamed topic aliases: `logt_*` → `ulog_t_*` (e.g., `logt_info` → `ulog_t_info`)
   - Removed basic aliases: `log_*` → use `ulog_*` directly (e.g., `log_info` → `ulog_info`)
 
 ## [v7.0.0-alpha.1] - September 4, 2025

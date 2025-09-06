@@ -24,56 +24,56 @@ struct TestFixture {
 bool TestFixture::callback_is_set = false;
 
 TEST_CASE_FIXTURE(TestFixture, "Topics: Enable/Disable and Levels") {
-    ulog_topic_add("testtopic", true);
+    ulog_topic_add("testtopic", ULOG_OUTPUT_ALL, true);
 
-    logt_trace("testtopic",
+    ulog_t_trace("testtopic",
                "Topic enabled - At default topic level - should appear");
     CHECK(ut_callback_get_message_count() == 1);
 
-    logt_error("testtopic", "Above default topic level - should appear");
+    ulog_t_error("testtopic", "Above default topic level - should appear");
     CHECK(ut_callback_get_message_count() == 2);
 
     ulog_topic_disable("testtopic");
-    logt_info("testtopic", "Should not appear");
+    ulog_t_info("testtopic", "Should not appear");
     CHECK(ut_callback_get_message_count() == 2);
 
     ulog_topic_enable("testtopic");
     ulog_topic_level_set("testtopic", ULOG_LEVEL_ERROR);
-    logt_warn("testtopic", "Below topic level - should not appear");
+    ulog_t_warn("testtopic", "Below topic level - should not appear");
     CHECK(ut_callback_get_message_count() == 2);
 
-    logt_error("testtopic", "At topic level - should appear");
+    ulog_t_error("testtopic", "At topic level - should appear");
     CHECK(ut_callback_get_message_count() == 3);
 
     ulog_topic_level_set("testtopic", ULOG_LEVEL_TRACE);
-    logt_trace("testtopic", "At topic level - should appear");
+    ulog_t_trace("testtopic", "At topic level - should appear");
     CHECK(ut_callback_get_message_count() == 4);
 
     ulog_topic_disable("testtopic");
-    logt_info("testtopic", "Should not appear again");
+    ulog_t_info("testtopic", "Should not appear again");
     CHECK(ut_callback_get_message_count() == 4);
 
     ulog_topic_enable("testtopic");
-    logt_info("testtopic", "Topic re-enabled and should appear");
+    ulog_t_info("testtopic", "Topic re-enabled and should appear");
     CHECK(ut_callback_get_message_count() == 5);
 
     ulog_topic_level_set("testtopic", ULOG_LEVEL_INFO);
-    logt_info("testtopic", "Topic level set to INFO and should appear");
+    ulog_t_info("testtopic", "Topic level set to INFO and should appear");
     CHECK(ut_callback_get_message_count() == 6);
 
     ulog_topic_disable_all();
-    logt_info("testtopic", "Should not appear after disabling all topics");
+    ulog_t_info("testtopic", "Should not appear after disabling all topics");
     CHECK(ut_callback_get_message_count() == 6);
 
     ulog_topic_enable_all();
-    logt_info("testtopic", "Should appear after enabling all topics");
+    ulog_t_info("testtopic", "Should appear after enabling all topics");
     CHECK(ut_callback_get_message_count() == 7);
 }
 
 TEST_CASE_FIXTURE(TestFixture, "Topics: Cannot create topic with empty name") {
     int res;
 
-    res = ulog_topic_add(NULL, true);
+    res = ulog_topic_add(NULL, ULOG_OUTPUT_ALL, true);
     CHECK(res == -1);
 }
 
@@ -83,18 +83,18 @@ TEST_CASE_FIXTURE(TestFixture, "Topics: Cannot create duplicate") {
     // Check that the topic created in previous test fixture is still available
     res = ulog_topic_get_id("testtopic");
     CHECK(res == 0);
-    logt_info(
+    ulog_t_info(
         "testtopic",
         "Should appear because the topic already exists and level set to INFO");
     CHECK(ut_callback_get_message_count() == 1);
 
     // Check that re-adding an existing topic does not duplicate it (thanks to
     // topic ID returned by ulog_topic_add)
-    res = ulog_topic_add("testtopic", true);
+    res = ulog_topic_add("testtopic", ULOG_OUTPUT_ALL, true);
     CHECK(res == 0);
-    res = ulog_topic_add("testtopic_2", true);
+    res = ulog_topic_add("testtopic_2", ULOG_OUTPUT_ALL, true);
     CHECK(res == 1);
-    logt_error("testtopic_2",
+    ulog_t_error("testtopic_2",
                "Should appear because there is still one free slot");
     CHECK(ut_callback_get_message_count() == 2);
 }
@@ -103,9 +103,9 @@ TEST_CASE_FIXTURE(TestFixture,
                   "Topics: Cannot create more than ULOG_BUILD_TOPICS_NUM topics") {
     int res;
 
-    res = ulog_topic_add("testtopic_3", true);
+    res = ulog_topic_add("testtopic_3", ULOG_OUTPUT_ALL, true);
     CHECK(res == -1);
-    logt_error("testtopic_3",
+    ulog_t_error("testtopic_3",
                "Should not appear because static allocation is set to 2 slots");
     CHECK(ut_callback_get_message_count() == 0);
 }
