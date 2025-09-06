@@ -155,7 +155,7 @@ static inline bool is_str_empty(const char *str) {
 // Output:
 //   WARN src/main.c:42: 'ulog_configure_time' ignored: ULOG_BUILD_TIME disabled
 #define warn_not_enabled(feature)                                              \
-    log_warn("'%s' called with %s disabled", __func__, feature)
+    ulog_warn("'%s' called with %s disabled", __func__, feature)
 
 /* ============================================================================
    Core Feature: Print

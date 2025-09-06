@@ -206,42 +206,42 @@ enum {
 };
 
 // clang-format off
-/// @brief Log a TRACE level message to a specific output. Alias: `logo_trace`
+/// @brief Log a TRACE level message to a specific output. Alias: `ulog_trace_o`
 /// @param OUTPUT_HANDLE Output handle to log to
 /// @param ... Format string and arguments (printf-style)
 #define ulog_output_trace(OUTPUT_HANDLE, ...) ulog_log(OUTPUT_HANDLE, ULOG_LEVEL_TRACE, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define logo_trace(...) ulog_output_trace(__VA_ARGS__) // Alias for `ulog_output_trace`
+#define ulog_trace_o(...) ulog_output_trace(__VA_ARGS__) // Alias for `ulog_output_trace`
 
     
 /// @brief Log a DEBUG level message to a specific output
 /// @param OUTPUT_HANDLE Output handle to log to
 /// @param ... Format string and arguments (printf-style)
 #define ulog_output_debug(OUTPUT_HANDLE, ...) ulog_log(OUTPUT_HANDLE, ULOG_LEVEL_DEBUG, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define logo_debug(...) ulog_output_debug(__VA_ARGS__) // Alias for `ulog_output_debug`
+#define ulog_debug_o(...) ulog_output_debug(__VA_ARGS__) // Alias for `ulog_output_debug`
 
 /// @brief Log an INFO level message to a specific output
 /// @param OUTPUT_HANDLE Output handle to log to
 /// @param ... Format string and arguments (printf-style)
 #define ulog_output_info(OUTPUT_HANDLE, ...) ulog_log(OUTPUT_HANDLE, ULOG_LEVEL_INFO, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define logo_info(...) ulog_output_info(__VA_ARGS__) // Alias for `ulog_output_info`
+#define ulog_info_o(...) ulog_output_info(__VA_ARGS__) // Alias for `ulog_output_info`
 
 /// @brief Log a WARN level message to a specific output
 /// @param OUTPUT_HANDLE Output handle to log to
 /// @param ... Format string and arguments (printf-style)
 #define ulog_output_warn(OUTPUT_HANDLE, ...) ulog_log(OUTPUT_HANDLE, ULOG_LEVEL_WARN, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define logo_warn(...) ulog_output_warn(__VA_ARGS__) // Alias for `ulog_output_warn`
+#define ulog_warn_o(...) ulog_output_warn(__VA_ARGS__) // Alias for `ulog_output_warn`
 
 /// @brief Log an ERROR level message to a specific output
 /// @param OUTPUT_HANDLE Output handle to log to
 /// @param ... Format string and arguments (printf-style)
 #define ulog_output_error(OUTPUT_HANDLE, ...) ulog_log(OUTPUT_HANDLE, ULOG_LEVEL_ERROR, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define logo_error(...) ulog_output_error(__VA_ARGS__) // Alias for `ulog_output_error`
+#define ulog_error_o(...) ulog_output_error(__VA_ARGS__) // Alias for `ulog_output_error`
 
 /// @brief Log a FATAL level message to a specific output
 /// @param OUTPUT_HANDLE Output handle to log to
 /// @param ... Format string and arguments (printf-style)
 #define ulog_output_fatal(OUTPUT_HANDLE, ...) ulog_log(OUTPUT_HANDLE, ULOG_LEVEL_FATAL, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define logo_fatal(...) ulog_output_fatal(__VA_ARGS__) // Alias for `ulog_output_fatal`
+#define ulog_fatal_o(...) ulog_output_fatal(__VA_ARGS__) // Alias for `ulog_output_fatal`
 // clang-format on
 
 /// @brief Callback function type for custom log output handlers
@@ -295,84 +295,84 @@ ulog_status ulog_output_remove(ulog_output_id output);
 /// @param TOPIC_NAME Topic name string
 /// @param ... Format string and arguments (printf-style)
 #define ulog_topic_trace(TOPIC_NAME, ...) ulog_log(ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_trace(...) ulog_topic_trace(__VA_ARGS__) // Alias for `ulog_topic_trace`
+#define ulog_trace_t(...) ulog_topic_trace(__VA_ARGS__) // Alias for `ulog_topic_trace`
 
 /// @brief Log a DEBUG level message with topic (requires ULOG_BUILD_TOPICS!=0 or
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param TOPIC_NAME Topic name string
 /// @param ... Format string and arguments (printf-style)
 #define ulog_topic_debug(TOPIC_NAME, ...) ulog_log(ULOG_OUTPUT_ALL, ULOG_LEVEL_DEBUG, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_debug(...) ulog_topic_debug(__VA_ARGS__)  // Alias for `ulog_topic_debug`
+#define ulog_debug_t(...) ulog_topic_debug(__VA_ARGS__)  // Alias for `ulog_topic_debug`
 
 /// @brief Log an INFO level message with topic (requires ULOG_BUILD_TOPICS!=0 or
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param TOPIC_NAME Topic name string
 /// @param ... Format string and arguments (printf-style)
 #define ulog_topic_info(TOPIC_NAME, ...) ulog_log(ULOG_OUTPUT_ALL, ULOG_LEVEL_INFO, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_info(...) ulog_topic_info(__VA_ARGS__)  // Alias for `ulog_topic_info`
+#define ulog_info_t(...) ulog_topic_info(__VA_ARGS__)  // Alias for `ulog_topic_info`
 
 /// @brief Log a WARN level message with topic (requires ULOG_BUILD_TOPICS!=0 or
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param TOPIC_NAME Topic name string
 /// @param ... Format string and arguments (printf-style)
 #define ulog_topic_warn(TOPIC_NAME, ...) ulog_log(ULOG_OUTPUT_ALL, ULOG_LEVEL_WARN, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_warn(...) ulog_topic_warn(__VA_ARGS__)  // Alias for `ulog_topic_warn`
+#define ulog_warn_t(...) ulog_topic_warn(__VA_ARGS__)  // Alias for `ulog_topic_warn`
 
 /// @brief Log an ERROR level message with topic (requires ULOG_BUILD_TOPICS!=0 or
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param TOPIC_NAME Topic name string
 /// @param ... Format string and arguments (printf-style)
 #define ulog_topic_error(TOPIC_NAME, ...) ulog_log(ULOG_OUTPUT_ALL, ULOG_LEVEL_ERROR, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_error(...) ulog_topic_error(__VA_ARGS__)  // Alias for `ulog_topic_error`
+#define ulog_error_t(...) ulog_topic_error(__VA_ARGS__)  // Alias for `ulog_topic_error`
 
 /// @brief Log a FATAL level message with topic (requires ULOG_BUILD_TOPICS!=0 or
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param TOPIC_NAME Topic name string
 /// @param ... Format string and arguments (printf-style)
 #define ulog_topic_fatal(TOPIC_NAME, ...) ulog_log(ULOG_OUTPUT_ALL, ULOG_LEVEL_FATAL, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logt_fatal(...) ulog_topic_fatal(__VA_ARGS__)  // Alias for `ulog_topic_fatal`
+#define ulog_fatal_t(...) ulog_topic_fatal(__VA_ARGS__)  // Alias for `ulog_topic_fatal`
 
 /// @brief Log a TRACE level message with topic to a specific output
 /// @param OUTPUT_HANDLE Output handle to log to
 /// @param TOPIC_NAME Topic name string
 /// @param ... Format string and arguments (printf-style)
 #define ulog_topic_output_trace(TOPIC_NAME, OUTPUT_HANDLE, ...) ulog_log(OUTPUT_HANDLE, ULOG_LEVEL_TRACE, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logto_trace(...) ulog_topic_output_trace(__VA_ARGS__)  // Alias for `ulog_topic_output_trace`
+#define ulog_trace_to(...) ulog_topic_output_trace(__VA_ARGS__)  // Alias for `ulog_topic_output_trace`
 
 /// @brief Log a DEBUG level message with topic to a specific output
 /// @param OUTPUT_HANDLE Output handle to log to
 /// @param TOPIC_NAME Topic name string
 /// @param ... Format string and arguments (printf-style)
 #define ulog_topic_output_debug(TOPIC_NAME, OUTPUT_HANDLE, ...) ulog_log(OUTPUT_HANDLE, ULOG_LEVEL_DEBUG, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logto_debug(...) ulog_topic_output_debug(__VA_ARGS__)  // Alias for `ulog_topic_output_debug`
+#define ulog_debug_to(...) ulog_topic_output_debug(__VA_ARGS__)  // Alias for `ulog_topic_output_debug`
 
 /// @brief Log an INFO level message with topic to a specific output
 /// @param OUTPUT_HANDLE Output handle to log to
 /// @param TOPIC_NAME Topic name string
 /// @param ... Format string and arguments (printf-style)
 #define ulog_topic_output_info(TOPIC_NAME, OUTPUT_HANDLE, ...)  ulog_log(OUTPUT_HANDLE, ULOG_LEVEL_INFO, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logto_info(...) ulog_topic_output_info(__VA_ARGS__)  // Alias for `ulog_topic_output_info`
+#define ulog_info_to(...) ulog_topic_output_info(__VA_ARGS__)  // Alias for `ulog_topic_output_info`
 
 /// @brief Log a WARN level message with topic to a specific output
 /// @param OUTPUT_HANDLE Output handle to log to
 /// @param TOPIC_NAME Topic name string
 /// @param ... Format string and arguments (printf-style)
 #define ulog_topic_output_warn(TOPIC_NAME, OUTPUT_HANDLE, ...)  ulog_log(OUTPUT_HANDLE, ULOG_LEVEL_WARN, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logto_warn(...) ulog_topic_output_warn(__VA_ARGS__)  // Alias for `ulog_topic_output_warn`
+#define ulog_warn_to(...) ulog_topic_output_warn(__VA_ARGS__)  // Alias for `ulog_topic_output_warn`
 
 /// @brief Log an ERROR level message with topic to a specific output
 /// @param OUTPUT_HANDLE Output handle to log to
 /// @param TOPIC_NAME Topic name string
 /// @param ... Format string and arguments (printf-style)
 #define ulog_topic_output_error(TOPIC_NAME, OUTPUT_HANDLE, ...) ulog_log(OUTPUT_HANDLE, ULOG_LEVEL_ERROR, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logto_error(...) ulog_topic_output_error(__VA_ARGS__)  // Alias for `ulog_topic_output_error`
+#define ulog_error_to(...) ulog_topic_output_error(__VA_ARGS__)  // Alias for `ulog_topic_output_error`
 
 /// @brief Log a FATAL level message with topic to a specific output
 /// @param OUTPUT_HANDLE Output handle to log to
 /// @param TOPIC_NAME Topic name string
 /// @param ... Format string and arguments (printf-style)
 #define ulog_topic_output_fatal(TOPIC_NAME, OUTPUT_HANDLE, ...) ulog_log(OUTPUT_HANDLE, ULOG_LEVEL_FATAL, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define logto_fatal(...) ulog_topic_output_fatal(__VA_ARGS__)  // Alias for `ulog_topic_output_fatal`
+#define ulog_fatal_to(...) ulog_topic_output_fatal(__VA_ARGS__)  // Alias for `ulog_topic_output_fatal`
 // clang-format on
 
 /// @brief Adds a topic  (requires ULOG_BUILD_TOPICS!=0 or
@@ -425,32 +425,26 @@ ulog_status ulog_topic_disable_all(void);
 /// @brief Log a TRACE level message
 /// @param ... Format string and arguments (printf-style)
 #define ulog_trace(...) ulog_log(ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define log_trace(...) ulog_trace(__VA_ARGS__)  // Alias for `ulog_trace`
 
 /// @brief Log a DEBUG level message
 /// @param ... Format string and arguments (printf-style)
 #define ulog_debug(...) ulog_log(ULOG_OUTPUT_ALL, ULOG_LEVEL_DEBUG, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define log_debug(...) ulog_debug(__VA_ARGS__)  // Alias for `ulog_debug`
 
 /// @brief Log an INFO level message
 /// @param ... Format string and arguments (printf-style)
 #define ulog_info(...) ulog_log(ULOG_OUTPUT_ALL, ULOG_LEVEL_INFO, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define log_info(...) ulog_info(__VA_ARGS__)  // Alias for `ulog_info`
 
 /// @brief Log a WARN level message
 /// @param ... Format string and arguments (printf-style)
 #define ulog_warn(...) ulog_log(ULOG_OUTPUT_ALL, ULOG_LEVEL_WARN, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define log_warn(...) ulog_warn(__VA_ARGS__)  // Alias for `ulog_warn`
 
 /// @brief Log an ERROR level message
 /// @param ... Format string and arguments (printf-style)
 #define ulog_error(...) ulog_log(ULOG_OUTPUT_ALL, ULOG_LEVEL_ERROR, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define log_error(...) ulog_error(__VA_ARGS__)  // Alias for `ulog_error`
 
 /// @brief Log a FATAL level message
 /// @param ... Format string and arguments (printf-style)
 #define ulog_fatal(...) ulog_log(ULOG_OUTPUT_ALL, ULOG_LEVEL_FATAL, __FILE__, __LINE__, NULL, __VA_ARGS__)
-#define log_fatal(...) ulog_fatal(__VA_ARGS__)  // Alias for `ulog_fatal`
 // clang-format on
 
 /// @brief Main logging function - typically called through macros
