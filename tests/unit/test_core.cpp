@@ -34,9 +34,12 @@ TEST_CASE_FIXTURE(TestFixture, "Base") {
     ulog_error("This is an ERROR message: %x", 0xff);
     ulog_fatal("This is a FATAL message");
 
-    CHECK(ut_callback_get_message_count() == 6);
-    CHECK(strstr(ut_callback_get_last_message(), "This is a FATAL message") !=
-          nullptr);
+    // Additional: empty format string
+    ulog_info("");
+
+    CHECK(ut_callback_get_message_count() == 7);
+    CHECK(strstr(ut_callback_get_last_message(), "INFO") != nullptr);
+    CHECK(std::string(ulog_level_to_string(ULOG_LEVEL_DEBUG)) == "DEBUG");
 }
 
 TEST_CASE_FIXTURE(TestFixture, "Levels") {
@@ -60,12 +63,16 @@ TEST_CASE_FIXTURE(TestFixture, "File Output") {
     const char *filename = "test_output.log";
     FILE *fp             = fopen(filename, "w");
     REQUIRE(fp != nullptr);
-    ulog_output_add_file(fp, ULOG_LEVEL_INFO);
+    ulog_output_id fid = ulog_output_add_file(fp, ULOG_LEVEL_INFO);
 
     ulog_info("This is an INFO message to file.");
     fclose(fp);
 
-    // Check if the file was created and contains the expected message
+    // Attempt to remove stdout should fail; removing file output should succeed
+    CHECK(ulog_output_remove(ULOG_OUTPUT_STDOUT) == ULOG_STATUS_ERROR);
+    CHECK(ulog_output_remove(fid) == ULOG_STATUS_OK);
+
+    // Check file content
     fp = fopen(filename, "r");
     REQUIRE(fp != nullptr);
 

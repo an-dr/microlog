@@ -19,6 +19,10 @@ void ut_callback(ulog_event *ev, void *arg) {
     
     ulog_event_to_cstr(ev, last_message_buffer, sizeof(last_message_buffer));
 
+    // Exercise success path of ulog_event_get_message for coverage
+    char msg_only[64];
+    (void)ulog_event_get_message(ev, msg_only, sizeof(msg_only));
+
     processed_message_count++;
 }
 

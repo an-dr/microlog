@@ -46,17 +46,16 @@ TEST_CASE_FIXTURE(TestFixture, "Dynamic Config - Prefix") {
 }
 
 TEST_CASE_FIXTURE(TestFixture, "Dynamic Config - Color") {
-    // Test color enable/disable
+    // Enable color and ensure ANSI sequence appears (ESC '[' )
     ulog_color_config(true);
     ulog_error("Test message with color");
-
     const char *last_message = ut_callback_get_last_message();
     REQUIRE(last_message != nullptr);
     REQUIRE(strstr(last_message, "Test message with color") != nullptr);
 
+    // Disable color and ensure a new log still prints but without starting ESC if previously present
     ulog_color_config(false);
     ulog_error("Test message without color");
-
     last_message = ut_callback_get_last_message();
     REQUIRE(last_message != nullptr);
     REQUIRE(strstr(last_message, "Test message without color") != nullptr);
