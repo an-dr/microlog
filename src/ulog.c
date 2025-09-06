@@ -237,7 +237,7 @@ struct ulog_event {
 
 ulog_status ulog_event_get_message(ulog_event *ev, char *buffer,
                                    size_t buffer_size) {
-    if (buffer == NULL || buffer_size == 0) {
+    if (ev == NULL || buffer == NULL || buffer_size == 0) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }
 
@@ -598,8 +598,9 @@ static bool time_print_if_invalid(print_target *tgt, ulog_event *ev) {
 /// @brief Fills the event time with the current local time
 /// @param ev - Event to fill. Assumed not NULL
 static void time_fill_current_time(ulog_event *ev) {
-    time_t current_time = time(NULL);     // Get current time
-    ev->time = localtime(&current_time);  // Fill time with current value
+    time_t current_time = time(NULL);  // Get current time
+    // Use localtime because existing tests inspect local clock fields.
+    ev->time = localtime(&current_time);
 }
 
 static void time_print_short(print_target *tgt, ulog_event *ev,
@@ -1596,7 +1597,7 @@ void log_fill_event(ulog_event *ev, const char *message, ulog_level level,
     (void)(topic_id);  // Unused if topics are disabled
 #endif
 
-#if ULOG_FEATURE_TIME
+#if ULOG_HAS_TIME
     ev->time = NULL;  // Time will be filled later
 #endif
 
