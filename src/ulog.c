@@ -776,20 +776,20 @@ typedef struct {
     ulog_output_callback_fn callback;
     void *arg;
     ulog_level level;
-} output_t;
+} output;
 
 typedef struct {
-    output_t outputs[OUTPUT_TOTAL_NUM];  // 0 is for stdout callback
+    output outputs[OUTPUT_TOTAL_NUM];  // order num = id. 0 is for stdout callback, 
 } output_data_t;
 
 static output_data_t output_data = {
     .outputs = {{output_stdout_callback, NULL, OUTPUT_STDOUT_DEFAULT_LEVEL}}};
 
-static void output_handle_single(ulog_event *ev, output_t *output) {
+static void output_handle_single(ulog_event *ev, output *output) {
     if (output->callback == NULL) {
         return;  // Output has been removed, skip it
     }
-    
+
     if (level_is_allowed(ev->level, output->level)) {
 
         // Create event copy to avoid va_list issues
@@ -867,11 +867,11 @@ static void output_file_callback(ulog_event *ev, void *arg) {
 // ================
 
 ulog_output_id ulog_output_add(ulog_output_callback_fn callback, void *arg,
-                            ulog_level level) {
+                               ulog_level level) {
     lock_lock();  // Lock the configuration
     for (int i = 0; i < OUTPUT_TOTAL_NUM; i++) {
         if (output_data.outputs[i].callback == NULL) {
-            output_data.outputs[i] = (output_t){callback, arg, level};
+            output_data.outputs[i] = (output){callback, arg, level};
             lock_unlock();  // Unlock the configuration
             return i;
         }
@@ -890,22 +890,22 @@ ulog_status ulog_output_remove(ulog_output_id output) {
     if (output < 0 || output >= OUTPUT_TOTAL_NUM) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }
-    
+
     if (output == ULOG_OUTPUT_STDOUT) {
         return ULOG_STATUS_ERROR;  // Cannot remove stdout output
     }
-    
+
     lock_lock();
     if (output_data.outputs[output].callback == NULL) {
         lock_unlock();
         return ULOG_STATUS_ERROR;  // Output not found or already removed
     }
-    
+
     // Mark output as removed by setting callback to NULL
     output_data.outputs[output].callback = NULL;
-    output_data.outputs[output].arg = NULL;
-    output_data.outputs[output].level = ULOG_LEVEL_TRACE;
-    
+    output_data.outputs[output].arg      = NULL;
+    output_data.outputs[output].level    = ULOG_LEVEL_TRACE;
+
     lock_unlock();
     return ULOG_STATUS_OK;
 }
@@ -918,7 +918,7 @@ ulog_status ulog_output_remove(ulog_output_id output) {
 #if ULOG_HAS_WARN_NOT_ENABLED
 
 ulog_output_id ulog_output_add(ulog_output_callback_fn callback, void *arg,
-                            ulog_level level) {
+                               ulog_level level) {
     (void)(callback);
     (void)(arg);
     (void)(level);
@@ -1607,8 +1607,8 @@ ulog_status ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size) {
     return ULOG_STATUS_OK;
 }
 
-void ulog_log(ulog_output_id output, ulog_level level, const char *file, int line, const char *topic,
-              const char *message, ...) {
+void ulog_log(ulog_output_id output, ulog_level level, const char *file,
+              int line, const char *topic, const char *message, ...) {
 
     lock_lock();
 
@@ -1628,14 +1628,14 @@ void ulog_log(ulog_output_id output, ulog_level level, const char *file, int lin
     va_start(ev.message_format_args, message);
 
     prefix_update(&ev);
-    
+
     // Handle output routing
     if (output == ULOG_OUTPUT_ALL) {
         // Log to all outputs (original behavior)
         output_handle_all(&ev);
     } else {
         // Log to specific output only
-        if (output >= 0 && output < OUTPUT_TOTAL_NUM && 
+        if (output >= 0 && output < OUTPUT_TOTAL_NUM &&
             output_data.outputs[output].callback != NULL &&
             level_is_allowed(level, output_data.outputs[output].level)) {
             output_handle_single(&ev, &output_data.outputs[output]);
