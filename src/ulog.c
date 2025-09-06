@@ -824,7 +824,7 @@ static void output_stdout_callback(ulog_event *ev, void *arg) {
 // Public
 // ================
 
-ulog_status ulog_output_level_set(ulog_output output, ulog_level level) {
+ulog_status ulog_output_level_set(ulog_output_id output, ulog_level level) {
     if (level < LEVEL_MIN_VALUE || level >= ULOG_LEVEL_TOTAL) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }
@@ -866,7 +866,7 @@ static void output_file_callback(ulog_event *ev, void *arg) {
 // Public
 // ================
 
-ulog_output ulog_output_add(ulog_output_callback_fn callback, void *arg,
+ulog_output_id ulog_output_add(ulog_output_callback_fn callback, void *arg,
                             ulog_level level) {
     lock_lock();  // Lock the configuration
     for (int i = 0; i < OUTPUT_TOTAL_NUM; i++) {
@@ -881,12 +881,12 @@ ulog_output ulog_output_add(ulog_output_callback_fn callback, void *arg,
 }
 
 /// @brief Add file callback
-ulog_output ulog_output_add_file(FILE *file, ulog_level level) {
+ulog_output_id ulog_output_add_file(FILE *file, ulog_level level) {
     return ulog_output_add(output_file_callback, file, level);
 }
 
 /// @brief Remove an output from the logging system
-ulog_status ulog_output_remove(ulog_output output) {
+ulog_status ulog_output_remove(ulog_output_id output) {
     if (output < 0 || output >= OUTPUT_TOTAL_NUM) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }
@@ -917,7 +917,7 @@ ulog_status ulog_output_remove(ulog_output output) {
 
 #if ULOG_HAS_WARN_NOT_ENABLED
 
-ulog_output ulog_output_add(ulog_output_callback_fn callback, void *arg,
+ulog_output_id ulog_output_add(ulog_output_callback_fn callback, void *arg,
                             ulog_level level) {
     (void)(callback);
     (void)(arg);
@@ -926,14 +926,14 @@ ulog_output ulog_output_add(ulog_output_callback_fn callback, void *arg,
     return ULOG_OUTPUT_INVALID;
 }
 
-ulog_output ulog_output_add_file(FILE *file, ulog_level level) {
+ulog_output_id ulog_output_add_file(FILE *file, ulog_level level) {
     (void)(file);
     (void)(level);
     warn_not_enabled("ULOG_BUILD_EXTRA_OUTPUTS");
     return ULOG_OUTPUT_INVALID;
 }
 
-ulog_status ulog_output_remove(ulog_output output) {
+ulog_status ulog_output_remove(ulog_output_id output) {
     (void)(output);
     warn_not_enabled("ULOG_BUILD_EXTRA_OUTPUTS");
     return ULOG_STATUS_ERROR;
@@ -1607,7 +1607,7 @@ ulog_status ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size) {
     return ULOG_STATUS_OK;
 }
 
-void ulog_log(ulog_level level, const char *file, int line, const char *topic,
+void ulog_log(ulog_output_id output, ulog_level level, const char *file, int line, const char *topic,
               const char *message, ...) {
 
     lock_lock();
@@ -1628,7 +1628,19 @@ void ulog_log(ulog_level level, const char *file, int line, const char *topic,
     va_start(ev.message_format_args, message);
 
     prefix_update(&ev);
-    output_handle_all(&ev);
+    
+    // Handle output routing
+    if (output == ULOG_OUTPUT_ALL) {
+        // Log to all outputs (original behavior)
+        output_handle_all(&ev);
+    } else {
+        // Log to specific output only
+        if (output >= 0 && output < OUTPUT_TOTAL_NUM && 
+            output_data.outputs[output].callback != NULL &&
+            level_is_allowed(level, output_data.outputs[output].level)) {
+            output_handle_single(&ev, &output_data.outputs[output]);
+        }
+    }
 
     va_end(ev.message_format_args);
 
