@@ -806,6 +806,14 @@ static void output_handle_single(ulog_event *ev, output *output) {
     }
 }
 
+static void output_handle_by_id(ulog_event *ev, ulog_output_id output_id) {
+    // Validate output ID bounds
+    if (output_id < 0 || output_id >= OUTPUT_TOTAL_NUM) {
+        return;  // Invalid output ID
+    }
+    output_handle_single(ev, &output_data.outputs[output_id]);
+}
+
 static void output_handle_all(ulog_event *ev) {
     // Processing the message for outputs
     for (int i = 0;
@@ -1631,15 +1639,9 @@ void ulog_log(ulog_output_id output, ulog_level level, const char *file,
 
     // Handle output routing
     if (output == ULOG_OUTPUT_ALL) {
-        // Log to all outputs (original behavior)
         output_handle_all(&ev);
     } else {
-        // Log to specific output only
-        if (output >= 0 && output < OUTPUT_TOTAL_NUM &&
-            output_data.outputs[output].callback != NULL &&
-            level_is_allowed(level, output_data.outputs[output].level)) {
-            output_handle_single(&ev, &output_data.outputs[output]);
-        }
+        output_handle_by_id(&ev, output);
     }
 
     va_end(ev.message_format_args);
