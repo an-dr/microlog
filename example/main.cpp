@@ -69,8 +69,7 @@ int main(int argc, char *argv[]) {
 
     /* Core Logging ===================================== */
     ulog_trace("Trace message %d", 1);  
-    // `log_*` also works as an alias, e.g.:
-    // log_trace("Trace message %d", 1);
+    // Macro variants: ulog_trace_t() for topics, ulog_trace_to() for specific outputs
     
     ulog_debug("Debug message 0x%x", 2);
     ulog_info("Info message %f", 3.0);
@@ -89,8 +88,7 @@ int main(int argc, char *argv[]) {
     ulog_topic_enable_all();
 
     ulog_topic_debug( "Bluetooth", "Bluetooth message 1");  
-    // `logt_*` also works as an alias, e.g.: 
-    // logt_debug("Bluetooth", "Bluetooth message 1");
+    // Short alias: ulog_debug_t("Bluetooth", "Bluetooth message 1");
     
     ulog_topic_info("Indication", "Indication message 1 (only in dynamic topics)");
     ulog_topic_warn("Audio", "Audio message 2");

@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased, v7.0.0-alpha.2]
+
+### Added
+
+- Per-output logging via ulog_output_* macros (e.g. `ulog_output_info(...)`)
+- Printing of a specific topic to a specific output via `ulog_topic_output_*`
+- Consistent logging alias `ulog_info`/`_o`/`_t`/`_to` - for output, topic, and topic+output, e.g. `ulog_trace_to("My Topic", ULOG_OUTPUT_ALL, "Message")`
+
+### Changed
+
+- **BREAKING**: Standardized macro alias naming conventions for consistency
+  - Renamed topic aliases: `logt_*` → `ulog_*_t` (e.g., `logt_info` → `ulog_info_t`)
+  - Removed basic aliases: `log_*` → use `ulog_*` directly (e.g., `log_info` → `ulog_info`)
+
 ## [v7.0.0-alpha.1] - September 4, 2025
 
 > 🚨 BREAKING CHANGES: Complete API redesign from v6.5.0. This is a major architectural overhaul with new type system, function names, and build configuration.
