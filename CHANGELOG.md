@@ -9,10 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Support binding topic to a specific output via `ulog_topic_add(TOPIC, OUTPUT, ENABLED)`
+- Binding topic to a specific output via `ulog_topic_add(TOPIC, OUTPUT, ENABLED)`
 
 ### Changed
 
+- **BREAKING**: Topics are now require `ulog_topic_add()` to be used. For both static and dynamic topics.
 - **BREAKING**: Standardized macro alias naming conventions for consistency
   - Renamed topic aliases: `logt_*` → `ulog_t_*` (e.g., `logt_info` → `ulog_t_info`)
   - Removed basic aliases: `log_*` → use `ulog_*` directly (e.g., `log_info` → `ulog_info`)
