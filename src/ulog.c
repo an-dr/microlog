@@ -198,26 +198,26 @@ static void print_to_target_valist(print_target *tgt, const char *format,
                                    va_list args) {
     if (tgt->type == PRINT_TARGET_BUFFER) {
         print_buffer *buf = &tgt->dsc.buffer;
-        
+
         if (buf->curr_pos >= buf->size) {
-            return; // No space available
+            return;  // No space available
         }
-        
+
         size_t remaining = buf->size - buf->curr_pos;
-        char *write_pos = buf->data + buf->curr_pos;
-        
+        char *write_pos  = buf->data + buf->curr_pos;
+
         int written = vsnprintf(write_pos, remaining, format, args);
         if (written < 0) {
-            return; // Encoding error
+            return;  // Encoding error
         }
-        
+
         // Update position, capping at buffer end
         if ((size_t)written >= remaining) {
             buf->curr_pos = buf->size > 0 ? buf->size - 1 : 0;
         } else {
             buf->curr_pos += written;
         }
-        
+
     } else if (tgt->type == PRINT_TARGET_STREAM) {
         vfprintf(tgt->dsc.stream, format, args);
     }
@@ -1035,7 +1035,7 @@ void ulog_topic_config(bool enabled) {
 
 // Private
 // ================
-#define TOPIC_DYNAMIC (ULOG_BUILD_TOPICS_NUM < 0)
+#define TOPIC_IS_DYNAMIC (ULOG_BUILD_TOPICS_NUM < 0)
 #define TOPIC_STATIC_NUM ULOG_BUILD_TOPICS_NUM
 #define TOPIC_LEVEL_DEFAULT ULOG_LEVEL_TRACE
 
@@ -1046,7 +1046,7 @@ typedef struct {
     ulog_level level;
     ulog_output_id output;
 
-#if TOPIC_DYNAMIC
+#if TOPIC_IS_DYNAMIC
     void *next;  // Pointer to the next topic pointer (Topic **)
 #endif
 
@@ -1055,7 +1055,7 @@ typedef struct {
 typedef struct {
     bool new_topic_enabled;  // Whether new topics are enabled by default
 
-#if TOPIC_DYNAMIC
+#if TOPIC_IS_DYNAMIC
     topic_t *topics;
 #else
     topic_t topics[TOPIC_STATIC_NUM];
@@ -1066,7 +1066,7 @@ typedef struct {
 static topic_data_t topic_data = {
     .new_topic_enabled = false,  // New topics are disabled by default
 
-#if TOPIC_DYNAMIC
+#if TOPIC_IS_DYNAMIC
     .topics = NULL,  // No topics allocated by default
 #else
     .topics = {{0}},  // Initialize static topics array to zero
@@ -1318,7 +1318,7 @@ ulog_topic_id ulog_topic_add(const char *topic_name, ulog_output_id output,
    Optional Feature: Topics - Static Allocation
    (`topic_*`, depends on: Topics)
 ============================================================================ */
-#if ULOG_HAS_TOPICS && TOPIC_DYNAMIC == false
+#if ULOG_HAS_TOPICS && TOPIC_IS_DYNAMIC == false
 // Private
 // ================
 
@@ -1407,14 +1407,14 @@ static ulog_status topic_remove(const char *topic_name) {
     lock_unlock();                 // Unlock the configuration
     return ULOG_STATUS_NOT_FOUND;  // Topic not found
 }
-#endif  // ULOG_HAS_TOPICS && TOPIC_DYNAMIC == false
+#endif  // ULOG_HAS_TOPICS && TOPIC_IS_DYNAMIC == false
 
 /* ============================================================================
    Optional Feature: Topics - Dynamic Allocation
    (`topic_*`, depends on: Topics)
 ============================================================================ */
 
-#if ULOG_HAS_TOPICS && TOPIC_DYNAMIC == true
+#if ULOG_HAS_TOPICS && TOPIC_IS_DYNAMIC == true
 // Private
 // ================
 
@@ -1558,7 +1558,7 @@ static ulog_status topic_remove(const char *topic_name) {
     return ULOG_STATUS_NOT_FOUND;  // Topic not found
 }
 
-#endif  // ULOG_HAS_TOPICS && TOPIC_DYNAMIC == true
+#endif  // ULOG_HAS_TOPICS && TOPIC_IS_DYNAMIC == true
 
 /* ============================================================================
    Optional Feature: Dynamic Configuration - Source Location
@@ -1754,7 +1754,7 @@ void ulog_log(ulog_level level, const char *file, int line, const char *topic,
 }
 
 /* ============================================================================
-   Core Feature: Initialization
+   Core Feature: Clean up
    (`init_*`, depends on: Locking, Outputs, Prefix, Time, Color)
 ============================================================================ */
 
@@ -1764,10 +1764,12 @@ void ulog_log(ulog_level level, const char *file, int line, const char *topic,
 ulog_status ulog_cleanup(void) {
     lock_lock();  // Lock the configuration
     // Cleanup Topics
+    
+    // TODO: this section can be improved with topic_remove_all() function
 #if ULOG_HAS_TOPICS
     // Reset new-topic default enable flag
     topic_data.new_topic_enabled = false;
-#if TOPIC_DYNAMIC
+#if TOPIC_IS_DYNAMIC
     // Free linked list of dynamically allocated topics
     topic_t *t = topic_data.topics;
     while (t != NULL) {
