@@ -1152,7 +1152,7 @@ static ulog_status topic_disable(int topic) {
 static void topic_process(const char *topic, ulog_level level,
                           bool *is_log_allowed, int *topic_id,
                           ulog_output_id *output) {
-    if (is_log_allowed == NULL || topic_id == NULL) {
+    if (is_log_allowed == NULL || topic_id == NULL || output == NULL) {
         return;  // Invalid arguments, do nothing
     }
 
