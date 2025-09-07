@@ -383,6 +383,10 @@ ulog_status ulog_topic_disable_all(void);
 /// @param ... Format arguments for the message
 void ulog_log(ulog_level level, const char *file,
               int line, const char *topic, const char *message, ...);
+              
+
+// @brief Clean up all topic, outputs and other dynamic resources
+ulog_status ulog_cleanup(void);
 
 #ifdef __cplusplus
 }

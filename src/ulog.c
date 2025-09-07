@@ -1084,6 +1084,11 @@ static ulog_status topic_disable_all();
 /// @param enable - Whether the topic is enabled after creation
 static ulog_topic_id topic_add(const char *topic_name, ulog_output_id output,
                                bool enable);
+                               
+/// @brief Remove a topic by name (implementation depends on static/dynamic mode)
+/// @param topic_name - Topic name
+/// @return ulog_status
+static ulog_status topic_remove(const char *topic_name);
 
 // === Common Topic Functions =================================================
 
@@ -1174,6 +1179,7 @@ static void topic_process(const char *topic, ulog_level level,
     *topic_id = t->id;      // Set topic ID
     *output   = t->output;  // Set topic output
 }
+
 
 // Public
 // ================
@@ -1731,4 +1737,53 @@ void ulog_log(ulog_level level, const char *file, int line, const char *topic,
     va_end(ev.message_format_args);
 
     lock_unlock();
+}
+
+/* ============================================================================
+   Core Feature: Initialization
+   (`init_*`, depends on: Locking, Outputs, Prefix, Time, Color)
+============================================================================ */
+
+// Public
+// ================
+
+ulog_status ulog_cleanup(void) {
+    lock_lock();  // Lock the configuration
+    // Cleanup Topics
+#if ULOG_HAS_TOPICS
+    // Reset new-topic default enable flag
+    topic_data.new_topic_enabled = false;
+    #if TOPIC_DYNAMIC
+        // Free linked list of dynamically allocated topics
+        topic_t *t = topic_data.topics;
+        while (t != NULL) {
+            topic_t *next = t->next;
+            free(t);
+            t = next;
+        }
+        topic_data.topics = NULL;
+    #else
+        // Zero out statically allocated topic array
+        memset(topic_data.topics, 0, sizeof(topic_data.topics));
+    #endif
+#endif // ULOG_HAS_TOPICS
+
+    // Cleanup Outputs (keep stdout (index 0) registered but reset its level)
+    output_data.outputs[ULOG_OUTPUT_STDOUT].level = OUTPUT_STDOUT_DEFAULT_LEVEL;
+#if ULOG_HAS_EXTRA_OUTPUTS
+    for (int i = 1; i < OUTPUT_TOTAL_NUM; i++) {
+        output_data.outputs[i].callback = NULL;
+        output_data.outputs[i].arg      = NULL;
+        output_data.outputs[i].level    = OUTPUT_STDOUT_DEFAULT_LEVEL;
+    }
+#endif // ULOG_HAS_EXTRA_OUTPUTS
+
+#if ULOG_HAS_PREFIX
+    // Reset prefix state
+    prefix_data.function = NULL;
+    memset(prefix_data.prefix, 0, sizeof(prefix_data.prefix));
+#endif
+
+    lock_unlock();  // Unlock the configuration
+    return ULOG_STATUS_OK;
 }
