@@ -516,7 +516,7 @@ static void prefix_update(ulog_event *ev) {
     prefix_data.function(ev, prefix_data.prefix, ULOG_BUILD_PREFIX_SIZE);
 }
 
-static void prefix_print(print_target *tgt, ulog_event *ev) {
+static void prefix_print(print_target *tgt) {
     if (prefix_data.function == NULL || !prefix_config_is_enabled()) {
         return;
     }
@@ -548,7 +548,7 @@ void ulog_prefix_set_fn(ulog_prefix_fn function) {
 // Disabled Private
 // ================
 
-#define prefix_print(tgt, ev) (void)(tgt), (void)(ev)
+#define prefix_print(tgt) (void)(tgt)
 #define prefix_update(ev) (void)(ev)
 #endif  // ULOG_HAS_PREFIX
 
@@ -1666,7 +1666,7 @@ static void log_print_event(print_target *tgt, ulog_event *ev, bool full_time,
     full_time ? time_print_full(tgt, ev, append_space)
               : time_print_short(tgt, ev, append_space);
 
-    prefix_print(tgt, ev);
+    prefix_print(tgt);
     level_print(tgt, ev);
     topic_print(tgt, ev);
     log_print_message(tgt, ev);
