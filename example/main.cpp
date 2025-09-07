@@ -32,6 +32,7 @@ build configuration):
 //  at log time, e.g. request ID, user ID, additional time metrics, etc.
 // In this example we use it to add ms
 void user_prefix(ulog_event *ev, char *prefix, size_t prefix_size) {
+    (void)ev; // Unused in this example
     static int count = 0; // count represents fake milliseconds
     snprintf(prefix, prefix_size, " [MsgID:%03d] ", count++);
 }
@@ -53,6 +54,8 @@ void user_output(ulog_event *ev, void *arg) {
 }
 
 int main(int argc, char *argv[]) {
+    (void)argc;
+    (void)argv;
 
     printf("\n");
 

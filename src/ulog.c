@@ -150,13 +150,24 @@ static inline bool is_str_empty(const char *str) {
     return (str == NULL) || (str[0] == '\0');
 }
 
+/* ============================================================================
+   Core Feature: Warn Not Enabled
+   (`warn_not_enabled`, depends on: - )
+============================================================================ */
+#if ULOG_HAS_WARN_NOT_ENABLED
+
 // Macro to log a warning when a feature is not enabled
 // Usage: warn_not_enabled("ULOG_BUILD_TIME")
 // Output:
 //   WARN src/main.c:42: 'ulog_configure_time' ignored: ULOG_BUILD_TIME disabled
 #define warn_not_enabled(feature)                                              \
-    ulog_warn("'%s' called with %s disabled", __func__, feature)
+    warn_non_enabled_full(__func__, feature, __FILE__, __LINE__)
 
+#define warn_non_enabled_full(func, feature, file, line)                       \
+    ulog_log(ULOG_LEVEL_WARN, file, line, NULL,                                \
+             "'%s' called with %s disabled", func, feature)
+
+#endif  // ULOG_HAS_WARN_NOT_ENABLED
 /* ============================================================================
    Core Feature: Print
    (`print_*`, depends on: - )
@@ -167,7 +178,7 @@ static inline bool is_str_empty(const char *str) {
 
 typedef struct {
     char *data;
-    unsigned int curr_pos;
+    size_t curr_pos;
     size_t size;
 } print_buffer;
 
@@ -186,14 +197,29 @@ typedef struct {
 static void print_to_target_valist(print_target *tgt, const char *format,
                                    va_list args) {
     if (tgt->type == PRINT_TARGET_BUFFER) {
-        char *buf   = tgt->dsc.buffer.data + tgt->dsc.buffer.curr_pos;
-        size_t size = tgt->dsc.buffer.size - tgt->dsc.buffer.curr_pos;
-        if (size > 0U) {
-            tgt->dsc.buffer.curr_pos += vsnprintf(buf, size, format, args);
+        print_buffer *buf = &tgt->dsc.buffer;
+
+        if (buf->curr_pos >= buf->size) {
+            return;  // No space available
         }
+
+        size_t remaining = buf->size - buf->curr_pos;
+        char *write_pos  = buf->data + buf->curr_pos;
+
+        int written = vsnprintf(write_pos, remaining, format, args);
+        if (written < 0) {
+            return;  // Encoding error
+        }
+
+        // Update position, capping at buffer end
+        if ((size_t)written >= remaining) {
+            buf->curr_pos = buf->size;
+        } else {
+            buf->curr_pos += written;
+        }
+
     } else if (tgt->type == PRINT_TARGET_STREAM) {
-        FILE *stream = tgt->dsc.stream;
-        vfprintf(stream, format, args);
+        vfprintf(tgt->dsc.stream, format, args);
     }
 }
 
@@ -490,7 +516,7 @@ static void prefix_update(ulog_event *ev) {
     prefix_data.function(ev, prefix_data.prefix, ULOG_BUILD_PREFIX_SIZE);
 }
 
-static void prefix_print(print_target *tgt, ulog_event *ev) {
+static void prefix_print(print_target *tgt) {
     if (prefix_data.function == NULL || !prefix_config_is_enabled()) {
         return;
     }
@@ -522,7 +548,7 @@ void ulog_prefix_set_fn(ulog_prefix_fn function) {
 // Disabled Private
 // ================
 
-#define prefix_print(tgt, ev) (void)(tgt), (void)(ev)
+#define prefix_print(tgt) (void)(tgt)
 #define prefix_update(ev) (void)(ev)
 #endif  // ULOG_HAS_PREFIX
 
@@ -817,9 +843,7 @@ static void output_handle_by_id(ulog_event *ev, ulog_output_id output_id) {
 
 static void output_handle_all(ulog_event *ev) {
     // Processing the message for outputs
-    for (int i = 0;
-         (i < OUTPUT_TOTAL_NUM) && (output_data.outputs[i].callback != NULL);
-         i++) {
+    for (int i = 0; (i < OUTPUT_TOTAL_NUM); i++) {
         output_handle_single(ev, &output_data.outputs[i]);
     }
 }
@@ -1011,7 +1035,7 @@ void ulog_topic_config(bool enabled) {
 
 // Private
 // ================
-#define TOPIC_DYNAMIC (ULOG_BUILD_TOPICS_NUM < 0)
+#define TOPIC_IS_DYNAMIC (ULOG_BUILD_TOPICS_NUM < 0)
 #define TOPIC_STATIC_NUM ULOG_BUILD_TOPICS_NUM
 #define TOPIC_LEVEL_DEFAULT ULOG_LEVEL_TRACE
 
@@ -1022,7 +1046,7 @@ typedef struct {
     ulog_level level;
     ulog_output_id output;
 
-#if TOPIC_DYNAMIC
+#if TOPIC_IS_DYNAMIC
     void *next;  // Pointer to the next topic pointer (Topic **)
 #endif
 
@@ -1031,7 +1055,7 @@ typedef struct {
 typedef struct {
     bool new_topic_enabled;  // Whether new topics are enabled by default
 
-#if TOPIC_DYNAMIC
+#if TOPIC_IS_DYNAMIC
     topic_t *topics;
 #else
     topic_t topics[TOPIC_STATIC_NUM];
@@ -1042,7 +1066,7 @@ typedef struct {
 static topic_data_t topic_data = {
     .new_topic_enabled = false,  // New topics are disabled by default
 
-#if TOPIC_DYNAMIC
+#if TOPIC_IS_DYNAMIC
     .topics = NULL,  // No topics allocated by default
 #else
     .topics = {{0}},  // Initialize static topics array to zero
@@ -1075,6 +1099,11 @@ static ulog_status topic_disable_all();
 /// @param enable - Whether the topic is enabled after creation
 static ulog_topic_id topic_add(const char *topic_name, ulog_output_id output,
                                bool enable);
+
+/// @brief Remove a topic by name
+/// @param topic_name - Topic name
+/// @return ulog_status
+static ulog_status topic_remove(const char *topic_name);
 
 // === Common Topic Functions =================================================
 
@@ -1215,6 +1244,13 @@ ulog_topic_id ulog_topic_add(const char *topic_name, ulog_output_id output,
     return topic_add(topic_name, output, enable);
 }
 
+ulog_status ulog_topic_remove(const char *topic_name) {
+    if (is_str_empty(topic_name)) {
+        return ULOG_STATUS_INVALID_ARGUMENT;  // Invalid topic name, do nothing
+    }
+    return topic_remove(topic_name);
+}
+
 #else  // ULOG_HAS_TOPICS
 
 // Disabled Public
@@ -1282,14 +1318,14 @@ ulog_topic_id ulog_topic_add(const char *topic_name, ulog_output_id output,
    Optional Feature: Topics - Static Allocation
    (`topic_*`, depends on: Topics)
 ============================================================================ */
-#if ULOG_HAS_TOPICS && TOPIC_DYNAMIC == false
+#if ULOG_HAS_TOPICS && TOPIC_IS_DYNAMIC == false
 // Private
 // ================
 
 ulog_status topic_enable_all(void) {
     for (int i = 0; i < TOPIC_STATIC_NUM; i++) {
         if (is_str_empty(topic_data.topics[i].name)) {
-            break;  // End of topics, no more to enable
+            continue;  // Skip empty slot; do not break to allow sparse reuse
         }
         topic_data.topics[i].enabled = true;
     }
@@ -1299,7 +1335,7 @@ ulog_status topic_enable_all(void) {
 ulog_status topic_disable_all(void) {
     for (int i = 0; i < TOPIC_STATIC_NUM; i++) {
         if (is_str_empty(topic_data.topics[i].name)) {
-            break;  // End of topics, no more to disable
+            continue;  // Skip empty slot; allow sparse arrays
         }
         topic_data.topics[i].enabled = false;
     }
@@ -1309,7 +1345,7 @@ ulog_status topic_disable_all(void) {
 ulog_topic_id topic_str_to_id(const char *str) {
     for (int i = 0; i < TOPIC_STATIC_NUM; i++) {
         if (is_str_empty(topic_data.topics[i].name)) {
-            break;  // End of topics, not found
+            continue;  // Skip empty slot; continue searching
         }
         if (strcmp(topic_data.topics[i].name, str) == 0) {
             return topic_data.topics[i].id;
@@ -1351,14 +1387,34 @@ static ulog_topic_id topic_add(const char *topic_name, ulog_output_id output,
     lock_unlock();                 // Unlock the configuration
     return ULOG_TOPIC_ID_INVALID;  // No space for new topics
 }
-#endif  // ULOG_HAS_TOPICS && TOPIC_DYNAMIC == false
+
+static ulog_status topic_remove(const char *topic_name) {
+    if (is_str_empty(topic_name)) {
+        return ULOG_STATUS_INVALID_ARGUMENT;  // Invalid topic name, do nothing
+    }
+    lock_lock();  // Lock the configuration
+    for (int i = 0; i < TOPIC_STATIC_NUM; i++) {
+        if (is_str_empty(topic_data.topics[i].name)) {
+            continue;  // Skip empty slot; continue search
+        }
+        if (strcmp(topic_data.topics[i].name, topic_name) == 0) {
+            // Clear the topic entry
+            topic_data.topics[i] = (topic_t){0};
+            lock_unlock();  // Unlock the configuration
+            return ULOG_STATUS_OK;
+        }
+    }
+    lock_unlock();                 // Unlock the configuration
+    return ULOG_STATUS_NOT_FOUND;  // Topic not found
+}
+#endif  // ULOG_HAS_TOPICS && TOPIC_IS_DYNAMIC == false
 
 /* ============================================================================
    Optional Feature: Topics - Dynamic Allocation
    (`topic_*`, depends on: Topics)
 ============================================================================ */
 
-#if ULOG_HAS_TOPICS && TOPIC_DYNAMIC == true
+#if ULOG_HAS_TOPICS && TOPIC_IS_DYNAMIC == true
 // Private
 // ================
 
@@ -1416,8 +1472,8 @@ static topic_t *topic_get(int topic) {
     return NULL;
 }
 
-static void *topic_allocate(int id, const char *topic_name,
-                            ulog_output_id output, bool enable) {
+static topic_t *topic_allocate(int id, const char *topic_name,
+                               ulog_output_id output, bool enable) {
     if (is_str_empty(topic_name)) {
         return NULL;  // Invalid topic name, do not allocate
     }
@@ -1453,8 +1509,7 @@ static ulog_topic_id topic_add(const char *topic_name, ulog_output_id output,
     lock_lock();
     topic_t *t = topic_get_last();
     if (t == NULL) {
-        topic_data.topics =
-            (topic_t *)topic_allocate(0, topic_name, output, enable);
+        topic_data.topics = topic_allocate(0, topic_name, output, enable);
         if (topic_data.topics != NULL) {
             lock_unlock();
             return 0;
@@ -1473,7 +1528,37 @@ static ulog_topic_id topic_add(const char *topic_name, ulog_output_id output,
     return ULOG_TOPIC_ID_INVALID;
 }
 
-#endif  // ULOG_HAS_TOPICS && TOPIC_DYNAMIC == true
+static ulog_status topic_remove(const char *topic_name) {
+    if (is_str_empty(topic_name)) {
+        return ULOG_STATUS_INVALID_ARGUMENT;  // Invalid topic name, do nothing
+    }
+    lock_lock();  // Lock the configuration
+
+    topic_t *t      = topic_get_first();
+    topic_t *t_prev = NULL;
+
+    while (t != NULL) {
+        if (!is_str_empty(t->name) && strcmp(t->name, topic_name) == 0) {
+            // Found the topic to remove
+            if (t_prev == NULL) {
+                // Removing the first topic
+                topic_data.topics = t->next;
+            } else {
+                t_prev->next = t->next;
+            }
+            free(t);        // Free the topic memory
+            lock_unlock();  // Unlock the configuration
+            return ULOG_STATUS_OK;
+        }
+        t_prev = t;
+        t      = t->next;
+    }
+
+    lock_unlock();                 // Unlock the configuration
+    return ULOG_STATUS_NOT_FOUND;  // Topic not found
+}
+
+#endif  // ULOG_HAS_TOPICS && TOPIC_IS_DYNAMIC == true
 
 /* ============================================================================
    Optional Feature: Dynamic Configuration - Source Location
@@ -1581,7 +1666,7 @@ static void log_print_event(print_target *tgt, ulog_event *ev, bool full_time,
     full_time ? time_print_full(tgt, ev, append_space)
               : time_print_short(tgt, ev, append_space);
 
-    prefix_print(tgt, ev);
+    prefix_print(tgt);
     level_print(tgt, ev);
     topic_print(tgt, ev);
     log_print_message(tgt, ev);
@@ -1666,4 +1751,55 @@ void ulog_log(ulog_level level, const char *file, int line, const char *topic,
     va_end(ev.message_format_args);
 
     lock_unlock();
+}
+
+/* ============================================================================
+   Core Feature: Clean up
+   (`init_*`, depends on: Locking, Outputs, Prefix, Time, Color)
+============================================================================ */
+
+// Public
+// ================
+
+ulog_status ulog_cleanup(void) {
+    lock_lock();  // Lock the configuration
+    // Cleanup Topics
+    
+    // TODO: this section can be improved with topic_remove_all() function
+#if ULOG_HAS_TOPICS
+    // Reset new-topic default enable flag
+    topic_data.new_topic_enabled = false;
+#if TOPIC_IS_DYNAMIC
+    // Free linked list of dynamically allocated topics
+    topic_t *t = topic_data.topics;
+    while (t != NULL) {
+        topic_t *next = t->next;
+        free(t);
+        t = next;
+    }
+    topic_data.topics = NULL;
+#else
+    // Zero out statically allocated topic array
+    memset(topic_data.topics, 0, sizeof(topic_data.topics));
+#endif
+#endif  // ULOG_HAS_TOPICS
+
+    // Cleanup Outputs (keep stdout (index 0) registered but reset its level)
+    output_data.outputs[ULOG_OUTPUT_STDOUT].level = OUTPUT_STDOUT_DEFAULT_LEVEL;
+#if ULOG_HAS_EXTRA_OUTPUTS
+    for (int i = 1; i < OUTPUT_TOTAL_NUM; i++) {
+        output_data.outputs[i].callback = NULL;
+        output_data.outputs[i].arg      = NULL;
+        output_data.outputs[i].level    = OUTPUT_STDOUT_DEFAULT_LEVEL;
+    }
+#endif  // ULOG_HAS_EXTRA_OUTPUTS
+
+#if ULOG_HAS_PREFIX
+    // Reset prefix state
+    prefix_data.function = NULL;
+    memset(prefix_data.prefix, 0, sizeof(prefix_data.prefix));
+#endif
+
+    lock_unlock();  // Unlock the configuration
+    return ULOG_STATUS_OK;
 }

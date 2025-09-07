@@ -303,6 +303,12 @@ ulog_status ulog_output_remove(ulog_output_id output);
 /// @return Topic ID on success, ULOG_TOPIC_ID_INVALID on failure
 ulog_topic_id ulog_topic_add(const char *topic_name, ulog_output_id output,
                              bool enable);
+                             
+/// @brief Removes a topic  (requires ULOG_BUILD_TOPICS!=0 or
+/// ULOG_BUILD_DYNAMIC_CONFIG=1)
+/// @param topic_name Topic name string (empty or NULL names are invalid)
+/// @return ULOG_STATUS_OK on success, ULOG_STATUS_NOT_FOUND if topic not found
+ulog_status ulog_topic_remove(const char *topic_name);
 
 /// @brief Sets the minimum log level for a topic  (requires
 /// ULOG_BUILD_TOPICS!=0 or ULOG_BUILD_DYNAMIC_CONFIG=1)
@@ -377,6 +383,10 @@ ulog_status ulog_topic_disable_all(void);
 /// @param ... Format arguments for the message
 void ulog_log(ulog_level level, const char *file,
               int line, const char *topic, const char *message, ...);
+              
+
+/// @brief Clean up all topic, outputs and other dynamic resources
+ulog_status ulog_cleanup(void);
 
 #ifdef __cplusplus
 }

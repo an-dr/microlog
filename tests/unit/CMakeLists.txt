@@ -96,3 +96,12 @@ target_sources(test_dynamic_config PRIVATE ${ULOG_SRC}
 target_include_directories(test_dynamic_config PRIVATE ${ULOG_INCLUDE_DIR})
 target_compile_definitions(test_dynamic_config PRIVATE ${ULOG_CONFIG_TEST_DYNAMIC_CONFIG})
 add_test(NAME DynamicConfigTest COMMAND test_dynamic_config)
+
+# --- Cleanup Test ---
+add_executable(test_cleanup)
+target_sources(test_cleanup PRIVATE ${ULOG_SRC}
+                                      ut_callback.c
+                                      test_cleanup.cpp)
+target_include_directories(test_cleanup PRIVATE ${ULOG_INCLUDE_DIR})
+target_compile_definitions(test_cleanup PRIVATE ${ULOG_CONFIG_TEST_CORE})
+add_test(NAME CleanupTest COMMAND test_cleanup)

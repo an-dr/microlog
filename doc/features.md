@@ -6,6 +6,7 @@
         - [Logging, Levels and Outputs](#logging-levels-and-outputs)
         - [Events](#events)
         - [Lock](#lock)
+        - [Cleanup](#cleanup)
     - [Optional Features](#optional-features)
         - [Topics](#topics)
         - [Extra Outputs](#extra-outputs)
@@ -172,6 +173,17 @@ pthread_mutex_t mutex;
 ulog_lock_set_fn(lock_function, mutex);
 ```
 
+### Cleanup
+
+If the library is used with dynamic features (e.g. topics, extra outputs, dynamic configuration) it is recommended to call the `ulog_cleanup()` function before program exit to free all allocated resources.
+
+```c
+. . .
+ulog_cleanup();
+```
+
+The clean up can be also used to remove all topics and outputs if needed during the program execution even if the allocation mode is static.
+
 ## Optional Features
 
 ### Topics
@@ -249,6 +261,8 @@ ulog_topic_info("network", "Connected to server"); // filtered out topic
 ulog_topic_debug("storage", "No free space"); // filtered out level DEBUG < INFO
 ```
 
+Topics can be removed by using the `ulog_topic_remove()` function.
+
 ### Extra Outputs
 
 - Static configuration options: `ULOG_BUILD_EXTRA_OUTPUTS`
@@ -287,6 +301,8 @@ if (fp) {
     fclose(fp);  // For demo purposes
 }
 ```
+
+Outputs can be removed by using the `ulog_output_remove()` function.
 
 #### User Defined Output
 

@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Binding topic to a specific output via `ulog_topic_add(TOPIC, OUTPUT, ENABLED)`
 - New status code: `ULOG_STATUS_NOT_FOUND` returned when a topic or output is not present (previously returned `ULOG_STATUS_ERROR`)
+- `ulog_topic_remove(TOPIC)`
+- `ulog_cleanup()` to free all dynamic resources and reset added entities (topics, outputs, etc.)
 
 ### Changed
 
@@ -18,6 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **BREAKING**: Standardized macro alias naming conventions for consistency
   - Renamed topic aliases: `logt_*` → `ulog_t_*` (e.g., `logt_info` → `ulog_t_info`)
   - Removed basic aliases: `log_*` → use `ulog_*` directly (e.g., `log_info` → `ulog_info`)
+
+### Fixed
+
+- Fix potential buffer overflows on printing
+- Fix early exits on outputs and topics iteration after removal
 
 ## [v7.0.0-alpha.1] - September 4, 2025
 
