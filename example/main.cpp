@@ -109,8 +109,9 @@ int main(int argc, char *argv[]) {
     // cpp example of using ulog library in C/C++
     
     printf("\n");
+    auto loc = std::source_location::current();
     ulog::Logger logger("MyTopic");
-    logger.info("Info message %d", 10);
+    logger.info(loc, "Info message %d", 10);
 
     return 0;
 }

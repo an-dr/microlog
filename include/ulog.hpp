@@ -56,13 +56,10 @@ class Logger {
     ~Logger() = default;
 
     template <class... Args>
-    void info(std::string_view fmt, Args&&... args) {
-        const auto& loc = std::source_location::current();
-        ulog_log(static_cast<ulog_level>(Level::info),
-                 loc.file_name(),
-                 loc.line(),
-                 topic_.c_str(),
-                 fmt.data(),
+    void info(const std::source_location &loc = std::source_location::current(),
+              std::string_view fmt            = {}, Args &&...args) {
+        ulog_log(static_cast<ulog_level>(Level::info), loc.file_name(),
+                 static_cast<int>(loc.line()), topic_.c_str(), fmt.data(),
                  std::forward<Args>(args)...);
     }
 
