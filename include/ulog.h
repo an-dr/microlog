@@ -36,6 +36,7 @@ typedef enum {
     ULOG_STATUS_OK               = 0,   ///< Operation completed successfully
     ULOG_STATUS_ERROR            = -1,  ///< General error occurred
     ULOG_STATUS_INVALID_ARGUMENT = -2,  ///< Invalid argument provided
+    ULOG_STATUS_NOT_FOUND        = -3,  ///< Requested item not found
 } ulog_status;
 
 /* ============================================================================
@@ -214,7 +215,7 @@ typedef void (*ulog_output_callback_fn)(ulog_event *ev, void *arg);
 /// @param output Output handle to configure
 /// @param level Minimum log level for this output
 /// @return ULOG_STATUS_OK on success, ULOG_STATUS_INVALID_ARGUMENT if invalid
-///         parameters, ULOG_STATUS_ERROR if output not found
+///         parameters, ULOG_STATUS_NOT_FOUND if output not found
 ulog_status ulog_output_level_set(ulog_output_id output, ulog_level level);
 
 /// @brief Sets the minimum log level for all outputs
@@ -243,7 +244,7 @@ ulog_output_id ulog_output_add_file(FILE *file, ulog_level level);
 /// ULOG_BUILD_EXTRA_OUTPUTS>0 or ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param output Output handle to remove
 /// @return ULOG_STATUS_OK on success, ULOG_STATUS_INVALID_ARGUMENT if invalid
-///         handle, ULOG_STATUS_ERROR if output not found
+///         handle, ULOG_STATUS_NOT_FOUND if output not found
 ulog_status ulog_output_remove(ulog_output_id output);
 
 /* ============================================================================
@@ -307,7 +308,7 @@ ulog_topic_id ulog_topic_add(const char *topic_name, ulog_output_id output,
 /// ULOG_BUILD_TOPICS!=0 or ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param topic_name Topic name string (empty or NULL names are invalid)
 /// @param level Minimum log level for this topic
-/// @return ULOG_STATUS_OK on success, ULOG_STATUS_ERROR if topic not found
+/// @return ULOG_STATUS_OK on success, ULOG_STATUS_NOT_FOUND if topic not found
 ulog_status ulog_topic_level_set(const char *topic_name, ulog_level level);
 
 /// @brief Gets the ID of a topic by name  (requires ULOG_BUILD_TOPICS!=0 or
@@ -319,13 +320,13 @@ ulog_topic_id ulog_topic_get_id(const char *topic_name);
 /// @brief Enables a topic for logging  (requires ULOG_BUILD_TOPICS!=0 or
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param topic_name Topic name string (empty or NULL names are invalid)
-/// @return ULOG_STATUS_OK on success, ULOG_STATUS_ERROR if topic not found
+/// @return ULOG_STATUS_OK on success, ULOG_STATUS_NOT_FOUND if topic not found
 ulog_status ulog_topic_enable(const char *topic_name);
 
 /// @brief Disables a topic from logging  (requires ULOG_BUILD_TOPICS!=0 or
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param topic_name Topic name string (empty or NULL names are invalid)
-/// @return ULOG_STATUS_OK on success, ULOG_STATUS_ERROR if topic not found
+/// @return ULOG_STATUS_OK on success, ULOG_STATUS_NOT_FOUND if topic not found
 ulog_status ulog_topic_disable(const char *topic_name);
 
 /// @brief Enables all existing topics  (requires ULOG_BUILD_TOPICS!=0 or

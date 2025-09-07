@@ -842,7 +842,7 @@ ulog_status ulog_output_level_set(ulog_output_id output, ulog_level level) {
     }
 
     if (output_data.outputs[output].callback == NULL) {
-        return ULOG_STATUS_ERROR;
+        return ULOG_STATUS_NOT_FOUND;  // Output exists but no callback assigned
     }
     output_data.outputs[output].level = level;
     return ULOG_STATUS_OK;
@@ -907,7 +907,7 @@ ulog_status ulog_output_remove(ulog_output_id output) {
     lock_lock();
     if (output_data.outputs[output].callback == NULL) {
         lock_unlock();
-        return ULOG_STATUS_ERROR;  // Output not found or already removed
+        return ULOG_STATUS_NOT_FOUND;  // Output not found or already removed
     }
 
     // Mark output as removed by setting callback to NULL
@@ -1092,14 +1092,17 @@ static void topic_print(print_target *tgt, ulog_event *ev) {
 /// @brief Sets the topic level
 /// @param topic - Topic ID
 /// @param level - Log level to set
-/// @return ULOG_STATUS_OK if success, ULOG_STATUS_ERROR if topic not found
+/// @return ULOG_STATUS_OK if success, ULOG_STATUS_NOT_FOUND if topic not found
 static ulog_status topic_set_level(int topic, ulog_level level) {
+    if (level < LEVEL_MIN_VALUE || level >= ULOG_LEVEL_TOTAL) {
+        return ULOG_STATUS_INVALID_ARGUMENT;
+    }
     topic_t *t = topic_get(topic);
     if (t != NULL) {
         t->level = level;
         return ULOG_STATUS_OK;
     }
-    return ULOG_STATUS_ERROR;
+    return ULOG_STATUS_NOT_FOUND;
 }
 
 /// @brief Checks if the topic is loggable
@@ -1118,26 +1121,26 @@ static bool topic_is_loggable(topic_t *t, ulog_level level) {
 
 /// @brief Enables the topic
 /// @param topic - Topic ID
-/// @return ULOG_STATUS_OK on success, ULOG_STATUS_ERROR if topic not found
+/// @return ULOG_STATUS_OK on success, ULOG_STATUS_NOT_FOUND if topic not found
 static ulog_status topic_enable(int topic) {
     topic_t *t = topic_get(topic);
     if (t != NULL) {
         t->enabled = true;
         return ULOG_STATUS_OK;
     }
-    return ULOG_STATUS_ERROR;
+    return ULOG_STATUS_NOT_FOUND;
 }
 
 /// @brief Disables the topic
 /// @param topic - Topic ID
-/// @return ULOG_STATUS_OK on success, ULOG_STATUS_ERROR if topic not found
+/// @return ULOG_STATUS_OK on success, ULOG_STATUS_NOT_FOUND if topic not found
 static ulog_status topic_disable(int topic) {
     topic_t *t = topic_get(topic);
     if (t != NULL) {
         t->enabled = false;
         return ULOG_STATUS_OK;
     }
-    return ULOG_STATUS_ERROR;
+    return ULOG_STATUS_NOT_FOUND;
 }
 
 /// @brief Processes the topic
@@ -1167,15 +1170,27 @@ static void topic_process(const char *topic, ulog_level level,
 // ================
 
 ulog_status ulog_topic_level_set(const char *topic_name, ulog_level level) {
-    return topic_set_level(ulog_topic_get_id(topic_name), level);
+    ulog_topic_id topic_id = ulog_topic_get_id(topic_name);
+    if (topic_id == ULOG_TOPIC_ID_INVALID) {
+        return ULOG_STATUS_NOT_FOUND;  // Topic not found, do nothing
+    }
+    return topic_set_level(topic_id, level);
 }
 
 ulog_status ulog_topic_enable(const char *topic_name) {
-    return topic_enable(ulog_topic_get_id(topic_name));
+    ulog_topic_id topic_id = ulog_topic_get_id(topic_name);
+    if (topic_id == ULOG_TOPIC_ID_INVALID) {
+        return ULOG_STATUS_NOT_FOUND;  // Topic not found, do nothing
+    }
+    return topic_enable(topic_id);
 }
 
 ulog_status ulog_topic_disable(const char *topic_name) {
-    return topic_disable(ulog_topic_get_id(topic_name));
+    ulog_topic_id topic_id = ulog_topic_get_id(topic_name);
+    if (topic_id == ULOG_TOPIC_ID_INVALID) {
+        return ULOG_STATUS_NOT_FOUND;  // Topic not found, do nothing
+    }
+    return topic_disable(topic_id);
 }
 
 ulog_status ulog_topic_enable_all(void) {
