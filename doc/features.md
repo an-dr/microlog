@@ -3,7 +3,7 @@
 - [Features](#features)
     - [Core Features](#core-features)
         - [Static Configuration](#static-configuration)
-        - [Logging and Levels](#logging-and-levels)
+        - [Logging, Levels and Outputs](#logging-levels-and-outputs)
         - [Events](#events)
         - [Lock](#lock)
     - [Optional Features](#optional-features)
@@ -86,7 +86,7 @@ The full list of build options for static configuration is shown bellow:
 | ULOG_BUILD_DYNAMIC_CONFIG   | 0                     | Runtime toggles          |
 | ULOG_BUILD_WARN_NOT_ENABLED | 1                     | Warning stubs            |
 
-### Logging and Levels
+### Logging, Levels and Outputs
 
 There are 7 log severity levels:
 
