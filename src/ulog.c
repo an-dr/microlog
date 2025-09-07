@@ -178,7 +178,7 @@ static inline bool is_str_empty(const char *str) {
 
 typedef struct {
     char *data;
-    unsigned int curr_pos;
+    size_t curr_pos;
     size_t size;
 } print_buffer;
 
@@ -197,14 +197,29 @@ typedef struct {
 static void print_to_target_valist(print_target *tgt, const char *format,
                                    va_list args) {
     if (tgt->type == PRINT_TARGET_BUFFER) {
-        char *buf   = tgt->dsc.buffer.data + tgt->dsc.buffer.curr_pos;
-        size_t size = tgt->dsc.buffer.size - tgt->dsc.buffer.curr_pos;
-        if (size > 0U) {
-            tgt->dsc.buffer.curr_pos += vsnprintf(buf, size, format, args);
+        print_buffer *buf = &tgt->dsc.buffer;
+        
+        if (buf->curr_pos >= buf->size) {
+            return; // No space available
         }
+        
+        size_t remaining = buf->size - buf->curr_pos;
+        char *write_pos = buf->data + buf->curr_pos;
+        
+        int written = vsnprintf(write_pos, remaining, format, args);
+        if (written < 0) {
+            return; // Encoding error
+        }
+        
+        // Update position, capping at buffer end
+        if ((size_t)written >= remaining) {
+            buf->curr_pos = buf->size > 0 ? buf->size - 1 : 0;
+        } else {
+            buf->curr_pos += written;
+        }
+        
     } else if (tgt->type == PRINT_TARGET_STREAM) {
-        FILE *stream = tgt->dsc.stream;
-        vfprintf(stream, format, args);
+        vfprintf(tgt->dsc.stream, format, args);
     }
 }
 
@@ -1320,7 +1335,7 @@ ulog_status topic_enable_all(void) {
 ulog_status topic_disable_all(void) {
     for (int i = 0; i < TOPIC_STATIC_NUM; i++) {
         if (is_str_empty(topic_data.topics[i].name)) {
-            break;  // End of topics, no more to disable
+            continue;  // Skip empty slot; allow sparse arrays
         }
         topic_data.topics[i].enabled = false;
     }
@@ -1775,7 +1790,7 @@ ulog_status ulog_cleanup(void) {
         output_data.outputs[i].arg      = NULL;
         output_data.outputs[i].level    = OUTPUT_STDOUT_DEFAULT_LEVEL;
     }
-#endif // ULOG_HAS_EXTRA_OUTPUTS
+#endif  // ULOG_HAS_EXTRA_OUTPUTS
 
 #if ULOG_HAS_PREFIX
     // Reset prefix state
