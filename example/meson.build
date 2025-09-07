@@ -1,4 +1,13 @@
-project('example', 'c', 'cpp')
+project('example', 'c', 'cpp',
+  version: '1.0.0',
+  default_options: [
+    'cpp_std=c++20',
+    'c_std=gnu11',
+    'warning_level=3',
+    'b_ndebug=true',
+    'buildtype=release',
+  ],
+)
 
 # To fix paths in the log messages
 add_project_arguments('-fmacro-prefix-map=../=', language: ['cpp', 'c'])
@@ -15,7 +24,7 @@ add_global_arguments('-DULOG_BUILD_COLOR=1', language : ['cpp', 'c'])
 add_global_arguments('-DULOG_BUILD_TIME=1', language: ['cpp', 'c'])
 add_global_arguments('-DULOG_BUILD_PREFIX_SIZE=16', language : ['cpp', 'c'])
 add_global_arguments('-DULOG_BUILD_EXTRA_OUTPUTS=2', language: ['cpp', 'c'])
-add_global_arguments('-DULOG_BUILD_TOPICS_NUM=3', language: ['cpp', 'c'])
+add_global_arguments('-DULOG_BUILD_TOPICS_NUM=-1', language: ['cpp', 'c'])
 
 
 exe = executable(

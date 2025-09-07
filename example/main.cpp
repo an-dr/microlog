@@ -27,11 +27,13 @@ build configuration):
 
 #include <cstdio>
 #include "ulog.h"
+#include "ulog.hpp"
 
 // This prefix function can be used to add any custom information calculated
 //  at log time, e.g. request ID, user ID, additional time metrics, etc.
 // In this example we use it to add ms
 void user_prefix(ulog_event *ev, char *prefix, size_t prefix_size) {
+    (void)ev;
     static int count = 0; // count represents fake milliseconds
     snprintf(prefix, prefix_size, " [MsgID:%03d] ", count++);
 }
@@ -53,6 +55,8 @@ void user_output(ulog_event *ev, void *arg) {
 }
 
 int main(int argc, char *argv[]) {
+    (void)argc;
+    (void)argv;
 
     printf("\n");
 
@@ -101,6 +105,12 @@ int main(int argc, char *argv[]) {
 
     ulog_t_info("Bluetooth", "Bluetooth message 2 (lower than topic level)");
     ulog_t_debug("Serial", "Serial message 3 (lower than global level)");
+    
+    // cpp example of using ulog library in C/C++
+    
+    printf("\n");
+    ulog::Logger logger("MyTopic");
+    logger.info("Info message %d", 10);
 
     return 0;
 }
