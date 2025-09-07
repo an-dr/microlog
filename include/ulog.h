@@ -385,7 +385,7 @@ void ulog_log(ulog_level level, const char *file,
               int line, const char *topic, const char *message, ...);
               
 
-// @brief Clean up all topic, outputs and other dynamic resources
+/// @brief Clean up all topic, outputs and other dynamic resources
 ulog_status ulog_cleanup(void);
 
 #ifdef __cplusplus
