@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Potential early exit from `output_handle_all` after some output removal
+- Potential early exit from topic-related loops after topic removal
 
 ## [v7.0.0-alpha.1] - September 4, 2025
 

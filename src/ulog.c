@@ -1084,8 +1084,8 @@ static ulog_status topic_disable_all();
 /// @param enable - Whether the topic is enabled after creation
 static ulog_topic_id topic_add(const char *topic_name, ulog_output_id output,
                                bool enable);
-                               
-/// @brief Remove a topic by name (implementation depends on static/dynamic mode)
+
+/// @brief Remove a topic by name
 /// @param topic_name - Topic name
 /// @return ulog_status
 static ulog_status topic_remove(const char *topic_name);
@@ -1179,7 +1179,6 @@ static void topic_process(const char *topic, ulog_level level,
     *topic_id = t->id;      // Set topic ID
     *output   = t->output;  // Set topic output
 }
-
 
 // Public
 // ================
@@ -1311,7 +1310,7 @@ ulog_topic_id ulog_topic_add(const char *topic_name, ulog_output_id output,
 ulog_status topic_enable_all(void) {
     for (int i = 0; i < TOPIC_STATIC_NUM; i++) {
         if (is_str_empty(topic_data.topics[i].name)) {
-            break;  // End of topics, no more to enable
+            continue;  // Skip empty slot; do not break to allow sparse reuse
         }
         topic_data.topics[i].enabled = true;
     }
@@ -1331,7 +1330,7 @@ ulog_status topic_disable_all(void) {
 ulog_topic_id topic_str_to_id(const char *str) {
     for (int i = 0; i < TOPIC_STATIC_NUM; i++) {
         if (is_str_empty(topic_data.topics[i].name)) {
-            break;  // End of topics, not found
+            continue;  // Skip empty slot; continue searching
         }
         if (strcmp(topic_data.topics[i].name, str) == 0) {
             return topic_data.topics[i].id;
@@ -1381,7 +1380,7 @@ static ulog_status topic_remove(const char *topic_name) {
     lock_lock();  // Lock the configuration
     for (int i = 0; i < TOPIC_STATIC_NUM; i++) {
         if (is_str_empty(topic_data.topics[i].name)) {
-            break;  // End of topics, not found
+            continue;  // Skip empty slot; continue search
         }
         if (strcmp(topic_data.topics[i].name, topic_name) == 0) {
             // Clear the topic entry
@@ -1753,20 +1752,20 @@ ulog_status ulog_cleanup(void) {
 #if ULOG_HAS_TOPICS
     // Reset new-topic default enable flag
     topic_data.new_topic_enabled = false;
-    #if TOPIC_DYNAMIC
-        // Free linked list of dynamically allocated topics
-        topic_t *t = topic_data.topics;
-        while (t != NULL) {
-            topic_t *next = t->next;
-            free(t);
-            t = next;
-        }
-        topic_data.topics = NULL;
-    #else
-        // Zero out statically allocated topic array
-        memset(topic_data.topics, 0, sizeof(topic_data.topics));
-    #endif
-#endif // ULOG_HAS_TOPICS
+#if TOPIC_DYNAMIC
+    // Free linked list of dynamically allocated topics
+    topic_t *t = topic_data.topics;
+    while (t != NULL) {
+        topic_t *next = t->next;
+        free(t);
+        t = next;
+    }
+    topic_data.topics = NULL;
+#else
+    // Zero out statically allocated topic array
+    memset(topic_data.topics, 0, sizeof(topic_data.topics));
+#endif
+#endif  // ULOG_HAS_TOPICS
 
     // Cleanup Outputs (keep stdout (index 0) registered but reset its level)
     output_data.outputs[ULOG_OUTPUT_STDOUT].level = OUTPUT_STDOUT_DEFAULT_LEVEL;
