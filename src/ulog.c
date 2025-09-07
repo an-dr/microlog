@@ -150,13 +150,24 @@ static inline bool is_str_empty(const char *str) {
     return (str == NULL) || (str[0] == '\0');
 }
 
+/* ============================================================================
+   Core Feature: Warn Not Enabled
+   (`warn_not_enabled`, depends on: - )
+============================================================================ */
+#if ULOG_HAS_WARN_NOT_ENABLED
+
 // Macro to log a warning when a feature is not enabled
 // Usage: warn_not_enabled("ULOG_BUILD_TIME")
 // Output:
 //   WARN src/main.c:42: 'ulog_configure_time' ignored: ULOG_BUILD_TIME disabled
 #define warn_not_enabled(feature)                                              \
-    ulog_warn("'%s' called with %s disabled", __func__, feature)
+    warn_non_enabled_full(__func__, feature, __FILE__, __LINE__)
 
+#define warn_non_enabled_full(func, feature, file, line)                       \
+    ulog_log(ULOG_LEVEL_WARN, file, line, NULL,                                \
+             "'%s' called with %s disabled", func, feature)
+
+#endif  // ULOG_HAS_WARN_NOT_ENABLED
 /* ============================================================================
    Core Feature: Print
    (`print_*`, depends on: - )
@@ -817,9 +828,7 @@ static void output_handle_by_id(ulog_event *ev, ulog_output_id output_id) {
 
 static void output_handle_all(ulog_event *ev) {
     // Processing the message for outputs
-    for (int i = 0;
-         (i < OUTPUT_TOTAL_NUM) && (output_data.outputs[i].callback != NULL);
-         i++) {
+    for (int i = 0; (i < OUTPUT_TOTAL_NUM); i++) {
         output_handle_single(ev, &output_data.outputs[i]);
     }
 }
@@ -1642,10 +1651,10 @@ void ulog_log(ulog_level level, const char *file, int line, const char *topic,
     ulog_output_id output = ULOG_OUTPUT_ALL;
     int topic_id          = -1;
     if (!is_str_empty(topic)) {
-        bool is_log_allowed = false;
-        topic_process(topic, level, &is_log_allowed, &topic_id, &output);
-        if (!is_log_allowed) {
-            lock_unlock();
+            bool is_log_allowed = false;
+            topic_process(topic, level, &is_log_allowed, &topic_id, &output);
+            if (!is_log_allowed) {
+                lock_unlock();
             return;  // Topic is not enabled or level is lower than topic level
         }
     }
