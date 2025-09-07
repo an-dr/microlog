@@ -213,7 +213,7 @@ static void print_to_target_valist(print_target *tgt, const char *format,
 
         // Update position, capping at buffer end
         if ((size_t)written >= remaining) {
-            buf->curr_pos = buf->size > 0 ? buf->size - 1 : 0;
+            buf->curr_pos = buf->size;
         } else {
             buf->curr_pos += written;
         }
