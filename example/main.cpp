@@ -37,7 +37,7 @@ void user_prefix(ulog_event *ev, char *prefix, size_t prefix_size) {
     snprintf(prefix, prefix_size, " [MsgID:%03d] ", count++);
 }
 
-// This callback can be used to get a log string 
+// This callback can be used to get a log string
 // and send it to any other output, e.g. network, GUI, etc.
 // In this example we just print it to the console with appending
 // data sent as a void pointer ("User Output"). We format the data like
@@ -53,12 +53,35 @@ void user_output(ulog_event *ev, void *arg) {
     printf("%s\n", buffer);
 }
 
+// Simple lock function with simple locking
+// This is just an example, real locking should use mutexes or similar
+// mechanisms to ensure thread safety.
+// The lock function should return ULOG_STATUS_OK on success, 
+// other values on error.
+ulog_status user_lock(bool lock, void *arg) {
+    (void)(arg);
+    static bool is_locked = false;
+    if (lock) {
+        if (is_locked) {
+            return ULOG_STATUS_TIMEOUT;  // Already locked
+        }
+        is_locked = true;
+    } else {
+        if (!is_locked) {
+            return ULOG_STATUS_TIMEOUT;  // Not locked
+        }
+        is_locked = false;
+    }
+    return ULOG_STATUS_OK;
+}
+
 int main(int argc, char *argv[]) {
     (void)argc;
     (void)argv;
 
     printf("\n");
 
+    ulog_lock_set_fn(user_lock, nullptr);  // Set user lock function
     ulog_output_level_set_all(ULOG_LEVEL_TRACE);
 
     /* Extra Outputs =============================== */
@@ -71,8 +94,8 @@ int main(int argc, char *argv[]) {
     ulog_prefix_set_fn(user_prefix);
 
     /* Core Logging ===================================== */
-    ulog_trace("Trace message %d", 1);  
-    
+    ulog_trace("Trace message %d", 1);
+
     ulog_debug("Debug message 0x%x", 2);
     ulog_info("Info message %f", 3.0);
     ulog_warn("Warning message %c", '4');
@@ -89,9 +112,9 @@ int main(int argc, char *argv[]) {
 
     ulog_topic_enable_all();
 
-    ulog_topic_debug( "Bluetooth", "Bluetooth message 1");  
+    ulog_topic_debug("Bluetooth", "Bluetooth message 1");
     // Short alias: ulog_t_debug("Bluetooth", "Bluetooth message 1");
-    
+
     ulog_t_warn("Audio", "Audio message 2");
     ulog_t_error("Serial", "Serial message 1");
     ulog_t_fatal("Serial", "Serial message 2");

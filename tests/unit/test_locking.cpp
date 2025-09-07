@@ -8,9 +8,10 @@
 #include "ut_callback.h"
 
 static std::vector<std::string> lock_events;
-void dummy_lock(bool lock, void *arg) {
+ulog_status dummy_lock(bool lock, void *arg) {
     (void)arg;
     lock_events.push_back(lock ? "lock" : "unlock");
+    return ULOG_STATUS_OK;
 }
 
 struct LockingTestFixture {

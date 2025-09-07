@@ -105,3 +105,12 @@ target_sources(test_cleanup PRIVATE ${ULOG_SRC}
 target_include_directories(test_cleanup PRIVATE ${ULOG_INCLUDE_DIR})
 target_compile_definitions(test_cleanup PRIVATE ${ULOG_CONFIG_TEST_CORE})
 add_test(NAME CleanupTest COMMAND test_cleanup)
+
+# --- Reentrancy Test ---
+add_executable(test_reentrancy)
+target_sources(test_reentrancy PRIVATE ${ULOG_SRC}
+                                        ut_callback.c
+                                        test_reentrancy.cpp)
+target_include_directories(test_reentrancy PRIVATE ${ULOG_INCLUDE_DIR})
+target_compile_definitions(test_reentrancy PRIVATE ${ULOG_CONFIG_BASE})
+add_test(NAME ReentrancyTest COMMAND test_reentrancy)

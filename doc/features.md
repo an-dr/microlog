@@ -434,7 +434,7 @@ If Dynamic Config enabled topics are created runtime in the **dynamic allocation
 
 Configuration functions:
 
-- `void ulog_topic_config(bool enabled)` - will show or hide topics in the log output when printing using `ulog_topic_xxx` macros.
+- `ulog_status ulog_topic_config(bool enabled)` - show or hide topics in the log output when using `ulog_topic_xxx` macros. Returns `ULOG_STATUS_OK` on success, `ULOG_STATUS_BUSY` if the logger is currently locked, or `ULOG_STATUS_ERROR` if the feature is not compiled in.
 
 Example output with and without topics:
 
@@ -451,31 +451,31 @@ If Dynamic Config enabled, `ULOG_BUILD_PREFIX_SIZE` is set to 64, so the prefix 
 
 Functions to configure the prefix:
 
-- `void ulog_prefix_config(bool enabled)` - will enable or disable prefix in the log output.
+- `ulog_status ulog_prefix_config(bool enabled)` - enable or disable prefix in the log output. Returns `ULOG_STATUS_OK` / `ULOG_STATUS_BUSY` / `ULOG_STATUS_ERROR` (feature disabled).
 
 #### Time Configuration
 
 Functions to configure the timestamp:
 
-- `void ulog_time_config(bool enabled)` - will enable or disable time in the log output.
+- `ulog_status ulog_time_config(bool enabled)` - enable or disable time in the log output. Returns `ULOG_STATUS_OK` / `ULOG_STATUS_BUSY` / `ULOG_STATUS_ERROR` (feature disabled).
 
 #### Color Configuration
 
 Functions to configure:
 
-- `void ulog_color_config(bool enabled)` - will enable or disable ANSI color escape codes when printing to stdout.
+- `ulog_status ulog_color_config(bool enabled)` - enable or disable ANSI color escape codes when printing to stdout. Returns `ULOG_STATUS_OK` / `ULOG_STATUS_BUSY` / `ULOG_STATUS_ERROR` (feature disabled).
 
 #### Source Location Configuration
 
 Functions to configure:
 
-- `void ulog_source_location_config(bool enabled)` - will show or hide file and line in the log output.
+- `ulog_status ulog_source_location_config(bool enabled)` - show or hide file and line in the log output. Returns `ULOG_STATUS_OK` / `ULOG_STATUS_BUSY` / `ULOG_STATUS_ERROR` (feature disabled).
 
 #### Level Configuration
 
 Functions to configure:
 
-- `void ulog_level_config(ulog_level_config_style style)` - will enable or disable short level strings, e.g. "T" for "TRACE", "I" for "INFO".
+- `ulog_status ulog_level_config(ulog_level_config_style style)` - enable or disable short level strings (e.g. "T" for "TRACE", "I" for "INFO"). Returns `ULOG_STATUS_OK` / `ULOG_STATUS_BUSY` / `ULOG_STATUS_ERROR` (feature disabled).
 
 The `style` argument can be one of the following values:
 

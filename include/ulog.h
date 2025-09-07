@@ -37,6 +37,8 @@ typedef enum {
     ULOG_STATUS_ERROR            = -1,  ///< General error occurred
     ULOG_STATUS_INVALID_ARGUMENT = -2,  ///< Invalid argument provided
     ULOG_STATUS_NOT_FOUND        = -3,  ///< Requested item not found
+    ULOG_STATUS_TIMEOUT          = -4,  ///< Operation timed out
+    ULOG_STATUS_BUSY             = -5,  ///< Resource is busy
 } ulog_status;
 
 /* ============================================================================
@@ -129,7 +131,7 @@ struct tm *ulog_event_get_time(ulog_event *ev);
 /// @brief Lock function type for thread synchronization
 /// @param lock True to acquire lock, false to release lock
 /// @param lock_arg User-provided argument passed during registration
-typedef void (*ulog_lock_fn)(bool lock, void *lock_arg);
+typedef ulog_status (*ulog_lock_fn)(bool lock, void *lock_arg);
 
 /// @brief Sets the thread synchronization lock function
 /// @param function Lock function to use, or NULL to disable locking
@@ -143,22 +145,22 @@ void ulog_lock_set_fn(ulog_lock_fn function, void *lock_arg);
 /// @brief Enable or disable colored output (requires
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param enabled True to enable colors, false to disable
-void ulog_color_config(bool enabled);
+ulog_status ulog_color_config(bool enabled);
 
 /// @brief Enable or disable custom prefix (requires
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param enabled True to enable prefix, false to disable
-void ulog_prefix_config(bool enabled);
+ulog_status ulog_prefix_config(bool enabled);
 
 /// @brief Enable or disable source location in logs (requires
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param enabled True to show file:line, false to hide
-void ulog_source_location_config(bool enabled);
+ulog_status ulog_source_location_config(bool enabled);
 
 /// @brief Enable or disable timestamps in logs (requires
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param enabled True to show timestamps, false to hide
-void ulog_time_config(bool enabled);
+ulog_status ulog_time_config(bool enabled);
 
 /// @brief Log level configuration styles
 typedef enum {
@@ -170,12 +172,12 @@ typedef enum {
 
 /// @brief Configure level string format (requires ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param style Level configuration style
-void ulog_level_config(ulog_level_config_style style);
+ulog_status ulog_level_config(ulog_level_config_style style);
 
 /// @brief Enable or disable topic support (requires
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param enabled True to enable topics, false to disable
-void ulog_topic_config(bool enabled);
+ulog_status ulog_topic_config(bool enabled);
 
 /* ============================================================================
    Feature: Prefix
@@ -303,7 +305,7 @@ ulog_status ulog_output_remove(ulog_output_id output);
 /// @return Topic ID on success, ULOG_TOPIC_ID_INVALID on failure
 ulog_topic_id ulog_topic_add(const char *topic_name, ulog_output_id output,
                              bool enable);
-                             
+
 /// @brief Removes a topic  (requires ULOG_BUILD_TOPICS!=0 or
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param topic_name Topic name string (empty or NULL names are invalid)
