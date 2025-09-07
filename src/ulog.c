@@ -1224,6 +1224,13 @@ ulog_topic_id ulog_topic_add(const char *topic_name, ulog_output_id output,
     return topic_add(topic_name, output, enable);
 }
 
+ulog_status ulog_topic_remove(const char *topic_name) {
+    if (is_str_empty(topic_name)) {
+        return ULOG_STATUS_INVALID_ARGUMENT;  // Invalid topic name, do nothing
+    }
+    return topic_remove(topic_name);
+}
+
 #else  // ULOG_HAS_TOPICS
 
 // Disabled Public
@@ -1360,6 +1367,26 @@ static ulog_topic_id topic_add(const char *topic_name, ulog_output_id output,
     lock_unlock();                 // Unlock the configuration
     return ULOG_TOPIC_ID_INVALID;  // No space for new topics
 }
+
+static ulog_status topic_remove(const char *topic_name) {
+    if (is_str_empty(topic_name)) {
+        return ULOG_STATUS_INVALID_ARGUMENT;  // Invalid topic name, do nothing
+    }
+    lock_lock();  // Lock the configuration
+    for (int i = 0; i < TOPIC_STATIC_NUM; i++) {
+        if (is_str_empty(topic_data.topics[i].name)) {
+            break;  // End of topics, not found
+        }
+        if (strcmp(topic_data.topics[i].name, topic_name) == 0) {
+            // Clear the topic entry
+            topic_data.topics[i] = (topic_t){0};
+            lock_unlock();  // Unlock the configuration
+            return ULOG_STATUS_OK;
+        }
+    }
+    lock_unlock();                 // Unlock the configuration
+    return ULOG_STATUS_NOT_FOUND;  // Topic not found
+}
 #endif  // ULOG_HAS_TOPICS && TOPIC_DYNAMIC == false
 
 /* ============================================================================
@@ -1425,8 +1452,8 @@ static topic_t *topic_get(int topic) {
     return NULL;
 }
 
-static void *topic_allocate(int id, const char *topic_name,
-                            ulog_output_id output, bool enable) {
+static topic_t *topic_allocate(int id, const char *topic_name,
+                               ulog_output_id output, bool enable) {
     if (is_str_empty(topic_name)) {
         return NULL;  // Invalid topic name, do not allocate
     }
@@ -1462,8 +1489,7 @@ static ulog_topic_id topic_add(const char *topic_name, ulog_output_id output,
     lock_lock();
     topic_t *t = topic_get_last();
     if (t == NULL) {
-        topic_data.topics =
-            (topic_t *)topic_allocate(0, topic_name, output, enable);
+        topic_data.topics = topic_allocate(0, topic_name, output, enable);
         if (topic_data.topics != NULL) {
             lock_unlock();
             return 0;
@@ -1480,6 +1506,36 @@ static ulog_topic_id topic_add(const char *topic_name, ulog_output_id output,
     }
     lock_unlock();
     return ULOG_TOPIC_ID_INVALID;
+}
+
+static ulog_status topic_remove(const char *topic_name) {
+    if (is_str_empty(topic_name)) {
+        return ULOG_STATUS_INVALID_ARGUMENT;  // Invalid topic name, do nothing
+    }
+    lock_lock();  // Lock the configuration
+
+    topic_t *t      = topic_get_first();
+    topic_t *t_prev = NULL;
+
+    while (t != NULL) {
+        if (!is_str_empty(t->name) && strcmp(t->name, topic_name) == 0) {
+            // Found the topic to remove
+            if (t_prev == NULL) {
+                // Removing the first topic
+                topic_data.topics = t->next;
+            } else {
+                t_prev->next = t->next;
+            }
+            free(t);        // Free the topic memory
+            lock_unlock();  // Unlock the configuration
+            return ULOG_STATUS_OK;
+        }
+        t_prev = t;
+        t      = t->next;
+    }
+
+    lock_unlock();                 // Unlock the configuration
+    return ULOG_STATUS_NOT_FOUND;  // Topic not found
 }
 
 #endif  // ULOG_HAS_TOPICS && TOPIC_DYNAMIC == true
@@ -1651,10 +1707,10 @@ void ulog_log(ulog_level level, const char *file, int line, const char *topic,
     ulog_output_id output = ULOG_OUTPUT_ALL;
     int topic_id          = -1;
     if (!is_str_empty(topic)) {
-            bool is_log_allowed = false;
-            topic_process(topic, level, &is_log_allowed, &topic_id, &output);
-            if (!is_log_allowed) {
-                lock_unlock();
+        bool is_log_allowed = false;
+        topic_process(topic, level, &is_log_allowed, &topic_id, &output);
+        if (!is_log_allowed) {
+            lock_unlock();
             return;  // Topic is not enabled or level is lower than topic level
         }
     }

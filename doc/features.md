@@ -249,6 +249,8 @@ ulog_topic_info("network", "Connected to server"); // filtered out topic
 ulog_topic_debug("storage", "No free space"); // filtered out level DEBUG < INFO
 ```
 
+Topics can be removed by using the `ulog_topic_remove()` function.
+
 ### Extra Outputs
 
 - Static configuration options: `ULOG_BUILD_EXTRA_OUTPUTS`
@@ -287,6 +289,8 @@ if (fp) {
     fclose(fp);  // For demo purposes
 }
 ```
+
+Outputs can be removed by using the `ulog_output_remove()` function.
 
 #### User Defined Output
 
