@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased, v7.0.0-alpha.2]
+
+### Added
+
+- Binding topic to a specific output via `ulog_topic_add(TOPIC, OUTPUT, ENABLED)`
+- New status code: `ULOG_STATUS_NOT_FOUND` returned when a topic or output is not present (previously returned `ULOG_STATUS_ERROR`)
+
+### Changed
+
+- **BREAKING**: Topics are now require `ulog_topic_add()` to be used. For both static and dynamic topics.
+- **BREAKING**: Standardized macro alias naming conventions for consistency
+  - Renamed topic aliases: `logt_*` → `ulog_t_*` (e.g., `logt_info` → `ulog_t_info`)
+  - Removed basic aliases: `log_*` → use `ulog_*` directly (e.g., `log_info` → `ulog_info`)
+
 ## [v7.0.0-alpha.1] - September 4, 2025
 
 > 🚨 BREAKING CHANGES: Complete API redesign from v6.5.0. This is a major architectural overhaul with new type system, function names, and build configuration.

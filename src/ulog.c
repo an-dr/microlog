@@ -155,7 +155,7 @@ static inline bool is_str_empty(const char *str) {
 // Output:
 //   WARN src/main.c:42: 'ulog_configure_time' ignored: ULOG_BUILD_TIME disabled
 #define warn_not_enabled(feature)                                              \
-    log_warn("'%s' called with %s disabled", __func__, feature)
+    ulog_warn("'%s' called with %s disabled", __func__, feature)
 
 /* ============================================================================
    Core Feature: Print
@@ -237,7 +237,7 @@ struct ulog_event {
 
 ulog_status ulog_event_get_message(ulog_event *ev, char *buffer,
                                    size_t buffer_size) {
-    if (buffer == NULL || buffer_size == 0) {
+    if (ev == NULL || buffer == NULL || buffer_size == 0) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }
 
@@ -598,8 +598,9 @@ static bool time_print_if_invalid(print_target *tgt, ulog_event *ev) {
 /// @brief Fills the event time with the current local time
 /// @param ev - Event to fill. Assumed not NULL
 static void time_fill_current_time(ulog_event *ev) {
-    time_t current_time = time(NULL);     // Get current time
-    ev->time = localtime(&current_time);  // Fill time with current value
+    time_t current_time = time(NULL);  // Get current time
+    // Use localtime because existing tests inspect local clock fields.
+    ev->time = localtime(&current_time);
 }
 
 static void time_print_short(print_target *tgt, ulog_event *ev,
@@ -776,20 +777,20 @@ typedef struct {
     ulog_output_callback_fn callback;
     void *arg;
     ulog_level level;
-} output_t;
+} output;
 
 typedef struct {
-    output_t outputs[OUTPUT_TOTAL_NUM];  // 0 is for stdout callback
+    output outputs[OUTPUT_TOTAL_NUM];  // order num = id. 0 is for stdout
 } output_data_t;
 
 static output_data_t output_data = {
     .outputs = {{output_stdout_callback, NULL, OUTPUT_STDOUT_DEFAULT_LEVEL}}};
 
-static void output_handle_single(ulog_event *ev, output_t *output) {
+static void output_handle_single(ulog_event *ev, output *output) {
     if (output->callback == NULL) {
         return;  // Output has been removed, skip it
     }
-    
+
     if (level_is_allowed(ev->level, output->level)) {
 
         // Create event copy to avoid va_list issues
@@ -804,6 +805,14 @@ static void output_handle_single(ulog_event *ev, output_t *output) {
         output->callback(&ev_copy, output->arg);
         va_end(ev_copy.message_format_args);
     }
+}
+
+static void output_handle_by_id(ulog_event *ev, ulog_output_id output_id) {
+    // Validate output ID bounds
+    if (output_id < 0 || output_id >= OUTPUT_TOTAL_NUM) {
+        return;  // Invalid output ID
+    }
+    output_handle_single(ev, &output_data.outputs[output_id]);
 }
 
 static void output_handle_all(ulog_event *ev) {
@@ -824,7 +833,7 @@ static void output_stdout_callback(ulog_event *ev, void *arg) {
 // Public
 // ================
 
-ulog_status ulog_output_level_set(ulog_output output, ulog_level level) {
+ulog_status ulog_output_level_set(ulog_output_id output, ulog_level level) {
     if (level < LEVEL_MIN_VALUE || level >= ULOG_LEVEL_TOTAL) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }
@@ -833,7 +842,7 @@ ulog_status ulog_output_level_set(ulog_output output, ulog_level level) {
     }
 
     if (output_data.outputs[output].callback == NULL) {
-        return ULOG_STATUS_ERROR;
+        return ULOG_STATUS_NOT_FOUND;  // Output exists but no callback assigned
     }
     output_data.outputs[output].level = level;
     return ULOG_STATUS_OK;
@@ -866,12 +875,12 @@ static void output_file_callback(ulog_event *ev, void *arg) {
 // Public
 // ================
 
-ulog_output ulog_output_add(ulog_output_callback_fn callback, void *arg,
-                            ulog_level level) {
+ulog_output_id ulog_output_add(ulog_output_callback_fn callback, void *arg,
+                               ulog_level level) {
     lock_lock();  // Lock the configuration
     for (int i = 0; i < OUTPUT_TOTAL_NUM; i++) {
         if (output_data.outputs[i].callback == NULL) {
-            output_data.outputs[i] = (output_t){callback, arg, level};
+            output_data.outputs[i] = (output){callback, arg, level};
             lock_unlock();  // Unlock the configuration
             return i;
         }
@@ -881,31 +890,31 @@ ulog_output ulog_output_add(ulog_output_callback_fn callback, void *arg,
 }
 
 /// @brief Add file callback
-ulog_output ulog_output_add_file(FILE *file, ulog_level level) {
+ulog_output_id ulog_output_add_file(FILE *file, ulog_level level) {
     return ulog_output_add(output_file_callback, file, level);
 }
 
 /// @brief Remove an output from the logging system
-ulog_status ulog_output_remove(ulog_output output) {
+ulog_status ulog_output_remove(ulog_output_id output) {
     if (output < 0 || output >= OUTPUT_TOTAL_NUM) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }
-    
+
     if (output == ULOG_OUTPUT_STDOUT) {
         return ULOG_STATUS_ERROR;  // Cannot remove stdout output
     }
-    
+
     lock_lock();
     if (output_data.outputs[output].callback == NULL) {
         lock_unlock();
-        return ULOG_STATUS_ERROR;  // Output not found or already removed
+        return ULOG_STATUS_NOT_FOUND;  // Output not found or already removed
     }
-    
+
     // Mark output as removed by setting callback to NULL
     output_data.outputs[output].callback = NULL;
-    output_data.outputs[output].arg = NULL;
-    output_data.outputs[output].level = ULOG_LEVEL_TRACE;
-    
+    output_data.outputs[output].arg      = NULL;
+    output_data.outputs[output].level    = ULOG_LEVEL_TRACE;
+
     lock_unlock();
     return ULOG_STATUS_OK;
 }
@@ -917,8 +926,8 @@ ulog_status ulog_output_remove(ulog_output output) {
 
 #if ULOG_HAS_WARN_NOT_ENABLED
 
-ulog_output ulog_output_add(ulog_output_callback_fn callback, void *arg,
-                            ulog_level level) {
+ulog_output_id ulog_output_add(ulog_output_callback_fn callback, void *arg,
+                               ulog_level level) {
     (void)(callback);
     (void)(arg);
     (void)(level);
@@ -926,14 +935,14 @@ ulog_output ulog_output_add(ulog_output_callback_fn callback, void *arg,
     return ULOG_OUTPUT_INVALID;
 }
 
-ulog_output ulog_output_add_file(FILE *file, ulog_level level) {
+ulog_output_id ulog_output_add_file(FILE *file, ulog_level level) {
     (void)(file);
     (void)(level);
     warn_not_enabled("ULOG_BUILD_EXTRA_OUTPUTS");
     return ULOG_OUTPUT_INVALID;
 }
 
-ulog_status ulog_output_remove(ulog_output output) {
+ulog_status ulog_output_remove(ulog_output_id output) {
     (void)(output);
     warn_not_enabled("ULOG_BUILD_EXTRA_OUTPUTS");
     return ULOG_STATUS_ERROR;
@@ -1011,6 +1020,7 @@ typedef struct {
     const char *name;
     bool enabled;
     ulog_level level;
+    ulog_output_id output;
 
 #if TOPIC_DYNAMIC
     void *next;  // Pointer to the next topic pointer (Topic **)
@@ -1061,8 +1071,10 @@ static ulog_status topic_disable_all();
 
 /// @brief Add a new topic
 /// @param topic_name - Topic name
+/// @param output - Output id
 /// @param enable - Whether the topic is enabled after creation
-static ulog_topic_id topic_add(const char *topic_name, bool enable);
+static ulog_topic_id topic_add(const char *topic_name, ulog_output_id output,
+                               bool enable);
 
 // === Common Topic Functions =================================================
 
@@ -1080,14 +1092,17 @@ static void topic_print(print_target *tgt, ulog_event *ev) {
 /// @brief Sets the topic level
 /// @param topic - Topic ID
 /// @param level - Log level to set
-/// @return ULOG_STATUS_OK if success, ULOG_STATUS_ERROR if topic not found
+/// @return ULOG_STATUS_OK if success, ULOG_STATUS_NOT_FOUND if topic not found
 static ulog_status topic_set_level(int topic, ulog_level level) {
+    if (level < LEVEL_MIN_VALUE || level >= ULOG_LEVEL_TOTAL) {
+        return ULOG_STATUS_INVALID_ARGUMENT;
+    }
     topic_t *t = topic_get(topic);
     if (t != NULL) {
         t->level = level;
         return ULOG_STATUS_OK;
     }
-    return ULOG_STATUS_ERROR;
+    return ULOG_STATUS_NOT_FOUND;
 }
 
 /// @brief Checks if the topic is loggable
@@ -1106,76 +1121,76 @@ static bool topic_is_loggable(topic_t *t, ulog_level level) {
 
 /// @brief Enables the topic
 /// @param topic - Topic ID
-/// @return ULOG_STATUS_OK on success, ULOG_STATUS_ERROR if topic not found
+/// @return ULOG_STATUS_OK on success, ULOG_STATUS_NOT_FOUND if topic not found
 static ulog_status topic_enable(int topic) {
     topic_t *t = topic_get(topic);
     if (t != NULL) {
         t->enabled = true;
         return ULOG_STATUS_OK;
     }
-    return ULOG_STATUS_ERROR;
+    return ULOG_STATUS_NOT_FOUND;
 }
 
 /// @brief Disables the topic
 /// @param topic - Topic ID
-/// @return ULOG_STATUS_OK on success, ULOG_STATUS_ERROR if topic not found
+/// @return ULOG_STATUS_OK on success, ULOG_STATUS_NOT_FOUND if topic not found
 static ulog_status topic_disable(int topic) {
     topic_t *t = topic_get(topic);
     if (t != NULL) {
         t->enabled = false;
         return ULOG_STATUS_OK;
     }
-    return ULOG_STATUS_ERROR;
+    return ULOG_STATUS_NOT_FOUND;
 }
 
 /// @brief Processes the topic
 /// @param topic - Topic name
 /// @param level - Log level
-/// @param is_log_allowed - Output log allowed
-/// @param topic_id - Output topic ID
+/// @param is_log_allowed - (Output) log allowed
+/// @param topic_id - (Output) topic ID
+/// @param output - (Output) topic output ID
 static void topic_process(const char *topic, ulog_level level,
-                          bool *is_log_allowed, int *topic_id) {
-    if (is_log_allowed == NULL || topic_id == NULL) {
+                          bool *is_log_allowed, int *topic_id,
+                          ulog_output_id *output) {
+    if (is_log_allowed == NULL || topic_id == NULL || output == NULL) {
         return;  // Invalid arguments, do nothing
     }
 
     topic_t *t = topic_get(topic_str_to_id(topic));
 
-#if TOPIC_DYNAMIC
-    // Allocate a new topic if not found
-    if (t == NULL) {
-        *topic_id = ulog_topic_add(topic, topic_data.new_topic_enabled);
-        if (*topic_id == -1) {
-            *is_log_allowed = false;  // Topic was not added, processing failed
-            return;                   // Processing failed, topic not found
-        }
-        t = topic_get(*topic_id);  // Get the newly added topic
-    }
-#endif  // TOPIC_DYNAMIC
-
     *is_log_allowed = topic_is_loggable(t, level);
     if (!*is_log_allowed) {
         return;  // Topic is not loggable, stop processing
     }
-    *topic_id = t->id;  // Set topic ID
+    *topic_id = t->id;      // Set topic ID
+    *output   = t->output;  // Set topic output
 }
 
 // Public
 // ================
 
 ulog_status ulog_topic_level_set(const char *topic_name, ulog_level level) {
-    if (ulog_topic_add(topic_name, true) != -1) {
-        return topic_set_level(ulog_topic_get_id(topic_name), level);
+    ulog_topic_id topic_id = ulog_topic_get_id(topic_name);
+    if (topic_id == ULOG_TOPIC_ID_INVALID) {
+        return ULOG_STATUS_NOT_FOUND;  // Topic not found, do nothing
     }
-    return ULOG_STATUS_ERROR;
+    return topic_set_level(topic_id, level);
 }
 
 ulog_status ulog_topic_enable(const char *topic_name) {
-    return topic_enable(ulog_topic_get_id(topic_name));
+    ulog_topic_id topic_id = ulog_topic_get_id(topic_name);
+    if (topic_id == ULOG_TOPIC_ID_INVALID) {
+        return ULOG_STATUS_NOT_FOUND;  // Topic not found, do nothing
+    }
+    return topic_enable(topic_id);
 }
 
 ulog_status ulog_topic_disable(const char *topic_name) {
-    return topic_disable(ulog_topic_get_id(topic_name));
+    ulog_topic_id topic_id = ulog_topic_get_id(topic_name);
+    if (topic_id == ULOG_TOPIC_ID_INVALID) {
+        return ULOG_STATUS_NOT_FOUND;  // Topic not found, do nothing
+    }
+    return topic_disable(topic_id);
 }
 
 ulog_status ulog_topic_enable_all(void) {
@@ -1192,11 +1207,12 @@ ulog_topic_id ulog_topic_get_id(const char *topic_name) {
     return topic_str_to_id(topic_name);
 }
 
-ulog_topic_id ulog_topic_add(const char *topic_name, bool enable) {
+ulog_topic_id ulog_topic_add(const char *topic_name, ulog_output_id output,
+                             bool enable) {
     if (is_str_empty(topic_name)) {
         return ULOG_TOPIC_ID_INVALID;  // Invalid topic name, do nothing
     }
-    return topic_add(topic_name, enable);
+    return topic_add(topic_name, output, enable);
 }
 
 #else  // ULOG_HAS_TOPICS
@@ -1241,8 +1257,10 @@ ulog_topic_id ulog_topic_get_id(const char *topic_name) {
     return ULOG_TOPIC_ID_INVALID;
 }
 
-ulog_topic_id ulog_topic_add(const char *topic_name, bool enable) {
+ulog_topic_id ulog_topic_add(const char *topic_name, ulog_output_id output,
+                             bool enable) {
     (void)(topic_name);
+    (void)(output);
     (void)(enable);
     warn_not_enabled("ULOG_BUILD_TOPICS_NUM");
     return ULOG_TOPIC_ID_INVALID;
@@ -1254,8 +1272,9 @@ ulog_topic_id ulog_topic_add(const char *topic_name, bool enable) {
 // ================
 
 #define topic_print(tgt, ev) (void)(tgt), (void)(ev)
-#define topic_process(topic, level, is_log_allowed, topic_id)                  \
-    (void)(topic), (void)(level), (void)(is_log_allowed), (void)(topic_id)
+#define topic_process(topic, level, is_log_allowed, topic_id, output)          \
+    (void)(topic), (void)(level), (void)(is_log_allowed), (void)(topic_id),    \
+        (void)(output)
 
 #endif  // ULOG_HAS_TOPICS
 
@@ -1306,7 +1325,8 @@ static topic_t *topic_get(ulog_topic_id topic) {
     return NULL;
 }
 
-static ulog_topic_id topic_add(const char *topic_name, bool enable) {
+static ulog_topic_id topic_add(const char *topic_name, ulog_output_id output,
+                               bool enable) {
     if (is_str_empty(topic_name)) {
         return ULOG_TOPIC_ID_INVALID;
     }
@@ -1318,6 +1338,7 @@ static ulog_topic_id topic_add(const char *topic_name, bool enable) {
             topic_data.topics[i].name    = topic_name;
             topic_data.topics[i].enabled = enable;
             topic_data.topics[i].level   = TOPIC_LEVEL_DEFAULT;
+            topic_data.topics[i].output  = output;
             lock_unlock();  // Unlock the configuration
             return i;
         }
@@ -1395,7 +1416,8 @@ static topic_t *topic_get(int topic) {
     return NULL;
 }
 
-static void *topic_allocate(int id, const char *topic_name, bool enable) {
+static void *topic_allocate(int id, const char *topic_name,
+                            ulog_output_id output, bool enable) {
     if (is_str_empty(topic_name)) {
         return NULL;  // Invalid topic name, do not allocate
     }
@@ -1408,12 +1430,14 @@ static void *topic_allocate(int id, const char *topic_name, bool enable) {
         t->name    = topic_name;
         t->enabled = enable;
         t->level   = TOPIC_LEVEL_DEFAULT;
+        t->output  = output;
         t->next    = NULL;
     }
     return t;
 }
 
-static ulog_topic_id topic_add(const char *topic_name, bool enable) {
+static ulog_topic_id topic_add(const char *topic_name, ulog_output_id output,
+                               bool enable) {
     if (is_str_empty(topic_name)) {
         return ULOG_TOPIC_ID_INVALID;
     }
@@ -1429,7 +1453,8 @@ static ulog_topic_id topic_add(const char *topic_name, bool enable) {
     lock_lock();
     topic_t *t = topic_get_last();
     if (t == NULL) {
-        topic_data.topics = (topic_t *)topic_allocate(0, topic_name, enable);
+        topic_data.topics =
+            (topic_t *)topic_allocate(0, topic_name, output, enable);
         if (topic_data.topics != NULL) {
             lock_unlock();
             return 0;
@@ -1439,7 +1464,7 @@ static ulog_topic_id topic_add(const char *topic_name, bool enable) {
     }
 
     // If the beginning is not empty
-    t->next = topic_allocate(t->id + 1, topic_name, enable);
+    t->next = topic_allocate(t->id + 1, topic_name, output, enable);
     if (t->next) {
         lock_unlock();
         return t->id + 1;
@@ -1587,7 +1612,7 @@ void log_fill_event(ulog_event *ev, const char *message, ulog_level level,
     (void)(topic_id);  // Unused if topics are disabled
 #endif
 
-#if ULOG_FEATURE_TIME
+#if ULOG_HAS_TIME
     ev->time = NULL;  // Time will be filled later
 #endif
 
@@ -1612,11 +1637,13 @@ void ulog_log(ulog_level level, const char *file, int line, const char *topic,
 
     lock_lock();
 
-    // Try to get topic ID and check if logging is allowed for this topic
-    int topic_id = -1;
+    // Try to get topic ID, outputs and check if logging is allowed for this
+    // topic
+    ulog_output_id output = ULOG_OUTPUT_ALL;
+    int topic_id          = -1;
     if (!is_str_empty(topic)) {
         bool is_log_allowed = false;
-        topic_process(topic, level, &is_log_allowed, &topic_id);
+        topic_process(topic, level, &is_log_allowed, &topic_id, &output);
         if (!is_log_allowed) {
             lock_unlock();
             return;  // Topic is not enabled or level is lower than topic level
@@ -1628,7 +1655,13 @@ void ulog_log(ulog_level level, const char *file, int line, const char *topic,
     va_start(ev.message_format_args, message);
 
     prefix_update(&ev);
-    output_handle_all(&ev);
+
+    // Handle output routing
+    if (output == ULOG_OUTPUT_ALL) {
+        output_handle_all(&ev);
+    } else {
+        output_handle_by_id(&ev, output);
+    }
 
     va_end(ev.message_format_args);
 

@@ -21,7 +21,7 @@ struct PrefixTestFixture {
 };
 
 TEST_CASE_FIXTURE(PrefixTestFixture, "Prefix") {
-    log_info("Prefix test");
+    ulog_info("Prefix test");
     CHECK(strstr(ut_callback_get_last_message(), "Prefix test") != nullptr);
     CHECK(strstr(ut_callback_get_last_message(), "[PREFIX]") != nullptr);
 }

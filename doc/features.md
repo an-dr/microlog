@@ -97,15 +97,15 @@ There are 7 log severity levels:
 - `ULOG_LEVEL_ERROR` - for information about recoverable errors
 - `ULOG_LEVEL_FATAL` - for information about condition causing the system failure
 
-The library provides macros for logging with aliases:
+The library provides macros for logging:
 
 ```c
-ulog_trace(const char *fmt, ...); // or log_trace(...)
-ulog_debug(const char *fmt, ...); // or log_debug(...)
-ulog_info(const char *fmt, ...); // or log_info(...)
-ulog_warn(const char *fmt, ...); // or log_warn(...)
-ulog_error(const char *fmt, ...); // or log_error(...)
-ulog_fatal(const char *fmt, ...); // or log_fatal(...)
+ulog_trace(const char *fmt, ...);
+ulog_debug(const char *fmt, ...);
+ulog_info(const char *fmt, ...);
+ulog_warn(const char *fmt, ...);
+ulog_error(const char *fmt, ...);
+ulog_fatal(const char *fmt, ...);
 ```
 
 Each function takes a printf format string followed by additional arguments:
@@ -184,29 +184,31 @@ The feature is controlled by `ULOG_BUILD_TOPICS_NUM`. It allows to filter log me
 
 There are two mechanism of working with the topics:
 
-- **Dynamic** allocation - slightly slower, but new topic will be added automatically
-- **Static** allocation - faster, but you need to define all topic using `ulog_topic_add`
+- **Dynamic** allocation - slightly slower than static allocation
+- **Static** allocation - faster
 
 If you want to use dynamic topics, you need to define `ULOG_BUILD_TOPICS_NUM` to be -1. Otherwise, you need to define the number of topics for static allocation.
 
-Printing the log message with the topic is done by the set of function-like macros similar to log_xxx, but with the topic as the first argument:
+Printing the log message with the topic is done by the set of function-like macros similar to `ulog_xxx`, but with the topic as the first argument:
 
 ```c
-ulog_topic_trace(const char *topic_name, const char *fmt, ...)  // or logt_trace(...)
-ulog_topic_debug(const char *topic_name, const char *fmt, ...)  // or logt_debug(...)
-ulog_topic_info(const char *topic_name, const char *fmt, ...)   // or logt_info(...)
-ulog_topic_warn(const char *topic_name, const char *fmt, ...)   // or logt_warn(...)
-ulog_topic_error(const char *topic_name, const char *fmt, ...)  // or logt_error(...)
-ulog_topic_fatal(const char *topic_name, const char *fmt, ...)  // or logt_fatal(...)
+// Short variation of ulog_topic_* is ulog_t_*(...), e.g. ulog_t_trace(TOPIC, MESSAGE, ...)
+ulog_topic_trace(const char *topic_name, const char *fmt, ...)
+ulog_topic_debug(const char *topic_name, const char *fmt, ...)
+ulog_topic_info(const char *topic_name, const char *fmt, ...) 
+ulog_topic_warn(const char *topic_name, const char *fmt, ...) 
+ulog_topic_error(const char *topic_name, const char *fmt, ...)
+ulog_topic_fatal(const char *topic_name, const char *fmt, ...)
+
 ```
 
-In static mode you can decide whether enable or disable the topic during its definition. In dynamic mode all topics are disabled by default.
+All topic must be added before usage via `ulog_topic_add`. At this step it is possible to select particular output for the topic (e.g. print topic `Credentials` only to a local file, or `Operator Info` only to `ULOG_OUTPUT_STDOUT`)
 
 For example (static topics):
 
 ```c
-ulog_topic_add("network", true); // enabled by default
-ulog_topic_add("storage", false); // disabled by default
+ulog_topic_add("network", ULOG_OUTPUT_ALL, true); // enabled by default
+ulog_topic_add("storage", ULOG_OUTPUT_ALL, false); // disabled by default
 
 ulog_topic_info("network", "Connected to server");
 
@@ -232,8 +234,8 @@ For example:
 
 ```c
 // By default, both topic logging levels are set to ULOG_LEVEL_TRACE
-ulog_topic_add("network", true);
-ulog_topic_add("storage", true);
+ulog_topic_add("network", ULOG_OUTPUT_ALL, true);
+ulog_topic_add("storage", ULOG_OUTPUT_ALL, true);
 
 // Both topics generate log as global logging level is set to ULOG_LEVEL_TRACE
 ulog_topic_info("network", "Connected to server");
@@ -250,7 +252,7 @@ ulog_topic_debug("storage", "No free space"); // filtered out level DEBUG < INFO
 ### Extra Outputs
 
 - Static configuration options: `ULOG_BUILD_EXTRA_OUTPUTS`
-- Values (int): `0...INT_MAX`
+- Values (int): `0...INT32_MAX`
 - Default: `0`.
 
 The feature is controlled by the following define:
@@ -272,9 +274,10 @@ vs
 To write to a file open a file and pass it to the `ulog_output_add_file` function.
 
 ```c
+ulog_topic_add("Outputs", ULOG_OUTPUT_ALL, true);
 FILE *fp = fopen("log.txt", "w");
 if (fp) {
-    ulog_output file_output = ulog_output_add_file(fp, ULOG_LEVEL_INFO);
+    ulog_output_id file_output = ulog_output_add_file(fp, ULOG_LEVEL_INFO);
     if (file_output != ULOG_OUTPUT_INVALID) {
         ulog_topic_info("Outputs", "File output added");
         ulog_output_level_set(file_output, ULOG_LEVEL_TRACE);
@@ -300,12 +303,11 @@ void arduino_callback(ulog_event *ev, void *arg) {
 
 . . .
 
-ulog_output ard_output = ulog_output_add(arduino_callback, NULL, ULOG_LEVEL_INFO);
+ulog_output_id ard_output = ulog_output_add(arduino_callback, NULL, ULOG_LEVEL_INFO);
 if (ard_output != ULOG_OUTPUT_INVALID) {
     ulog_info("Will be printed to Arduino serial");
     ulog_output_remove(ard_output); // For demo purposes
 }
-
 ```
 
 ### Prefix

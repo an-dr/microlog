@@ -69,8 +69,6 @@ int main(int argc, char *argv[]) {
 
     /* Core Logging ===================================== */
     ulog_trace("Trace message %d", 1);  
-    // `log_*` also works as an alias, e.g.:
-    // log_trace("Trace message %d", 1);
     
     ulog_debug("Debug message 0x%x", 2);
     ulog_info("Info message %f", 3.0);
@@ -81,30 +79,28 @@ int main(int argc, char *argv[]) {
     /* Topics =========================================== */
     printf("\n");
 
-    ulog_topic_add("Bluetooth", true);
-    ulog_topic_add("Serial", false);
-    ulog_topic_add("Audio", false);
-    ulog_topic_warn("Audio", "Audio message 1 (disabled)");
+    ulog_topic_add("Bluetooth", ULOG_OUTPUT_ALL, true);
+    ulog_topic_add("Serial", ULOG_OUTPUT_ALL, false);
+    ulog_topic_add("Audio", ULOG_OUTPUT_ALL, false);
+    ulog_t_warn("Audio", "Audio message 1 (disabled)");
 
     ulog_topic_enable_all();
 
     ulog_topic_debug( "Bluetooth", "Bluetooth message 1");  
-    // `logt_*` also works as an alias, e.g.: 
-    // logt_debug("Bluetooth", "Bluetooth message 1");
+    // Short alias: ulog_t_debug("Bluetooth", "Bluetooth message 1");
     
-    ulog_topic_info("Indication", "Indication message 1 (only in dynamic topics)");
-    ulog_topic_warn("Audio", "Audio message 2");
-    ulog_topic_error("Serial", "Serial message 1");
-    ulog_topic_fatal("Serial", "Serial message 2");
+    ulog_t_warn("Audio", "Audio message 2");
+    ulog_t_error("Serial", "Serial message 1");
+    ulog_t_fatal("Serial", "Serial message 2");
 
     ulog_topic_disable("Serial");
-    ulog_topic_warn("Serial", "Serial message 3 (disabled)");
+    ulog_t_warn("Serial", "Serial message 3 (disabled)");
 
     ulog_output_level_set_all(ULOG_LEVEL_INFO);
     ulog_topic_level_set("Bluetooth", ULOG_LEVEL_WARN);
 
-    ulog_topic_info("Bluetooth", "Bluetooth message 2 (lower than topic level)");
-    ulog_topic_debug("Serial", "Serial message 3 (lower than global level)");
+    ulog_t_info("Bluetooth", "Bluetooth message 2 (lower than topic level)");
+    ulog_t_debug("Serial", "Serial message 3 (lower than global level)");
 
     return 0;
 }

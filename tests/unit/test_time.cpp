@@ -66,7 +66,7 @@ static void _check_time_fields(int hh, int mm, int ss, const time_t &before,
     // The timestamp should be close to the current time (within reasonable bounds)
     // We'll be more lenient and just check it's not wildly off
     time_t current = time(NULL);
-    struct tm current_tm = *gmtime(&current);
+    struct tm current_tm = *localtime(&current);
     
     // Check that we're within a reasonable time window (same hour at least)
     // This handles edge cases around time boundaries more gracefully
@@ -92,7 +92,7 @@ static void _check_date_time_fields(int yr, int mo, int d, int hh, int mm,
     
     // Additional check: the date should be close to current date
     time_t current = time(NULL);
-    struct tm current_tm = *gmtime(&current);
+    struct tm current_tm = *localtime(&current);
     
     // Should be the same year, month, and day (allow for day boundary edge cases)
     bool date_reasonable = (yr == current_tm.tm_year + 1900) &&
@@ -138,7 +138,7 @@ void _check_file_time(bool prefix = false) {
 
     FILE *fp = fopen(filename.c_str(), "w");
     REQUIRE(fp != nullptr);
-    ulog_output file_output = ulog_output_add_file(fp, ULOG_LEVEL_INFO);
+    ulog_output_id file_output = ulog_output_add_file(fp, ULOG_LEVEL_INFO);
 
     time_t before, after;
     _get_time_bounds(before, after);
