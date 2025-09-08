@@ -37,7 +37,7 @@ void user_prefix(ulog_event *ev, char *prefix, size_t prefix_size) {
     snprintf(prefix, prefix_size, " [MsgID:%03d] ", count++);
 }
 
-// This callback can be used to get a log string
+// This handler can be used to get a log string
 // and send it to any other output, e.g. network, GUI, etc.
 // In this example we just print it to the console with appending
 // data sent as a void pointer ("User Output"). We format the data like

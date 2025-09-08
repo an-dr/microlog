@@ -182,7 +182,7 @@ ulog_status ulog_topic_config(bool enabled);
    Feature: Prefix
 ============================================================================ */
 
-/// @brief Callback function type for generating custom log prefixes
+/// @brief Handler function type for generating custom log prefixes
 /// (requires: ULOG_BUILD_PREFIX_SIZE>0 or ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param ev Log event containing level, file, line, etc.
 /// @param prefix Buffer to write the prefix string to
@@ -192,7 +192,7 @@ typedef void (*ulog_prefix_fn)(ulog_event *ev, char *prefix,
 
 /// @brief Sets the custom prefix generation function (requires
 ///        ULOG_BUILD_PREFIX_SIZE>0 or ULOG_BUILD_DYNAMIC_CONFIG=1)
-/// @param function Callback function to generate prefix, or NULL to disable
+/// @param function Handler function to generate prefix, or NULL to disable
 void ulog_prefix_set_fn(ulog_prefix_fn function);
 
 /* ============================================================================
@@ -207,10 +207,10 @@ enum {
     ULOG_OUTPUT_ALL     = INT32_MAX,  ///< Log to all outputs (default behavior)
 };
 
-/// @brief Callback function type for custom log output handlers
+/// @brief Handler function type for custom log output handlers
 /// @param ev Log event to process
-/// @param arg User-provided argument passed during callback registration
-typedef void (*ulog_output_callback_fn)(ulog_event *ev, void *arg);
+/// @param arg User-provided argument passed during handler registration
+typedef void (*ulog_output_handler_fn)(ulog_event *ev, void *arg);
 
 /// @brief Sets the minimum log level for a specific output
 /// @param output Output handle to configure
@@ -225,13 +225,13 @@ ulog_status ulog_output_level_set(ulog_output_id output, ulog_level level);
 /// level
 ulog_status ulog_output_level_set_all(ulog_level level);
 
-/// @brief Adds a custom output callback (requires ULOG_BUILD_EXTRA_OUTPUTS>0
+/// @brief Adds a custom output handler (requires ULOG_BUILD_EXTRA_OUTPUTS>0
 /// or ULOG_BUILD_DYNAMIC_CONFIG=1)
-/// @param callback Function to handle log events
-/// @param arg User argument passed to the callback function
+/// @param handler Function to handle log events
+/// @param arg User argument passed to the handler function
 /// @param level Minimum log level for this output
 /// @return Output handle on success, ULOG_OUTPUT_INVALID on error
-ulog_output_id ulog_output_add(ulog_output_callback_fn callback, void *arg,
+ulog_output_id ulog_output_add(ulog_output_handler_fn handler, void *arg,
                                ulog_level level);
 
 /// @brief Adds a file output (requires ULOG_BUILD_EXTRA_OUTPUTS>0 or

@@ -318,10 +318,10 @@ Outputs can be removed by using the `ulog_output_remove()` function.
 
 #### User Defined Output
 
-One or more callback functions which are called with the log data can be provided to the library by using the `ulog_output_add()` function. You can use `ulog_event_to_cstr` to convert the `ulog_event` structure to a string.
+One or more output handler functions which are called with the log data can be provided to the library by using the `ulog_output_add()` function. You can use `ulog_event_to_cstr` to convert the `ulog_event` structure to a string.
 
 ```c
-void arduino_callback(ulog_event *ev, void *arg) {
+void arduino_output_handler(ulog_event *ev, void *arg) {
     static char buffer[128];
     int result = ulog_event_to_cstr(ev, buffer, sizeof(buffer));
     if (result == 0) {
@@ -331,14 +331,20 @@ void arduino_callback(ulog_event *ev, void *arg) {
 
 . . .
 
-ulog_output_id ard_output = ulog_output_add(arduino_callback, NULL, ULOG_LEVEL_INFO);
+ulog_output_id ard_output = ulog_output_add(arduino_output_handler, NULL, ULOG_LEVEL_INFO);
 if (ard_output != ULOG_OUTPUT_INVALID) {
     ulog_info("Will be printed to Arduino serial");
     ulog_output_remove(ard_output); // For demo purposes
 }
 ```
 
-Note: The callback function is called with the lock acquired, so if you are using logging inside the callback, it will be dropped to prevent deadlocks.
+WARNING: The handler function is called with the lock acquired, so if you are using logging inside the handler, it may cause a deadlocks: e.g.
+
+```c
+void faulty_output_handler(ulog_event *ev, void *arg) {
+    ulog_info("This might cause a deadlock or unexpected behavior");
+}
+```
 
 ### Prefix
 
@@ -351,11 +357,11 @@ Sets a prefix function that can be used to customize the log output. The functio
 Requires `ULOG_BUILD_PREFIX_SIZE` to be more than 0.
 
 ```c
-void update_prefix(ulog_event *ev, char *prefix, size_t prefix_size) {
+void prefix_handler(ulog_event *ev, char *prefix, size_t prefix_size) {
     snprintf(prefix, prefix_size, ", %03d ms", millis());
 }
 // . . .
-ulog_prefix_set_fn(prefix_fn);
+ulog_prefix_set_fn(prefix_handler);
 ```
 
 The output will be:
@@ -364,7 +370,13 @@ The output will be:
 19:51:42, 005 ms ERROR src/main.c:38: Error message
 ```
 
-Note: The callback function is called with the lock acquired, so if you are using logging inside the callback, it will be dropped to prevent deadlocks.
+WARNING: The handler function is called with the lock acquired, so if you are using logging inside the handler, it may cause a deadlocks. E.g.:
+
+```c
+void faulty_prefix(ulog_event *ev, char *prefix, size_t prefix_size) {
+    ulog_info("This might cause a deadlock or unexpected behavior");
+}
+```
 
 ### Time
 

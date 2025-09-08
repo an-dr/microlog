@@ -809,12 +809,12 @@ const char *ulog_level_to_string(ulog_level level) {
 #define OUTPUT_TOTAL_NUM (1 + OUTPUT_EXTRA_NUM)  // stdout + extra
 
 // Prototypes
-static void output_stdout_callback(ulog_event *ev, void *arg);
+static void output_stdout_handler(ulog_event *ev, void *arg);
 static void log_print_event(print_target *tgt, ulog_event *ev, bool full_time,
                             bool color, bool new_line);
 
 typedef struct {
-    ulog_output_callback_fn callback;
+    ulog_output_handler_fn handler;
     void *arg;
     ulog_level level;
 } output;
@@ -824,10 +824,10 @@ typedef struct {
 } output_data_t;
 
 static output_data_t output_data = {
-    .outputs = {{output_stdout_callback, NULL, OUTPUT_STDOUT_DEFAULT_LEVEL}}};
+    .outputs = {{output_stdout_handler, NULL, OUTPUT_STDOUT_DEFAULT_LEVEL}}};
 
 static void output_handle_single(ulog_event *ev, output *output) {
-    if (output->callback == NULL) {
+    if (output->handler == NULL) {
         return;  // Output has been removed, skip it
     }
 
@@ -842,7 +842,7 @@ static void output_handle_single(ulog_event *ev, output *output) {
         // directly as on some platforms using the same va_list multiple times
         // can lead to undefined behavior.
         va_copy(ev_copy.message_format_args, ev->message_format_args);
-        output->callback(&ev_copy, output->arg);
+        output->handler(&ev_copy, output->arg);
         va_end(ev_copy.message_format_args);
     }
 }
@@ -862,7 +862,7 @@ static void output_handle_all(ulog_event *ev) {
     }
 }
 
-static void output_stdout_callback(ulog_event *ev, void *arg) {
+static void output_stdout_handler(ulog_event *ev, void *arg) {
     (void)(arg);  // Unused
     print_target tgt = {.type = PRINT_TARGET_STREAM, .dsc.stream = stdout};
     log_print_event(&tgt, ev, false, true, true);
@@ -879,8 +879,8 @@ ulog_status ulog_output_level_set(ulog_output_id output, ulog_level level) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }
 
-    if (output_data.outputs[output].callback == NULL) {
-        return ULOG_STATUS_NOT_FOUND;  // Output exists but no callback assigned
+    if (output_data.outputs[output].handler == NULL) {
+        return ULOG_STATUS_NOT_FOUND;  // Output exists but no handler assigned
     }
     output_data.outputs[output].level = level;
     return ULOG_STATUS_OK;
@@ -905,7 +905,7 @@ ulog_status ulog_output_level_set_all(ulog_level level) {
 
 //  Private
 // ================
-static void output_file_callback(ulog_event *ev, void *arg) {
+static void output_file_handler(ulog_event *ev, void *arg) {
     print_target tgt = {.type = PRINT_TARGET_STREAM, .dsc.stream = (FILE *)arg};
     log_print_event(&tgt, ev, true, false, true);
 }
@@ -913,14 +913,14 @@ static void output_file_callback(ulog_event *ev, void *arg) {
 // Public
 // ================
 
-ulog_output_id ulog_output_add(ulog_output_callback_fn callback, void *arg,
+ulog_output_id ulog_output_add(ulog_output_handler_fn handler, void *arg,
                                ulog_level level) {
     if (lock_lock() != ULOG_STATUS_OK) {
         return ULOG_OUTPUT_INVALID;
     }
     for (int i = 0; i < OUTPUT_TOTAL_NUM; i++) {
-        if (output_data.outputs[i].callback == NULL) {
-            output_data.outputs[i] = (output){callback, arg, level};
+        if (output_data.outputs[i].handler == NULL) {
+            output_data.outputs[i] = (output){handler, arg, level};
             (void)lock_unlock();
             return i;
         }
@@ -929,9 +929,9 @@ ulog_output_id ulog_output_add(ulog_output_callback_fn callback, void *arg,
     return ULOG_OUTPUT_INVALID;
 }
 
-/// @brief Add file callback
+/// @brief Add file handler
 ulog_output_id ulog_output_add_file(FILE *file, ulog_level level) {
-    return ulog_output_add(output_file_callback, file, level);
+    return ulog_output_add(output_file_handler, file, level);
 }
 
 /// @brief Remove an output from the logging system
@@ -947,17 +947,17 @@ ulog_status ulog_output_remove(ulog_output_id output) {
     if (lock_lock() != ULOG_STATUS_OK) {
         return ULOG_STATUS_BUSY;
     }
-    if (output_data.outputs[output].callback == NULL) {
+    if (output_data.outputs[output].handler == NULL) {
         if (lock_unlock() != ULOG_STATUS_OK) {
             return ULOG_STATUS_BUSY;
         }
         return ULOG_STATUS_NOT_FOUND;  // Output not found or already removed
     }
 
-    // Mark output as removed by setting callback to NULL
-    output_data.outputs[output].callback = NULL;
-    output_data.outputs[output].arg      = NULL;
-    output_data.outputs[output].level    = ULOG_LEVEL_TRACE;
+    // Mark output as removed by setting handler to NULL
+    output_data.outputs[output].handler = NULL;
+    output_data.outputs[output].arg     = NULL;
+    output_data.outputs[output].level   = ULOG_LEVEL_TRACE;
 
     return lock_unlock();
 }
@@ -969,9 +969,9 @@ ulog_status ulog_output_remove(ulog_output_id output) {
 
 #if ULOG_HAS_WARN_NOT_ENABLED
 
-ulog_output_id ulog_output_add(ulog_output_callback_fn callback, void *arg,
+ulog_output_id ulog_output_add(ulog_output_handler_fn handler, void *arg,
                                ulog_level level) {
-    (void)(callback);
+    (void)(handler);
     (void)(arg);
     (void)(level);
     warn_not_enabled("ULOG_BUILD_EXTRA_OUTPUTS");
@@ -1653,15 +1653,6 @@ ulog_status ulog_source_location_config(bool enabled) {
 
 // Private
 // ================
-
-typedef struct {
-    bool is_logging;  // Whether logging is in progress
-} log_data;
-
-static log_data log = {
-    .is_logging = false,
-};
-
 /// @brief Prints the message
 /// @param tgt - Target
 /// @param ev - Event
@@ -1766,13 +1757,6 @@ void ulog_log(ulog_level level, const char *file, int line, const char *topic,
         return;  // Failed to acquire lock, drop log
     }
 
-    if (log.is_logging) {
-        (void)lock_unlock();
-        printf("Recursive logging detected, dropping log\n");
-        return;  // Prevent recursive logging, drop log
-    }
-    log.is_logging = true;
-
     // Try to get topic ID, outputs and check if logging is allowed for this
     // topic
     ulog_output_id output = ULOG_OUTPUT_ALL;
@@ -1781,7 +1765,6 @@ void ulog_log(ulog_level level, const char *file, int line, const char *topic,
         bool is_log_allowed = false;
         topic_process(topic, level, &is_log_allowed, &topic_id, &output);
         if (!is_log_allowed) {
-            log.is_logging = false;
             (void)lock_unlock();
             return;  // Topic is not enabled or level is lower than topic level
         }
@@ -1802,7 +1785,6 @@ void ulog_log(ulog_level level, const char *file, int line, const char *topic,
 
     va_end(ev.message_format_args);
 
-    log.is_logging = false;
     (void)lock_unlock();
 }
 
@@ -1843,9 +1825,9 @@ ulog_status ulog_cleanup(void) {
     output_data.outputs[ULOG_OUTPUT_STDOUT].level = OUTPUT_STDOUT_DEFAULT_LEVEL;
 #if ULOG_HAS_EXTRA_OUTPUTS
     for (int i = 1; i < OUTPUT_TOTAL_NUM; i++) {
-        output_data.outputs[i].callback = NULL;
-        output_data.outputs[i].arg      = NULL;
-        output_data.outputs[i].level    = OUTPUT_STDOUT_DEFAULT_LEVEL;
+        output_data.outputs[i].handler = NULL;
+        output_data.outputs[i].arg     = NULL;
+        output_data.outputs[i].level   = OUTPUT_STDOUT_DEFAULT_LEVEL;
     }
 #endif  // ULOG_HAS_EXTRA_OUTPUTS
 
