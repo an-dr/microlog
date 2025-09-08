@@ -122,7 +122,8 @@
                 "name": "(gdb) Launch Unit Test",
                 "type": "cppdbg",
                 "request": "launch",
-                "program": "${workspaceFolder}/build_tests/tests/unit/test_core",
+                // Select which unit test binary to launch via the input defined below
+                "program": "${workspaceFolder}/build_tests/tests/unit/${input:unitTestName}",
                 "args": [],
                 "stopAtEntry": false,
                 "cwd": "${fileDirname}",
@@ -142,6 +143,24 @@
                         "ignoreFailures": true
                     }
                 ]
+            }
+        ],
+        "inputs": [
+            {
+                "id": "unitTestName",
+                "type": "pickString",
+                "description": "Select unit test binary to debug",
+                "options": [
+                    "test_cleanup",
+                    "test_core",
+                    "test_dynamic_config",
+                    "test_lock",
+                    "test_prefix",
+                    "test_time",
+                    "test_time_np",
+                    "test_topics",
+                ],
+                "default": "test_core"
             }
         ]
     },

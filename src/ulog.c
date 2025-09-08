@@ -1785,6 +1785,7 @@ void ulog_log(ulog_level level, const char *file, int line, const char *topic,
         bool is_log_allowed = false;
         topic_process(topic, level, &is_log_allowed, &topic_id, &output);
         if (!is_log_allowed) {
+            log.is_logging = false;
             (void)lock_unlock();
             return;  // Topic is not enabled or level is lower than topic level
         }
