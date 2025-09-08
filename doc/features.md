@@ -154,22 +154,34 @@ The data is accessible via getters (see header file for details):
 
 ### Lock
 
-If the log will be written to from multiple threads a lock function can be set. To do this use the `ulog_lock_set_fn()` function.
+If the log will be written to from multiple threads a lock function can be set. To do this use the `ulog_lock_set_fn()` function. 
+
+The lock function must match the `ulog_lock_fn` type and return non-ULOG_STATUS_OK value on error:
+
+```c
+typedef ulog_status (*ulog_lock_fn)(bool lock, void *udata);
+```
+
 The function is passed the boolean `true` if the lock should be acquired or `false` if the lock should be released and the given `udata` value.
 
 ```c
 
-void lock_function(bool lock, void *lock_arg) {
+ulog_status lock_function(bool lock, void *lock_arg) {
+    pthread_mutex_t *mutex = (pthread_mutex_t *) lock_arg; // retrieve the mutex
+    int result = -1;
     if (lock) {
-        pthread_mutex_lock((pthread_mutex_t *) lock_arg);
+        result = pthread_mutex_lock(mutex);
     } else {
-        pthread_mutex_unlock((pthread_mutex_t *) lock_arg);
+        result = pthread_mutex_unlock(mutex);
     }
+    return (result == 0) ? ULOG_STATUS_OK : ULOG_STATUS_ERROR;
 }
 
 . . .
 
-pthread_mutex_t mutex;
+pthread_mutex_t mutex; // We pass the mutex as the lock_arg
+pthread_mutex_init(&mutex, NULL);
+. . .
 ulog_lock_set_fn(lock_function, mutex);
 ```
 
@@ -326,6 +338,8 @@ if (ard_output != ULOG_OUTPUT_INVALID) {
 }
 ```
 
+Note: The callback function is called with the lock acquired, so if you are using logging inside the callback, it will be dropped to prevent deadlocks.
+
 ### Prefix
 
 - Static configuration options: `ULOG_BUILD_PREFIX_SIZE`
@@ -349,6 +363,8 @@ The output will be:
 ```txt
 19:51:42, 005 ms ERROR src/main.c:38: Error message
 ```
+
+Note: The callback function is called with the lock acquired, so if you are using logging inside the callback, it will be dropped to prevent deadlocks.
 
 ### Time
 

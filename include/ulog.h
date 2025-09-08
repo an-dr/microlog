@@ -37,8 +37,7 @@ typedef enum {
     ULOG_STATUS_ERROR            = -1,  ///< General error occurred
     ULOG_STATUS_INVALID_ARGUMENT = -2,  ///< Invalid argument provided
     ULOG_STATUS_NOT_FOUND        = -3,  ///< Requested item not found
-    ULOG_STATUS_TIMEOUT          = -4,  ///< Operation timed out
-    ULOG_STATUS_BUSY             = -5,  ///< Resource is busy
+    ULOG_STATUS_BUSY             = -4,  ///< Resource is busy
 } ulog_status;
 
 /* ============================================================================

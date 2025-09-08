@@ -10,21 +10,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Binding topic to a specific output via `ulog_topic_add(TOPIC, OUTPUT, ENABLED)`
-- New status code: `ULOG_STATUS_NOT_FOUND` returned when a topic or output is not present (previously returned `ULOG_STATUS_ERROR`)
+- New status codes: 
+    - `ULOG_STATUS_NOT_FOUND` returned when a topic or output is not present (previously returned `ULOG_STATUS_ERROR`)
+    - `ULOG_STATUS_BUSY` for lock timeouts / failed lock attempts
 - `ulog_topic_remove(TOPIC)`
 - `ulog_cleanup()` to free all dynamic resources and reset added entities (topics, outputs, etc.)
 
 ### Changed
 
-- **BREAKING**: Topics are now require `ulog_topic_add()` to be used. For both static and dynamic topics.
-- **BREAKING**: Standardized macro alias naming conventions for consistency
+- Topics are now require `ulog_topic_add()` to be used. For both static and dynamic topics.
+- Standardized macro alias naming conventions for consistency
   - Renamed topic aliases: `logt_*` → `ulog_t_*` (e.g., `logt_info` → `ulog_t_info`)
   - Removed basic aliases: `log_*` → use `ulog_*` directly (e.g., `log_info` → `ulog_info`)
+- Dynamic Config functions now return `ulog_status` for error handling - as they can fail on failed locks
+- `ulog_lock_fn` now returns `ulog_status` - error handling for failed locks.
 
 ### Fixed
 
 - Fix potential buffer overflows on printing
 - Fix early exits on outputs and topics iteration after removal
+- Fix potential deadlocks on recursive logging in outputs and prefix callbacks
 
 ## [v7.0.0-alpha.1] - September 4, 2025
 

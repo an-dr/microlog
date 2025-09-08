@@ -1657,6 +1657,15 @@ ulog_status ulog_source_location_config(bool enabled) {
 // Private
 // ================
 
+typedef struct {
+    bool is_logging; // Whether logging is in progress
+} log_data;
+
+static log_data log = {
+    .is_logging = false,
+};
+
+
 /// @brief Prints the message
 /// @param tgt - Target
 /// @param ev - Event
@@ -1760,6 +1769,13 @@ void ulog_log(ulog_level level, const char *file, int line, const char *topic,
     if (lock_lock() != ULOG_STATUS_OK) {
         return;  // Failed to acquire lock, drop log
     }
+    
+    if (log.is_logging) {
+        (void)lock_unlock();
+        printf("Recursive logging detected, dropping log\n");
+        return;  // Prevent recursive logging, drop log
+    }
+    log.is_logging = true;
 
     // Try to get topic ID, outputs and check if logging is allowed for this
     // topic
@@ -1788,7 +1804,8 @@ void ulog_log(ulog_level level, const char *file, int line, const char *topic,
     }
 
     va_end(ev.message_format_args);
-
+    
+    log.is_logging = false;
     (void)lock_unlock();
 }
 

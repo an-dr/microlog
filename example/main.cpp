@@ -63,12 +63,12 @@ ulog_status user_lock(bool lock, void *arg) {
     static bool is_locked = false;
     if (lock) {
         if (is_locked) {
-            return ULOG_STATUS_TIMEOUT;  // Already locked
+            return ULOG_STATUS_BUSY;  // Already locked
         }
         is_locked = true;
     } else {
         if (!is_locked) {
-            return ULOG_STATUS_TIMEOUT;  // Not locked
+            return ULOG_STATUS_BUSY;  // Not locked
         }
         is_locked = false;
     }
