@@ -383,8 +383,7 @@ ulog_status ulog_color_config(bool enabled) {
         return ULOG_STATUS_BUSY;  // Failed to acquire lock
     }
     color_cfg.enabled = enabled;
-    (void)lock_unlock();
-    return ULOG_STATUS_OK;
+    return lock_unlock();
 }
 
 #else  // ULOG_HAS_DYNAMIC_CONFIG
@@ -478,8 +477,7 @@ ulog_status ulog_prefix_config(bool enabled) {
         return ULOG_STATUS_BUSY;
     }
     prefix_cfg.enabled = enabled;
-    (void)lock_unlock();
-    return ULOG_STATUS_OK;
+    return lock_unlock();
 }
 
 #else  // ULOG_HAS_DYNAMIC_CONFIG
@@ -591,8 +589,7 @@ ulog_status ulog_time_config(bool enabled) {
         return ULOG_STATUS_BUSY;
     }
     time_cfg.enabled = enabled;
-    (void)lock_unlock();
-    return ULOG_STATUS_OK;
+    return lock_unlock();
 }
 
 #else  // ULOG_HAS_DYNAMIC_CONFIG
@@ -709,8 +706,7 @@ ulog_status ulog_level_config(ulog_level_config_style style) {
         return ULOG_STATUS_BUSY;
     }
     level_cfg.style = style;
-    (void)lock_unlock();
-    return ULOG_STATUS_OK;
+    return lock_unlock();
 }
 
 #else  // ULOG_HAS_DYNAMIC_CONFIG
@@ -952,7 +948,9 @@ ulog_status ulog_output_remove(ulog_output_id output) {
         return ULOG_STATUS_BUSY;
     }
     if (output_data.outputs[output].callback == NULL) {
-        (void)lock_unlock();
+        if (lock_unlock() != ULOG_STATUS_OK) {
+            return ULOG_STATUS_BUSY;
+        }
         return ULOG_STATUS_NOT_FOUND;  // Output not found or already removed
     }
 
@@ -961,8 +959,7 @@ ulog_status ulog_output_remove(ulog_output_id output) {
     output_data.outputs[output].arg      = NULL;
     output_data.outputs[output].level    = ULOG_LEVEL_TRACE;
 
-    (void)lock_unlock();
-    return ULOG_STATUS_OK;
+    return lock_unlock();
 }
 
 #else  // ULOG_HAS_EXTRA_OUTPUTS
@@ -1027,8 +1024,7 @@ ulog_status ulog_topic_config(bool enabled) {
         return ULOG_STATUS_BUSY;
     }
     topic_cfg.enabled = enabled;
-    (void)lock_unlock();
-    return ULOG_STATUS_OK;
+    return lock_unlock();
 }
 
 #else  // ULOG_HAS_DYNAMIC_CONFIG
@@ -1403,16 +1399,16 @@ static ulog_topic_id topic_add(const char *topic_name, ulog_output_id output,
             topic_data.topics[i].enabled = enable;
             topic_data.topics[i].level   = TOPIC_LEVEL_DEFAULT;
             topic_data.topics[i].output  = output;
-        (void)lock_unlock();  // Unlock the configuration
+            (void)lock_unlock();  // Unlock the configuration
             return i;
         }
         // If the topic already exists
         else if (strcmp(topic_data.topics[i].name, topic_name) == 0) {
-        (void)lock_unlock();  // Unlock the configuration
+            (void)lock_unlock();  // Unlock the configuration
             return i;
         }
     }
-    (void)lock_unlock();                 // Unlock the configuration
+    (void)lock_unlock();           // Unlock the configuration
     return ULOG_TOPIC_ID_INVALID;  // No space for new topics
 }
 
@@ -1430,11 +1426,12 @@ static ulog_status topic_remove(const char *topic_name) {
         if (strcmp(topic_data.topics[i].name, topic_name) == 0) {
             // Clear the topic entry
             topic_data.topics[i] = (topic_t){0};
-        (void)lock_unlock();  // Unlock the configuration
-            return ULOG_STATUS_OK;
+            return lock_unlock();
         }
     }
-    (void)lock_unlock();                 // Unlock the configuration
+    if (lock_unlock() != ULOG_STATUS_OK) {  // Unlock the configuration
+        return ULOG_STATUS_BUSY;
+    }
     return ULOG_STATUS_NOT_FOUND;  // Topic not found
 }
 #endif  // ULOG_HAS_TOPICS && TOPIC_IS_DYNAMIC == false
@@ -1580,15 +1577,16 @@ static ulog_status topic_remove(const char *topic_name) {
             } else {
                 t_prev->next = t->next;
             }
-        free(t);        // Free the topic memory
-        (void)lock_unlock();  // Unlock the configuration
-            return ULOG_STATUS_OK;
+            free(t);  // Free the topic memory
+            return lock_unlock();
         }
         t_prev = t;
         t      = t->next;
     }
 
-    (void)lock_unlock();                 // Unlock the configuration
+    if (lock_unlock() != ULOG_STATUS_OK) {  // Unlock the configuration
+        return ULOG_STATUS_BUSY;
+    }
     return ULOG_STATUS_NOT_FOUND;  // Topic not found
 }
 
@@ -1623,8 +1621,7 @@ ulog_status ulog_source_location_config(bool enabled) {
         return ULOG_STATUS_BUSY;
     }
     src_loc_cfg.enabled = enabled;
-    (void)lock_unlock();
-    return ULOG_STATUS_OK;
+    return lock_unlock();
 }
 
 #else  // ULOG_HAS_DYNAMIC_CONFIG
@@ -1658,13 +1655,12 @@ ulog_status ulog_source_location_config(bool enabled) {
 // ================
 
 typedef struct {
-    bool is_logging; // Whether logging is in progress
+    bool is_logging;  // Whether logging is in progress
 } log_data;
 
 static log_data log = {
     .is_logging = false,
 };
-
 
 /// @brief Prints the message
 /// @param tgt - Target
@@ -1769,7 +1765,7 @@ void ulog_log(ulog_level level, const char *file, int line, const char *topic,
     if (lock_lock() != ULOG_STATUS_OK) {
         return;  // Failed to acquire lock, drop log
     }
-    
+
     if (log.is_logging) {
         (void)lock_unlock();
         printf("Recursive logging detected, dropping log\n");
@@ -1805,7 +1801,7 @@ void ulog_log(ulog_level level, const char *file, int line, const char *topic,
     }
 
     va_end(ev.message_format_args);
-    
+
     log.is_logging = false;
     (void)lock_unlock();
 }
@@ -1823,7 +1819,7 @@ ulog_status ulog_cleanup(void) {
         return ULOG_STATUS_BUSY;
     }
     // Cleanup Topics
-    
+
     // TODO: this section can be improved with topic_remove_all() function
 #if ULOG_HAS_TOPICS
     // Reset new-topic default enable flag
@@ -1859,6 +1855,5 @@ ulog_status ulog_cleanup(void) {
     memset(prefix_data.prefix, 0, sizeof(prefix_data.prefix));
 #endif
 
-    (void)lock_unlock();  // Unlock the configuration
-    return ULOG_STATUS_OK;
+    return lock_unlock();
 }
