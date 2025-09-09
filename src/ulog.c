@@ -332,16 +332,18 @@ static lock_data_t lock_data = {
     .args     = NULL,  // No lock argument by default
 };
 
-static void lock_lock(void) {
+static ulog_status lock_lock(void) {
     if (lock_data.function != NULL) {
-        lock_data.function(true, lock_data.args);
+        return lock_data.function(true, lock_data.args);
     }
+    return ULOG_STATUS_OK;
 }
 
-static void lock_unlock(void) {
+static ulog_status lock_unlock(void) {
     if (lock_data.function != NULL) {
-        lock_data.function(false, lock_data.args);
+        return lock_data.function(false, lock_data.args);
     }
+    return ULOG_STATUS_OK;
 }
 
 // Public
@@ -376,10 +378,12 @@ bool color_config_is_enabled(void) {
 // Public
 // ================
 
-void ulog_color_config(bool enabled) {
-    lock_lock();  // Lock the configuration
+ulog_status ulog_color_config(bool enabled) {
+    if (lock_lock() != ULOG_STATUS_OK) {
+        return ULOG_STATUS_BUSY;  // Failed to acquire lock
+    }
     color_cfg.enabled = enabled;
-    lock_unlock();  // Unlock the configuration
+    return lock_unlock();
 }
 
 #else  // ULOG_HAS_DYNAMIC_CONFIG
@@ -388,9 +392,10 @@ void ulog_color_config(bool enabled) {
 // ================
 
 #if ULOG_HAS_WARN_NOT_ENABLED
-void ulog_color_config(bool enabled) {
+ulog_status ulog_color_config(bool enabled) {
     (void)(enabled);
     warn_not_enabled("ULOG_BUILD_COLOR");
+    return ULOG_STATUS_ERROR;
 }
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
 
@@ -467,10 +472,12 @@ bool prefix_config_is_enabled(void) {
 // Public
 // ================
 
-void ulog_prefix_config(bool enabled) {
-    lock_lock();  // Lock the configuration
+ulog_status ulog_prefix_config(bool enabled) {
+    if (lock_lock() != ULOG_STATUS_OK) {
+        return ULOG_STATUS_BUSY;
+    }
     prefix_cfg.enabled = enabled;
-    lock_unlock();  // Unlock the configuration
+    return lock_unlock();
 }
 
 #else  // ULOG_HAS_DYNAMIC_CONFIG
@@ -479,9 +486,10 @@ void ulog_prefix_config(bool enabled) {
 // ================
 
 #if ULOG_HAS_WARN_NOT_ENABLED
-void ulog_prefix_config(bool enabled) {
+ulog_status ulog_prefix_config(bool enabled) {
     (void)(enabled);
     warn_not_enabled("ULOG_BUILD_DYNAMIC_CONFIG");
+    return ULOG_STATUS_ERROR;
 }
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
 
@@ -576,10 +584,12 @@ bool time_config_is_enabled(void) {
 // Public
 // ================
 
-void ulog_time_config(bool enabled) {
-    lock_lock();  // Lock the configuration
+ulog_status ulog_time_config(bool enabled) {
+    if (lock_lock() != ULOG_STATUS_OK) {
+        return ULOG_STATUS_BUSY;
+    }
     time_cfg.enabled = enabled;
-    lock_unlock();  // Unlock the configuration
+    return lock_unlock();
 }
 
 #else  // ULOG_HAS_DYNAMIC_CONFIG
@@ -588,9 +598,10 @@ void ulog_time_config(bool enabled) {
 // ================
 
 #if ULOG_HAS_WARN_NOT_ENABLED
-void ulog_time_config(bool enabled) {
+ulog_status ulog_time_config(bool enabled) {
     (void)(enabled);
     warn_not_enabled("ULOG_BUILD_TIME");
+    return ULOG_STATUS_ERROR;
 }
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
 
@@ -690,10 +701,12 @@ bool level_config_is_short(void) {
 // Public
 // ================
 
-void ulog_level_config(ulog_level_config_style style) {
-    lock_lock();  // Lock the configuration
+ulog_status ulog_level_config(ulog_level_config_style style) {
+    if (lock_lock() != ULOG_STATUS_OK) {
+        return ULOG_STATUS_BUSY;
+    }
     level_cfg.style = style;
-    lock_unlock();  // Unlock the configuration
+    return lock_unlock();
 }
 
 #else  // ULOG_HAS_DYNAMIC_CONFIG
@@ -703,9 +716,10 @@ void ulog_level_config(ulog_level_config_style style) {
 
 #if ULOG_HAS_WARN_NOT_ENABLED
 
-void ulog_level_config(ulog_level_config_style style) {
+ulog_status ulog_level_config(ulog_level_config_style style) {
     (void)(style);
     warn_not_enabled("ULOG_BUILD_DYNAMIC_CONFIG");
+    return ULOG_STATUS_ERROR;
 }
 
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
@@ -795,12 +809,12 @@ const char *ulog_level_to_string(ulog_level level) {
 #define OUTPUT_TOTAL_NUM (1 + OUTPUT_EXTRA_NUM)  // stdout + extra
 
 // Prototypes
-static void output_stdout_callback(ulog_event *ev, void *arg);
+static void output_stdout_handler(ulog_event *ev, void *arg);
 static void log_print_event(print_target *tgt, ulog_event *ev, bool full_time,
                             bool color, bool new_line);
 
 typedef struct {
-    ulog_output_callback_fn callback;
+    ulog_output_handler_fn handler;
     void *arg;
     ulog_level level;
 } output;
@@ -810,10 +824,10 @@ typedef struct {
 } output_data_t;
 
 static output_data_t output_data = {
-    .outputs = {{output_stdout_callback, NULL, OUTPUT_STDOUT_DEFAULT_LEVEL}}};
+    .outputs = {{output_stdout_handler, NULL, OUTPUT_STDOUT_DEFAULT_LEVEL}}};
 
 static void output_handle_single(ulog_event *ev, output *output) {
-    if (output->callback == NULL) {
+    if (output->handler == NULL) {
         return;  // Output has been removed, skip it
     }
 
@@ -828,7 +842,7 @@ static void output_handle_single(ulog_event *ev, output *output) {
         // directly as on some platforms using the same va_list multiple times
         // can lead to undefined behavior.
         va_copy(ev_copy.message_format_args, ev->message_format_args);
-        output->callback(&ev_copy, output->arg);
+        output->handler(&ev_copy, output->arg);
         va_end(ev_copy.message_format_args);
     }
 }
@@ -848,7 +862,7 @@ static void output_handle_all(ulog_event *ev) {
     }
 }
 
-static void output_stdout_callback(ulog_event *ev, void *arg) {
+static void output_stdout_handler(ulog_event *ev, void *arg) {
     (void)(arg);  // Unused
     print_target tgt = {.type = PRINT_TARGET_STREAM, .dsc.stream = stdout};
     log_print_event(&tgt, ev, false, true, true);
@@ -865,8 +879,8 @@ ulog_status ulog_output_level_set(ulog_output_id output, ulog_level level) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }
 
-    if (output_data.outputs[output].callback == NULL) {
-        return ULOG_STATUS_NOT_FOUND;  // Output exists but no callback assigned
+    if (output_data.outputs[output].handler == NULL) {
+        return ULOG_STATUS_NOT_FOUND;  // Output exists but no handler assigned
     }
     output_data.outputs[output].level = level;
     return ULOG_STATUS_OK;
@@ -891,7 +905,7 @@ ulog_status ulog_output_level_set_all(ulog_level level) {
 
 //  Private
 // ================
-static void output_file_callback(ulog_event *ev, void *arg) {
+static void output_file_handler(ulog_event *ev, void *arg) {
     print_target tgt = {.type = PRINT_TARGET_STREAM, .dsc.stream = (FILE *)arg};
     log_print_event(&tgt, ev, true, false, true);
 }
@@ -899,23 +913,25 @@ static void output_file_callback(ulog_event *ev, void *arg) {
 // Public
 // ================
 
-ulog_output_id ulog_output_add(ulog_output_callback_fn callback, void *arg,
+ulog_output_id ulog_output_add(ulog_output_handler_fn handler, void *arg,
                                ulog_level level) {
-    lock_lock();  // Lock the configuration
+    if (lock_lock() != ULOG_STATUS_OK) {
+        return ULOG_OUTPUT_INVALID;
+    }
     for (int i = 0; i < OUTPUT_TOTAL_NUM; i++) {
-        if (output_data.outputs[i].callback == NULL) {
-            output_data.outputs[i] = (output){callback, arg, level};
-            lock_unlock();  // Unlock the configuration
+        if (output_data.outputs[i].handler == NULL) {
+            output_data.outputs[i] = (output){handler, arg, level};
+            (void)lock_unlock();
             return i;
         }
     }
-    lock_unlock();  // Unlock the configuration
+    (void)lock_unlock();
     return ULOG_OUTPUT_INVALID;
 }
 
-/// @brief Add file callback
+/// @brief Add file handler
 ulog_output_id ulog_output_add_file(FILE *file, ulog_level level) {
-    return ulog_output_add(output_file_callback, file, level);
+    return ulog_output_add(output_file_handler, file, level);
 }
 
 /// @brief Remove an output from the logging system
@@ -928,19 +944,22 @@ ulog_status ulog_output_remove(ulog_output_id output) {
         return ULOG_STATUS_ERROR;  // Cannot remove stdout output
     }
 
-    lock_lock();
-    if (output_data.outputs[output].callback == NULL) {
-        lock_unlock();
+    if (lock_lock() != ULOG_STATUS_OK) {
+        return ULOG_STATUS_BUSY;
+    }
+    if (output_data.outputs[output].handler == NULL) {
+        if (lock_unlock() != ULOG_STATUS_OK) {
+            return ULOG_STATUS_BUSY;
+        }
         return ULOG_STATUS_NOT_FOUND;  // Output not found or already removed
     }
 
-    // Mark output as removed by setting callback to NULL
-    output_data.outputs[output].callback = NULL;
-    output_data.outputs[output].arg      = NULL;
-    output_data.outputs[output].level    = ULOG_LEVEL_TRACE;
+    // Mark output as removed by setting handler to NULL
+    output_data.outputs[output].handler = NULL;
+    output_data.outputs[output].arg     = NULL;
+    output_data.outputs[output].level   = ULOG_LEVEL_TRACE;
 
-    lock_unlock();
-    return ULOG_STATUS_OK;
+    return lock_unlock();
 }
 
 #else  // ULOG_HAS_EXTRA_OUTPUTS
@@ -950,9 +969,9 @@ ulog_status ulog_output_remove(ulog_output_id output) {
 
 #if ULOG_HAS_WARN_NOT_ENABLED
 
-ulog_output_id ulog_output_add(ulog_output_callback_fn callback, void *arg,
+ulog_output_id ulog_output_add(ulog_output_handler_fn handler, void *arg,
                                ulog_level level) {
-    (void)(callback);
+    (void)(handler);
     (void)(arg);
     (void)(level);
     warn_not_enabled("ULOG_BUILD_EXTRA_OUTPUTS");
@@ -1000,10 +1019,12 @@ bool topic_config_is_enabled(void) {
 // Public
 // ================
 
-void ulog_topic_config(bool enabled) {
-    lock_lock();  // Lock the configuration
+ulog_status ulog_topic_config(bool enabled) {
+    if (lock_lock() != ULOG_STATUS_OK) {
+        return ULOG_STATUS_BUSY;
+    }
     topic_cfg.enabled = enabled;
-    lock_unlock();  // Unlock the configuration
+    return lock_unlock();
 }
 
 #else  // ULOG_HAS_DYNAMIC_CONFIG
@@ -1013,9 +1034,10 @@ void ulog_topic_config(bool enabled) {
 
 #if ULOG_HAS_WARN_NOT_ENABLED
 
-void ulog_topic_config(bool enabled) {
+ulog_status ulog_topic_config(bool enabled) {
     (void)(enabled);
     warn_not_enabled("ULOG_BUILD_DYNAMIC_CONFIG");
+    return ULOG_STATUS_ERROR;
 }
 
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
@@ -1366,7 +1388,9 @@ static ulog_topic_id topic_add(const char *topic_name, ulog_output_id output,
     if (is_str_empty(topic_name)) {
         return ULOG_TOPIC_ID_INVALID;
     }
-    lock_lock();  // Lock the configuration
+    if (lock_lock() != ULOG_STATUS_OK) {  // Lock the configuration
+        return ULOG_TOPIC_ID_INVALID;
+    }
     for (int i = 0; i < TOPIC_STATIC_NUM; i++) {
         // If there is an empty slot
         if (is_str_empty(topic_data.topics[i].name)) {
@@ -1375,16 +1399,16 @@ static ulog_topic_id topic_add(const char *topic_name, ulog_output_id output,
             topic_data.topics[i].enabled = enable;
             topic_data.topics[i].level   = TOPIC_LEVEL_DEFAULT;
             topic_data.topics[i].output  = output;
-            lock_unlock();  // Unlock the configuration
+            (void)lock_unlock();  // Unlock the configuration
             return i;
         }
         // If the topic already exists
         else if (strcmp(topic_data.topics[i].name, topic_name) == 0) {
-            lock_unlock();  // Unlock the configuration
+            (void)lock_unlock();  // Unlock the configuration
             return i;
         }
     }
-    lock_unlock();                 // Unlock the configuration
+    (void)lock_unlock();           // Unlock the configuration
     return ULOG_TOPIC_ID_INVALID;  // No space for new topics
 }
 
@@ -1392,7 +1416,9 @@ static ulog_status topic_remove(const char *topic_name) {
     if (is_str_empty(topic_name)) {
         return ULOG_STATUS_INVALID_ARGUMENT;  // Invalid topic name, do nothing
     }
-    lock_lock();  // Lock the configuration
+    if (lock_lock() != ULOG_STATUS_OK) {  // Lock the configuration
+        return ULOG_STATUS_BUSY;
+    }
     for (int i = 0; i < TOPIC_STATIC_NUM; i++) {
         if (is_str_empty(topic_data.topics[i].name)) {
             continue;  // Skip empty slot; continue search
@@ -1400,11 +1426,12 @@ static ulog_status topic_remove(const char *topic_name) {
         if (strcmp(topic_data.topics[i].name, topic_name) == 0) {
             // Clear the topic entry
             topic_data.topics[i] = (topic_t){0};
-            lock_unlock();  // Unlock the configuration
-            return ULOG_STATUS_OK;
+            return lock_unlock();
         }
     }
-    lock_unlock();                 // Unlock the configuration
+    if (lock_unlock() != ULOG_STATUS_OK) {  // Unlock the configuration
+        return ULOG_STATUS_BUSY;
+    }
     return ULOG_STATUS_NOT_FOUND;  // Topic not found
 }
 #endif  // ULOG_HAS_TOPICS && TOPIC_IS_DYNAMIC == false
@@ -1506,25 +1533,27 @@ static ulog_topic_id topic_add(const char *topic_name, ulog_output_id output,
     }
 
     // If the beginning is empty
-    lock_lock();
+    if (lock_lock() != ULOG_STATUS_OK) {
+        return ULOG_TOPIC_ID_INVALID;
+    }
     topic_t *t = topic_get_last();
     if (t == NULL) {
         topic_data.topics = topic_allocate(0, topic_name, output, enable);
         if (topic_data.topics != NULL) {
-            lock_unlock();
+            (void)lock_unlock();
             return 0;
         }
-        lock_unlock();
+        (void)lock_unlock();
         return ULOG_TOPIC_ID_INVALID;
     }
 
     // If the beginning is not empty
     t->next = topic_allocate(t->id + 1, topic_name, output, enable);
     if (t->next) {
-        lock_unlock();
+        (void)lock_unlock();
         return t->id + 1;
     }
-    lock_unlock();
+    (void)lock_unlock();
     return ULOG_TOPIC_ID_INVALID;
 }
 
@@ -1532,7 +1561,9 @@ static ulog_status topic_remove(const char *topic_name) {
     if (is_str_empty(topic_name)) {
         return ULOG_STATUS_INVALID_ARGUMENT;  // Invalid topic name, do nothing
     }
-    lock_lock();  // Lock the configuration
+    if (lock_lock() != ULOG_STATUS_OK) {  // Lock the configuration
+        return ULOG_STATUS_BUSY;
+    }
 
     topic_t *t      = topic_get_first();
     topic_t *t_prev = NULL;
@@ -1546,15 +1577,16 @@ static ulog_status topic_remove(const char *topic_name) {
             } else {
                 t_prev->next = t->next;
             }
-            free(t);        // Free the topic memory
-            lock_unlock();  // Unlock the configuration
-            return ULOG_STATUS_OK;
+            free(t);  // Free the topic memory
+            return lock_unlock();
         }
         t_prev = t;
         t      = t->next;
     }
 
-    lock_unlock();                 // Unlock the configuration
+    if (lock_unlock() != ULOG_STATUS_OK) {  // Unlock the configuration
+        return ULOG_STATUS_BUSY;
+    }
     return ULOG_STATUS_NOT_FOUND;  // Topic not found
 }
 
@@ -1584,10 +1616,12 @@ bool src_loc_config_is_enabled(void) {
 // Public
 // ================
 
-void ulog_source_location_config(bool enabled) {
-    lock_lock();  // Lock the configuration
+ulog_status ulog_source_location_config(bool enabled) {
+    if (lock_lock() != ULOG_STATUS_OK) {
+        return ULOG_STATUS_BUSY;
+    }
     src_loc_cfg.enabled = enabled;
-    lock_unlock();  // Unlock the configuration
+    return lock_unlock();
 }
 
 #else  // ULOG_HAS_DYNAMIC_CONFIG
@@ -1597,9 +1631,10 @@ void ulog_source_location_config(bool enabled) {
 
 #if ULOG_HAS_WARN_NOT_ENABLED
 
-void ulog_source_location_config(bool enabled) {
+ulog_status ulog_source_location_config(bool enabled) {
     (void)(enabled);
     warn_not_enabled("ULOG_BUILD_SOURCE_LOCATION");
+    return ULOG_STATUS_ERROR;
 }
 
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
@@ -1618,7 +1653,6 @@ void ulog_source_location_config(bool enabled) {
 
 // Private
 // ================
-
 /// @brief Prints the message
 /// @param tgt - Target
 /// @param ev - Event
@@ -1719,8 +1753,9 @@ ulog_status ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size) {
 
 void ulog_log(ulog_level level, const char *file, int line, const char *topic,
               const char *message, ...) {
-
-    lock_lock();
+    if (lock_lock() != ULOG_STATUS_OK) {
+        return;  // Failed to acquire lock, drop log
+    }
 
     // Try to get topic ID, outputs and check if logging is allowed for this
     // topic
@@ -1730,7 +1765,7 @@ void ulog_log(ulog_level level, const char *file, int line, const char *topic,
         bool is_log_allowed = false;
         topic_process(topic, level, &is_log_allowed, &topic_id, &output);
         if (!is_log_allowed) {
-            lock_unlock();
+            (void)lock_unlock();
             return;  // Topic is not enabled or level is lower than topic level
         }
     }
@@ -1750,7 +1785,7 @@ void ulog_log(ulog_level level, const char *file, int line, const char *topic,
 
     va_end(ev.message_format_args);
 
-    lock_unlock();
+    (void)lock_unlock();
 }
 
 /* ============================================================================
@@ -1762,9 +1797,11 @@ void ulog_log(ulog_level level, const char *file, int line, const char *topic,
 // ================
 
 ulog_status ulog_cleanup(void) {
-    lock_lock();  // Lock the configuration
+    if (lock_lock() != ULOG_STATUS_OK) {  // Lock the configuration
+        return ULOG_STATUS_BUSY;
+    }
     // Cleanup Topics
-    
+
     // TODO: this section can be improved with topic_remove_all() function
 #if ULOG_HAS_TOPICS
     // Reset new-topic default enable flag
@@ -1788,9 +1825,9 @@ ulog_status ulog_cleanup(void) {
     output_data.outputs[ULOG_OUTPUT_STDOUT].level = OUTPUT_STDOUT_DEFAULT_LEVEL;
 #if ULOG_HAS_EXTRA_OUTPUTS
     for (int i = 1; i < OUTPUT_TOTAL_NUM; i++) {
-        output_data.outputs[i].callback = NULL;
-        output_data.outputs[i].arg      = NULL;
-        output_data.outputs[i].level    = OUTPUT_STDOUT_DEFAULT_LEVEL;
+        output_data.outputs[i].handler = NULL;
+        output_data.outputs[i].arg     = NULL;
+        output_data.outputs[i].level   = OUTPUT_STDOUT_DEFAULT_LEVEL;
     }
 #endif  // ULOG_HAS_EXTRA_OUTPUTS
 
@@ -1800,6 +1837,5 @@ ulog_status ulog_cleanup(void) {
     memset(prefix_data.prefix, 0, sizeof(prefix_data.prefix));
 #endif
 
-    lock_unlock();  // Unlock the configuration
-    return ULOG_STATUS_OK;
+    return lock_unlock();
 }

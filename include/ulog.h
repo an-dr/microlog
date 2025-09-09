@@ -37,6 +37,7 @@ typedef enum {
     ULOG_STATUS_ERROR            = -1,  ///< General error occurred
     ULOG_STATUS_INVALID_ARGUMENT = -2,  ///< Invalid argument provided
     ULOG_STATUS_NOT_FOUND        = -3,  ///< Requested item not found
+    ULOG_STATUS_BUSY             = -4,  ///< Resource is busy
 } ulog_status;
 
 /* ============================================================================
@@ -129,7 +130,7 @@ struct tm *ulog_event_get_time(ulog_event *ev);
 /// @brief Lock function type for thread synchronization
 /// @param lock True to acquire lock, false to release lock
 /// @param lock_arg User-provided argument passed during registration
-typedef void (*ulog_lock_fn)(bool lock, void *lock_arg);
+typedef ulog_status (*ulog_lock_fn)(bool lock, void *lock_arg);
 
 /// @brief Sets the thread synchronization lock function
 /// @param function Lock function to use, or NULL to disable locking
@@ -143,22 +144,22 @@ void ulog_lock_set_fn(ulog_lock_fn function, void *lock_arg);
 /// @brief Enable or disable colored output (requires
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param enabled True to enable colors, false to disable
-void ulog_color_config(bool enabled);
+ulog_status ulog_color_config(bool enabled);
 
 /// @brief Enable or disable custom prefix (requires
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param enabled True to enable prefix, false to disable
-void ulog_prefix_config(bool enabled);
+ulog_status ulog_prefix_config(bool enabled);
 
 /// @brief Enable or disable source location in logs (requires
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param enabled True to show file:line, false to hide
-void ulog_source_location_config(bool enabled);
+ulog_status ulog_source_location_config(bool enabled);
 
 /// @brief Enable or disable timestamps in logs (requires
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param enabled True to show timestamps, false to hide
-void ulog_time_config(bool enabled);
+ulog_status ulog_time_config(bool enabled);
 
 /// @brief Log level configuration styles
 typedef enum {
@@ -170,18 +171,18 @@ typedef enum {
 
 /// @brief Configure level string format (requires ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param style Level configuration style
-void ulog_level_config(ulog_level_config_style style);
+ulog_status ulog_level_config(ulog_level_config_style style);
 
 /// @brief Enable or disable topic support (requires
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param enabled True to enable topics, false to disable
-void ulog_topic_config(bool enabled);
+ulog_status ulog_topic_config(bool enabled);
 
 /* ============================================================================
    Feature: Prefix
 ============================================================================ */
 
-/// @brief Callback function type for generating custom log prefixes
+/// @brief Handler function type for generating custom log prefixes
 /// (requires: ULOG_BUILD_PREFIX_SIZE>0 or ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param ev Log event containing level, file, line, etc.
 /// @param prefix Buffer to write the prefix string to
@@ -191,7 +192,7 @@ typedef void (*ulog_prefix_fn)(ulog_event *ev, char *prefix,
 
 /// @brief Sets the custom prefix generation function (requires
 ///        ULOG_BUILD_PREFIX_SIZE>0 or ULOG_BUILD_DYNAMIC_CONFIG=1)
-/// @param function Callback function to generate prefix, or NULL to disable
+/// @param function Handler function to generate prefix, or NULL to disable
 void ulog_prefix_set_fn(ulog_prefix_fn function);
 
 /* ============================================================================
@@ -206,10 +207,10 @@ enum {
     ULOG_OUTPUT_ALL     = INT32_MAX,  ///< Log to all outputs (default behavior)
 };
 
-/// @brief Callback function type for custom log output handlers
+/// @brief Handler function type for custom log output handlers
 /// @param ev Log event to process
-/// @param arg User-provided argument passed during callback registration
-typedef void (*ulog_output_callback_fn)(ulog_event *ev, void *arg);
+/// @param arg User-provided argument passed during handler registration
+typedef void (*ulog_output_handler_fn)(ulog_event *ev, void *arg);
 
 /// @brief Sets the minimum log level for a specific output
 /// @param output Output handle to configure
@@ -224,13 +225,13 @@ ulog_status ulog_output_level_set(ulog_output_id output, ulog_level level);
 /// level
 ulog_status ulog_output_level_set_all(ulog_level level);
 
-/// @brief Adds a custom output callback (requires ULOG_BUILD_EXTRA_OUTPUTS>0
+/// @brief Adds a custom output handler (requires ULOG_BUILD_EXTRA_OUTPUTS>0
 /// or ULOG_BUILD_DYNAMIC_CONFIG=1)
-/// @param callback Function to handle log events
-/// @param arg User argument passed to the callback function
+/// @param handler Function to handle log events
+/// @param arg User argument passed to the handler function
 /// @param level Minimum log level for this output
 /// @return Output handle on success, ULOG_OUTPUT_INVALID on error
-ulog_output_id ulog_output_add(ulog_output_callback_fn callback, void *arg,
+ulog_output_id ulog_output_add(ulog_output_handler_fn handler, void *arg,
                                ulog_level level);
 
 /// @brief Adds a file output (requires ULOG_BUILD_EXTRA_OUTPUTS>0 or
@@ -303,7 +304,7 @@ ulog_status ulog_output_remove(ulog_output_id output);
 /// @return Topic ID on success, ULOG_TOPIC_ID_INVALID on failure
 ulog_topic_id ulog_topic_add(const char *topic_name, ulog_output_id output,
                              bool enable);
-                             
+
 /// @brief Removes a topic  (requires ULOG_BUILD_TOPICS!=0 or
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param topic_name Topic name string (empty or NULL names are invalid)

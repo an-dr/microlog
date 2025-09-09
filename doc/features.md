@@ -154,22 +154,34 @@ The data is accessible via getters (see header file for details):
 
 ### Lock
 
-If the log will be written to from multiple threads a lock function can be set. To do this use the `ulog_lock_set_fn()` function.
+If the log will be written to from multiple threads a lock function can be set. To do this use the `ulog_lock_set_fn()` function. 
+
+The lock function must match the `ulog_lock_fn` type and return non-ULOG_STATUS_OK value on error:
+
+```c
+typedef ulog_status (*ulog_lock_fn)(bool lock, void *udata);
+```
+
 The function is passed the boolean `true` if the lock should be acquired or `false` if the lock should be released and the given `udata` value.
 
 ```c
 
-void lock_function(bool lock, void *lock_arg) {
+ulog_status lock_function(bool lock, void *lock_arg) {
+    pthread_mutex_t *mutex = (pthread_mutex_t *) lock_arg; // retrieve the mutex
+    int result = -1;
     if (lock) {
-        pthread_mutex_lock((pthread_mutex_t *) lock_arg);
+        result = pthread_mutex_lock(mutex);
     } else {
-        pthread_mutex_unlock((pthread_mutex_t *) lock_arg);
+        result = pthread_mutex_unlock(mutex);
     }
+    return (result == 0) ? ULOG_STATUS_OK : ULOG_STATUS_ERROR;
 }
 
 . . .
 
-pthread_mutex_t mutex;
+pthread_mutex_t mutex; // We pass the mutex as the lock_arg
+pthread_mutex_init(&mutex, NULL);
+. . .
 ulog_lock_set_fn(lock_function, mutex);
 ```
 
@@ -306,10 +318,10 @@ Outputs can be removed by using the `ulog_output_remove()` function.
 
 #### User Defined Output
 
-One or more callback functions which are called with the log data can be provided to the library by using the `ulog_output_add()` function. You can use `ulog_event_to_cstr` to convert the `ulog_event` structure to a string.
+One or more output handler functions which are called with the log data can be provided to the library by using the `ulog_output_add()` function. You can use `ulog_event_to_cstr` to convert the `ulog_event` structure to a string.
 
 ```c
-void arduino_callback(ulog_event *ev, void *arg) {
+void arduino_output_handler(ulog_event *ev, void *arg) {
     static char buffer[128];
     int result = ulog_event_to_cstr(ev, buffer, sizeof(buffer));
     if (result == 0) {
@@ -319,10 +331,18 @@ void arduino_callback(ulog_event *ev, void *arg) {
 
 . . .
 
-ulog_output_id ard_output = ulog_output_add(arduino_callback, NULL, ULOG_LEVEL_INFO);
+ulog_output_id ard_output = ulog_output_add(arduino_output_handler, NULL, ULOG_LEVEL_INFO);
 if (ard_output != ULOG_OUTPUT_INVALID) {
     ulog_info("Will be printed to Arduino serial");
     ulog_output_remove(ard_output); // For demo purposes
+}
+```
+
+WARNING: The handler function is called with the lock acquired, so if you are using logging inside the handler, it may cause a deadlocks: e.g.
+
+```c
+void faulty_output_handler(ulog_event *ev, void *arg) {
+    ulog_info("This might cause a deadlock or unexpected behavior");
 }
 ```
 
@@ -337,17 +357,25 @@ Sets a prefix function that can be used to customize the log output. The functio
 Requires `ULOG_BUILD_PREFIX_SIZE` to be more than 0.
 
 ```c
-void update_prefix(ulog_event *ev, char *prefix, size_t prefix_size) {
+void prefix_handler(ulog_event *ev, char *prefix, size_t prefix_size) {
     snprintf(prefix, prefix_size, ", %03d ms", millis());
 }
 // . . .
-ulog_prefix_set_fn(prefix_fn);
+ulog_prefix_set_fn(prefix_handler);
 ```
 
 The output will be:
 
 ```txt
 19:51:42, 005 ms ERROR src/main.c:38: Error message
+```
+
+WARNING: The handler function is called with the lock acquired, so if you are using logging inside the handler, it may cause a deadlocks. E.g.:
+
+```c
+void faulty_prefix(ulog_event *ev, char *prefix, size_t prefix_size) {
+    ulog_info("This might cause a deadlock or unexpected behavior");
+}
 ```
 
 ### Time
@@ -434,7 +462,7 @@ If Dynamic Config enabled topics are created runtime in the **dynamic allocation
 
 Configuration functions:
 
-- `void ulog_topic_config(bool enabled)` - will show or hide topics in the log output when printing using `ulog_topic_xxx` macros.
+- `ulog_status ulog_topic_config(bool enabled)` - show or hide topics in the log output when using `ulog_topic_xxx` macros. Returns `ULOG_STATUS_OK` on success, `ULOG_STATUS_BUSY` if the logger is currently locked, or `ULOG_STATUS_ERROR` if the feature is not compiled in.
 
 Example output with and without topics:
 
@@ -451,31 +479,31 @@ If Dynamic Config enabled, `ULOG_BUILD_PREFIX_SIZE` is set to 64, so the prefix 
 
 Functions to configure the prefix:
 
-- `void ulog_prefix_config(bool enabled)` - will enable or disable prefix in the log output.
+- `ulog_status ulog_prefix_config(bool enabled)` - enable or disable prefix in the log output. Returns `ULOG_STATUS_OK` / `ULOG_STATUS_BUSY` / `ULOG_STATUS_ERROR` (feature disabled).
 
 #### Time Configuration
 
 Functions to configure the timestamp:
 
-- `void ulog_time_config(bool enabled)` - will enable or disable time in the log output.
+- `ulog_status ulog_time_config(bool enabled)` - enable or disable time in the log output. Returns `ULOG_STATUS_OK` / `ULOG_STATUS_BUSY` / `ULOG_STATUS_ERROR` (feature disabled).
 
 #### Color Configuration
 
 Functions to configure:
 
-- `void ulog_color_config(bool enabled)` - will enable or disable ANSI color escape codes when printing to stdout.
+- `ulog_status ulog_color_config(bool enabled)` - enable or disable ANSI color escape codes when printing to stdout. Returns `ULOG_STATUS_OK` / `ULOG_STATUS_BUSY` / `ULOG_STATUS_ERROR` (feature disabled).
 
 #### Source Location Configuration
 
 Functions to configure:
 
-- `void ulog_source_location_config(bool enabled)` - will show or hide file and line in the log output.
+- `ulog_status ulog_source_location_config(bool enabled)` - show or hide file and line in the log output. Returns `ULOG_STATUS_OK` / `ULOG_STATUS_BUSY` / `ULOG_STATUS_ERROR` (feature disabled).
 
 #### Level Configuration
 
 Functions to configure:
 
-- `void ulog_level_config(ulog_level_config_style style)` - will enable or disable short level strings, e.g. "T" for "TRACE", "I" for "INFO".
+- `ulog_status ulog_level_config(ulog_level_config_style style)` - enable or disable short level strings (e.g. "T" for "TRACE", "I" for "INFO"). Returns `ULOG_STATUS_OK` / `ULOG_STATUS_BUSY` / `ULOG_STATUS_ERROR` (feature disabled).
 
 The `style` argument can be one of the following values:
 

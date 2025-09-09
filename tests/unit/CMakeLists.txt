@@ -44,13 +44,13 @@ add_test(NAME CoreTests COMMAND test_core)
 
 
 # --- Locking Test ---
-add_executable(test_locking)
-target_sources(test_locking PRIVATE ${ULOG_SRC} 
+add_executable(test_lock)
+target_sources(test_lock PRIVATE ${ULOG_SRC} 
                                     ut_callback.c 
-                                    test_locking.cpp)
-target_include_directories(test_locking PRIVATE ${ULOG_INCLUDE_DIR})
-target_compile_definitions(test_locking PRIVATE ${ULOG_CONFIG_BASE})
-add_test(NAME LockingTest COMMAND test_locking)
+                                    test_lock.cpp)
+target_include_directories(test_lock PRIVATE ${ULOG_INCLUDE_DIR})
+target_compile_definitions(test_lock PRIVATE ${ULOG_CONFIG_BASE})
+add_test(NAME LockingTest COMMAND test_lock)
 
 # --- Prefix Test ---
 add_executable(test_prefix)
