@@ -7,7 +7,7 @@ add_project_arguments('-fmacro-prefix-map=../=', language: ['cpp', 'c'])
 # ===================================
 
 ## Note: ULOG_BUILD_DYNAMIC_CONFIG overrides all other options
-# add_global_arguments('-DULOG_BUILD_DYNAMIC_CONFIG=1', language: ['cpp', 'c'])
+add_global_arguments('-DULOG_BUILD_DYNAMIC_CONFIG=1', language: ['cpp', 'c'])
 
 # add_global_arguments('-DULOG_BUILD_SOURCE_LOCATION=1', language : ['cpp', 'c'])
 # add_global_arguments('-DULOG_BUILD_LEVEL_STYLE=ULOG_LEVEL_STYLE_SHORT', language : ['cpp', 'c'])

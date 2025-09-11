@@ -678,8 +678,64 @@ static void time_print_full(print_target *tgt, ulog_event *ev,
 #endif  // ULOG_HAS_TIME
 
 /* ============================================================================
+   Core Feature: Levels
+   (`level_*`, depends on: Levels Config, Print)
+============================================================================ */
+
+// Private
+// ================
+
+typedef struct {
+    const ulog_level_descriptor *dsc;
+} level_data_t;
+
+// clang-format off
+#if !ULOG_HAS_LEVEL_SHORT
+const ulog_level_descriptor level_names_default = {
+    .max_level = ULOG_LEVEL_DEFAULT_TOTAL - 1,
+    .names = {"TRACE", "DEBUG", "INFO ", "WARN ", "ERROR", "FATAL", NULL, NULL},
+    .name_max_len = 5,
+};
+#else
+const ulog_level_descriptor level_names_default = {
+    .max_level = ULOG_LEVEL_DEFAULT_TOTAL - 1,
+    .names = {"T", "D", "I", "W", "E", "F", NULL, NULL},
+    .name_max_len = 1,
+};
+#endif  // !ULOG_HAS_LEVEL_SHORT
+// clang-format on
+
+level_data_t level_data = {
+    .dsc = &level_names_default,
+};
+
+#define LEVEL_MIN_VALUE 0
+
+static bool level_is_allowed(ulog_level msg_level, ulog_level log_verbosity) {
+    if (msg_level < log_verbosity || msg_level < LEVEL_MIN_VALUE) {
+        return false;  // Level is higher than the configured level, not allowed
+    }
+    return true;  // Level is allowed
+}
+
+static void level_print(print_target *tgt, ulog_event *ev) {
+    print_to_target(tgt, "%s ", level_data.dsc->names[ev->level]);
+}
+
+// Public
+// ================
+
+/// @brief Returns the string representation of the level
+const char *ulog_level_to_string(ulog_level level) {
+    if (level < LEVEL_MIN_VALUE || level >= level_data.dsc->max_level) {
+        return "?";  // Return a default string for invalid levels
+    }
+    return level_data.dsc->names[level];
+}
+
+/* ============================================================================
    Optional Feature: Dynamic Configuration - Level
-   (`level_config_*`, depends on: - )
+   (`level_config_*`, depends on: Levels )
 ============================================================================ */
 #if ULOG_HAS_DYNAMIC_CONFIG
 
@@ -694,6 +750,12 @@ static level_config level_cfg = {
 // Private
 // ================
 
+const ulog_level_descriptor level_names_short = {
+    .max_level    = ULOG_LEVEL_DEFAULT_TOTAL - 1,
+    .names        = {"T", "D", "I", "W", "E", "F", NULL, NULL},
+    .name_max_len = 1,
+};
+
 bool level_config_is_short(void) {
     return level_cfg.style == ULOG_LEVEL_CONFIG_STYLE_SHORT;
 }
@@ -705,7 +767,17 @@ ulog_status ulog_level_config(ulog_level_config_style style) {
     if (lock_lock() != ULOG_STATUS_OK) {
         return ULOG_STATUS_BUSY;
     }
+    if (style != ULOG_LEVEL_STYLE_LONG &&
+        style != ULOG_LEVEL_STYLE_SHORT) {
+        lock_unlock();
+        return ULOG_STATUS_INVALID_ARGUMENT;  // Invalid style
+    }
     level_cfg.style = style;
+    if (level_config_is_short()) {
+        level_data.dsc = &level_names_short;
+    } else {
+        level_data.dsc = &level_names_default;
+    }
     return lock_unlock();
 }
 
@@ -729,72 +801,6 @@ ulog_status ulog_level_config(ulog_level_config_style style) {
 
 #define level_config_is_short() (ULOG_HAS_LEVEL_SHORT)
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
-
-/* ============================================================================
-   Core Feature: Levels
-   (`level_*`, depends on: Levels Config, Print)
-============================================================================ */
-
-// Private
-// ================
-
-typedef struct {
-    ulog_level max_level;    // maximum log level
-    ulog_level_names names;  // level names
-    size_t name_max_len;     // maximum length of level names
-} level_data_t;
-
-ulog_level_names level_names_default = {
-#if !ULOG_HAS_LEVEL_SHORT
-    {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL", NULL, NULL},
-#else
-    {"T", "D", "I", "W", "E", "F", NULL, NULL},
-#endif
-};
-
-level_data_t level_data = {
-    .max_level = 5,  // Default max level is FATAL
-    .names     = level_names_default,
-#if !ULOG_HAS_LEVEL_SHORT
-    .name_max_len = 5,
-#else
-    .name_max_len = 1,
-#endif
-};
-
-#define LEVEL_MIN_VALUE 0
-
-static bool level_is_allowed(ulog_level msg_level, ulog_level log_verbosity) {
-    if (msg_level < log_verbosity || msg_level < LEVEL_MIN_VALUE) {
-        return false;  // Level is higher than the configured level, not allowed
-    }
-    return true;  // Level is allowed
-}
-
-static void level_print(print_target *tgt, ulog_event *ev) {
-#if ULOG_HAS_LEVEL_LONG && ULOG_HAS_LEVEL_SHORT
-    if (level_config_is_short()) {
-        print_to_target(tgt, "%-1s ", level_data.names[ev->level]);
-    } else {
-        print_to_target(tgt, "%-5s ", level_data.names[ev->level]);
-    }
-#elif ULOG_HAS_LEVEL_SHORT
-    print_to_target(tgt, "%-1s ", level_data.names[ev->level]);
-#else
-    print_to_target(tgt, "%-5s ", level_data.names[ev->level]);
-#endif  // ULOG_HAS_LEVEL_SHORT
-}
-
-// Public
-// ================
-
-/// @brief Returns the string representation of the level
-const char *ulog_level_to_string(ulog_level level) {
-    if (level < LEVEL_MIN_VALUE || level >= ULOG_LEVEL_DEFAULT_TOTAL) {
-        return "?";  // Return a default string for invalid levels
-    }
-    return level_data.names[level];
-}
 
 /* ============================================================================
    Core Feature: Outputs

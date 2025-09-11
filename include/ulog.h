@@ -68,6 +68,13 @@ typedef enum ulog_level_enum {
 
 typedef const char *ulog_level_names[ULOG_LEVEL_TOTAL];
 
+typedef struct {
+    ulog_level max_level;              // maximum log level
+    const ulog_level_names names;     // level names
+    size_t name_max_len;               // maximum length of level names
+} ulog_level_descriptor;
+
+
 #define ULOG_LEVEL_STYLE_LONG (0)   /// Use long level strings (DEBUG, etc.)
 #define ULOG_LEVEL_STYLE_SHORT (1)  /// Use short level strings (D, I, etc.)
 
