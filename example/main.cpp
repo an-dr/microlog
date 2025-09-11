@@ -1,8 +1,8 @@
-/* 
+/*
 Example of using ulog library in C/C++
 
 It demonstrates basic logging functionality using C interface.
-The output to console looks like this (with possible variations based on 
+The output to console looks like this (with possible variations based on
 build configuration):
 
 18:50:32 [MsgID:000] TRACE main.cpp:71: Trace message 1
@@ -32,9 +32,9 @@ build configuration):
 //  at log time, e.g. request ID, user ID, additional time metrics, etc.
 // In this example we use it to add ms
 void user_prefix(ulog_event *ev, char *prefix, size_t prefix_size) {
-    (void)ev; // Unused in this example
-    static int count = 0; // count represents fake milliseconds
-    snprintf(prefix, prefix_size, " [MsgID:%03d] ", count++);
+    (void)ev;              // Unused in this example
+    static int count = 0;  // count represents fake milliseconds
+    snprintf(prefix, prefix_size, " | MsgID:%03d ", count++);
 }
 
 // This handler can be used to get a log string
@@ -46,7 +46,7 @@ void user_output(ulog_event *ev, void *arg) {
     // Print argument data
     static int count = 0;
     printf("[%s:%d] ", (const char *)arg, count++);
-    
+
     // Print log string
     static char buffer[128];
     ulog_event_to_cstr(ev, buffer, sizeof(buffer));
@@ -56,7 +56,7 @@ void user_output(ulog_event *ev, void *arg) {
 // Simple lock function with simple locking
 // This is just an example, real locking should use mutexes or similar
 // mechanisms to ensure thread safety.
-// The lock function should return ULOG_STATUS_OK on success, 
+// The lock function should return ULOG_STATUS_OK on success,
 // other values on error.
 ulog_status user_lock(bool lock, void *arg) {
     (void)(arg);
@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
 
     FILE *fp = fopen("example.log", "w");
     ulog_output_add_file(fp, ULOG_LEVEL_INFO);
-    ulog_output_add(user_output, (void *)"Output msg count", ULOG_LEVEL_INFO);
+    // ulog_output_add(user_output, (void *)"Output msg count", ULOG_LEVEL_INFO);
 
     /* Prefix ==================================== */
     ulog_prefix_set_fn(user_prefix);
@@ -128,5 +128,21 @@ int main(int argc, char *argv[]) {
     ulog_t_info("Bluetooth", "Bluetooth message 2 (lower than topic level)");
     ulog_t_debug("Serial", "Serial message 3 (lower than global level)");
 
-    return 0;
+    /* Custom Log Levels ============================ */
+    printf("\n");
+
+    static ulog_level_descriptor syslog_levels = {
+        .max_level = ULOG_LEVEL_7,
+        .names = {"| DEBUG  |", "| INFO   |", "| NOTICE |", "| WARN   |", "| ERR    |", "| CRIT   |",
+                  "| ALERT  |", "| EMERG  |"}};
+    ulog_level_set_new_levels(&syslog_levels);
+
+    ulog_log(ULOG_LEVEL_0, "Message for debugging");
+    ulog_log(ULOG_LEVEL_1, "Normal informational message");
+    ulog_log(ULOG_LEVEL_2, "Important notice");
+    ulog_log(ULOG_LEVEL_3, "Warning message");
+    ulog_log(ULOG_LEVEL_4, "Error message");
+    ulog_log(ULOG_LEVEL_5, "Critical condition");
+    ulog_log(ULOG_LEVEL_6, "Alert: action must be taken immediately");
+    ulog_log(ULOG_LEVEL_7, "Emergency: system is unusable");
 }
