@@ -737,22 +737,32 @@ ulog_status ulog_level_config(ulog_level_config_style style) {
 
 // Private
 // ================
-#define LEVEL_MIN_VALUE 0
-#define LEVEL_STYLE_NUM                                                        \
-    (ULOG_HAS_LEVEL_SHORT + ULOG_HAS_LEVEL_LONG)  // TODO: fragile
 
-/// @brief Level strings
-static const char *level_strings[LEVEL_STYLE_NUM][ULOG_LEVEL_TOTAL] = {
+typedef struct {
+    ulog_level max_level;    // maximum log level
+    ulog_level_names names;  // level names
+    size_t name_max_len;     // maximum length of level names
+} level_data_t;
 
-#if ULOG_HAS_LEVEL_LONG
-    {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"},
+ulog_level_names level_names_default = {
+#if !ULOG_HAS_LEVEL_SHORT
+    {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL", NULL, NULL},
+#else
+    {"T", "D", "I", "W", "E", "F", NULL, NULL},
 #endif
-
-#if ULOG_HAS_LEVEL_SHORT
-    {"T", "D", "I", "W", "E", "F"},
-#endif
-
 };
+
+level_data_t level_data = {
+    .max_level = 5,  // Default max level is FATAL
+    .names     = level_names_default,
+#if !ULOG_HAS_LEVEL_SHORT
+    .name_max_len = 5,
+#else
+    .name_max_len = 1,
+#endif
+};
+
+#define LEVEL_MIN_VALUE 0
 
 static bool level_is_allowed(ulog_level msg_level, ulog_level log_verbosity) {
     if (msg_level < log_verbosity || msg_level < LEVEL_MIN_VALUE) {
@@ -764,20 +774,14 @@ static bool level_is_allowed(ulog_level msg_level, ulog_level log_verbosity) {
 static void level_print(print_target *tgt, ulog_event *ev) {
 #if ULOG_HAS_LEVEL_LONG && ULOG_HAS_LEVEL_SHORT
     if (level_config_is_short()) {
-        print_to_target(
-            tgt, "%-1s ",
-            level_strings[ULOG_LEVEL_CONFIG_STYLE_SHORT][ev->level]);
+        print_to_target(tgt, "%-1s ", level_data.names[ev->level]);
     } else {
-        print_to_target(
-            tgt, "%-5s ",
-            level_strings[ULOG_LEVEL_CONFIG_STYLE_DEFAULT][ev->level]);
+        print_to_target(tgt, "%-5s ", level_data.names[ev->level]);
     }
 #elif ULOG_HAS_LEVEL_SHORT
-    print_to_target(tgt, "%-1s ",
-                    level_strings[ULOG_LEVEL_CONFIG_STYLE_DEFAULT][ev->level]);
+    print_to_target(tgt, "%-1s ", level_data.names[ev->level]);
 #else
-    print_to_target(tgt, "%-5s ",
-                    level_strings[ULOG_LEVEL_CONFIG_STYLE_DEFAULT][ev->level]);
+    print_to_target(tgt, "%-5s ", level_data.names[ev->level]);
 #endif  // ULOG_HAS_LEVEL_SHORT
 }
 
@@ -786,10 +790,10 @@ static void level_print(print_target *tgt, ulog_event *ev) {
 
 /// @brief Returns the string representation of the level
 const char *ulog_level_to_string(ulog_level level) {
-    if (level < LEVEL_MIN_VALUE || level >= ULOG_LEVEL_TOTAL) {
+    if (level < LEVEL_MIN_VALUE || level >= ULOG_LEVEL_DEFAULT_TOTAL) {
         return "?";  // Return a default string for invalid levels
     }
-    return level_strings[ULOG_LEVEL_CONFIG_STYLE_DEFAULT][level];
+    return level_data.names[level];
 }
 
 /* ============================================================================
@@ -872,7 +876,7 @@ static void output_stdout_handler(ulog_event *ev, void *arg) {
 // ================
 
 ulog_status ulog_output_level_set(ulog_output_id output, ulog_level level) {
-    if (level < LEVEL_MIN_VALUE || level >= ULOG_LEVEL_TOTAL) {
+    if (level < LEVEL_MIN_VALUE || level >= ULOG_LEVEL_DEFAULT_TOTAL) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }
     if (output < ULOG_OUTPUT_STDOUT || output >= OUTPUT_TOTAL_NUM) {
@@ -887,7 +891,7 @@ ulog_status ulog_output_level_set(ulog_output_id output, ulog_level level) {
 }
 
 ulog_status ulog_output_level_set_all(ulog_level level) {
-    if (level < LEVEL_MIN_VALUE || level >= ULOG_LEVEL_TOTAL) {
+    if (level < LEVEL_MIN_VALUE || level >= ULOG_LEVEL_DEFAULT_TOTAL) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }
 
@@ -1145,7 +1149,7 @@ static void topic_print(print_target *tgt, ulog_event *ev) {
 /// @param level - Log level to set
 /// @return ULOG_STATUS_OK if success, ULOG_STATUS_NOT_FOUND if topic not found
 static ulog_status topic_set_level(int topic, ulog_level level) {
-    if (level < LEVEL_MIN_VALUE || level >= ULOG_LEVEL_TOTAL) {
+    if (level < LEVEL_MIN_VALUE || level >= ULOG_LEVEL_DEFAULT_TOTAL) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }
     topic_t *t = topic_get(topic);

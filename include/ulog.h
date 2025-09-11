@@ -46,14 +46,27 @@ typedef enum {
 
 /// @brief Log levels in ascending order of severity
 typedef enum ulog_level_enum {
-    ULOG_LEVEL_TRACE = 0,  ///< Most verbose level for tracing execution
-    ULOG_LEVEL_DEBUG,      ///< Debug information for developers
-    ULOG_LEVEL_INFO,       ///< General information messages
-    ULOG_LEVEL_WARN,       ///< Warning messages for potential issues
-    ULOG_LEVEL_ERROR,      ///< Error messages for failures
-    ULOG_LEVEL_FATAL,      ///< Critical errors that may terminate program
+    ULOG_LEVEL_0,  ///< Default ULOG_LEVEL_TRACE level
+    ULOG_LEVEL_1,  ///< Default ULOG_LEVEL_DEBUG level
+    ULOG_LEVEL_2,  ///< Default ULOG_LEVEL_INFO level
+    ULOG_LEVEL_3,  ///< Default ULOG_LEVEL_WARN level
+    ULOG_LEVEL_4,  ///< Default ULOG_LEVEL_ERROR level
+    ULOG_LEVEL_5,  ///< Default ULOG_LEVEL_FATAL level
+    ULOG_LEVEL_6,  ///< Custom level 6
+    ULOG_LEVEL_7,  ///< Custom level 7
+    ULOG_LEVEL_TOTAL = 8,
 } ulog_level;
-#define ULOG_LEVEL_TOTAL 6  ///< Total number of log levels
+
+/// @brief Default log levels in ascending order of severity
+#define ULOG_LEVEL_TRACE (ulog_level)0  ///< For tracing execution
+#define ULOG_LEVEL_DEBUG (ulog_level)1  ///< Debug information for developers
+#define ULOG_LEVEL_INFO (ulog_level)2   ///< General information messages
+#define ULOG_LEVEL_WARN (ulog_level)3   ///< For potential issues
+#define ULOG_LEVEL_ERROR (ulog_level)4  ///< For failures
+#define ULOG_LEVEL_FATAL (ulog_level)5  ///< May terminate program
+#define ULOG_LEVEL_DEFAULT_TOTAL 6      ///< Total number of defaultlog levels
+
+typedef const char *ulog_level_names[ULOG_LEVEL_TOTAL];
 
 #define ULOG_LEVEL_STYLE_LONG (0)   /// Use long level strings (DEBUG, etc.)
 #define ULOG_LEVEL_STYLE_SHORT (1)  /// Use short level strings (D, I, etc.)
