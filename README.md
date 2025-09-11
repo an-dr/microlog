@@ -18,14 +18,18 @@ In the default configuration it looks like this:
 
 <img src="doc/README/demo0.png" width="800">
 
-...but in can be very minimalistic
+[Picture 1 - default configuration: no time, long default levels, source location, no topics, no colors]
+
+...but in can be very minimalistic :
 
 <img src="doc/README/demo1.png" width="800">
+
+[Picture 2 - short levels, no colors, no time, no source location]
 
 ... or feature-rich:
 
 <img src="doc/README/demo2.png" width="800">
-
+[Picture 3 - time, custom prefix for MsgID, custom syslog levels, topics, source location, colors]
 
 The project is based on several core principles:
 
@@ -43,6 +47,7 @@ The project is based on several core principles:
         - [1. Install](#1-install)
         - [2. Use](#2-use)
     - [Contributing](#contributing)
+    - [Changelog](#changelog)
     - [License](#license)
     - [Credits](#credits)
 

@@ -1627,9 +1627,11 @@ ulog_status ulog_source_location_config(bool enabled) {
 /// @param ev - Event
 static void log_print_message(print_target *tgt, ulog_event *ev) {
 
+#if ULOG_HAS_SOURCE_LOCATION
     if (src_loc_config_is_enabled()) {
         print_to_target(tgt, "%s:%d: ", ev->file, ev->line);  // file and line
     }
+#endif  // ULOG_HAS_SOURCE_LOCATION
 
     if (!is_str_empty(ev->message)) {
         print_to_target_valist(tgt, ev->message,
