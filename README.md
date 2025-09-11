@@ -131,6 +131,39 @@ INFO  src/main.cpp:4: Hello, World
 
 [See full and detailed feature description in `doc/features.md`](doc/features.md).
 
+### Extensions
+
+The `extensions` folder contains optional add-ons that use only the public API.
+
+Current extensions:
+
+- `ulog_syslog` – Provides RFC 5424 style syslog severity names (DEBUG, INFO,
+  NOTICE, WARN, ERR, CRIT, ALERT, EMERG) plus helper macros. Enable it at
+  runtime; no core source modifications required.
+
+Usage:
+
+```c
+#include "ulog.h"
+#include "ulog_syslog.h"
+
+int main(void) {
+    ulog_syslog_enable(ULOG_SYSLOG_STYLE_LONG); // or ULOG_SYSLOG_STYLE_SHORT
+    ulog_sys_notice("System starting: version=%d", 1);
+    ulog_sys_error("Failure: code=%d", -5);
+    ulog_syslog_disable(); // Back to default TRACE..FATAL set
+}
+```
+
+Build integration:
+
+- CMake: toggle with `-DMICROLOG_EXT_SYSLOG=ON/OFF` (ON by default)
+- Meson: toggle with `-Dsyslog_extension=true/false` (true by default)
+
+Both always install the public header `extensions/ulog_syslog.h`. The source
+file `ulog_syslog.c` is installed only when the feature is enabled (Meson
+always installs the header; CMake installs the source and header if enabled).
+
 ## Contributing
 
 Contributions are welcome! Please read the [CONTRIBUTING.md](CONTRIBUTING.md) for details, I tried to keep it simple.
