@@ -418,14 +418,14 @@ ulog_status ulog_color_config(bool enabled) {
 // From https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit
 // ANSI color codes from least to most attention-grabbing
 static const char *color_levels[] = {
-    "\x1b[90m",  // DEBUG (LEVEL_0): Dark Gray - least attention, debug info
-    "\x1b[37m",  // INFO (LEVEL_1): White - normal informational messages
-    "\x1b[36m",  // NOTICE (LEVEL_2): Cyan - important but not urgent
-    "\x1b[33m",  // WARN (LEVEL_3): Yellow - warning conditions
-    "\x1b[31m",  // ERR (LEVEL_4): Red - error conditions
-    "\x1b[35m",  // CRIT (LEVEL_5): Magenta - critical conditions
-    "\x1b[45m\x1b[97m",  // ALERT (LEVEL_6): White on Red background - action must be taken
-    "\x1b[41m\x1b[97m",  // EMERG (LEVEL_7): White on Red background - system unusable
+    "\x1b[m",            // LEVEL_0: Color reset (default)
+    "\x1b[36m",          // LEVEL_1: Color (Cyan)
+    "\x1b[32m",          // LEVEL_2: Color (Green)
+    "\x1b[33m",          // LEVEL_3: Color (Yellow)
+    "\x1b[31m",          // LEVEL_4: Color (Red)
+    "\x1b[31m\x1b[47m",  // LEVEL_5: Color (Red on White)
+    "\x1b[43m\x1b[31m",  // LEVEL_6: Color (Yellow on Red)
+    "\x1b[41m\x1b[97m",  // LEVEL_7: Color (White on Red)
 };
 
 #define COLOR_TERMINATOR "\x1b[0m"

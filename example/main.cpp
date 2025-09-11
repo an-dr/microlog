@@ -34,7 +34,7 @@ build configuration):
 void user_prefix(ulog_event *ev, char *prefix, size_t prefix_size) {
     (void)ev;              // Unused in this example
     static int count = 0;  // count represents fake milliseconds
-    snprintf(prefix, prefix_size, " | MsgID:%03d ", count++);
+    snprintf(prefix, prefix_size, " | MsgID:%03d | ", count++);
 }
 
 // This handler can be used to get a log string
@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
     ulog_topic_disable("Serial");
     ulog_t_warn("Serial", "Serial message 3 (disabled)");
 
-    ulog_output_level_set_all(ULOG_LEVEL_INFO);
+    ulog_output_level_set_all(ULOG_LEVEL_0);
     ulog_topic_level_set("Bluetooth", ULOG_LEVEL_WARN);
 
     ulog_t_info("Bluetooth", "Bluetooth message 2 (lower than topic level)");
@@ -133,8 +133,8 @@ int main(int argc, char *argv[]) {
 
     static ulog_level_descriptor syslog_levels = {
         .max_level = ULOG_LEVEL_7,
-        .names = {"| DEBUG  |", "| INFO   |", "| NOTICE |", "| WARN   |", "| ERR    |", "| CRIT   |",
-                  "| ALERT  |", "| EMERG  |"}};
+        .names = {"DEBUG  |", "INFO   |", "NOTICE |", "WARN   |", "ERR    |", "CRIT   |",
+                  "ALERT  |", "EMERG  |"}};
     ulog_level_set_new_levels(&syslog_levels);
 
     ulog_log(ULOG_LEVEL_0, "Message for debugging");
