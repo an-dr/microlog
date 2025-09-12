@@ -54,7 +54,7 @@ typedef enum ulog_level_enum {
     ULOG_LEVEL_5,  ///< Default ULOG_LEVEL_FATAL level
     ULOG_LEVEL_6,  ///< Custom level 6
     ULOG_LEVEL_7,  ///< Custom level 7
-    ULOG_LEVEL_TOTAL = 8,
+    ULOG_LEVEL_TOTAL,
 } ulog_level;
 
 /// @brief Default log levels in ascending order of severity
@@ -84,7 +84,7 @@ const char *ulog_level_to_string(ulog_level level);
 /// @brief  Set custom log levels
 /// @param new_levels
 /// @return ulog_status
-ulog_status ulog_level_set_new_levels(ulog_level_descriptor *new_levels);
+ulog_status ulog_level_set_new_levels(const ulog_level_descriptor *new_levels);
 
 /// @brief Set default log levels (TRACE, DEBUG, INFO, WARN, ERROR, FATAL)
 /// @return ulog_status

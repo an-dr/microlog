@@ -742,7 +742,7 @@ const char *ulog_level_to_string(ulog_level level) {
     return level_data.dsc->names[level];
 }
 
-ulog_status ulog_level_set_new_levels(ulog_level_descriptor *new_levels) {
+ulog_status ulog_level_set_new_levels(const ulog_level_descriptor *new_levels) {
     if (new_levels == NULL || new_levels->names[0] == NULL ||
         new_levels->max_level <= LEVEL_MIN_VALUE) {
         return ULOG_STATUS_INVALID_ARGUMENT;  // Invalid argument
