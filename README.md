@@ -10,6 +10,7 @@
 - **Advanced filtering** and log levels per **topic** or **output**
 - **Thread-safety** via external locking injection
 - **Customization** - only data you need
+- **Extensible** - add your own features via public API, set of predefined extensions
 - **Support for embedded systems** static allocation, small size
 - **Easy to install** two files for copy-paste and support for many build systems
 - **For everyone** - C and C++ support, works with any compiler, any platform, commercial or open-source use
@@ -46,6 +47,7 @@ The project is based on several core principles:
     - [Quick Start](#quick-start)
         - [1. Install](#1-install)
         - [2. Use](#2-use)
+    - [Advanced Usage](#advanced-usage)
     - [Contributing](#contributing)
     - [Changelog](#changelog)
     - [License](#license)
@@ -127,42 +129,13 @@ Output:
 INFO  src/main.cpp:4: Hello, World
 ```
 
-[See the example for more features in action: `example/main.cpp`](example/main.cpp)
+## Advanced Usage
 
-[See full and detailed feature description in `doc/features.md`](doc/features.md).
+[User Manual in `doc/features.md`](doc/features.md) - detailed information about the available features.
 
-### Extensions
+[Extensions](doc/extensions.md) - Optional add-ons that use only the public API to enhance functionality.
 
-The `extensions` folder contains optional add-ons that use only the public API.
-
-Current extensions:
-
-- `ulog_syslog` – Provides RFC 5424 style syslog severity names (DEBUG, INFO,
-  NOTICE, WARN, ERR, CRIT, ALERT, EMERG) plus helper macros. Enable it at
-  runtime; no core source modifications required.
-
-Usage:
-
-```c
-#include "ulog.h"
-#include "ulog_syslog.h"
-
-int main(void) {
-    ulog_syslog_enable(ULOG_SYSLOG_STYLE_LONG); // or ULOG_SYSLOG_STYLE_SHORT
-    ulog_sl_notice("System starting: version=%d", 1);
-    ulog_sl_error("Failure: code=%d", -5);
-    ulog_syslog_disable(); // Back to default TRACE..FATAL set
-}
-```
-
-Build integration:
-
-- CMake: toggle with `-DMICROLOG_EXT_SYSLOG=ON/OFF` (ON by default)
-- Meson: toggle with `-Dsyslog_extension=true/false` (true by default)
-
-Both always install the public header `extensions/ulog_syslog.h`. The source
-file `ulog_syslog.c` is installed only when the feature is enabled (Meson
-always installs the header; CMake installs the source and header if enabled).
+[See the example for more features in action: `example/main.cpp`](example/main.cpp).
 
 ## Contributing
 

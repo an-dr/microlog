@@ -3,7 +3,7 @@
 // *************************************************************************
 // This file provides an opt-in level descriptor matching traditional syslog
 // severities. It leaves the core library untouched. Include the header and
-// call `ulog_syslog_enable(...)` to activate.
+// call `ulog_syslog_enable()` to activate.
 // *************************************************************************
 
 #include "ulog_syslog.h"
