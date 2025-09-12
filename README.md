@@ -149,8 +149,8 @@ Usage:
 
 int main(void) {
     ulog_syslog_enable(ULOG_SYSLOG_STYLE_LONG); // or ULOG_SYSLOG_STYLE_SHORT
-    ulog_sys_notice("System starting: version=%d", 1);
-    ulog_sys_error("Failure: code=%d", -5);
+    ulog_sl_notice("System starting: version=%d", 1);
+    ulog_sl_error("Failure: code=%d", -5);
     ulog_syslog_disable(); // Back to default TRACE..FATAL set
 }
 ```

@@ -1,6 +1,0 @@
-# Meson build options for microlog
-# ---------------------------------
-# Keep options minimal; library is intentionally lightweight.
-
-option('syslog_extension', type: 'boolean', value: true,
-  description: 'Build and package syslog levels extension (ulog_syslog)')

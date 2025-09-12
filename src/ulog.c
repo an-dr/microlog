@@ -690,6 +690,7 @@ static void time_print_full(print_target *tgt, ulog_event *ev,
 
 // Private
 // ================
+#define LEVEL_MIN_VALUE 0
 
 typedef struct {
     const ulog_level_descriptor *dsc;
@@ -713,17 +714,16 @@ level_data_t level_data = {
     .dsc = &level_names_default,
 };
 
-#define LEVEL_MIN_VALUE 0
-
 static bool level_is_allowed(ulog_level msg_level, ulog_level log_verbosity) {
     if (msg_level < log_verbosity || msg_level < LEVEL_MIN_VALUE) {
         return false;  // Level is higher than the configured level, not allowed
     }
+
     return true;  // Level is allowed
 }
 
 static bool level_is_valid(ulog_level level) {
-    return (level >= LEVEL_MIN_VALUE && level < level_data.dsc->max_level);
+    return (level >= LEVEL_MIN_VALUE && level <= level_data.dsc->max_level);
 }
 
 static void level_print(print_target *tgt, ulog_event *ev) {
@@ -738,6 +738,7 @@ const char *ulog_level_to_string(ulog_level level) {
     if (level < LEVEL_MIN_VALUE || level >= level_data.dsc->max_level) {
         return "?";  // Return a default string for invalid levels
     }
+
     return level_data.dsc->names[level];
 }
 
@@ -749,6 +750,7 @@ ulog_status ulog_level_set_new_levels(ulog_level_descriptor *new_levels) {
     if (lock_lock() != ULOG_STATUS_OK) {
         return ULOG_STATUS_BUSY;  // Failed to acquire lock
     }
+
     level_data.dsc = new_levels;
     return lock_unlock();
 }
@@ -757,6 +759,7 @@ ulog_status ulog_level_reset_levels(void) {
     if (lock_lock() != ULOG_STATUS_OK) {
         return ULOG_STATUS_BUSY;  // Failed to acquire lock
     }
+
     level_data.dsc = &level_names_default;
     return lock_unlock();
 }
@@ -769,13 +772,12 @@ ulog_status ulog_level_reset_levels(void) {
 //  Private
 // ================
 #if ULOG_HAS_EXTRA_OUTPUTS
-#define OUTPUT_EXTRA_NUM ULOG_BUILD_EXTRA_OUTPUTS
+#define OUTPUT_TOTAL_NUM (1 + ULOG_BUILD_EXTRA_OUTPUTS)  // stdout + extra
 #else
-#define OUTPUT_EXTRA_NUM 0
-#endif  // ULOG_HAS_EXTRA_OUTPUTS
+#define OUTPUT_TOTAL_NUM 1  // Only stdout
+#endif                      // ULOG_HAS_EXTRA_OUTPUTS
 
 #define OUTPUT_STDOUT_DEFAULT_LEVEL ULOG_LEVEL_TRACE
-#define OUTPUT_TOTAL_NUM (1 + OUTPUT_EXTRA_NUM)  // stdout + extra
 
 // Prototypes
 static void output_stdout_handler(ulog_event *ev, void *arg);

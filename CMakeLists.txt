@@ -21,31 +21,18 @@ project(microlog VERSION ${PROJECT_VERSION})
 # Building
 # ----------------------------------------------------------------------------
 
-option(MICROLOG_EXT_SYSLOG "Build syslog levels extension (ulog_syslog)" ON)
-
 add_library(${PROJECT_NAME} INTERFACE)
-
-set(MICROLOG_PUBLIC_HEADERS
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/ulog.h)
-
-set(MICROLOG_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/ulog.c)
-
-if(MICROLOG_EXT_SYSLOG)
-  list(APPEND MICROLOG_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/extensions/ulog_syslog.c)
-endif()
-
 target_sources(
   microlog
-  INTERFACE $<BUILD_INTERFACE:${MICROLOG_SOURCES}>
-            $<INSTALL_INTERFACE:src/ulog.c> # keep core source; extensions installed separately
+  INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/ulog.c>
+            $<INSTALL_INTERFACE:src/ulog.c> # installed version will assume
+                                            # relative to install prefix
 )
-target_include_directories(${PROJECT_NAME}
-  INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/extensions>
-    $<INSTALL_INTERFACE:include>
-    $<INSTALL_INTERFACE:extensions>)
+target_include_directories(
+  ${PROJECT_NAME}
+  INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include> # while
+                                                                 # building
+            $<INSTALL_INTERFACE:include>) # when installed
 
 # ----------------------------------------------------------------------------
 # Testing
@@ -72,10 +59,6 @@ install(
 # Headers (they are sources, not artifacts so copy them explicitly)
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 install(FILES src/ulog.c DESTINATION ${CMAKE_INSTALL_PREFIX}/src)
-install(FILES extensions/ulog_syslog.h DESTINATION ${CMAKE_INSTALL_PREFIX}/extensions)
-if(MICROLOG_EXT_SYSLOG)
-  install(FILES extensions/ulog_syslog.c DESTINATION ${CMAKE_INSTALL_PREFIX}/extensions)
-endif()
 
 # ----------------------------------------------------------------------------
 # Packing
