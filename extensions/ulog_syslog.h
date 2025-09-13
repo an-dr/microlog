@@ -11,14 +11,15 @@
 // Usage:
 //
 //   #include "ulog_syslog.h"
+//  ...
 //   ulog_syslog_enable(); // DEBUG |, INFO |, ...
-//   ulog_sl_debug("Starting (%d)", 42);
-//   ulog_sl_error("Failure");
+//   ulog(ULOG_SYSLOG_DEBUG, "Starting (%d)", 42);
+//   ulog(ULOG_SYSLOG_ERR, "Failure");
 //   ulog_syslog_disable(); // Restore default microlog levels
 //
 // Topic variants (if topics enabled):
 //
-//   ulog_sl_t_warn("Net", "Link down");
+//   ulog_t(ULOG_SYSLOG_WARN, "Net", "Link down");
 //
 // *************************************************************************
 //
@@ -43,44 +44,54 @@
 extern "C" {
 #endif
 
-// clang-format off
-
 /// @brief Mapping macros for syslog severity names.
 /// RFC 5424 severities ascending in numeric value but descending in priority.
 /// microlog interprets a higher numeric value as higher severity; we keep the
 /// conventional ordering but name macros for readability.
-#define ULOG_SYSLOG_DEBUG   ULOG_LEVEL_0    // 7 Debug
-#define ULOG_SYSLOG_INFO    ULOG_LEVEL_1    // 6 Informational
-#define ULOG_SYSLOG_NOTICE  ULOG_LEVEL_2    // 5 Notice
-#define ULOG_SYSLOG_WARN    ULOG_LEVEL_3    // 4 Warning
-#define ULOG_SYSLOG_ERR     ULOG_LEVEL_4    // 3 Error
-#define ULOG_SYSLOG_CRIT    ULOG_LEVEL_5    // 2 Critical
-#define ULOG_SYSLOG_ALERT   ULOG_LEVEL_6    // 1 Alert
-#define ULOG_SYSLOG_EMERG   ULOG_LEVEL_7    // 0 Emergency (highest severity)
 
-// Convenience logging macros.
-// These map directly onto the generic `ulog_log()` macro which expects the
-// level as the first argument. They continue to work even if you later switch
-// back to default levels, though the textual representation will obviously
-// change.
-#define ulog_sl_debug(...)     ulog_log(ULOG_SYSLOG_DEBUG, __VA_ARGS__)
-#define ulog_sl_info(...)      ulog_log(ULOG_SYSLOG_INFO, __VA_ARGS__)
-#define ulog_sl_notice(...)    ulog_log(ULOG_SYSLOG_NOTICE, __VA_ARGS__)
-#define ulog_sl_warn(...)      ulog_log(ULOG_SYSLOG_WARN, __VA_ARGS__)
-#define ulog_sl_error(...)     ulog_log(ULOG_SYSLOG_ERR, __VA_ARGS__)
-#define ulog_sl_crit(...)      ulog_log(ULOG_SYSLOG_CRIT, __VA_ARGS__)
-#define ulog_sl_alert(...)     ulog_log(ULOG_SYSLOG_ALERT, __VA_ARGS__)
-#define ulog_sl_emerg(...)     ulog_log(ULOG_SYSLOG_EMERG, __VA_ARGS__)
-#define ulog_sl_t_debug(TOPIC, ...)    ulog_topic_log(ULOG_SYSLOG_DEBUG, TOPIC, __VA_ARGS__)
-#define ulog_sl_t_info(TOPIC, ...)     ulog_topic_log(ULOG_SYSLOG_INFO, TOPIC, __VA_ARGS__)
-#define ulog_sl_t_notice(TOPIC, ...)   ulog_topic_log(ULOG_SYSLOG_NOTICE, TOPIC, __VA_ARGS__)
-#define ulog_sl_t_warn(TOPIC, ...)     ulog_topic_log(ULOG_SYSLOG_WARN, TOPIC, __VA_ARGS__)
-#define ulog_sl_t_error(TOPIC, ...)    ulog_topic_log(ULOG_SYSLOG_ERR, TOPIC, __VA_ARGS__)
-#define ulog_sl_t_crit(TOPIC, ...)     ulog_topic_log(ULOG_SYSLOG_CRIT, TOPIC, __VA_ARGS__)
-#define ulog_sl_t_alert(TOPIC, ...)    ulog_topic_log(ULOG_SYSLOG_ALERT, TOPIC, __VA_ARGS__)
-#define ulog_sl_t_emerg(TOPIC, ...)    ulog_topic_log(ULOG_SYSLOG_EMERG, TOPIC, __VA_ARGS__)
+/// @brief Debug-level messages.
+/// Provides detailed diagnostic information intended for developers.
+/// Example: variable values, function entry/exit traces, protocol state
+/// transitions.
+#define ULOG_SYSLOG_DEBUG ULOG_LEVEL_0
 
-// clang-format on
+/// @brief Informational messages.
+/// Confirms normal operation and expected behavior of the system.
+/// Example: module initialization completed, service started successfully.
+#define ULOG_SYSLOG_INFO ULOG_LEVEL_1
+
+/// @brief Notice conditions.
+/// Highlights significant but non-error events that may require attention.
+/// Example: configuration reloaded, user session established, firmware updated.
+#define ULOG_SYSLOG_NOTICE ULOG_LEVEL_2
+
+/// @brief Warning conditions.
+/// Indicates abnormal or unexpected events that could escalate if not
+/// addressed. Example: nearing memory or disk limits, transient network
+/// failures, retries.
+#define ULOG_SYSLOG_WARN ULOG_LEVEL_3
+
+/// @brief Error conditions.
+/// Reports failures of specific operations that impact functionality but are
+/// not fatal. Example: file write failed, sensor read error, communication
+/// timeout.
+#define ULOG_SYSLOG_ERR ULOG_LEVEL_4
+
+/// @brief Critical conditions.
+/// Identifies serious issues that may compromise overall system functionality.
+/// Example: database inaccessible, corrupted configuration, subsystem failure.
+#define ULOG_SYSLOG_CRIT ULOG_LEVEL_5
+
+/// @brief Alert conditions.
+/// Requires immediate intervention to prevent full system failure.
+/// Example: primary storage offline, authentication system unavailable,
+/// resource exhaustion.
+#define ULOG_SYSLOG_ALERT ULOG_LEVEL_6
+
+/// @brief Emergency conditions.
+/// System is unusable. Highest severity, triggers fail-safe or shutdown.
+/// Example: kernel panic, unrecoverable hardware fault, power failure.
+#define ULOG_SYSLOG_EMERG ULOG_LEVEL_7
 
 /// @brief Enable syslog level names (long or short). Replaces current level
 /// descriptor with a persistent internal descriptor.

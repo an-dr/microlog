@@ -92,7 +92,7 @@ The full list of build options for static configuration is shown bellow:
 There are 8 log severity levels (by ascending severity): `ULOG_LEVEL_0` ... `ULOG_LEVEL7`. To log a message there is a general macro:
 
 ```c
-ulog_log(ulog_level level, const char *fmt, ...);
+ulog(ulog_level level, const char *fmt, ...);
 ```
 
 By default these generic levels are aliased with:
@@ -133,11 +133,11 @@ static ulog_level_descriptor syslog_levels = {
 #define LOG_NOTICE  ULOG_LEVEL_2
 // ...
 ulog_level_set_new_levels(&syslog_levels);
-ulog_log(LOG_NOTICE, "This is a notice message");
+ulog(LOG_NOTICE, "This is a notice message");
 // Output: NOTICE src/main.c:12: This is a notice message
 ulog_level_reset_levels();
 
-ulog_log(ULOG_LEVEL_2, "This is a default level message");
+ulog(ULOG_LEVEL_2, "This is a default level message");
 // Output: INFO src/main.c:14: This is a default level message
 
 ```
@@ -243,7 +243,6 @@ If you want to use dynamic topics, you need to define `ULOG_BUILD_TOPICS_NUM` to
 Printing the log message with the topic is done by the set of function-like macros similar to `ulog_xxx`, but with the topic as the first argument:
 
 ```c
-// Short variation of ulog_topic_* is ulog_t_*(...), e.g. ulog_t_trace(TOPIC, MESSAGE, ...)
 ulog_topic_log(ulog_level level, const char *topic_name, const char *fmt, ...);
 ulog_topic_trace(const char *topic_name, const char *fmt, ...);
 ulog_topic_debug(const char *topic_name, const char *fmt, ...);
@@ -251,6 +250,14 @@ ulog_topic_info(const char *topic_name, const char *fmt, ...);
 ulog_topic_warn(const char *topic_name, const char *fmt, ...);
 ulog_topic_error(const char *topic_name, const char *fmt, ...);
 ulog_topic_fatal(const char *topic_name, const char *fmt, ...);
+// or short versions:
+ulog_t(ulog_level level, const char *topic_name, const char *fmt, ...);
+ulog_t_trace(const char *topic_name, const char *fmt, ...);
+ulog_t_debug(const char *topic_name, const char *fmt, ...);
+ulog_t_info(const char *topic_name, const char *fmt, ...);
+ulog_t_warn(const char *topic_name, const char *fmt, ...);
+ulog_t_error(const char *topic_name, const char *fmt, ...);
+ulog_t_fatal(const char *topic_name, const char *fmt, ...);
 
 ```
 
