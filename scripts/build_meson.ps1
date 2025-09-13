@@ -13,7 +13,7 @@ try {
     $HEADER_FILE = "install/meson/microlog/include/ulog.h"
     scripts/replace_variables.ps1 $SRC_FILE $SRC_FILE @{ "ULOG_VERSION" = "$VERSION" }
     scripts/replace_variables.ps1 $HEADER_FILE $HEADER_FILE @{ "ULOG_VERSION" = "$VERSION" }
-    
+
     popd
     
 } catch {

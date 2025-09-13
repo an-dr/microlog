@@ -5,12 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased, v7.0.0-alpha.2]
+## [unreleased, v7.0.0-alpha.3]
+
+### Added
+
+- Custom log levels via `ulog_level_set_new_levels(ulog_level_descriptor)` / `ulog_level_reset_levels()`
+- Replace default levels with generic `ULOG_LEVEL_0...7` - for custom level schemes.
+- New macros `ulog_t_log(level, topic, ...)` and `ulog_log(level, ...)` for dynamic level logging.
+- `ULOG_STATUS_DISABLED` status code for disabled features.
+- Syslog levels extension (`extensions/ulog_syslog.c`, `extensions/ulog_syslog.h`) providing RFC 5424 style severities (DEBUG, INFO, NOTICE, WARN, ERR, CRIT, ALERT, EMERG) with:
+    - Runtime activation via `ulog_syslog_enable(ULOG_SYSLOG_STYLE_*)` / `ulog_syslog_disable()`
+    - Long and short style variants
+    - Convenience macros for plain and topic logging (e.g. `ulog_sys_notice()`, `ulog_sys_t_error(TOPIC, ...)`)
+- New documentation page `doc/extensions.md` and README Extensions section.
+
+### Changed
+
+- `ulog_prefix_set_fn` now returns `ulog_status` for error handling.
+- Default levels are now aliases for generic `ULOG_LEVEL_0...7`. TRACE = 0, DEBUG = 1, INFO = 2, WARN = 3, ERROR = 4, FATAL = 5. Upper levels (6,7) are unused by default.
+- Color of `FATAL` level from "magenta" to "red on white" for better visibility.
+- Example application updated to demonstrate syslog levels and dynamic level switching.
+- `ULOG_BUILD_LEVEL_STYLE` replaced with `ULOG_BUILD_LEVEL_SHORT` (bool, 0/1) for static configuration of level style.
+
+### Fixed
+
+- Minor consistency and formatting adjustments in feature documentation prior to extension introduction.
+
+## [v7.0.0-alpha.2]
 
 ### Added
 
 - Binding topic to a specific output via `ulog_topic_add(TOPIC, OUTPUT, ENABLED)`
-- New status codes: 
+- New status codes:
     - `ULOG_STATUS_NOT_FOUND` returned when a topic or output is not present (previously returned `ULOG_STATUS_ERROR`)
     - `ULOG_STATUS_BUSY` for lock timeouts / failed lock attempts
 - `ulog_topic_remove(TOPIC)`

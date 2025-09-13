@@ -10,6 +10,7 @@
 - **Advanced filtering** and log levels per **topic** or **output**
 - **Thread-safety** via external locking injection
 - **Customization** - only data you need
+- **Extensible** - add your own features via public API, set of predefined extensions
 - **Support for embedded systems** static allocation, small size
 - **Easy to install** two files for copy-paste and support for many build systems
 - **For everyone** - C and C++ support, works with any compiler, any platform, commercial or open-source use
@@ -18,14 +19,18 @@ In the default configuration it looks like this:
 
 <img src="doc/README/demo0.png" width="800">
 
-...but in can be very minimalistic
+[Picture 1 - default configuration: no time, long default levels, source location, no topics, no colors]
+
+...but in can be very minimalistic :
 
 <img src="doc/README/demo1.png" width="800">
+
+[Picture 2 - short levels, no colors, no time, no source location]
 
 ... or feature-rich:
 
 <img src="doc/README/demo2.png" width="800">
-
+[Picture 3 - time, custom prefix for MsgID, custom syslog levels, topics, source location, colors]
 
 The project is based on several core principles:
 
@@ -42,7 +47,9 @@ The project is based on several core principles:
     - [Quick Start](#quick-start)
         - [1. Install](#1-install)
         - [2. Use](#2-use)
+    - [Advanced Usage](#advanced-usage)
     - [Contributing](#contributing)
+    - [Changelog](#changelog)
     - [License](#license)
     - [Credits](#credits)
 
@@ -122,9 +129,13 @@ Output:
 INFO  src/main.cpp:4: Hello, World
 ```
 
-[See the example for more features in action: `example/main.cpp`](example/main.cpp)
+## Advanced Usage
 
-[See full and detailed feature description in `doc/features.md`](doc/features.md).
+[User Manual in `doc/features.md`](doc/features.md) - detailed information about the available features.
+
+[Extensions](doc/extensions.md) - Optional add-ons that use only the public API to enhance functionality.
+
+[See the example for more features in action: `example/main.cpp`](example/main.cpp).
 
 ## Contributing
 

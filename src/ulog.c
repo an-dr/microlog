@@ -31,7 +31,7 @@
 | ULOG_BUILD_PREFIX_SIZE      | 0                     | ULOG_HAS_PREFIX               | Prefix buffer logic      |
 | ULOG_BUILD_EXTRA_OUTPUTS    | 0                     | ULOG_HAS_EXTRA_OUTPUTS        | Extra output backends    |
 | ULOG_BUILD_SOURCE_LOCATION  | 1                     | ULOG_HAS_SOURCE_LOCATION      | File\:line output        |
-| ULOG_BUILD_LEVEL_STYLE      | ULOG_LEVEL_STYLE_LONG | ULOG_LEVEL_HAS_SHORT/_LONG    | Level style              |
+| ULOG_BUILD_LEVEL_SHORT      | 0                     | ULOG_LEVEL_HAS_SHORT/_LONG    | Short level style        |
 | ULOG_BUILD_TIME             | 0                     | ULOG_HAS_TIME                 | Timestamp support        |
 | ULOG_BUILD_TOPICS_NUM       | 0                     | ULOG_HAS_TOPICS               | Topic filtering logic    |
 | ULOG_BUILD_DYNAMIC_CONFIG   | 0                     | ULOG_HAS_DYNAMIC_CONFIG       | Runtime toggles          |
@@ -60,12 +60,12 @@
 #endif
 
 
-#ifndef ULOG_BUILD_LEVEL_STYLE
+#ifndef ULOG_BUILD_LEVEL_SHORT
     #define ULOG_HAS_LEVEL_LONG  1
     #define ULOG_HAS_LEVEL_SHORT 0
 #else
-    #define ULOG_HAS_LEVEL_LONG  (ULOG_BUILD_LEVEL_STYLE == ULOG_LEVEL_STYLE_LONG)
-    #define ULOG_HAS_LEVEL_SHORT (ULOG_BUILD_LEVEL_STYLE == ULOG_LEVEL_STYLE_SHORT)
+    #define ULOG_HAS_LEVEL_LONG  !ULOG_BUILD_LEVEL_SHORT
+    #define ULOG_HAS_LEVEL_SHORT ULOG_BUILD_LEVEL_SHORT
 #endif
 
 
@@ -164,8 +164,8 @@ static inline bool is_str_empty(const char *str) {
     warn_non_enabled_full(__func__, feature, __FILE__, __LINE__)
 
 #define warn_non_enabled_full(func, feature, file, line)                       \
-    ulog_log(ULOG_LEVEL_WARN, file, line, NULL,                                \
-             "'%s' called with %s disabled", func, feature)
+    ulog_log_manual(ULOG_LEVEL_WARN, file, line, NULL,                         \
+                    "'%s' called with %s disabled", func, feature)
 
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
 /* ============================================================================
@@ -395,14 +395,14 @@ ulog_status ulog_color_config(bool enabled) {
 ulog_status ulog_color_config(bool enabled) {
     (void)(enabled);
     warn_not_enabled("ULOG_BUILD_COLOR");
-    return ULOG_STATUS_ERROR;
+    return ULOG_STATUS_DISABLED;
 }
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
 
 // Disabled Private
 // ================
 
-#define color_config_is_enabled() (ULOG_HAS_COLOR)
+#define color_config_is_enabled(void) (ULOG_HAS_COLOR)
 
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
@@ -414,14 +414,20 @@ ulog_status ulog_color_config(bool enabled) {
 
 //  Private
 // ================
+
+// From https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit
+// ANSI color codes from least to most attention-grabbing
 static const char *color_levels[] = {
-    "\x1b[37m",  // TRACE : White #000
-    "\x1b[36m",  // DEBUG : Cyan #0ff
-    "\x1b[32m",  // INFO : Green #0f0
-    "\x1b[33m",  // WARN : Yellow #ff0
-    "\x1b[31m",  // ERROR : Red #f00
-    "\x1b[35m"   // FATAL : Magenta #f0f
+    "\x1b[m",            // LEVEL_0: Color reset (default)
+    "\x1b[36m",          // LEVEL_1: Color (Cyan)
+    "\x1b[32m",          // LEVEL_2: Color (Green)
+    "\x1b[33m",          // LEVEL_3: Color (Yellow)
+    "\x1b[31m",          // LEVEL_4: Color (Red)
+    "\x1b[31m\x1b[47m",  // LEVEL_5: Color (Red on White)
+    "\x1b[43m\x1b[31m",  // LEVEL_6: Color (Yellow on Red)
+    "\x1b[41m\x1b[97m",  // LEVEL_7: Color (White on Red)
 };
+
 #define COLOR_TERMINATOR "\x1b[0m"
 
 static void color_print_start(print_target *tgt, ulog_event *ev) {
@@ -489,14 +495,14 @@ ulog_status ulog_prefix_config(bool enabled) {
 ulog_status ulog_prefix_config(bool enabled) {
     (void)(enabled);
     warn_not_enabled("ULOG_BUILD_DYNAMIC_CONFIG");
-    return ULOG_STATUS_ERROR;
+    return ULOG_STATUS_DISABLED;
 }
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
 
 // Disabled Private
 // ================
 
-#define prefix_config_is_enabled() (ULOG_HAS_PREFIX)
+#define prefix_config_is_enabled(void) (ULOG_HAS_PREFIX)
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
@@ -534,11 +540,15 @@ static void prefix_print(print_target *tgt) {
 // Public
 // ================
 
-void ulog_prefix_set_fn(ulog_prefix_fn function) {
+ulog_status ulog_prefix_set_fn(ulog_prefix_fn function) {
+    if (lock_lock() != ULOG_STATUS_OK) {
+        return ULOG_STATUS_BUSY;
+    }
     if (function == NULL) {
-        return;  // Ignore NULL function
+        return ULOG_STATUS_INVALID_ARGUMENT;  // Ignore NULL function
     }
     prefix_data.function = function;
+    return lock_unlock();
 }
 
 #else  // ULOG_HAS_PREFIX
@@ -547,9 +557,10 @@ void ulog_prefix_set_fn(ulog_prefix_fn function) {
 // ================
 
 #if ULOG_HAS_WARN_NOT_ENABLED
-void ulog_prefix_set_fn(ulog_prefix_fn function) {
+ulog_status ulog_prefix_set_fn(ulog_prefix_fn function) {
     (void)(function);
     warn_not_enabled("ULOG_BUILD_PREFIX_SIZE");
+    return ULOG_STATUS_DISABLED;
 }
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
 
@@ -601,14 +612,14 @@ ulog_status ulog_time_config(bool enabled) {
 ulog_status ulog_time_config(bool enabled) {
     (void)(enabled);
     warn_not_enabled("ULOG_BUILD_TIME");
-    return ULOG_STATUS_ERROR;
+    return ULOG_STATUS_DISABLED;
 }
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
 
 // Disabled Private
 // ================
 
-#define time_config_is_enabled() (ULOG_HAS_TIME)
+#define time_config_is_enabled(void) (ULOG_HAS_TIME)
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
@@ -678,24 +689,112 @@ static void time_print_full(print_target *tgt, ulog_event *ev,
 #endif  // ULOG_HAS_TIME
 
 /* ============================================================================
+   Core Feature: Levels
+   (`level_*`, depends on: Levels Config, Print)
+============================================================================ */
+
+// Private
+// ================
+// clang-format off
+#define LEVEL_MIN_VALUE 0
+
+#define LEVEL_NAMES_SHORT {"T", "D", "I", "W", "E", "F", NULL, NULL}
+#define LEVEL_NAMES_LONG  {"TRACE", "DEBUG", "INFO ", "WARN ", "ERROR", "FATAL", NULL, NULL}
+
+#if ULOG_HAS_LEVEL_SHORT && !ULOG_HAS_LEVEL_LONG
+    #define LEVEL_NAMES_DEFAULT LEVEL_NAMES_SHORT
+#else // ULOG_HAS_LEVEL_LONG or both
+    #define LEVEL_NAMES_DEFAULT LEVEL_NAMES_LONG
+#endif
+// clang-format on
+
+typedef struct {
+    const ulog_level_descriptor *dsc;
+} level_data_t;
+
+const ulog_level_descriptor level_names_default = {
+    .max_level = ULOG_LEVEL_FATAL,
+    .names     = LEVEL_NAMES_DEFAULT,
+};
+
+level_data_t level_data = {
+    .dsc = &level_names_default,
+};
+
+static bool level_is_allowed(ulog_level msg_level, ulog_level log_verbosity) {
+    if (msg_level < log_verbosity || msg_level < LEVEL_MIN_VALUE) {
+        return false;  // Level is higher than the configured level, not allowed
+    }
+
+    return true;  // Level is allowed
+}
+
+static bool level_is_valid(ulog_level level) {
+    return (level >= LEVEL_MIN_VALUE && level <= level_data.dsc->max_level);
+}
+
+static void level_print(print_target *tgt, ulog_event *ev) {
+    print_to_target(tgt, "%s ", level_data.dsc->names[ev->level]);
+}
+
+// Public
+// ================
+
+/// @brief Returns the string representation of the level
+const char *ulog_level_to_string(ulog_level level) {
+    if (level < LEVEL_MIN_VALUE || level >= level_data.dsc->max_level) {
+        return "?";  // Return a default string for invalid levels
+    }
+
+    return level_data.dsc->names[level];
+}
+
+ulog_status ulog_level_set_new_levels(const ulog_level_descriptor *new_levels) {
+    if (new_levels == NULL || new_levels->names[0] == NULL ||
+        new_levels->max_level <= LEVEL_MIN_VALUE) {
+        return ULOG_STATUS_INVALID_ARGUMENT;  // Invalid argument
+    }
+    if (lock_lock() != ULOG_STATUS_OK) {
+        return ULOG_STATUS_BUSY;  // Failed to acquire lock
+    }
+
+    level_data.dsc = new_levels;
+    return lock_unlock();
+}
+
+ulog_status ulog_level_reset_levels(void) {
+    if (lock_lock() != ULOG_STATUS_OK) {
+        return ULOG_STATUS_BUSY;  // Failed to acquire lock
+    }
+
+    level_data.dsc = &level_names_default;
+    return lock_unlock();
+}
+
+/* ============================================================================
    Optional Feature: Dynamic Configuration - Level
    (`level_config_*`, depends on: - )
 ============================================================================ */
 #if ULOG_HAS_DYNAMIC_CONFIG
 
-typedef struct {
-    ulog_level_config_style style;  // Use short level strings
-} level_config;
-
-static level_config level_cfg = {
-    .style = ULOG_LEVEL_CONFIG_STYLE_DEFAULT,
-};
-
 // Private
 // ================
 
+typedef struct {
+    bool short_style;  // Use short level strings
+} level_config;
+
+static level_config level_cfg = {
+    .short_style = false,
+};
+
+const ulog_level_descriptor level_names_default_short = {
+    .max_level = ULOG_LEVEL_FATAL,
+    .names     = LEVEL_NAMES_SHORT,
+};
+
 bool level_config_is_short(void) {
-    return level_cfg.style == ULOG_LEVEL_CONFIG_STYLE_SHORT;
+    return level_cfg.short_style;
 }
 
 // Public
@@ -705,7 +804,12 @@ ulog_status ulog_level_config(ulog_level_config_style style) {
     if (lock_lock() != ULOG_STATUS_OK) {
         return ULOG_STATUS_BUSY;
     }
-    level_cfg.style = style;
+    level_cfg.short_style = (style == ULOG_LEVEL_CONFIG_STYLE_SHORT);
+    if (level_cfg.short_style) {
+        level_data.dsc = &level_names_default_short;
+    } else {
+        level_data.dsc = &level_names_default;
+    }
     return lock_unlock();
 }
 
@@ -719,7 +823,7 @@ ulog_status ulog_level_config(ulog_level_config_style style) {
 ulog_status ulog_level_config(ulog_level_config_style style) {
     (void)(style);
     warn_not_enabled("ULOG_BUILD_DYNAMIC_CONFIG");
-    return ULOG_STATUS_ERROR;
+    return ULOG_STATUS_DISABLED;
 }
 
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
@@ -727,70 +831,8 @@ ulog_status ulog_level_config(ulog_level_config_style style) {
 // Disabled Private
 // ================
 
-#define level_config_is_short() (ULOG_HAS_LEVEL_SHORT)
+#define level_config_is_short(void) (ULOG_HAS_LEVEL_SHORT)
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
-
-/* ============================================================================
-   Core Feature: Levels
-   (`level_*`, depends on: Levels Config, Print)
-============================================================================ */
-
-// Private
-// ================
-#define LEVEL_MIN_VALUE 0
-#define LEVEL_STYLE_NUM                                                        \
-    (ULOG_HAS_LEVEL_SHORT + ULOG_HAS_LEVEL_LONG)  // TODO: fragile
-
-/// @brief Level strings
-static const char *level_strings[LEVEL_STYLE_NUM][ULOG_LEVEL_TOTAL] = {
-
-#if ULOG_HAS_LEVEL_LONG
-    {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"},
-#endif
-
-#if ULOG_HAS_LEVEL_SHORT
-    {"T", "D", "I", "W", "E", "F"},
-#endif
-
-};
-
-static bool level_is_allowed(ulog_level msg_level, ulog_level log_verbosity) {
-    if (msg_level < log_verbosity || msg_level < LEVEL_MIN_VALUE) {
-        return false;  // Level is higher than the configured level, not allowed
-    }
-    return true;  // Level is allowed
-}
-
-static void level_print(print_target *tgt, ulog_event *ev) {
-#if ULOG_HAS_LEVEL_LONG && ULOG_HAS_LEVEL_SHORT
-    if (level_config_is_short()) {
-        print_to_target(
-            tgt, "%-1s ",
-            level_strings[ULOG_LEVEL_CONFIG_STYLE_SHORT][ev->level]);
-    } else {
-        print_to_target(
-            tgt, "%-5s ",
-            level_strings[ULOG_LEVEL_CONFIG_STYLE_DEFAULT][ev->level]);
-    }
-#elif ULOG_HAS_LEVEL_SHORT
-    print_to_target(tgt, "%-1s ",
-                    level_strings[ULOG_LEVEL_CONFIG_STYLE_DEFAULT][ev->level]);
-#else
-    print_to_target(tgt, "%-5s ",
-                    level_strings[ULOG_LEVEL_CONFIG_STYLE_DEFAULT][ev->level]);
-#endif  // ULOG_HAS_LEVEL_SHORT
-}
-
-// Public
-// ================
-
-/// @brief Returns the string representation of the level
-const char *ulog_level_to_string(ulog_level level) {
-    if (level < LEVEL_MIN_VALUE || level >= ULOG_LEVEL_TOTAL) {
-        return "?";  // Return a default string for invalid levels
-    }
-    return level_strings[ULOG_LEVEL_CONFIG_STYLE_DEFAULT][level];
-}
 
 /* ============================================================================
    Core Feature: Outputs
@@ -800,13 +842,12 @@ const char *ulog_level_to_string(ulog_level level) {
 //  Private
 // ================
 #if ULOG_HAS_EXTRA_OUTPUTS
-#define OUTPUT_EXTRA_NUM ULOG_BUILD_EXTRA_OUTPUTS
+#define OUTPUT_TOTAL_NUM (1 + ULOG_BUILD_EXTRA_OUTPUTS)  // stdout + extra
 #else
-#define OUTPUT_EXTRA_NUM 0
-#endif  // ULOG_HAS_EXTRA_OUTPUTS
+#define OUTPUT_TOTAL_NUM 1  // Only stdout
+#endif                      // ULOG_HAS_EXTRA_OUTPUTS
 
 #define OUTPUT_STDOUT_DEFAULT_LEVEL ULOG_LEVEL_TRACE
-#define OUTPUT_TOTAL_NUM (1 + OUTPUT_EXTRA_NUM)  // stdout + extra
 
 // Prototypes
 static void output_stdout_handler(ulog_event *ev, void *arg);
@@ -872,7 +913,7 @@ static void output_stdout_handler(ulog_event *ev, void *arg) {
 // ================
 
 ulog_status ulog_output_level_set(ulog_output_id output, ulog_level level) {
-    if (level < LEVEL_MIN_VALUE || level >= ULOG_LEVEL_TOTAL) {
+    if (!level_is_valid(level)) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }
     if (output < ULOG_OUTPUT_STDOUT || output >= OUTPUT_TOTAL_NUM) {
@@ -887,7 +928,7 @@ ulog_status ulog_output_level_set(ulog_output_id output, ulog_level level) {
 }
 
 ulog_status ulog_output_level_set_all(ulog_level level) {
-    if (level < LEVEL_MIN_VALUE || level >= ULOG_LEVEL_TOTAL) {
+    if (!level_is_valid(level)) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }
 
@@ -988,7 +1029,7 @@ ulog_output_id ulog_output_add_file(FILE *file, ulog_level level) {
 ulog_status ulog_output_remove(ulog_output_id output) {
     (void)(output);
     warn_not_enabled("ULOG_BUILD_EXTRA_OUTPUTS");
-    return ULOG_STATUS_ERROR;
+    return ULOG_STATUS_DISABLED;
 }
 
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
@@ -1037,7 +1078,7 @@ ulog_status ulog_topic_config(bool enabled) {
 ulog_status ulog_topic_config(bool enabled) {
     (void)(enabled);
     warn_not_enabled("ULOG_BUILD_DYNAMIC_CONFIG");
-    return ULOG_STATUS_ERROR;
+    return ULOG_STATUS_DISABLED;
 }
 
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
@@ -1045,7 +1086,7 @@ ulog_status ulog_topic_config(bool enabled) {
 // Disabled Private
 // ================
 
-#define topic_config_is_enabled() (ULOG_HAS_TOPICS)
+#define topic_config_is_enabled(void) (ULOG_HAS_TOPICS)
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
@@ -1109,11 +1150,11 @@ static topic_t *topic_get(ulog_topic_id topic);
 
 /// @brief Enable all topics
 /// @return ulog_status
-static ulog_status topic_enable_all();
+static ulog_status topic_enable_all(void);
 
 /// @brief Disable all topics
 /// @return ulog_status
-static ulog_status topic_disable_all();
+static ulog_status topic_disable_all(void);
 
 /// @brief Add a new topic
 /// @param topic_name - Topic name
@@ -1145,7 +1186,7 @@ static void topic_print(print_target *tgt, ulog_event *ev) {
 /// @param level - Log level to set
 /// @return ULOG_STATUS_OK if success, ULOG_STATUS_NOT_FOUND if topic not found
 static ulog_status topic_set_level(int topic, ulog_level level) {
-    if (level < LEVEL_MIN_VALUE || level >= ULOG_LEVEL_TOTAL) {
+    if (!level_is_valid(level)) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }
     topic_t *t = topic_get(topic);
@@ -1284,29 +1325,29 @@ ulog_status ulog_topic_level_set(const char *topic_name, ulog_level level) {
     (void)(topic_name);
     (void)(level);
     warn_not_enabled("ULOG_BUILD_TOPICS_NUM");
-    return ULOG_STATUS_ERROR;
+    return ULOG_STATUS_DISABLED;
 }
 
 ulog_status ulog_topic_enable(const char *topic_name) {
     (void)(topic_name);
     warn_not_enabled("ULOG_BUILD_TOPICS_NUM");
-    return ULOG_STATUS_ERROR;
+    return ULOG_STATUS_DISABLED;
 }
 
 ulog_status ulog_topic_disable(const char *topic_name) {
     (void)(topic_name);
     warn_not_enabled("ULOG_BUILD_TOPICS_NUM");
-    return ULOG_STATUS_ERROR;
+    return ULOG_STATUS_DISABLED;
 }
 
 ulog_status ulog_topic_enable_all(void) {
     warn_not_enabled("ULOG_BUILD_TOPICS_NUM");
-    return ULOG_STATUS_ERROR;
+    return ULOG_STATUS_DISABLED;
 }
 
 ulog_status ulog_topic_disable_all(void) {
     warn_not_enabled("ULOG_BUILD_TOPICS_NUM");
-    return ULOG_STATUS_ERROR;
+    return ULOG_STATUS_DISABLED;
 }
 
 ulog_topic_id ulog_topic_get_id(const char *topic_name) {
@@ -1634,7 +1675,7 @@ ulog_status ulog_source_location_config(bool enabled) {
 ulog_status ulog_source_location_config(bool enabled) {
     (void)(enabled);
     warn_not_enabled("ULOG_BUILD_SOURCE_LOCATION");
-    return ULOG_STATUS_ERROR;
+    return ULOG_STATUS_DISABLED;
 }
 
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
@@ -1642,7 +1683,7 @@ ulog_status ulog_source_location_config(bool enabled) {
 // Disabled Private
 // ================
 
-#define src_loc_config_is_enabled() (ULOG_HAS_SOURCE_LOCATION)
+#define src_loc_config_is_enabled(void) (ULOG_HAS_SOURCE_LOCATION)
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
@@ -1658,9 +1699,11 @@ ulog_status ulog_source_location_config(bool enabled) {
 /// @param ev - Event
 static void log_print_message(print_target *tgt, ulog_event *ev) {
 
-    if (src_loc_config_is_enabled()) {
+#if ULOG_HAS_SOURCE_LOCATION
+    if (src_loc_config_is_enabled() && ev->file != NULL) {
         print_to_target(tgt, "%s:%d: ", ev->file, ev->line);  // file and line
     }
+#endif  // ULOG_HAS_SOURCE_LOCATION
 
     if (!is_str_empty(ev->message)) {
         print_to_target_valist(tgt, ev->message,
@@ -1751,8 +1794,8 @@ ulog_status ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size) {
     return ULOG_STATUS_OK;
 }
 
-void ulog_log(ulog_level level, const char *file, int line, const char *topic,
-              const char *message, ...) {
+void ulog_log_manual(ulog_level level, const char *file, int line,
+                     const char *topic, const char *message, ...) {
     if (lock_lock() != ULOG_STATUS_OK) {
         return;  // Failed to acquire lock, drop log
     }
