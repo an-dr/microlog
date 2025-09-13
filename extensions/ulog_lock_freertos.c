@@ -37,8 +37,8 @@ ulog_status ulog_lock_freertos_enable(SemaphoreHandle_t mutex) {
     return ULOG_STATUS_OK;
 }
 
-/** @copydoc ulog_lock_freertos_create_enable */
-ulog_status ulog_lock_freertos_create_enable(void) {
+/** @copydoc ulog_lock_freertos_create_and_enable */
+ulog_status ulog_lock_freertos_create_and_enable(void) {
     if (freertos_mutex == NULL) {
         freertos_mutex = xSemaphoreCreateMutex();
         if (freertos_mutex == NULL) {
@@ -59,8 +59,8 @@ ulog_status ulog_lock_freertos_disable(void) {
     return ULOG_STATUS_OK;
 }
 
-/** @copydoc ulog_lock_freertos_delete_disable */
-ulog_status ulog_lock_freertos_delete_disable(void) {
+/** @copydoc ulog_lock_freertos_delete_and_disable */
+ulog_status ulog_lock_freertos_delete_and_disable(void) {
     ulog_lock_freertos_disable();
     if (freertos_mutex != NULL) {
         vSemaphoreDelete(freertos_mutex);

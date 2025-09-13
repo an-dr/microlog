@@ -17,8 +17,8 @@ static ulog_status macos_unfair_lock_fn(bool lock, void *arg) {
     return ULOG_STATUS_OK;
 }
 
-/** @copydoc ulog_lock_macos_unfair_enable */
-ulog_status ulog_lock_macos_unfair_enable(os_unfair_lock *lock) {
+/** @copydoc ulog_lock_macos_enable_with_unfair_lock */
+ulog_status ulog_lock_macos_enable_with_unfair_lock(os_unfair_lock *lock) {
     if (lock == NULL) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }
@@ -26,17 +26,17 @@ ulog_status ulog_lock_macos_unfair_enable(os_unfair_lock *lock) {
     return ULOG_STATUS_OK;
 }
 
-/** @copydoc ulog_lock_macos_unfair_init_enable */
-ulog_status ulog_lock_macos_unfair_init_enable(os_unfair_lock *lock) {
+/** @copydoc ulog_lock_macos_init_and_enable_with_unfair_lock */
+ulog_status ulog_lock_macos_init_and_enable_with_unfair_lock(os_unfair_lock *lock) {
     if (lock == NULL) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }
     *lock = OS_UNFAIR_LOCK_INIT;  // explicit init (usually already set)
-    return ulog_lock_macos_unfair_enable(lock);
+    return ulog_lock_macos_enable_with_unfair_lock(lock);
 }
 
-/** @copydoc ulog_lock_macos_unfair_disable */
-ulog_status ulog_lock_macos_unfair_disable(void) {
+/** @copydoc ulog_lock_macos_disable_unfair_lock */
+ulog_status ulog_lock_macos_disable_unfair_lock(void) {
     ulog_lock_set_fn(NULL, NULL);
     return ULOG_STATUS_OK;
 }

@@ -30,8 +30,8 @@ ulog_status ulog_lock_threadx_enable(TX_MUTEX *mtx) {
     return ULOG_STATUS_OK;
 }
 
-/** @copydoc ulog_lock_threadx_create_enable */
-ulog_status ulog_lock_threadx_create_enable(TX_MUTEX *mtx) {
+/** @copydoc ulog_lock_threadx_create_and_enable */
+ulog_status ulog_lock_threadx_create_and_enable(TX_MUTEX *mtx) {
     if (mtx == NULL) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }
@@ -48,8 +48,8 @@ ulog_status ulog_lock_threadx_disable(void) {
     return ULOG_STATUS_OK;
 }
 
-/** @copydoc ulog_lock_threadx_delete_disable */
-ulog_status ulog_lock_threadx_delete_disable(TX_MUTEX *mtx) {
+/** @copydoc ulog_lock_threadx_delete_and_disable */
+ulog_status ulog_lock_threadx_delete_and_disable(TX_MUTEX *mtx) {
     if (mtx == NULL) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }

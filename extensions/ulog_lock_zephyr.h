@@ -8,7 +8,7 @@
 // Usage:
 //   #include "extensions/ulog_lock_zephyr.h"
 //   static struct k_mutex log_mutex;
-//   ulog_lock_zephyr_init_enable(&log_mutex);
+//   ulog_lock_zephyr_init_and_enable(&log_mutex);
 //   ulog_info("Zephyr lock active");
 //
 // *************************************************************************
@@ -30,7 +30,7 @@ ulog_status ulog_lock_zephyr_enable(struct k_mutex *mtx);
  * @brief Initialize a k_mutex (k_mutex_init) and enable locking.
  * @param mtx Pointer to mutex storage.
  */
-ulog_status ulog_lock_zephyr_init_enable(struct k_mutex *mtx);
+ulog_status ulog_lock_zephyr_init_and_enable(struct k_mutex *mtx);
 
 /**
  * @brief Disable logging lock (clears lock function). Does not free mutex.

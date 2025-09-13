@@ -31,8 +31,8 @@ ulog_status ulog_lock_win_enable(CRITICAL_SECTION *cs) {
     return ULOG_STATUS_OK;
 }
 
-/** @copydoc ulog_lock_win_init_enable */
-ulog_status ulog_lock_win_init_enable(CRITICAL_SECTION *cs) {
+/** @copydoc ulog_lock_win_init_and_enable */
+ulog_status ulog_lock_win_init_and_enable(CRITICAL_SECTION *cs) {
     if (cs == NULL) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }
@@ -46,8 +46,8 @@ ulog_status ulog_lock_win_disable(void) {
     return ULOG_STATUS_OK;
 }
 
-/** @copydoc ulog_lock_win_delete_disable */
-ulog_status ulog_lock_win_delete_disable(CRITICAL_SECTION *cs) {
+/** @copydoc ulog_lock_win_delete_and_disable */
+ulog_status ulog_lock_win_delete_and_disable(CRITICAL_SECTION *cs) {
     if (cs == NULL) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }

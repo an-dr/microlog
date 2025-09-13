@@ -9,7 +9,7 @@
 // Usage:
 //   #define ULOG_LOCK_WITH_FREERTOS
 //   #include "extensions/ulog_lock_freertos.h"
-//   ulog_lock_freertos_create_enable();
+//   ulog_lock_freertos_create_and_enable();
 //   ulog_info("FreeRTOS lock active");
 //
 // Or reuse existing mutex:
@@ -37,7 +37,7 @@ ulog_status ulog_lock_freertos_enable(SemaphoreHandle_t mutex);
  * @brief Create (if needed) an internal mutex with xSemaphoreCreateMutex and enable it.
  * @return ULOG_STATUS_OK on success, ULOG_STATUS_ERROR on allocation failure.
  */
-ulog_status ulog_lock_freertos_create_enable(void);
+ulog_status ulog_lock_freertos_create_and_enable(void);
 
 /**
  * @brief Get handle of internally created mutex (NULL if not created).
@@ -53,7 +53,7 @@ ulog_status ulog_lock_freertos_disable(void);
  * @brief Delete internally created mutex (if any) and disable locking.
  *        Safe only if mutex was created by create_enable().
  */
-ulog_status ulog_lock_freertos_delete_disable(void);
+ulog_status ulog_lock_freertos_delete_and_disable(void);
 
 #ifdef __cplusplus
 }

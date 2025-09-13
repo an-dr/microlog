@@ -32,8 +32,8 @@ ulog_status ulog_lock_cmsis_enable(osMutexId_t mutex_id) {
     return ULOG_STATUS_OK;
 }
 
-/** @copydoc ulog_lock_cmsis_create_enable */
-ulog_status ulog_lock_cmsis_create_enable(void) {
+/** @copydoc ulog_lock_cmsis_create_and_enable */
+ulog_status ulog_lock_cmsis_create_and_enable(void) {
     if (cmsis_mutex == NULL) {
         cmsis_mutex = osMutexNew(NULL);
         if (cmsis_mutex == NULL) {
@@ -54,8 +54,8 @@ ulog_status ulog_lock_cmsis_disable(void) {
     return ULOG_STATUS_OK;
 }
 
-/** @copydoc ulog_lock_cmsis_delete_disable */
-ulog_status ulog_lock_cmsis_delete_disable(void) {
+/** @copydoc ulog_lock_cmsis_delete_and_disable */
+ulog_status ulog_lock_cmsis_delete_and_disable(void) {
     ulog_lock_cmsis_disable();
     if (cmsis_mutex != NULL) {
         if (osMutexDelete(cmsis_mutex) != osOK) {

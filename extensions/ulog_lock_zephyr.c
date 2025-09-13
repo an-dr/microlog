@@ -30,8 +30,8 @@ ulog_status ulog_lock_zephyr_enable(struct k_mutex *mtx) {
     return ULOG_STATUS_OK;
 }
 
-/** @copydoc ulog_lock_zephyr_init_enable */
-ulog_status ulog_lock_zephyr_init_enable(struct k_mutex *mtx) {
+/** @copydoc ulog_lock_zephyr_init_and_enable */
+ulog_status ulog_lock_zephyr_init_and_enable(struct k_mutex *mtx) {
     if (mtx == NULL) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }

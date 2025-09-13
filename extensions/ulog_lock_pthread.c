@@ -53,9 +53,9 @@ ulog_status ulog_lock_pthread_enable(pthread_mutex_t *mtx) {
 }
 
 /**
- * @copydoc ulog_lock_pthread_init_enable
+ * @copydoc ulog_lock_pthread_init_and_enable
  */
-ulog_status ulog_lock_pthread_init_enable(pthread_mutex_t *mtx) {
+ulog_status ulog_lock_pthread_init_and_enable(pthread_mutex_t *mtx) {
     if (mtx == NULL) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }
@@ -72,8 +72,8 @@ ulog_status ulog_lock_pthread_disable(void) {
     return ULOG_STATUS_OK;
 }
 
-/** @copydoc ulog_lock_pthread_destroy_disable */
-ulog_status ulog_lock_pthread_destroy_disable(pthread_mutex_t *mtx) {
+/** @copydoc ulog_lock_pthread_destroy_and_disable */
+ulog_status ulog_lock_pthread_destroy_and_disable(pthread_mutex_t *mtx) {
     if (mtx == NULL) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }

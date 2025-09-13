@@ -61,7 +61,6 @@ Enable a lock if multiple threads, tasks, or ISRs (with proper exclusion) may lo
 | Aspect            | Detail                                                                                                                         |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | Reentrancy        | Output & prefix callbacks run under the lock. Avoid calling `ulog_*` inside them (may deadlock with non-reentrant primitives). |
-| Performance       | Choose the lightest primitive sufficient for correctness: spin for tiny sections on SMP, mutex / critical section otherwise.   |
 | Failures          | If the lock function returns non-`ULOG_STATUS_OK` on acquire, the log call is dropped silently.                                |
 | Critical Sections | Keep them short: formatting + routing only. Heavy I/O should be buffered externally.                                           |
 

@@ -8,7 +8,7 @@
 //
 // Usage:
 //   #include "extensions/ulog_lock_cmsis.h"
-//   ulog_lock_cmsis_create_enable();
+//   ulog_lock_cmsis_create_and_enable();
 //   ulog_info("CMSIS lock active");
 //
 // *************************************************************************
@@ -29,7 +29,7 @@ ulog_status ulog_lock_cmsis_enable(osMutexId_t mutex_id);
 /**
  * @brief Create (once) an internal CMSIS mutex and enable it.
  */
-ulog_status ulog_lock_cmsis_create_enable(void);
+ulog_status ulog_lock_cmsis_create_and_enable(void);
 
 /**
  * @brief Get internally created mutex id (NULL if not created).
@@ -44,7 +44,7 @@ ulog_status ulog_lock_cmsis_disable(void);
 /**
  * @brief Delete internally created mutex (if owned) and disable locking.
  */
-ulog_status ulog_lock_cmsis_delete_disable(void);
+ulog_status ulog_lock_cmsis_delete_and_disable(void);
 
 #ifdef __cplusplus
 }

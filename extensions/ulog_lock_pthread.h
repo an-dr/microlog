@@ -6,7 +6,7 @@
 // locking callback. Mirrors the enable/disable pattern used by other
 // extensions (e.g. `ulog_syslog_enable/disable`).
 //
-// Lifetime: You own the mutex. Use `ulog_lock_pthread_init_enable()` to
+// Lifetime: You own the mutex. Use `ulog_lock_pthread_init_and_enable()` to
 // initialize + enable, then optionally `ulog_lock_pthread_destroy_disable()`
 // when finished *after* ensuring no other threads are inside logging.
 //
@@ -40,7 +40,7 @@ ulog_status ulog_lock_pthread_enable(pthread_mutex_t *mtx);
  * @return ULOG_STATUS_OK on success, ULOG_STATUS_ERROR if initialization fails,
  *         ULOG_STATUS_INVALID_ARGUMENT if mtx is NULL.
  */
-ulog_status ulog_lock_pthread_init_enable(pthread_mutex_t *mtx);
+ulog_status ulog_lock_pthread_init_and_enable(pthread_mutex_t *mtx);
 
 /**
  * @brief Disable logging lock (clears lock function). Does not destroy mutex.
@@ -54,7 +54,7 @@ ulog_status ulog_lock_pthread_disable(void);
  * @return ULOG_STATUS_OK on success, ULOG_STATUS_INVALID_ARGUMENT if mtx is NULL,
  *         ULOG_STATUS_ERROR if pthread_mutex_destroy fails.
  */
-ulog_status ulog_lock_pthread_destroy_disable(pthread_mutex_t *mtx);
+ulog_status ulog_lock_pthread_destroy_and_disable(pthread_mutex_t *mtx);
 
 #ifdef __cplusplus
 }
