@@ -38,6 +38,7 @@ typedef enum {
     ULOG_STATUS_INVALID_ARGUMENT = -2,  ///< Invalid argument provided
     ULOG_STATUS_NOT_FOUND        = -3,  ///< Requested item not found
     ULOG_STATUS_BUSY             = -4,  ///< Resource is busy
+    ULOG_STATUS_DISABLED         = -5,  ///< Feature is disabled
 } ulog_status;
 
 /* ============================================================================
@@ -72,9 +73,6 @@ typedef struct {
     ulog_level max_level;          // maximum log level
     const ulog_level_names names;  // level names
 } ulog_level_descriptor;
-
-#define ULOG_LEVEL_STYLE_LONG (0)   /// Use long level strings (DEBUG, etc.)
-#define ULOG_LEVEL_STYLE_SHORT (1)  /// Use short level strings (D, I, etc.)
 
 /// @brief Returns the string representation of the log level
 /// @param level Log level to convert
@@ -171,26 +169,43 @@ void ulog_lock_set_fn(ulog_lock_fn function, void *lock_arg);
 /// @brief Enable or disable colored output (requires
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param enabled True to enable colors, false to disable
+/// @return ULOG_STATUS_OK on success, ULOG_STATUS_BUSY if lock cannot be
+///         acquired
 ulog_status ulog_color_config(bool enabled);
 
 /// @brief Enable or disable custom prefix (requires
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param enabled True to enable prefix, false to disable
+/// @return ULOG_STATUS_OK on success, ULOG_STATUS_BUSY if lock cannot be
+///         acquired
 ulog_status ulog_prefix_config(bool enabled);
 
 /// @brief Enable or disable source location in logs (requires
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param enabled True to show file:line, false to hide
+/// @return ULOG_STATUS_OK on success, ULOG_STATUS_BUSY if lock cannot be
+///         acquired
 ulog_status ulog_source_location_config(bool enabled);
 
 /// @brief Enable or disable timestamps in logs (requires
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param enabled True to show timestamps, false to hide
+/// @return ULOG_STATUS_OK on success, ULOG_STATUS_BUSY if lock cannot be
+///         acquired
 ulog_status ulog_time_config(bool enabled);
+
+/// @brief Configure level string format (requires ULOG_BUILD_DYNAMIC_CONFIG=1)
+/// @param short_style Use one-letter short style for default levels
+/// @return ULOG_STATUS_OK on success, ULOG_STATUS_BUSY if lock cannot be
+///         acquired
+ulog_status ulog_level_config(bool short_style);
+
 
 /// @brief Enable or disable topic support (requires
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param enabled True to enable topics, false to disable
+/// @return ULOG_STATUS_OK on success, ULOG_STATUS_BUSY if lock cannot be
+///         acquired
 ulog_status ulog_topic_config(bool enabled);
 
 /* ============================================================================
@@ -208,7 +223,9 @@ typedef void (*ulog_prefix_fn)(ulog_event *ev, char *prefix,
 /// @brief Sets the custom prefix generation function (requires
 ///        ULOG_BUILD_PREFIX_SIZE>0 or ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param function Handler function to generate prefix, or NULL to disable
-void ulog_prefix_set_fn(ulog_prefix_fn function);
+/// @return ULOG_STATUS_OK on success, ULOG_STATUS_BUSY if lock cannot be
+///         acquired, ULOG_STATUS_INVALID_ARGUMENT if function is NULL
+ulog_status ulog_prefix_set_fn(ulog_prefix_fn function);
 
 /* ============================================================================
    Feature: Output

@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
 
     FILE *fp = fopen("example.log", "w");
     ulog_output_add_file(fp, ULOG_LEVEL_INFO);
-    // ulog_output_add(user_output, (void *)"Output msg count", ULOG_LEVEL_INFO);
+    ulog_output_add(user_output, (void *)"Output msg count", ULOG_LEVEL_INFO);
 
     /* Prefix ==================================== */
     ulog_prefix_set_fn(user_prefix);
@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
     ulog_topic_disable("Serial");
     ulog_t_warn("Serial", "Serial message 3 (disabled)");
 
-    ulog_output_level_set_all(ULOG_LEVEL_0);
+    ulog_output_level_set_all(ULOG_LEVEL_TRACE);
     ulog_topic_level_set("Bluetooth", ULOG_LEVEL_WARN);
 
     ulog_t_info("Bluetooth", "Bluetooth message 2 (lower than topic level)");

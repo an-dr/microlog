@@ -83,14 +83,8 @@ TEST_CASE_FIXTURE(TestFixture, "Dynamic Config - File String") {
 }
 
 TEST_CASE_FIXTURE(TestFixture, "Dynamic Config - Short Level Strings") {
-    // Create short level descriptor
-    static ulog_level_descriptor short_levels = {
-        (ulog_level)5,                                         // max_level
-        {"T", "D", "I", "W", "E", "F", NULL, NULL}            // names
-    };
-    
-    // Test short level strings enable
-    REQUIRE(ulog_level_set_new_levels(&short_levels) == ULOG_STATUS_OK);
+    // Test short level strings enable/disable
+    REQUIRE(ulog_level_config(true) == ULOG_STATUS_OK);
     ulog_info("Test message with short level");
 
     const char *last_message = ut_callback_get_last_message();
@@ -98,8 +92,7 @@ TEST_CASE_FIXTURE(TestFixture, "Dynamic Config - Short Level Strings") {
     REQUIRE(strstr(last_message, "I ") != nullptr);  // Short for INFO
     REQUIRE(strstr(last_message, "Test message with short level") != nullptr);
 
-    // Reset to default (long) levels
-    REQUIRE(ulog_level_reset_levels() == ULOG_STATUS_OK);
+    REQUIRE(ulog_level_config(false) == ULOG_STATUS_OK);
     ulog_info("Test message with long level");
 
     last_message = ut_callback_get_last_message();
