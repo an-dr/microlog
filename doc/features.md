@@ -75,17 +75,17 @@ add_global_arguments('-fmacro-prefix-map=../=',language: 'c')
 
 The full list of build options for static configuration is shown bellow:
 
-| Build Option                | Default               | Purpose                  |
-| --------------------------- | --------------------- | ------------------------ |
-| ULOG_BUILD_COLOR            | 0                     | Compile color code paths |
-| ULOG_BUILD_PREFIX_SIZE      | 0                     | Prefix buffer logic      |
-| ULOG_BUILD_EXTRA_OUTPUTS    | 0                     | Extra output backends    |
-| ULOG_BUILD_SOURCE_LOCATION  | 1                     | File\:line output        |
-| ULOG_BUILD_LEVEL_STYLE      | ULOG_LEVEL_STYLE_LONG | Level style              |
-| ULOG_BUILD_TIME             | 0                     | Timestamp support        |
-| ULOG_BUILD_TOPICS_NUM       | 0                     | Topic filtering logic    |
-| ULOG_BUILD_DYNAMIC_CONFIG   | 0                     | Runtime toggles          |
-| ULOG_BUILD_WARN_NOT_ENABLED | 1                     | Warning stubs            |
+| Build Option                | Default | Purpose                                 |
+| --------------------------- | ------- | --------------------------------------- |
+| ULOG_BUILD_COLOR            | 0       | Compile color code paths                |
+| ULOG_BUILD_PREFIX_SIZE      | 0       | Prefix buffer logic                     |
+| ULOG_BUILD_EXTRA_OUTPUTS    | 0       | Extra output backends                   |
+| ULOG_BUILD_SOURCE_LOCATION  | 1       | File\:line output                       |
+| ULOG_BUILD_LEVEL_SHORT      | 0       | Print levels with short names, e.g. 'E' |
+| ULOG_BUILD_TIME             | 0       | Timestamp support                       |
+| ULOG_BUILD_TOPICS_NUM       | 0       | Topic filtering logic                   |
+| ULOG_BUILD_DYNAMIC_CONFIG   | 0       | Runtime toggles                         |
+| ULOG_BUILD_WARN_NOT_ENABLED | 1       | Warning stubs                           |
 
 ### Logging, Levels and Outputs
 
@@ -428,14 +428,14 @@ Hide or show the file name and line number. See output examples below:
 
 ### Level Style
 
-- Static configuration options: `ULOG_BUILD_LEVEL_STYLE`
-- Values (bool/enum): `0/1`, `ULOG_LEVEL_STYLE_LONG/ULOG_LEVEL_STYLE_SHORT`
-- Default: `ULOG_LEVEL_STYLE_LONG`.
+- Static configuration options: `ULOG_BUILD_LEVEL_SHORT`
+- Values (bool): `0/1`
+- Default: `0`.
 
 Allows to use short level strings, e.g. "T" for "TRACE", "I" for "INFO":
 
-- ULOG_BUILD_LEVEL_STYLE=ULOG_LEVEL_STYLE_LONG: `TRACE src/main.c:11: Hello world`
-- ULOG_BUILD_LEVEL_STYLE=ULOG_LEVEL_STYLE_SHORT: `T src/main.c:11: Hello world`
+- ULOG_BUILD_LEVEL_SHORT=0: `TRACE src/main.c:11: Hello world`
+- ULOG_BUILD_LEVEL_SHORT=1: `T src/main.c:11: Hello world`
 
 ### Dynamic Configuration
 
@@ -452,7 +452,7 @@ Most of the library features are configured compile time to reduce the code size
 | ULOG_BUILD_TIME             | 1                              |
 | ULOG_BUILD_SOURCE_LOCATION  | 1                              |
 | ULOG_BUILD_COLOR            | 1                              |
-| ULOG_BUILD_LEVEL_STYLE      | ULOG_LEVEL_STYLE_LONG +\_SHORT |
+| ULOG_BUILD_LEVEL_SHORT      | 0                              |
 | ULOG_BUILD_TOPICS_NUM       | -1                             |
 | ULOG_BUILD_WARN_NOT_ENABLED | 0                              |
 

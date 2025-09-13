@@ -149,4 +149,6 @@ int main(int argc, char *argv[]) {
     ulog_t_log(ULOG_LEVEL_5, "Bluetooth", "Critical condition");
     ulog_t_log(ULOG_LEVEL_6, "Serial", "Alert: action must be taken immediately");
     ulog_t_log(ULOG_LEVEL_7, "Audio", "Emergency: system is unusable");
+
+    return 0;
 }
