@@ -89,16 +89,23 @@ The full list of build options for static configuration is shown bellow:
 
 ### Logging, Levels and Outputs
 
-There are 7 log severity levels:
+There are 8 log severity levels (by ascending severity): `ULOG_LEVEL_0` ... `ULOG_LEVEL7`. To log a message there is a general macro:
 
-- `ULOG_LEVEL_TRACE` - for tracing the execution path
-- `ULOG_LEVEL_DEBUG` - for debug information
-- `ULOG_LEVEL_INFO` - for general information
-- `ULOG_LEVEL_WARN` - for important information
-- `ULOG_LEVEL_ERROR` - for information about recoverable errors
-- `ULOG_LEVEL_FATAL` - for information about condition causing the system failure
+```c
+ulog_log(ulog_level level, const char *fmt, ...);
+```
 
-The library provides macros for logging:
+By default these generic levels are aliased with:
+
+- `ULOG_LEVEL_TRACE` - for tracing the execution path (`ULOG_LEVEL_0`)
+- `ULOG_LEVEL_DEBUG` - for debug information (`ULOG_LEVEL_1`)
+- `ULOG_LEVEL_INFO` - for general information (`ULOG_LEVEL_2`)
+- `ULOG_LEVEL_WARN` - for important information (`ULOG_LEVEL_3`)
+- `ULOG_LEVEL_ERROR` - for information about recoverable errors (`ULOG_LEVEL_4`)
+- `ULOG_LEVEL_FATAL` - for information about condition causing the system failure (`ULOG_LEVEL_5`)
+- Leveles `ULOG_LEVEL_6` and `ULOG_LEVEL_7` are not used by default
+
+The library provides also default level macros for logging:
 
 ```c
 ulog_trace(const char *fmt, ...);
@@ -113,6 +120,26 @@ Each function takes a printf format string followed by additional arguments:
 
 ```c
 ulog_info("Info message %f", 3.0)
+```
+
+The user can also define custom levels by using the `ulog_level_set_new_levels(ulog_level_descriptor *levels)` function. The default levels can be restored by calling `ulog_level_reset_levels()`. E.g.
+
+```cpp
+static ulog_level_descriptor syslog_levels = {
+    .max_level = ULOG_LEVEL_7,  // allow 0..7
+    .names     = {"DEBUG", "INFO", "NOTICE", "WARN", "ERR", "CRIT", "ALERT", "EMERG"},
+};
+
+#define LOG_NOTICE  ULOG_LEVEL_2
+// ...
+ulog_level_set_new_levels(&syslog_levels);
+ulog_log(LOG_NOTICE, "This is a notice message");
+// Output: NOTICE src/main.c:12: This is a notice message
+ulog_level_reset_levels();
+
+ulog_log(ULOG_LEVEL_2, "This is a default level message");
+// Output: INFO src/main.c:14: This is a default level message
+
 ```
 
 The default log level is `ULOG_LEVEL_TRACE`, such that nothing is ignored. And by default there is only one available output - **stdout**. To configure its severity the user can use these two functions:
@@ -154,7 +181,7 @@ The data is accessible via getters (see header file for details):
 
 ### Lock
 
-If the log will be written to from multiple threads a lock function can be set. To do this use the `ulog_lock_set_fn()` function. 
+If the log will be written to from multiple threads a lock function can be set. To do this use the `ulog_lock_set_fn()` function.
 
 The lock function must match the `ulog_lock_fn` type and return non-ULOG_STATUS_OK value on error:
 
@@ -217,12 +244,13 @@ Printing the log message with the topic is done by the set of function-like macr
 
 ```c
 // Short variation of ulog_topic_* is ulog_t_*(...), e.g. ulog_t_trace(TOPIC, MESSAGE, ...)
-ulog_topic_trace(const char *topic_name, const char *fmt, ...)
-ulog_topic_debug(const char *topic_name, const char *fmt, ...)
-ulog_topic_info(const char *topic_name, const char *fmt, ...) 
-ulog_topic_warn(const char *topic_name, const char *fmt, ...) 
-ulog_topic_error(const char *topic_name, const char *fmt, ...)
-ulog_topic_fatal(const char *topic_name, const char *fmt, ...)
+ulog_topic_log(ulog_level level, const char *topic_name, const char *fmt, ...);
+ulog_topic_trace(const char *topic_name, const char *fmt, ...);
+ulog_topic_debug(const char *topic_name, const char *fmt, ...);
+ulog_topic_info(const char *topic_name, const char *fmt, ...);
+ulog_topic_warn(const char *topic_name, const char *fmt, ...);
+ulog_topic_error(const char *topic_name, const char *fmt, ...);
+ulog_topic_fatal(const char *topic_name, const char *fmt, ...);
 
 ```
 
@@ -446,16 +474,16 @@ Allows to use short level strings, e.g. "T" for "TRACE", "I" for "INFO":
 
 Most of the library features are configured compile time to reduce the code size and complexity. However, if the code size is not a concern, you can enable Dynamic Config by defining `ULOG_BUILD_DYNAMIC_CONFIG=1`. When the feature is enables all other features are enabled too in some default mode described in bellow. All Dynamic Config functions named like: `ulog_FEATURE_config`. The default configuration is following:
 
-| Build Config                | Default Value                  |
-| --------------------------- | ------------------------------ |
-| ULOG_BUILD_PREFIX_SIZE      | 64                             |
-| ULOG_BUILD_EXTRA_OUTPUTS    | 8                              |
-| ULOG_BUILD_TIME             | 1                              |
-| ULOG_BUILD_SOURCE_LOCATION  | 1                              |
-| ULOG_BUILD_COLOR            | 1                              |
-| ULOG_BUILD_LEVEL_SHORT      | 0                              |
-| ULOG_BUILD_TOPICS_NUM       | -1                             |
-| ULOG_BUILD_WARN_NOT_ENABLED | 0                              |
+| Build Config                | Default Value |
+| --------------------------- | ------------- |
+| ULOG_BUILD_PREFIX_SIZE      | 64            |
+| ULOG_BUILD_EXTRA_OUTPUTS    | 8             |
+| ULOG_BUILD_TIME             | 1             |
+| ULOG_BUILD_SOURCE_LOCATION  | 1             |
+| ULOG_BUILD_COLOR            | 1             |
+| ULOG_BUILD_LEVEL_SHORT      | 0             |
+| ULOG_BUILD_TOPICS_NUM       | -1            |
+| ULOG_BUILD_WARN_NOT_ENABLED | 0             |
 
 #### Topics Configuration
 
