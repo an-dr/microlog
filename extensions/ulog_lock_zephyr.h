@@ -32,6 +32,20 @@ ulog_status ulog_lock_zephyr_enable(struct k_mutex *mtx);
  */
 ulog_status ulog_lock_zephyr_init_enable(struct k_mutex *mtx);
 
+/**
+ * @brief Disable logging lock (clears lock function). Does not free mutex.
+ */
+ulog_status ulog_lock_zephyr_disable(void);
+
+// Zephyr k_mutex has no destroy; provide alias for consistency.
+/**
+ * @brief Disable logging lock (alias for symmetry with delete APIs elsewhere).
+ */
+static inline ulog_status ulog_lock_zephyr_destroy_disable(struct k_mutex *mtx) {
+	(void)mtx;  // nothing to destroy
+	return ulog_lock_zephyr_disable();
+}
+
 #ifdef __cplusplus
 }
 #endif

@@ -39,6 +39,17 @@ ulog_status ulog_lock_threadx_enable(TX_MUTEX *mtx);
  */
 ulog_status ulog_lock_threadx_create_enable(TX_MUTEX *mtx);
 
+/**
+ * @brief Disable logging lock (clears lock function). Does not delete mutex.
+ */
+ulog_status ulog_lock_threadx_disable(void);
+
+/**
+ * @brief Delete a ThreadX mutex (tx_mutex_delete) and disable logging.
+ * @param mtx Pointer to created mutex.
+ */
+ulog_status ulog_lock_threadx_delete_disable(TX_MUTEX *mtx);
+
 #ifdef __cplusplus
 }
 #endif

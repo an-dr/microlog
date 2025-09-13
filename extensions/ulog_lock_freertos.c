@@ -52,3 +52,19 @@ ulog_status ulog_lock_freertos_create_enable(void) {
 SemaphoreHandle_t ulog_lock_freertos_get_handle(void) {
     return freertos_mutex;
 }
+
+/** @copydoc ulog_lock_freertos_disable */
+ulog_status ulog_lock_freertos_disable(void) {
+    ulog_lock_set_fn(NULL, NULL);
+    return ULOG_STATUS_OK;
+}
+
+/** @copydoc ulog_lock_freertos_delete_disable */
+ulog_status ulog_lock_freertos_delete_disable(void) {
+    ulog_lock_freertos_disable();
+    if (freertos_mutex != NULL) {
+        vSemaphoreDelete(freertos_mutex);
+        freertos_mutex = NULL;
+    }
+    return ULOG_STATUS_OK;
+}

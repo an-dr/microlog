@@ -32,6 +32,21 @@ ulog_status ulog_lock_macos_unfair_enable(os_unfair_lock *lock);
  */
 ulog_status ulog_lock_macos_unfair_init_enable(os_unfair_lock *lock);
 
+/**
+ * @brief Disable logging lock (clears lock function). Does not touch lock.
+ */
+ulog_status ulog_lock_macos_unfair_disable(void);
+
+// Unfair locks have no explicit destroy API; supply a semantic alias for
+// consistency with other platforms.
+/**
+ * @brief Disable logging lock (alias; symmetry with *_destroy_disable APIs).
+ */
+static inline ulog_status ulog_lock_macos_unfair_destroy_disable(os_unfair_lock *lock) {
+	(void)lock;  // nothing to destroy
+	return ulog_lock_macos_unfair_disable();
+}
+
 #ifdef __cplusplus
 }
 #endif

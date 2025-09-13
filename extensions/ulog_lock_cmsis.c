@@ -47,3 +47,21 @@ ulog_status ulog_lock_cmsis_create_enable(void) {
 osMutexId_t ulog_lock_cmsis_get_mutex(void) {
     return cmsis_mutex;
 }
+
+/** @copydoc ulog_lock_cmsis_disable */
+ulog_status ulog_lock_cmsis_disable(void) {
+    ulog_lock_set_fn(NULL, NULL);
+    return ULOG_STATUS_OK;
+}
+
+/** @copydoc ulog_lock_cmsis_delete_disable */
+ulog_status ulog_lock_cmsis_delete_disable(void) {
+    ulog_lock_cmsis_disable();
+    if (cmsis_mutex != NULL) {
+        if (osMutexDelete(cmsis_mutex) != osOK) {
+            return ULOG_STATUS_ERROR;
+        }
+        cmsis_mutex = NULL;
+    }
+    return ULOG_STATUS_OK;
+}

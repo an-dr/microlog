@@ -38,3 +38,9 @@ ulog_status ulog_lock_zephyr_init_enable(struct k_mutex *mtx) {
     k_mutex_init(mtx);
     return ulog_lock_zephyr_enable(mtx);
 }
+
+/** @copydoc ulog_lock_zephyr_disable */
+ulog_status ulog_lock_zephyr_disable(void) {
+    ulog_lock_set_fn(NULL, NULL);
+    return ULOG_STATUS_OK;
+}

@@ -44,6 +44,17 @@ ulog_status ulog_lock_freertos_create_enable(void);
  */
 SemaphoreHandle_t ulog_lock_freertos_get_handle(void);
 
+/**
+ * @brief Disable logging lock (clears lock function). Keeps mutex allocated.
+ */
+ulog_status ulog_lock_freertos_disable(void);
+
+/**
+ * @brief Delete internally created mutex (if any) and disable locking.
+ *        Safe only if mutex was created by create_enable().
+ */
+ulog_status ulog_lock_freertos_delete_disable(void);
+
 #ifdef __cplusplus
 }
 #endif

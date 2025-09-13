@@ -39,3 +39,19 @@ ulog_status ulog_lock_win_init_enable(CRITICAL_SECTION *cs) {
     InitializeCriticalSection(cs);
     return ulog_lock_win_enable(cs);
 }
+
+/** @copydoc ulog_lock_win_disable */
+ulog_status ulog_lock_win_disable(void) {
+    ulog_lock_set_fn(NULL, NULL);
+    return ULOG_STATUS_OK;
+}
+
+/** @copydoc ulog_lock_win_delete_disable */
+ulog_status ulog_lock_win_delete_disable(CRITICAL_SECTION *cs) {
+    if (cs == NULL) {
+        return ULOG_STATUS_INVALID_ARGUMENT;
+    }
+    ulog_lock_win_disable();
+    DeleteCriticalSection(cs);
+    return ULOG_STATUS_OK;
+}

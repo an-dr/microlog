@@ -36,6 +36,16 @@ ulog_status ulog_lock_cmsis_create_enable(void);
  */
 osMutexId_t ulog_lock_cmsis_get_mutex(void);
 
+/**
+ * @brief Disable logging lock (clears lock function). Keeps mutex.
+ */
+ulog_status ulog_lock_cmsis_disable(void);
+
+/**
+ * @brief Delete internally created mutex (if owned) and disable locking.
+ */
+ulog_status ulog_lock_cmsis_delete_disable(void);
+
 #ifdef __cplusplus
 }
 #endif

@@ -34,3 +34,9 @@ ulog_status ulog_lock_macos_unfair_init_enable(os_unfair_lock *lock) {
     *lock = OS_UNFAIR_LOCK_INIT;  // explicit init (usually already set)
     return ulog_lock_macos_unfair_enable(lock);
 }
+
+/** @copydoc ulog_lock_macos_unfair_disable */
+ulog_status ulog_lock_macos_unfair_disable(void) {
+    ulog_lock_set_fn(NULL, NULL);
+    return ULOG_STATUS_OK;
+}
