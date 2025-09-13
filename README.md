@@ -49,6 +49,7 @@ The project is based on the following core principles:
     - [Quick Start](#quick-start)
         - [1. Install](#1-install)
         - [2. Use](#2-use)
+        - [3. Extend](#3-extend)
     - [Advanced Usage](#advanced-usage)
     - [Contributing](#contributing)
     - [Changelog](#changelog)
@@ -131,6 +132,11 @@ Output:
 INFO  src/main.cpp:4: Hello, World
 ```
 
+### 3. Extend
+
+Add missing functionalities via API or use predefined extensions. See [Extensions documentation](doc/extensions.md).
+
+   
 ## Advanced Usage
 
 [User Manual in `doc/features.md`](doc/features.md) - detailed information about the available features.
