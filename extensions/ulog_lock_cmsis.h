@@ -7,7 +7,7 @@
 // helper create one.
 //
 // Usage:
-//   #include "extensions/ulog_lock_cmsis.h"
+//   #include "ulog_lock_cmsis.h"
 //   ulog_lock_cmsis_create_and_enable();
 //   ulog_info("CMSIS lock active");
 //

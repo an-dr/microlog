@@ -35,7 +35,7 @@ This document describes optional extensions that live under the `extensions/` fo
 Provides RFC 5424 style severity names without altering core headers. Compile `extensions/ulog_syslog.c` and include the header:
 
 ```c
-#include "extensions/ulog_syslog.h"
+#include "ulog_syslog.h"
 
 int main(void) {
     ulog_syslog_enable();
@@ -69,7 +69,7 @@ Enable a lock if multiple threads, tasks, or ISRs (with proper exclusion) may lo
 Files: `ulog_lock_pthread.[ch]` (on UNIX / macOS). Use existing or allow creation.
 
 ```c
-#include "extensions/ulog_lock_pthread.h"
+#include "ulog_lock_pthread.h"
 static pthread_mutex_t log_mutex;
 ulog_lock_pthread_init_enable(&log_mutex); // init + enable
 // ... later
@@ -81,7 +81,7 @@ ulog_lock_pthread_enable(&log_mutex);      // enable existing
 Files: `ulog_lock_win.[ch]` (on `_WIN32`).
 
 ```c
-#include "extensions/ulog_lock_win.h"
+#include "ulog_lock_win.h"
 static CRITICAL_SECTION log_cs;
 ulog_lock_win_init_enable(&log_cs);
 ```
@@ -92,7 +92,7 @@ Define `ULOG_LOCK_WITH_FREERTOS` and compile `ulog_lock_freertos.[ch]`.
 
 ```c
 #define ULOG_LOCK_WITH_FREERTOS
-#include "extensions/ulog_lock_freertos.h"
+#include "ulog_lock_freertos.h"
 ulog_lock_freertos_create_enable();
 ```
 
@@ -109,7 +109,7 @@ Define `ULOG_LOCK_WITH_THREADX`.
 
 ```c
 #define ULOG_LOCK_WITH_THREADX
-#include "extensions/ulog_lock_threadx.h"
+#include "ulog_lock_threadx.h"
 static TX_MUTEX log_mutex;
 ulog_lock_threadx_create_enable(&log_mutex);
 ```
@@ -120,7 +120,7 @@ Define `ULOG_LOCK_WITH_ZEPHYR`.
 
 ```c
 #define ULOG_LOCK_WITH_ZEPHYR
-#include "extensions/ulog_lock_zephyr.h"
+#include "ulog_lock_zephyr.h"
 static struct k_mutex log_mutex;
 ulog_lock_zephyr_init_enable(&log_mutex);
 ```
@@ -131,7 +131,7 @@ Define `ULOG_LOCK_WITH_CMSIS`.
 
 ```c
 #define ULOG_LOCK_WITH_CMSIS
-#include "extensions/ulog_lock_cmsis.h"
+#include "ulog_lock_cmsis.h"
 ulog_lock_cmsis_create_enable();
 ```
 
@@ -146,7 +146,7 @@ ulog_lock_cmsis_enable(existing_id);
 Files: `ulog_lock_macos.[ch]` (Apple platforms).
 
 ```c
-#include "extensions/ulog_lock_macos.h"
+#include "ulog_lock_macos.h"
 static os_unfair_lock log_lock = OS_UNFAIR_LOCK_INIT;
 ulog_lock_macos_unfair_enable(&log_lock);
 ```

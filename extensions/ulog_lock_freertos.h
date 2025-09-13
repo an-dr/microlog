@@ -8,7 +8,7 @@
 //
 // Usage:
 //   #define ULOG_LOCK_WITH_FREERTOS
-//   #include "extensions/ulog_lock_freertos.h"
+//   #include "ulog_lock_freertos.h"
 //   ulog_lock_freertos_create_and_enable();
 //   ulog_info("FreeRTOS lock active");
 //

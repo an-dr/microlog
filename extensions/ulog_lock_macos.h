@@ -7,7 +7,7 @@
 // than a mutex for short critical sections.
 //
 // Usage:
-//   #include "extensions/ulog_lock_macos.h"
+//   #include "ulog_lock_macos.h"
 //   static os_unfair_lock log_lock = OS_UNFAIR_LOCK_INIT;
 //   ulog_lock_macos_enable_with_unfair_lock(&log_lock);
 //

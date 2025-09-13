@@ -6,7 +6,7 @@
 // Use existing struct k_mutex or let helper initialize it.
 //
 // Usage:
-//   #include "extensions/ulog_lock_zephyr.h"
+//   #include "ulog_lock_zephyr.h"
 //   static struct k_mutex log_mutex;
 //   ulog_lock_zephyr_init_and_enable(&log_mutex);
 //   ulog_info("Zephyr lock active");

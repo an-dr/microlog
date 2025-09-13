@@ -7,7 +7,7 @@
 //
 // Usage:
 //   #define ULOG_LOCK_WITH_THREADX
-//   #include "extensions/ulog_lock_threadx.h"
+//   #include "ulog_lock_threadx.h"
 //   // Create + enable
 //   static TX_MUTEX log_mutex;               // zeroed BSS is fine
 //   ulog_lock_threadx_create_and_enable(&log_mutex);
