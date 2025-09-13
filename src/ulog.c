@@ -402,7 +402,7 @@ ulog_status ulog_color_config(bool enabled) {
 // Disabled Private
 // ================
 
-#define color_config_is_enabled() (ULOG_HAS_COLOR)
+#define color_config_is_enabled(void) (ULOG_HAS_COLOR)
 
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
@@ -502,7 +502,7 @@ ulog_status ulog_prefix_config(bool enabled) {
 // Disabled Private
 // ================
 
-#define prefix_config_is_enabled() (ULOG_HAS_PREFIX)
+#define prefix_config_is_enabled(void) (ULOG_HAS_PREFIX)
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
@@ -619,7 +619,7 @@ ulog_status ulog_time_config(bool enabled) {
 // Disabled Private
 // ================
 
-#define time_config_is_enabled() (ULOG_HAS_TIME)
+#define time_config_is_enabled(void) (ULOG_HAS_TIME)
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
@@ -800,12 +800,12 @@ bool level_config_is_short(void) {
 // Public
 // ================
 
-ulog_status ulog_level_config(bool short_style) {
+ulog_status ulog_level_config(ulog_level_config_style style) {
     if (lock_lock() != ULOG_STATUS_OK) {
         return ULOG_STATUS_BUSY;
     }
-    level_cfg.short_style = short_style;
-    if (short_style) {
+    level_cfg.short_style = (style == ULOG_LEVEL_CONFIG_STYLE_SHORT);
+    if (level_cfg.short_style) {
         level_data.dsc = &level_names_default_short;
     } else {
         level_data.dsc = &level_names_default;
@@ -820,8 +820,8 @@ ulog_status ulog_level_config(bool short_style) {
 
 #if ULOG_HAS_WARN_NOT_ENABLED
 
-ulog_status ulog_level_config(bool short_style) {
-    (void)(short_style);
+ulog_status ulog_level_config(ulog_level_config_style style) {
+    (void)(style);
     warn_not_enabled("ULOG_BUILD_DYNAMIC_CONFIG");
     return ULOG_STATUS_DISABLED;
 }
@@ -831,7 +831,7 @@ ulog_status ulog_level_config(bool short_style) {
 // Disabled Private
 // ================
 
-#define level_config_is_short() (ULOG_HAS_LEVEL_SHORT)
+#define level_config_is_short(void) (ULOG_HAS_LEVEL_SHORT)
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
@@ -1086,7 +1086,7 @@ ulog_status ulog_topic_config(bool enabled) {
 // Disabled Private
 // ================
 
-#define topic_config_is_enabled() (ULOG_HAS_TOPICS)
+#define topic_config_is_enabled(void) (ULOG_HAS_TOPICS)
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
@@ -1150,11 +1150,11 @@ static topic_t *topic_get(ulog_topic_id topic);
 
 /// @brief Enable all topics
 /// @return ulog_status
-static ulog_status topic_enable_all();
+static ulog_status topic_enable_all(void);
 
 /// @brief Disable all topics
 /// @return ulog_status
-static ulog_status topic_disable_all();
+static ulog_status topic_disable_all(void);
 
 /// @brief Add a new topic
 /// @param topic_name - Topic name
@@ -1683,7 +1683,7 @@ ulog_status ulog_source_location_config(bool enabled) {
 // Disabled Private
 // ================
 
-#define src_loc_config_is_enabled() (ULOG_HAS_SOURCE_LOCATION)
+#define src_loc_config_is_enabled(void) (ULOG_HAS_SOURCE_LOCATION)
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
@@ -1700,7 +1700,7 @@ ulog_status ulog_source_location_config(bool enabled) {
 static void log_print_message(print_target *tgt, ulog_event *ev) {
 
 #if ULOG_HAS_SOURCE_LOCATION
-    if (src_loc_config_is_enabled()) {
+    if (src_loc_config_is_enabled() && ev->file != NULL) {
         print_to_target(tgt, "%s:%d: ", ev->file, ev->line);  // file and line
     }
 #endif  // ULOG_HAS_SOURCE_LOCATION

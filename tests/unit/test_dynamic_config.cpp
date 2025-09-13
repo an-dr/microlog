@@ -84,7 +84,7 @@ TEST_CASE_FIXTURE(TestFixture, "Dynamic Config - File String") {
 
 TEST_CASE_FIXTURE(TestFixture, "Dynamic Config - Short Level Strings") {
     // Test short level strings enable/disable
-    REQUIRE(ulog_level_config(true) == ULOG_STATUS_OK);
+    REQUIRE(ulog_level_config(ULOG_LEVEL_CONFIG_STYLE_SHORT) == ULOG_STATUS_OK);
     ulog_info("Test message with short level");
 
     const char *last_message = ut_callback_get_last_message();
@@ -92,7 +92,7 @@ TEST_CASE_FIXTURE(TestFixture, "Dynamic Config - Short Level Strings") {
     REQUIRE(strstr(last_message, "I ") != nullptr);  // Short for INFO
     REQUIRE(strstr(last_message, "Test message with short level") != nullptr);
 
-    REQUIRE(ulog_level_config(false) == ULOG_STATUS_OK);
+    REQUIRE(ulog_level_config(ULOG_LEVEL_CONFIG_STYLE_DEFAULT) == ULOG_STATUS_OK);
     ulog_info("Test message with long level");
 
     last_message = ut_callback_get_last_message();

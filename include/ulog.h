@@ -194,11 +194,17 @@ ulog_status ulog_source_location_config(bool enabled);
 ///         acquired
 ulog_status ulog_time_config(bool enabled);
 
+/// @brief Log level configuration styles
+typedef enum {
+    ULOG_LEVEL_CONFIG_STYLE_DEFAULT = 0,/// Use default style (e.g. `DEBUG`)
+    ULOG_LEVEL_CONFIG_STYLE_SHORT, /// Use short style (e.g. `D`)
+} ulog_level_config_style;
+
 /// @brief Configure level string format (requires ULOG_BUILD_DYNAMIC_CONFIG=1)
-/// @param short_style Use one-letter short style for default levels
+/// @param style Level configuration style
 /// @return ULOG_STATUS_OK on success, ULOG_STATUS_BUSY if lock cannot be
 ///         acquired
-ulog_status ulog_level_config(bool short_style);
+ulog_status ulog_level_config(ulog_level_config_style style);
 
 
 /// @brief Enable or disable topic support (requires
