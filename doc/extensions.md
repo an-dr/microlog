@@ -19,14 +19,9 @@ The extensions are designed to be easy to understand and modify. They are not pa
         - [Windows Critical Section (`ulog_lock_win`)](#windows-critical-section-ulog_lock_win)
         - [FreeRTOS Mutex (`ulog_lock_freertos`)](#freertos-mutex-ulog_lock_freertos)
         - [ThreadX Mutex (`ulog_lock_threadx`)](#threadx-mutex-ulog_lock_threadx)
-        - [Zephyr k\_mutex (`ulog_lock_zephyr`)](#zephyr-k_mutex-ulog_lock_zephyr)
         - [CMSIS‑RTOS2 Mutex (`ulog_lock_cmsis`)](#cmsisrtos2-mutex-ulog_lock_cmsis)
-        - [macOS `os_unfair_lock` (`ulog_lock_macos`)](#macos-os_unfair_lock-ulog_lock_macos)
-        - [Custom Lock Function](#custom-lock-function)
         - [Disabling Locking](#disabling-locking)
-    - [Choosing a Helper](#choosing-a-helper)
     - [Adding Your Own Extension](#adding-your-own-extension)
-- [Extensions](#extensions)
 
 ---
 
@@ -116,17 +111,6 @@ static TX_MUTEX log_mutex;
 ulog_lock_threadx_create_enable(&log_mutex);
 ```
 
-### Zephyr k_mutex (`ulog_lock_zephyr`)
-
-Define `ULOG_LOCK_WITH_ZEPHYR`.
-
-```c
-#define ULOG_LOCK_WITH_ZEPHYR
-#include "ulog_lock_zephyr.h"
-static struct k_mutex log_mutex;
-ulog_lock_zephyr_init_enable(&log_mutex);
-```
-
 ### CMSIS‑RTOS2 Mutex (`ulog_lock_cmsis`)
 
 Define `ULOG_LOCK_WITH_CMSIS`.
@@ -143,41 +127,11 @@ Or enable an existing mutex:
 ulog_lock_cmsis_enable(existing_id);
 ```
 
-### macOS `os_unfair_lock` (`ulog_lock_macos`)
-
-Files: `ulog_lock_macos.[ch]` (Apple platforms).
-
-```c
-#include "ulog_lock_macos.h"
-static os_unfair_lock log_lock = OS_UNFAIR_LOCK_INIT;
-ulog_lock_macos_unfair_enable(&log_lock);
-```
-
-### Custom Lock Function
-
-You can always bypass helpers:
-
-```c
-static ulog_status my_lock(bool lock, void *arg) {
-    (void)arg; // implement acquire/release
-    return ULOG_STATUS_OK;
-}
-ulog_lock_set_fn(my_lock, NULL);
-```
-
 ### Disabling Locking
 
 Call `ulog_lock_set_fn(NULL, NULL);` (or the helper `ulog_lock_disable()` if you included the spin header).
 
 ---
-
-## Choosing a Helper
-
-| Environment                         | Recommended                                              |
-| ----------------------------------- | -------------------------------------------------------- |
-| Single-core bare metal (short logs) | Spin lock or no lock if interrupts disabled around calls |
-| RTOS tasks (moderate contention)    | Native mutex helper for that RTOS                        |
-| High contention multicore           | OS mutex / unfair lock (macOS)                           |
 
 ---
 
@@ -189,5 +143,3 @@ Call `ulog_lock_set_fn(NULL, NULL);` (or the helper `ulog_lock_disable()` if you
 4. Document usage in this file.
 
 Feel free to submit a PR with additional platforms or higher-level outputs.
-
-# Extensions
