@@ -1,3 +1,4 @@
+// clang-format off
 /*
 Example of using ulog library in C/C++
 
@@ -5,25 +6,43 @@ It demonstrates basic logging functionality using C interface.
 The output to console looks like this (with possible variations based on
 build configuration):
 
-18:50:32 [MsgID:000] TRACE main.cpp:71: Trace message 1
-18:50:32 [MsgID:001] DEBUG main.cpp:75: Debug message 0x2
-18:50:32 [MsgID:002] INFO  main.cpp:76: Info message 3.000000
-[Output msg count:0] 18:50:32 [MsgID:002] INFO  main.cpp:76: Info message 3.000000
-18:50:32 [MsgID:003] WARN  main.cpp:77: Warning message 4
-[Output msg count:1] 18:50:32 [MsgID:003] WARN  main.cpp:77: Warning message 4
-18:50:32 [MsgID:004] ERROR main.cpp:78: Error message Five
-[Output msg count:2] 18:50:32 [MsgID:004] ERROR main.cpp:78: Error message Five
-18:50:32 [MsgID:005] FATAL main.cpp:79: Fatal message 6
-[Output msg count:3] 18:50:32 [MsgID:005] FATAL main.cpp:79: Fatal message 6
+    16:20:14 | MsgID:000 | TRACE main.cpp:97: Trace message 1
+    16:20:14 | MsgID:001 | DEBUG main.cpp:99: Debug message 0x2
+    16:20:14 | MsgID:002 | INFO  main.cpp:100: Info message 3.000000
+    [Output msg count:0] 16:20:14 | MsgID:002 | INFO  main.cpp:100: Info message 3.000000
+    16:20:14 | MsgID:003 | WARN  main.cpp:101: Warning message 4
+    [Output msg count:1] 16:20:14 | MsgID:003 | WARN  main.cpp:101: Warning message 4
+    16:20:14 | MsgID:004 | ERROR main.cpp:102: Error message Five
+    [Output msg count:2] 16:20:14 | MsgID:004 | ERROR main.cpp:102: Error message Five
+    16:20:14 | MsgID:005 | FATAL main.cpp:103: Fatal message 6
+    [Output msg count:3] 16:20:14 | MsgID:005 | FATAL main.cpp:103: Fatal message 6
 
-18:50:32 [MsgID:006] DEBUG [Bluetooth] main.cpp:89: Bluetooth message 1
-18:50:32 [MsgID:007] WARN  [Audio] main.cpp:94: Audio message 2
-[Output msg count:4] 18:50:32 [MsgID:007] WARN  [Audio] main.cpp:94: Audio message 2
-18:50:32 [MsgID:008] ERROR [Serial] main.cpp:95: Serial message 1
-[Output msg count:5] 18:50:32 [MsgID:008] ERROR [Serial] main.cpp:95: Serial message 1
-18:50:32 [MsgID:009] FATAL [Serial] main.cpp:96: Serial message 2
-[Output msg count:6] 18:50:32 [MsgID:009] FATAL [Serial] main.cpp:96: Serial message 2
+    16:20:14 | MsgID:006 | DEBUG [Bluetooth] main.cpp:115: Bluetooth message 1
+    16:20:14 | MsgID:007 | WARN  [Audio] main.cpp:118: Audio message 2
+    [Output msg count:4] 16:20:14 | MsgID:007 | WARN  [Audio] main.cpp:118: Audio message 2
+    16:20:14 | MsgID:008 | ERROR [Serial] main.cpp:119: Serial message 1
+    [Output msg count:5] 16:20:14 | MsgID:008 | ERROR [Serial] main.cpp:119: Serial message 1
+    16:20:14 | MsgID:009 | FATAL [Serial] main.cpp:120: Serial message 2
+    [Output msg count:6] 16:20:14 | MsgID:009 | FATAL [Serial] main.cpp:120: Serial message 2
+
+    16:20:14 | MsgID:010 | DEBUG  | [Audio] main.cpp:144: Message for debugging
+    [Output msg count:7] 16:20:14 | MsgID:010 | DEBUG  | [Audio] main.cpp:144: Message for debugging
+    16:20:14 | MsgID:011 | INFO   | [Bluetooth] main.cpp:145: General information
+    [Output msg count:8] 16:20:14 | MsgID:011 | INFO   | [Bluetooth] main.cpp:145: General information
+    16:20:14 | MsgID:012 | NOTICE | [Serial] main.cpp:146: Important notice
+    [Output msg count:9] 16:20:14 | MsgID:012 | NOTICE | [Serial] main.cpp:146: Important notice
+    16:20:14 | MsgID:013 | WARN   | [Audio] main.cpp:147: Warning message
+    [Output msg count:10] 16:20:14 | MsgID:013 | WARN   | [Audio] main.cpp:147: Warning message
+    16:20:14 | MsgID:014 | ERR    | [Audio] main.cpp:148: Error message
+    [Output msg count:11] 16:20:14 | MsgID:014 | ERR    | [Audio] main.cpp:148: Error message
+    16:20:14 | MsgID:015 | CRIT   | [Bluetooth] main.cpp:149: Critical condition
+    [Output msg count:12] 16:20:14 | MsgID:015 | CRIT   | [Bluetooth] main.cpp:149: Critical condition
+    16:20:14 | MsgID:016 | ALERT  | [Serial] main.cpp:150: Alert: action must be taken immediately
+    [Output msg count:13] 16:20:14 | MsgID:016 | ALERT  | [Serial] main.cpp:150: Alert: action must be taken immediately
+    16:20:14 | MsgID:017 | EMERG  | [Audio] main.cpp:151: Emergency: system is unusable
+    [Output msg count:14] 16:20:14 | MsgID:017 | EMERG  | [Audio] main.cpp:151: Emergency: system is unusable
 */
+// clang-format on
 
 #include <cstdio>
 #include "ulog.h"
