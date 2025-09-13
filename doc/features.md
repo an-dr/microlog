@@ -210,7 +210,10 @@ pthread_mutex_t mutex; // We pass the mutex as the lock_arg
 pthread_mutex_init(&mutex, NULL);
 . . .
 ulog_lock_set_fn(lock_function, mutex);
+
 ```
+
+For platform-specific convenience helpers (pthread, Windows, FreeRTOS, ThreadX, Zephyr, CMSIS‑RTOS2, macOS unfair lock) and the syslog level extension, see `doc/extensions.md`.
 
 ### Cleanup
 
