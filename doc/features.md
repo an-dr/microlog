@@ -411,9 +411,10 @@ Use ANSI color escape codes when printing to stdout. If the terminal supports, t
 - INFO - green
 - WARN - yellow
 - ERROR - red
-- FATAL - magenta
+- FATAL - red on white background
+- UNUSED levels (6,7) - yellow on red and white on red background
 
-![colors_demo](features/colors.png)
+<img src="features/colors.png" width="600">
 
 ### Source Location
 
