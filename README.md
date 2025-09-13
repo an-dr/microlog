@@ -17,28 +17,30 @@
 
 In the default configuration it looks like this:
 
-<img src="doc/README/demo0.png" width="800">
-
-[Picture 1 - default configuration: no time, long default levels, source location, no topics, no colors]
+|<img src="doc/README/demo0.png" width="800">|
+|-|
+|Picture 1 - default configuration: no time, long default levels, source location, no topics, no colors|
 
 ...but in can be very minimalistic :
 
-<img src="doc/README/demo1.png" width="800">
-
-[Picture 2 - short levels, no colors, no time, no source location]
+|<img src="doc/README/demo1.png" width="800">|
+|-|
+|Picture 2 - short levels, no colors, no time, no source location|
 
 ... or feature-rich:
 
-<img src="doc/README/demo2.png" width="800">
-[Picture 3 - time, custom prefix for MsgID, custom syslog levels, topics, source location, colors]
+|<img src="doc/README/demo2.png" width="800"> |
+|-|
+|Picture 3 - time, custom prefix for MsgID, custom syslog levels, topics, source location, colors|
 
-The project is based on several core principles:
+The project is based on the following core principles:
 
 - Universal for embedded and desktop applications
 - No feature - no code for compilation
 - Shallow learning curve, works out of box
 - No dependencies
-- Two files
+- Two files for core functionality.
+- Extensions as recipes for your own features.
 
 ## Table of Contents
 
@@ -47,6 +49,7 @@ The project is based on several core principles:
     - [Quick Start](#quick-start)
         - [1. Install](#1-install)
         - [2. Use](#2-use)
+        - [3. Extend](#3-extend)
     - [Advanced Usage](#advanced-usage)
     - [Contributing](#contributing)
     - [Changelog](#changelog)
@@ -129,6 +132,11 @@ Output:
 INFO  src/main.cpp:4: Hello, World
 ```
 
+### 3. Extend
+
+Add missing functionalities via API or use predefined extensions. See [Extensions documentation](doc/extensions.md).
+
+   
 ## Advanced Usage
 
 [User Manual in `doc/features.md`](doc/features.md) - detailed information about the available features.
