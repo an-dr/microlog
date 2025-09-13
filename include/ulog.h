@@ -65,7 +65,6 @@ typedef enum ulog_level_enum {
 #define ULOG_LEVEL_WARN (ulog_level)3   ///< For potential issues
 #define ULOG_LEVEL_ERROR (ulog_level)4  ///< For failures
 #define ULOG_LEVEL_FATAL (ulog_level)5  ///< May terminate program
-#define ULOG_LEVEL_DEFAULT_TOTAL 6      ///< Total number of defaultlog levels
 
 typedef const char *ulog_level_names[ULOG_LEVEL_TOTAL];
 
@@ -196,8 +195,8 @@ ulog_status ulog_time_config(bool enabled);
 
 /// @brief Log level configuration styles
 typedef enum {
-    ULOG_LEVEL_CONFIG_STYLE_DEFAULT = 0,/// Use default style (e.g. `DEBUG`)
-    ULOG_LEVEL_CONFIG_STYLE_SHORT, /// Use short style (e.g. `D`)
+    ULOG_LEVEL_CONFIG_STYLE_DEFAULT = 0,  /// Use default style (e.g. `DEBUG`)
+    ULOG_LEVEL_CONFIG_STYLE_SHORT,        /// Use short style (e.g. `D`)
 } ulog_level_config_style;
 
 /// @brief Configure level string format (requires ULOG_BUILD_DYNAMIC_CONFIG=1)
@@ -205,7 +204,6 @@ typedef enum {
 /// @return ULOG_STATUS_OK on success, ULOG_STATUS_BUSY if lock cannot be
 ///         acquired
 ulog_status ulog_level_config(ulog_level_config_style style);
-
 
 /// @brief Enable or disable topic support (requires
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
@@ -292,49 +290,54 @@ ulog_status ulog_output_remove(ulog_output_id output);
 
 // clang-format off
 
-#define ulog_topic_log(LEVEL, TOPIC_NAME,...) ulog_log_manual(LEVEL, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
-#define ulog_t_log(...) ulog_topic_log(__VA_ARGS__) // Alias for `ulog_topic_log`
+/// @brief Alias: `ulog_t`. Log a message with topic (requires ULOG_BUILD_TOPICS!=0 or
+/// ULOG_BUILD_DYNAMIC_CONFIG=1)
+/// @param LEVEL Log level
+/// @param TOPIC_NAME Topic name string
+/// @param ... Format string and arguments (printf-style)
+#define ulog_topic_log(LEVEL, TOPIC_NAME,...) ulog_log(LEVEL, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define ulog_t(...) ulog_topic_log(__VA_ARGS__) // Alias for `ulog_topic_log`
 
-/// @brief Log a TRACE level message with topic (requires ULOG_BUILD_TOPICS!=0 or
+/// @brief Alias: `ulog_t_trace`. Log a TRACE level message with topic (requires ULOG_BUILD_TOPICS!=0 or
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param TOPIC_NAME Topic name string
 /// @param ... Format string and arguments (printf-style)
-#define ulog_topic_trace(TOPIC_NAME, ...) ulog_log_manual(ULOG_LEVEL_TRACE, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define ulog_topic_trace(TOPIC_NAME, ...) ulog_log(ULOG_LEVEL_TRACE, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
 #define ulog_t_trace(...) ulog_topic_trace(__VA_ARGS__) // Alias for `ulog_topic_trace`
 
-/// @brief Log a DEBUG level message with topic (requires ULOG_BUILD_TOPICS!=0 or
+/// @brief Alias: `ulog_t_debug`. Log a DEBUG level message with topic (requires ULOG_BUILD_TOPICS!=0 or
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param TOPIC_NAME Topic name string
 /// @param ... Format string and arguments (printf-style)
-#define ulog_topic_debug(TOPIC_NAME, ...) ulog_log_manual(ULOG_LEVEL_DEBUG, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define ulog_topic_debug(TOPIC_NAME, ...) ulog_log(ULOG_LEVEL_DEBUG, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
 #define ulog_t_debug(...) ulog_topic_debug(__VA_ARGS__)  // Alias for `ulog_topic_debug`
 
-/// @brief Log an INFO level message with topic (requires ULOG_BUILD_TOPICS!=0 or
+/// @brief Alias: `ulog_t_info`. Log an INFO level message with topic (requires ULOG_BUILD_TOPICS!=0 or
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param TOPIC_NAME Topic name string
 /// @param ... Format string and arguments (printf-style)
-#define ulog_topic_info(TOPIC_NAME, ...) ulog_log_manual(ULOG_LEVEL_INFO, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define ulog_topic_info(TOPIC_NAME, ...) ulog_log(ULOG_LEVEL_INFO, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
 #define ulog_t_info(...) ulog_topic_info(__VA_ARGS__)  // Alias for `ulog_topic_info`
 
-/// @brief Log a WARN level message with topic (requires ULOG_BUILD_TOPICS!=0 or
+/// @brief Alias: `ulog_t_warn`. Log a WARN level message with topic (requires ULOG_BUILD_TOPICS!=0 or
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param TOPIC_NAME Topic name string
 /// @param ... Format string and arguments (printf-style)
-#define ulog_topic_warn(TOPIC_NAME, ...) ulog_log_manual(ULOG_LEVEL_WARN, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define ulog_topic_warn(TOPIC_NAME, ...) ulog_log(ULOG_LEVEL_WARN, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
 #define ulog_t_warn(...) ulog_topic_warn(__VA_ARGS__)  // Alias for `ulog_topic_warn`
 
-/// @brief Log an ERROR level message with topic (requires ULOG_BUILD_TOPICS!=0 or
+/// @brief Alias: `ulog_t_error`. Log an ERROR level message with topic (requires ULOG_BUILD_TOPICS!=0 or
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param TOPIC_NAME Topic name string
 /// @param ... Format string and arguments (printf-style)
-#define ulog_topic_error(TOPIC_NAME, ...) ulog_log_manual(ULOG_LEVEL_ERROR, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define ulog_topic_error(TOPIC_NAME, ...) ulog_log(ULOG_LEVEL_ERROR, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
 #define ulog_t_error(...) ulog_topic_error(__VA_ARGS__)  // Alias for `ulog_topic_error`
 
-/// @brief Log a FATAL level message with topic (requires ULOG_BUILD_TOPICS!=0 or
+/// @brief Alias: `ulog_t_fatal`. Log a FATAL level message with topic (requires ULOG_BUILD_TOPICS!=0 or
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param TOPIC_NAME Topic name string
 /// @param ... Format string and arguments (printf-style)
-#define ulog_topic_fatal(TOPIC_NAME, ...) ulog_log_manual(ULOG_LEVEL_FATAL, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
+#define ulog_topic_fatal(TOPIC_NAME, ...) ulog_log(ULOG_LEVEL_FATAL, __FILE__, __LINE__, TOPIC_NAME, __VA_ARGS__)
 #define ulog_t_fatal(...) ulog_topic_fatal(__VA_ARGS__)  // Alias for `ulog_topic_fatal`
 // clang-format on
 
@@ -394,32 +397,36 @@ ulog_status ulog_topic_disable_all(void);
 
 // clang-format off
 
-#define ulog_log(LEVEL,...) ulog_log_manual(LEVEL, __FILE__, __LINE__, NULL, __VA_ARGS__)
-
+/// @brief Main logging function . For default log levels can be replaces with
+/// macros `ulog_trace`, `ulog_debug`, `ulog_info`, `ulog_warn`, `ulog_error`,
+/// and `ulog_fatal`.
+/// @param level Log level for this message
+/// @param ... Format arguments for the message
+#define ulog(LEVEL,...) ulog_log(LEVEL, __FILE__, __LINE__, NULL, __VA_ARGS__)
 
 /// @brief Log a TRACE level message
 /// @param ... Format string and arguments (printf-style)
-#define ulog_trace(...) ulog_log_manual(ULOG_LEVEL_TRACE, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define ulog_trace(...) ulog_log(ULOG_LEVEL_TRACE, __FILE__, __LINE__, NULL, __VA_ARGS__)
 
 /// @brief Log a DEBUG level message
 /// @param ... Format string and arguments (printf-style)
-#define ulog_debug(...) ulog_log_manual(ULOG_LEVEL_DEBUG, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define ulog_debug(...) ulog_log(ULOG_LEVEL_DEBUG, __FILE__, __LINE__, NULL, __VA_ARGS__)
 
 /// @brief Log an INFO level message
 /// @param ... Format string and arguments (printf-style)
-#define ulog_info(...) ulog_log_manual(ULOG_LEVEL_INFO, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define ulog_info(...) ulog_log(ULOG_LEVEL_INFO, __FILE__, __LINE__, NULL, __VA_ARGS__)
 
 /// @brief Log a WARN level message
 /// @param ... Format string and arguments (printf-style)
-#define ulog_warn(...) ulog_log_manual(ULOG_LEVEL_WARN, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define ulog_warn(...) ulog_log(ULOG_LEVEL_WARN, __FILE__, __LINE__, NULL, __VA_ARGS__)
 
 /// @brief Log an ERROR level message
 /// @param ... Format string and arguments (printf-style)
-#define ulog_error(...) ulog_log_manual(ULOG_LEVEL_ERROR, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define ulog_error(...) ulog_log(ULOG_LEVEL_ERROR, __FILE__, __LINE__, NULL, __VA_ARGS__)
 
 /// @brief Log a FATAL level message
 /// @param ... Format string and arguments (printf-style)
-#define ulog_fatal(...) ulog_log_manual(ULOG_LEVEL_FATAL, __FILE__, __LINE__, NULL, __VA_ARGS__)
+#define ulog_fatal(...) ulog_log(ULOG_LEVEL_FATAL, __FILE__, __LINE__, NULL, __VA_ARGS__)
 
 
 /// @brief Main logging function - typically called through macros
@@ -429,7 +436,7 @@ ulog_status ulog_topic_disable_all(void);
 /// @param topic Topic name string, or NULL for no topic
 /// @param message Printf-style format string
 /// @param ... Format arguments for the message
-void ulog_log_manual(ulog_level level, const char *file,
+void ulog_log(ulog_level level, const char *file,
               int line, const char *topic, const char *message, ...);
               
 

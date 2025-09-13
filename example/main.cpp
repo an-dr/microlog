@@ -160,14 +160,14 @@ int main(int argc, char *argv[]) {
     ulog_topic_level_set("Audio", ULOG_LEVEL_0);
     ulog_topic_level_set("Bluetooth", ULOG_LEVEL_0);
     ulog_topic_level_set("Serial", ULOG_LEVEL_0);
-    ulog_t_log(ULOG_LEVEL_0, "Audio", "Message for debugging");
-    ulog_t_log(ULOG_LEVEL_1, "Bluetooth", "General information");
-    ulog_t_log(ULOG_LEVEL_2, "Serial", "Important notice");
-    ulog_t_log(ULOG_LEVEL_3, "Audio", "Warning message");
-    ulog_t_log(ULOG_LEVEL_4, "Audio", "Error message");
-    ulog_t_log(ULOG_LEVEL_5, "Bluetooth", "Critical condition");
-    ulog_t_log(ULOG_LEVEL_6, "Serial", "Alert: action must be taken immediately");
-    ulog_t_log(ULOG_LEVEL_7, "Audio", "Emergency: system is unusable");
+    ulog_t(ULOG_LEVEL_0, "Audio", "Message for debugging");
+    ulog_t(ULOG_LEVEL_1, "Bluetooth", "General information");
+    ulog_t(ULOG_LEVEL_2, "Serial", "Important notice");
+    ulog_t(ULOG_LEVEL_3, "Audio", "Warning message");
+    ulog_t(ULOG_LEVEL_4, "Audio", "Error message");
+    ulog_t(ULOG_LEVEL_5, "Bluetooth", "Critical condition");
+    ulog_t(ULOG_LEVEL_6, "Serial", "Alert: action must be taken immediately");
+    ulog_t(ULOG_LEVEL_7, "Audio", "Emergency: system is unusable");
 
     return 0;
 }

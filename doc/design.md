@@ -4,7 +4,7 @@ This document outlines the design of the library and key concepts.
 
 ## Overview
 
-All logging is happening via `ulog_log` function. `ulog_topic_*` and `ulog_*` macros are using `ulog_log`.
+All logging is happening via `ulog_log` function. `ulog`, `ulog_t`, `ulog_topic_*` and `ulog_*` macros use `ulog_log`.
 
 ## Logging Mechanism
 

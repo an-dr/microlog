@@ -164,8 +164,8 @@ static inline bool is_str_empty(const char *str) {
     warn_non_enabled_full(__func__, feature, __FILE__, __LINE__)
 
 #define warn_non_enabled_full(func, feature, file, line)                       \
-    ulog_log_manual(ULOG_LEVEL_WARN, file, line, NULL,                         \
-                    "'%s' called with %s disabled", func, feature)
+    ulog_log(ULOG_LEVEL_WARN, file, line, NULL,                                \
+             "'%s' called with %s disabled", func, feature)
 
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
 /* ============================================================================
@@ -1794,8 +1794,8 @@ ulog_status ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size) {
     return ULOG_STATUS_OK;
 }
 
-void ulog_log_manual(ulog_level level, const char *file, int line,
-                     const char *topic, const char *message, ...) {
+void ulog_log(ulog_level level, const char *file, int line, const char *topic,
+              const char *message, ...) {
     if (lock_lock() != ULOG_STATUS_OK) {
         return;  // Failed to acquire lock, drop log
     }
