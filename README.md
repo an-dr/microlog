@@ -17,28 +17,30 @@
 
 In the default configuration it looks like this:
 
-<img src="doc/README/demo0.png" width="800">
-
-[Picture 1 - default configuration: no time, long default levels, source location, no topics, no colors]
+|<img src="doc/README/demo0.png" width="800">|
+|-|
+|Picture 1 - default configuration: no time, long default levels, source location, no topics, no colors|
 
 ...but in can be very minimalistic :
 
-<img src="doc/README/demo1.png" width="800">
-
-[Picture 2 - short levels, no colors, no time, no source location]
+|<img src="doc/README/demo1.png" width="800">|
+|-|
+|Picture 2 - short levels, no colors, no time, no source location|
 
 ... or feature-rich:
 
-<img src="doc/README/demo2.png" width="800">
-[Picture 3 - time, custom prefix for MsgID, custom syslog levels, topics, source location, colors]
+|<img src="doc/README/demo2.png" width="800"> |
+|-|
+|Picture 3 - time, custom prefix for MsgID, custom syslog levels, topics, source location, colors|
 
-The project is based on several core principles:
+The project is based on the following core principles:
 
 - Universal for embedded and desktop applications
 - No feature - no code for compilation
 - Shallow learning curve, works out of box
 - No dependencies
-- Two files
+- Two files for core functionality.
+- Extensions as recipes for your own features.
 
 ## Table of Contents
 
