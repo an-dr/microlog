@@ -11,22 +11,13 @@ jobs:
   test-packaging:
     runs-on: ubuntu-latest
     steps:
-      # This is needed for testing the PR code. Github create a merge commit
-      # that breaks the tests.
-      - name: Checkout PR code
-        if: github.event_name == 'pull_request'
+      # Checkout the appropriate ref. For workflow_call, github.event_name is
+      # 'workflow_call', so we fall back to github.sha.
+      - name: Checkout repository
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 1
-
-      # This is needed for testing the main branch after a push
-      - name: Checkout Push code
-        if: github.event_name == 'push'
-      - uses: actions/checkout@v5
-        with:
-          ref: ${{ github.sha }}
-          fetch-depth: 1
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0  # full history (some packaging/version logic may rely on tags)
 
       - name: Install Meson and Ninja
         run: |
