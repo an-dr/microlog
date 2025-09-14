@@ -7,8 +7,10 @@ set(ULOG_INCLUDE_DIR ../../include)
 
 # Configure test environment
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-add_compile_options(--coverage -fprofile-arcs -ftest-coverage -g -O0 -Wall)
-add_link_options(--coverage -fprofile-arcs -ftest-coverage)
+if(NOT WIN32)
+    add_compile_options(--coverage -fprofile-arcs -ftest-coverage -g -O0 -Wall)
+    add_link_options(--coverage -fprofile-arcs -ftest-coverage)
+endif()
 
 # Microlog configs
 set(ULOG_CONFIG_BASE "-DULOG_BUILD_EXTRA_OUTPUTS=8" 
@@ -114,3 +116,12 @@ target_sources(test_output PRIVATE ${ULOG_SRC}
 target_include_directories(test_output PRIVATE ${ULOG_INCLUDE_DIR})
 target_compile_definitions(test_output PRIVATE ${ULOG_CONFIG_BASE})
 add_test(NAME OutputTest COMMAND test_output)
+
+# --- Warn Not Enabled Test ---
+add_executable(test_warn_not_enabled)
+target_sources(test_warn_not_enabled PRIVATE ${ULOG_SRC}
+                                              ut_callback.c
+                                              test_warn_not_enabled.cpp)
+target_include_directories(test_warn_not_enabled PRIVATE ${ULOG_INCLUDE_DIR})
+target_compile_definitions(test_warn_not_enabled PRIVATE ${ULOG_CONFIG_BASE})
+add_test(NAME WarnNotEnabledTest COMMAND test_warn_not_enabled)
