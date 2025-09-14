@@ -8,7 +8,6 @@ try {
         -DULOG_VERSION_OVERRIDE="$(Get-Content ./version).Trim()"
     cmake --build ./build/cmake
     cmake --install ./build/cmake
-
     Write-Host "CMake install complete. Installation directory: $PWD/install/cmake/microlog"
     
     popd

@@ -8,67 +8,68 @@
 # site:    https://agramakov.me e-mail:  mail@agramakov.me
 #
 # *************************************************************************
+
+# ----------------------------------------------------------------------------
+# Project
+# ----------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.15.0)
 
 # Read version (raw file contains semantic version optionally with metadata)
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/version" VERSION_CONTENT)
 string(STRIP "${VERSION_CONTENT}" PROJECT_VERSION_RAW)
-string(REGEX REPLACE "^([0-9]+\.[0-9]+\.[0-9]+).*$" "\\1" PROJECT_VERSION "${PROJECT_VERSION_RAW}")
+string(REGEX REPLACE "^([0-9]+\.[0-9]+\.[0-9]+).*$" "\\1" PROJECT_VERSION
+                     "${PROJECT_VERSION_RAW}")
+
+# Declare the project
 project(microlog VERSION ${PROJECT_VERSION})
 
+# ----------------------------------------------------------------------------
+# Version substitution
+# ----------------------------------------------------------------------------
 # Expose version for substitution
 set(ULOG_VERSION "${PROJECT_VERSION_RAW}")
 
-# We keep original sources in-place without .in duplicates. For install we
-# generate configured copies with the banner token replaced. This avoids
-# maintaining parallel template files while still delivering substituted
-# content to consumers.
+# Configure selected sources/headers preserving relative paths
+set(ULOG_CONFIGURED_DIR ${CMAKE_CURRENT_BINARY_DIR}/configured)
 
-set(MICROLOG_FILES_CONFIGURE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/ulog.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/ulog.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/extensions/ulog_syslog.h
-)
+# Treat source files as templates
+set(ULOG_FILES_CONFIGURE src/ulog.c include/ulog.h)
 
-set(MICROLOG_CONFIGURED_DIR ${CMAKE_CURRENT_BINARY_DIR}/configured)
-file(MAKE_DIRECTORY ${MICROLOG_CONFIGURED_DIR}/include)
-file(MAKE_DIRECTORY ${MICROLOG_CONFIGURED_DIR}/src)
-file(MAKE_DIRECTORY ${MICROLOG_CONFIGURED_DIR}/extensions)
+# Process each template
+foreach(input_file ${ULOG_FILES_CONFIGURE})
 
-foreach(f ${MICROLOG_FILES_CONFIGURE})
-  get_filename_component(fname ${f} NAME)
-  # Decide subdir based on original path
-  if(f MATCHES "/include/")
-    set(out "${MICROLOG_CONFIGURED_DIR}/include/${fname}")
-  elseif(f MATCHES "/src/")
-    set(out "${MICROLOG_CONFIGURED_DIR}/src/${fname}")
-  elseif(f MATCHES "/extensions/")
-    set(out "${MICROLOG_CONFIGURED_DIR}/extensions/${fname}")
-  else()
-    set(out "${MICROLOG_CONFIGURED_DIR}/${fname}")
+  # Create subdirs as needed
+  get_filename_component(dir ${input_file} DIRECTORY)
+  if(dir)
+    file(MAKE_DIRECTORY ${ULOG_CONFIGURED_DIR}/${dir})
   endif()
-  configure_file(${f} ${out} @ONLY NEWLINE_STYLE UNIX)
-endforeach()
 
-# Provide an interface include dir to configured headers *after* install while
-# using original headers for build to avoid recompilation on each clean.
-set(MICROLOG_BUILD_INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR}/include)
-set(MICROLOG_INSTALL_INCLUDE_DIR include)
+  # Configure file
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${input_file}
+                 ${ULOG_CONFIGURED_DIR}/${input_file} @ONLY NEWLINE_STYLE UNIX)
+endforeach()
 
 # ----------------------------------------------------------------------------
 # Building
 # ----------------------------------------------------------------------------
+set(ULOG_BUILD_INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR}/include)
+set(ULOG_BUILD_SRC_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
+set(ULOG_INSTALL_INCLUDE_DIR include)
+set(ULOG_INSTALL_SRC_DIR src)
 
 add_library(${PROJECT_NAME} INTERFACE)
-target_sources(microlog
-  INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/ulog.c>
-    $<INSTALL_INTERFACE:src/ulog.c>
+target_sources(
+  microlog
+  INTERFACE $<BUILD_INTERFACE:${ULOG_BUILD_SRC_DIR}/ulog.c>
+            $<INSTALL_INTERFACE:${ULOG_INSTALL_SRC_DIR}/ulog.c> # installed
+                                                                # version
+            # will assume relative to install prefix
 )
-target_include_directories(${PROJECT_NAME}
-  INTERFACE
-    $<BUILD_INTERFACE:${MICROLOG_BUILD_INCLUDE_DIR}>
-    $<INSTALL_INTERFACE:include>
+target_include_directories(
+  ${PROJECT_NAME}
+  INTERFACE $<BUILD_INTERFACE:${ULOG_BUILD_INCLUDE_DIR}> # while building
+            $<INSTALL_INTERFACE:${ULOG_INSTALL_INCLUDE_DIR}> # when
+            # installed
 )
 
 # ----------------------------------------------------------------------------
@@ -87,6 +88,11 @@ endif()
 # ----------------------------------------------------------------------------
 # Installing
 # ----------------------------------------------------------------------------
+set(ULOG_INSTALL_INCLUDE_IN ${ULOG_CONFIGURED_DIR}/include)
+set(ULOG_INSTALL_SRC_IN ${ULOG_CONFIGURED_DIR}/src/ulog.c)
+set(ULOG_INSTALL_INCLUDE_DST
+    ${CMAKE_INSTALL_PREFIX}/${ULOG_INSTALL_INCLUDE_DIR})
+set(ULOG_INSTALL_SRC_DST ${CMAKE_INSTALL_PREFIX}/${ULOG_INSTALL_SRC_DIR})
 
 install(
   TARGETS ${PROJECT_NAME}
@@ -94,38 +100,36 @@ install(
   ARCHIVE DESTINATION lib)
 
 # Headers (they are sources, not artifacts so copy them explicitly)
-install(DIRECTORY ${MICROLOG_CONFIGURED_DIR}/include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
-install(FILES ${MICROLOG_CONFIGURED_DIR}/src/ulog.c DESTINATION ${CMAKE_INSTALL_PREFIX}/src)
-install(FILES ${MICROLOG_CONFIGURED_DIR}/extensions/ulog_syslog.h DESTINATION ${CMAKE_INSTALL_PREFIX}/extensions)
+install(DIRECTORY ${ULOG_INSTALL_INCLUDE_IN}
+        DESTINATION ${ULOG_INSTALL_INCLUDE_DST})
+install(FILES ${ULOG_INSTALL_SRC_IN} DESTINATION ${ULOG_INSTALL_SRC_DST})
 
 # ----------------------------------------------------------------------------
 # Packing
 # ----------------------------------------------------------------------------
+set(ULOG_CONFIG_FILE_IN ${CMAKE_CURRENT_LIST_DIR}/cmake/micrologConfig.cmake.in)
+set(ULOG_CONFIG_FILE_OUT ${CMAKE_CURRENT_BINARY_DIR}/micrologConfig.cmake)
+set(ULOG_TARGETS_FILE ${CMAKE_CURRENT_LIST_DIR}/cmake/micrologTargets.cmake)
+set(ULOG_VERSION_FILE_OUT
+    ${CMAKE_CURRENT_BINARY_DIR}/micrologConfigVersion.cmake)
+
 include(CMakePackageConfigHelpers)
 
 # We have a custom Targets file below. Original is generated like this: install(
 # EXPORT ${PROJECT_NAME}Targets NAMESPACE ${PROJECT_NAME}:: DESTINATION
 # ${CMAKE_INSTALL_PREFIX})
-
-install(FILES ${CMAKE_CURRENT_LIST_DIR}/cmake/micrologTargets.cmake
-        DESTINATION ${CMAKE_INSTALL_PREFIX})
+install(FILES ${ULOG_TARGETS_FILE} DESTINATION ${CMAKE_INSTALL_PREFIX})
 
 # Make a config file using targets based on the template
-configure_package_config_file(
-  ${CMAKE_CURRENT_LIST_DIR}/cmake/${PROJECT_NAME}Config.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
-  INSTALL_DESTINATION ${CMAKE_INSTALL_PREFIX})
+configure_package_config_file(${ULOG_CONFIG_FILE_IN} ${ULOG_CONFIG_FILE_OUT}
+                              INSTALL_DESTINATION ${CMAKE_INSTALL_PREFIX})
 
 # Make a version file
 write_basic_package_version_file(
-  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+  ${ULOG_VERSION_FILE_OUT}
   VERSION ${PROJECT_VERSION}
   COMPATIBILITY SameMajorVersion)
 
-# install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-# DESTINATION ${CMAKE_INSTALL_PREFIX})
-
-install(
-  FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
-        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-        ${CMAKE_CURRENT_LIST_DIR}/LICENSE DESTINATION ${CMAKE_INSTALL_PREFIX})
+install(FILES ${ULOG_CONFIG_FILE_OUT} ${ULOG_VERSION_FILE_OUT}
+              ${CMAKE_CURRENT_LIST_DIR}/LICENSE
+        DESTINATION ${CMAKE_INSTALL_PREFIX})
