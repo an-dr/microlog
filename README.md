@@ -115,49 +115,6 @@ target_compile_definitions( microlog
         ULOG_BUILD_COLOR=1) # configuration
 ```
 
-**Option 5 - vcpkg (overlay / pending upstream):**
-
-microlog provides a `vcpkg.json` manifest and an overlay port under `ports/microlog`.
-Until the port is accepted upstream you can use it as an overlay.
-
-1. Clone the repository (or add as a submodule) next to your project.
-2. Pass the overlay path to vcpkg:
-
-```pwsh
-# Example with classic mode
-$vcpkgRoot = "C:/dev/vcpkg"
-& $vcpkgRoot/vcpkg install microlog --overlay-ports=path/to/microlog/ports
-
-# Manifest mode (your project has its own vcpkg.json)
-& $vcpkgRoot/vcpkg install --overlay-ports=path/to/microlog/ports
-```
-
-3. Use in CMake (vcpkg toolchain loaded):
-
-```cmake
-find_package(microlog CONFIG REQUIRED)
-add_executable(app main.cpp)
-target_link_libraries(app PRIVATE microlog::microlog)
-# Optional configuration flags
-add_compile_definitions(ULOG_BUILD_COLOR=1)
-```
-
-4. (When preparing an upstream submission) Replace the placeholder `SHA512 0` in `ports/microlog/portfile.cmake` with the real archive hash:
-
-```pwsh
-$url = 'https://github.com/an-dr/microlog/archive/refs/tags/v7.0.0-alpha.3.tar.gz'
-Invoke-WebRequest $url -OutFile microlog.tar.gz
-Get-FileHash microlog.tar.gz -Algorithm SHA512 | Select-Object -ExpandProperty Hash
-```
-
-If/when the port is merged upstream, installation simplifies to:
-
-```pwsh
-& $vcpkgRoot/vcpkg install microlog
-```
-
-No additional dependencies are required; the port installs headers, the single source file `src/ulog.c`, and exposes the CMake target `microlog::microlog`.
-
 ### 2. Use
 
 ```cpp
