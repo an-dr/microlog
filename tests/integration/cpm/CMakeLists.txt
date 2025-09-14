@@ -1,16 +1,11 @@
 cmake_minimum_required(VERSION 3.15)
 project(example_package)
 
-if(DEFINED ENV{GITHUB_SHA})
-  set(GIT_COMMIT_HASH "$ENV{GITHUB_SHA}")
-else()
-  # Fallback: query Git directly
-  execute_process(
-    COMMAND git rev-parse HEAD
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    OUTPUT_VARIABLE GIT_COMMIT_HASH
-    OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
-endif()
+execute_process(
+  COMMAND git rev-parse HEAD
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE GIT_COMMIT_HASH
+  OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
 message(STATUS "Current commit: ${GIT_COMMIT_HASH}")
 
 include(CPM.cmake)
