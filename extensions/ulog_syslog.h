@@ -1,9 +1,6 @@
 // *************************************************************************
 //
-// ulog v@{ULOG_VERSION}@ - A simple customizable logging library.
-// https://github.com/an-dr/microlog
-//
-// Extension: Syslog Levels.
+// microlog extension: Syslog Levels.
 //
 // Convenience helpers for using RFC 5424 style syslog severities with
 // microlog without modifying the core library headers or sources.
