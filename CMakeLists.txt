@@ -58,6 +58,9 @@ set(ULOG_INSTALL_INCLUDE_DIR .)
 set(ULOG_INSTALL_SRC_DIR src)
 
 add_library(${PROJECT_NAME} INTERFACE)
+# Provide namespaced alias when consumed via add_subdirectory
+add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
+
 target_sources(
   microlog
   INTERFACE $<BUILD_INTERFACE:${ULOG_BUILD_SRC_DIR}/ulog.c>
