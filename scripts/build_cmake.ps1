@@ -4,16 +4,13 @@ pushd $PSScriptRoot/..
 
 try {
     
-    cmake -G "Ninja" -B./build/cmake -DCMAKE_INSTALL_PREFIX=install/cmake/microlog
+    cmake -G "Ninja" -B./build/cmake -DCMAKE_INSTALL_PREFIX=install/cmake/microlog `
+        -DULOG_VERSION_OVERRIDE="$(Get-Content ./version).Trim()"
     cmake --build ./build/cmake
     cmake --install ./build/cmake
-    
-    $VERSION = (Get-Content ./version).Trim()
-    $SRC_FILE = "install/cmake/microlog/src/ulog.c"
-    $HEADER_FILE = "install/cmake/microlog/include/ulog.h"
-    scripts/replace_variables.ps1 $SRC_FILE $SRC_FILE @{ "ULOG_VERSION" = "$VERSION" }
-    scripts/replace_variables.ps1 $HEADER_FILE $HEADER_FILE @{ "ULOG_VERSION" = "$VERSION" }
 
+    Write-Host "CMake install complete. Installation directory: $PWD/install/cmake/microlog"
+    
     popd
     
 } catch {

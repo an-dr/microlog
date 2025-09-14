@@ -1,0 +1,8 @@
+{
+  "name": "microlog",
+  "version": "7.0.0-alpha.3",
+  "description": "Extensible and configurable logging library for embedded and desktop applications (portable, no deps).",
+  "homepage": "https://github.com/an-dr/microlog",
+  "license": "MIT",
+  "supports": "!uwp"
+}
