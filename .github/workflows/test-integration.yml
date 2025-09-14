@@ -19,8 +19,12 @@ jobs:
           sudo apt update
           sudo apt install -y meson ninja-build
 
-      - name: Test CMake Package
-        run: pwsh -File ./tests/integration/packaging/test_cmake.ps1
-
       - name: Test Meson Package
         run: pwsh -File ./tests/integration/packaging/test_meson.ps1
+
+      - name: Test CMake Package
+        run: pwsh -File ./tests/integration/packaging/test_cmake.ps1
+        
+      - name: Test CMake + CPM
+        run: pwsh -File ./tests/integration/cpm/test_cpm.ps1
+
