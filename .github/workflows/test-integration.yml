@@ -14,16 +14,16 @@ jobs:
       # This is needed for testing the PR code. Github create a merge commit
       # that breaks the tests.
       - name: Checkout PR code
-        uses: actions/checkout@v5
         if: github.event_name == 'pull_request'
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 1
 
       # This is needed for testing the main branch after a push
       - name: Checkout Push code
-      - uses: actions/checkout@v5
         if: github.event_name == 'push'
+      - uses: actions/checkout@v5
         with:
           ref: ${{ github.sha }}
           fetch-depth: 1
