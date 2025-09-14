@@ -17,7 +17,6 @@ try {
     
     # Build the test package
     cmake -B./build/cmake-cpm
-    # $env:microlog_DIR = "$PSScriptRoot/build/cmake/deps/microlog" # - another option to specify the path
     cmake --build ./build/cmake-cpm --verbose
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Tests failed with exit code $LASTEXITCODE"

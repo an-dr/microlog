@@ -20,13 +20,7 @@ CPMAddPackage(
 
 add_executable(example_package example.cpp)
 
-# Link against the exported namespace target (preferred) if it exists; fallback to plain target
-if(TARGET microlog::microlog)
-  target_link_libraries(example_package PRIVATE microlog::microlog)
-else()
-  target_link_libraries(example_package PRIVATE microlog)
-endif()
-
+target_link_libraries(example_package PRIVATE microlog::microlog)
 target_compile_definitions(example_package PRIVATE ULOG_BUILD_COLOR=1)
 
 install(TARGETS example_package)

@@ -7,4 +7,6 @@ add_executable(example_package example.cpp)
 
 target_link_libraries(example_package PRIVATE microlog::microlog)
 
+target_compile_definitions(microlog PRIVATE ULOG_BUILD_COLOR=1)
+
 install(TARGETS example_package)
