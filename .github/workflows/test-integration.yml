@@ -11,10 +11,23 @@ jobs:
   test-packaging:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+
+      - name: Checkout PR code
+        # This is needed for testing the PR code. Github create a merge commit
+        # that breaks the tests.
+        uses: actions/checkout@v5
+        if: github.event_name == 'pull_request'
         with:
-          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+          
+      - name: Checkout Push code
+        # This is needed for testing the main branch after a push
+      - uses: actions/checkout@v5
+        if: github.event_name == 'push'
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
 
       - name: Install Meson and Ninja
         run: |
