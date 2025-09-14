@@ -270,7 +270,13 @@ ulog_status ulog_event_get_message(ulog_event *ev, char *buffer,
     print_target tgt = {.type       = PRINT_TARGET_BUFFER,
                         .dsc.buffer = {buffer, 0, buffer_size}};
 
-    log_print_message(&tgt, ev);
+    // Create a copy of the event to avoid va_list issues
+    ulog_event ev_copy = *ev;
+    va_copy(ev_copy.message_format_args, ev->message_format_args);
+    
+    log_print_message(&tgt, &ev_copy);
+    
+    va_end(ev_copy.message_format_args);
     return ULOG_STATUS_OK;
 }
 
@@ -1102,7 +1108,7 @@ ulog_status ulog_topic_config(bool enabled) {
 #define TOPIC_STATIC_NUM ULOG_BUILD_TOPICS_NUM
 #define TOPIC_LEVEL_DEFAULT ULOG_LEVEL_TRACE
 
-typedef struct {
+typedef struct topic_t {
     ulog_topic_id id;
     const char *name;
     bool enabled;
@@ -1110,7 +1116,7 @@ typedef struct {
     ulog_output_id output;
 
 #if TOPIC_IS_DYNAMIC
-    void *next;  // Pointer to the next topic pointer (Topic **)
+    struct topic_t *next;  // Pointer to the next topic
 #endif
 
 } topic_t;
@@ -1550,8 +1556,17 @@ static topic_t *topic_allocate(int id, const char *topic_name,
     }
     topic_t *t = malloc(sizeof(topic_t));
     if (t != NULL) {
+        // Allocate memory for the topic name and copy it
+        size_t name_len = strlen(topic_name) + 1;
+        char *name_copy = malloc(name_len);
+        if (name_copy == NULL) {
+            free(t);
+            return NULL;  // Failed to allocate memory for name
+        }
+        strcpy(name_copy, topic_name);
+        
         t->id      = id;
-        t->name    = topic_name;
+        t->name    = name_copy;
         t->enabled = enable;
         t->level   = TOPIC_LEVEL_DEFAULT;
         t->output  = output;
@@ -1618,6 +1633,7 @@ static ulog_status topic_remove(const char *topic_name) {
             } else {
                 t_prev->next = t->next;
             }
+            free((void*)t->name);  // Free the allocated topic name
             free(t);  // Free the topic memory
             return lock_unlock();
         }
@@ -1790,7 +1806,14 @@ ulog_status ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size) {
     }
     print_target tgt = {.type       = PRINT_TARGET_BUFFER,
                         .dsc.buffer = {out, 0, out_size}};
-    log_print_event(&tgt, ev, false, false, false);
+    
+    // Create a copy of the event to avoid va_list issues
+    ulog_event ev_copy = *ev;
+    va_copy(ev_copy.message_format_args, ev->message_format_args);
+    
+    log_print_event(&tgt, &ev_copy, false, false, false);
+    
+    va_end(ev_copy.message_format_args);
     return ULOG_STATUS_OK;
 }
 
@@ -1854,6 +1877,7 @@ ulog_status ulog_cleanup(void) {
     topic_t *t = topic_data.topics;
     while (t != NULL) {
         topic_t *next = t->next;
+        free((void*)t->name);  // Free the allocated topic name
         free(t);
         t = next;
     }

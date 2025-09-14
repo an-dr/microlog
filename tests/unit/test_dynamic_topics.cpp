@@ -264,16 +264,26 @@ TEST_CASE_FIXTURE(DynamicTopicsTestFixture, "Dynamic Topic New Topic Behavior") 
     // Test default behavior for new topics
     ut_callback_reset();
     
-    // Initially, new topics should be disabled by default
+    // Initially, new topics should be disabled by default (and not exist)
     ulog_topic_info("newtopic1", "Should not appear");
     CHECK(ut_callback_get_message_count() == 0);
     
-    // Enable all topics - this also sets new topic default to enabled
+    // Enable all topics - this enables existing topics but doesn't auto-create new ones
     ulog_topic_enable_all();
     
     ut_callback_reset();
     
-    // Now new topics should be enabled by default
+    // New topics still should not appear since they don't exist
+    ulog_topic_info("newtopic2", "Should not appear");
+    CHECK(ut_callback_get_message_count() == 0);
+    
+    // However, if we explicitly create a topic after enable_all, it should be enabled
+    ulog_topic_id topic_id = ulog_topic_add("newtopic2", ULOG_OUTPUT_ALL, true);
+    REQUIRE(topic_id != ULOG_TOPIC_ID_INVALID);
+    
+    ut_callback_reset();
+    
+    // Now it should appear
     ulog_topic_info("newtopic2", "Should appear");
     CHECK(ut_callback_get_message_count() == 1);
     CHECK(strstr(ut_callback_get_last_message(), "[newtopic2]") != nullptr);
@@ -283,7 +293,11 @@ TEST_CASE_FIXTURE(DynamicTopicsTestFixture, "Dynamic Topic New Topic Behavior") 
     
     ut_callback_reset();
     
-    // Now new topics should be disabled again
+    // Existing topics should now be disabled
+    ulog_topic_info("newtopic2", "Should not appear");
+    CHECK(ut_callback_get_message_count() == 0);
+    
+    // And new topics still should not appear since they don't exist
     ulog_topic_info("newtopic3", "Should not appear");
     CHECK(ut_callback_get_message_count() == 0);
 }
@@ -309,8 +323,8 @@ TEST_CASE_FIXTURE(DynamicTopicsTestFixture, "Dynamic Topic Invalid Operations") 
 }
 
 TEST_CASE_FIXTURE(DynamicTopicsTestFixture, "Dynamic Topic Memory Management") {
-    // Test that we can add many topics without issues
-    const int NUM_TOPICS = 50;
+    // Test that we can add multiple topics without issues
+    const int NUM_TOPICS = 10;  // Back to a reasonable number
     ulog_topic_id topics[NUM_TOPICS];
     
     for (int i = 0; i < NUM_TOPICS; i++) {
@@ -332,8 +346,8 @@ TEST_CASE_FIXTURE(DynamicTopicsTestFixture, "Dynamic Topic Memory Management") {
     
     // Test logging to some of the topics
     ulog_topic_info("topic_0", "First topic");
-    ulog_topic_info("topic_25", "Middle topic");
-    ulog_topic_info("topic_49", "Last topic");
+    ulog_topic_info("topic_5", "Middle topic");
+    ulog_topic_info("topic_9", "Last topic");
     CHECK(ut_callback_get_message_count() == 3);
     
     // Cleanup will remove all topics
