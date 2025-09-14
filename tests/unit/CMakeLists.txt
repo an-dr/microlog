@@ -105,3 +105,12 @@ target_sources(test_cleanup PRIVATE ${ULOG_SRC}
 target_include_directories(test_cleanup PRIVATE ${ULOG_INCLUDE_DIR})
 target_compile_definitions(test_cleanup PRIVATE ${ULOG_CONFIG_TEST_CORE})
 add_test(NAME CleanupTest COMMAND test_cleanup)
+
+# --- Output Test ---
+add_executable(test_output)
+target_sources(test_output PRIVATE ${ULOG_SRC}
+                                    ut_callback.c
+                                    test_output.cpp)
+target_include_directories(test_output PRIVATE ${ULOG_INCLUDE_DIR})
+target_compile_definitions(test_output PRIVATE ${ULOG_CONFIG_BASE})
+add_test(NAME OutputTest COMMAND test_output)
