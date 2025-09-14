@@ -1,3 +1,9 @@
+# cmake_minimum_required(VERSION 3.14)
+# project(microlog_unit_tests)
+
+# # Enable testing
+# enable_testing()
+
 # CMakeLists.txt for microlog unit tests
 
 # Common sources and include directories
@@ -34,6 +40,19 @@ set(ULOG_CONFIG_TEST_TOPICS ${ULOG_CONFIG_BASE}
                             )
 
 set(ULOG_CONFIG_TEST_DYNAMIC_CONFIG "-DULOG_BUILD_DYNAMIC_CONFIG=1")
+
+set(ULOG_CONFIG_TEST_DYNAMIC_TOPICS "-DULOG_BUILD_TOPICS_NUM=-1"
+                                    "-DULOG_BUILD_EXTRA_OUTPUTS=8"
+                                    "-DULOG_BUILD_DYNAMIC_CONFIG=1"
+                                    "-DULOG_BUILD_TIME=1"
+                                    "-DULOG_BUILD_PREFIX_SIZE=16"
+                                    "-DULOG_BUILD_SOURCE_LOCATION=1"
+                                    )
+
+set(ULOG_CONFIG_TEST_EVENT_GETTERS ${ULOG_CONFIG_BASE}
+                                   "-DULOG_BUILD_TOPICS_NUM=4"
+                                   "-DULOG_BUILD_SOURCE_LOCATION=1"
+                                   )
 
 # --- Core Tests ---
 add_executable(test_core)
@@ -125,3 +144,21 @@ target_sources(test_warn_not_enabled PRIVATE ${ULOG_SRC}
 target_include_directories(test_warn_not_enabled PRIVATE ${ULOG_INCLUDE_DIR})
 target_compile_definitions(test_warn_not_enabled PRIVATE ${ULOG_CONFIG_BASE})
 add_test(NAME WarnNotEnabledTest COMMAND test_warn_not_enabled)
+
+# --- Dynamic Topics Test ---
+add_executable(test_dynamic_topics)
+target_sources(test_dynamic_topics PRIVATE ${ULOG_SRC}
+                                            ut_callback.c
+                                            test_dynamic_topics.cpp)
+target_include_directories(test_dynamic_topics PRIVATE ${ULOG_INCLUDE_DIR})
+target_compile_definitions(test_dynamic_topics PRIVATE ${ULOG_CONFIG_TEST_DYNAMIC_TOPICS})
+add_test(NAME DynamicTopicsTest COMMAND test_dynamic_topics)
+
+# --- Event Getters Test ---
+add_executable(test_event_getters)
+target_sources(test_event_getters PRIVATE ${ULOG_SRC}
+                                           ut_callback.c
+                                           test_event_getters.cpp)
+target_include_directories(test_event_getters PRIVATE ${ULOG_INCLUDE_DIR})
+target_compile_definitions(test_event_getters PRIVATE ${ULOG_CONFIG_TEST_EVENT_GETTERS})
+add_test(NAME EventGettersTest COMMAND test_event_getters)
