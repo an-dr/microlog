@@ -7,8 +7,13 @@ try {
     meson setup build --reconfigure --prefix=$PWD/install/meson/microlog
     meson compile -C build
     meson install -C build
-    Write-Host "Meson install complete. Installation directory: $PWD/install/meson/microlog"
     
+    $VERSION = (Get-Content ./version).Trim()
+    $SRC_FILE = "install/meson/microlog/src/ulog.c"
+    $HEADER_FILE = "install/meson/microlog/include/ulog.h"
+    scripts/replace_variables.ps1 $SRC_FILE $SRC_FILE @{ "ULOG_VERSION" = "$VERSION" }
+    scripts/replace_variables.ps1 $HEADER_FILE $HEADER_FILE @{ "ULOG_VERSION" = "$VERSION" }
+
     popd
     
 } catch {
