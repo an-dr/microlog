@@ -54,7 +54,7 @@ endforeach()
 # ----------------------------------------------------------------------------
 set(ULOG_BUILD_INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR}/include)
 set(ULOG_BUILD_SRC_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
-set(ULOG_INSTALL_INCLUDE_DIR include)
+set(ULOG_INSTALL_INCLUDE_DIR .)
 set(ULOG_INSTALL_SRC_DIR src)
 
 add_library(${PROJECT_NAME} INTERFACE)
