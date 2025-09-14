@@ -30,33 +30,8 @@ ulog_status ulog_lock_threadx_enable(TX_MUTEX *mtx) {
     return ULOG_STATUS_OK;
 }
 
-/** @copydoc ulog_lock_threadx_create_and_enable */
-ulog_status ulog_lock_threadx_create_and_enable(TX_MUTEX *mtx) {
-    if (mtx == NULL) {
-        return ULOG_STATUS_INVALID_ARGUMENT;
-    }
-    UINT rc = tx_mutex_create(mtx, (CHAR *)"ulog_mutex", TX_NO_INHERIT);
-    if (rc != TX_SUCCESS) {
-        return ULOG_STATUS_ERROR;
-    }
-    return ulog_lock_threadx_enable(mtx);
-}
-
 /** @copydoc ulog_lock_threadx_disable */
 ulog_status ulog_lock_threadx_disable(void) {
     ulog_lock_set_fn(NULL, NULL);
-    return ULOG_STATUS_OK;
-}
-
-/** @copydoc ulog_lock_threadx_delete_and_disable */
-ulog_status ulog_lock_threadx_delete_and_disable(TX_MUTEX *mtx) {
-    if (mtx == NULL) {
-        return ULOG_STATUS_INVALID_ARGUMENT;
-    }
-    UINT rc = tx_mutex_delete(mtx);
-    ulog_lock_threadx_disable();
-    if (rc != TX_SUCCESS) {
-        return ULOG_STATUS_ERROR;
-    }
     return ULOG_STATUS_OK;
 }

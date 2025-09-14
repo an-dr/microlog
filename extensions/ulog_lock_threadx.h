@@ -2,19 +2,13 @@
 //
 // microlog extension: ThreadX mutex lock helper
 //
-// Enable by defining ULOG_LOCK_WITH_THREADX and compiling this file.
-// Provides helpers to use an existing TX_MUTEX or create one.
-//
 // Usage:
-//   #define ULOG_LOCK_WITH_THREADX
-//   #include "ulog_lock_threadx.h"
-//   // Create + enable
-//   static TX_MUTEX log_mutex;               // zeroed BSS is fine
-//   ulog_lock_threadx_create_and_enable(&log_mutex);
-//   ulog_info("ThreadX lock active");
-//
-//   // Or if you already created it:
-//   ulog_lock_threadx_enable(&log_mutex);
+//    #include "ulog_lock_threadx.h"
+//    ...
+//    TX_MUTEX m;
+//    tx_mutex_create(&m, "ulog", TX_INHERIT);
+//    ulog_lock_threadx_enable(&m);
+//    ulog_info("ThreadX lock active");
 //
 // *************************************************************************
 #pragma once
@@ -33,22 +27,9 @@ extern "C" {
 ulog_status ulog_lock_threadx_enable(TX_MUTEX *mtx);
 
 /**
- * @brief Create a ThreadX mutex (tx_mutex_create) and enable locking.
- * @param mtx Pointer to TX_MUTEX storage.
- * @return ULOG_STATUS_OK on success, ULOG_STATUS_ERROR on create failure.
- */
-ulog_status ulog_lock_threadx_create_and_enable(TX_MUTEX *mtx);
-
-/**
  * @brief Disable logging lock (clears lock function). Does not delete mutex.
  */
 ulog_status ulog_lock_threadx_disable(void);
-
-/**
- * @brief Delete a ThreadX mutex (tx_mutex_delete) and disable logging.
- * @param mtx Pointer to created mutex.
- */
-ulog_status ulog_lock_threadx_delete_and_disable(TX_MUTEX *mtx);
 
 #ifdef __cplusplus
 }
