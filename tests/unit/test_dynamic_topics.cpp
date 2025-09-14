@@ -441,3 +441,50 @@ TEST_CASE_FIXTURE(DynamicTopicsTestFixture, "Dynamic Topic Complex Scenario") {
     CHECK(ut_callback_get_message_count() == 1);
     CHECK(strstr(ut_callback_get_last_message(), "[database]") != nullptr);
 }
+
+TEST_CASE("Dynamic Topic Error Handling") {
+    // Test invalid topic name scenarios
+    ulog_topic_id invalid_id;
+    
+    // Test empty topic name
+    invalid_id = ulog_topic_add("", ULOG_OUTPUT_ALL, true);
+    CHECK(invalid_id == ULOG_TOPIC_ID_INVALID);
+    
+    // Test NULL topic name
+    invalid_id = ulog_topic_add(nullptr, ULOG_OUTPUT_ALL, true);
+    CHECK(invalid_id == ULOG_TOPIC_ID_INVALID);
+    
+    // Test removal with invalid parameters
+    ulog_status result = ulog_topic_remove("");
+    CHECK(result == ULOG_STATUS_INVALID_ARGUMENT);
+    
+    result = ulog_topic_remove(nullptr);
+    CHECK(result == ULOG_STATUS_INVALID_ARGUMENT);
+    
+    // Test level setting with invalid topics
+    result = ulog_topic_level_set("", ULOG_LEVEL_INFO);
+    CHECK(result == ULOG_STATUS_NOT_FOUND);
+    
+    result = ulog_topic_level_set(nullptr, ULOG_LEVEL_INFO);
+    CHECK(result == ULOG_STATUS_NOT_FOUND);
+    
+    // Test enable/disable with invalid topics
+    result = ulog_topic_enable("");
+    CHECK(result == ULOG_STATUS_NOT_FOUND);
+    
+    result = ulog_topic_enable(nullptr);
+    CHECK(result == ULOG_STATUS_NOT_FOUND);
+    
+    result = ulog_topic_disable("");
+    CHECK(result == ULOG_STATUS_NOT_FOUND);
+    
+    result = ulog_topic_disable(nullptr);
+    CHECK(result == ULOG_STATUS_NOT_FOUND);
+    
+    // Test getting ID for invalid topics
+    ulog_topic_id id = ulog_topic_get_id("");
+    CHECK(id == ULOG_TOPIC_ID_INVALID);
+    
+    id = ulog_topic_get_id(nullptr);
+    CHECK(id == ULOG_TOPIC_ID_INVALID);
+}

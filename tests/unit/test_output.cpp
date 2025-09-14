@@ -463,3 +463,50 @@ TEST_CASE_FIXTURE(OutputTestFixture, "Output Edge Cases") {
         ulog_cleanup();
     }
 }
+
+TEST_CASE_FIXTURE(OutputTestFixture, "Output Parameter Validation") {
+    SUBCASE("Invalid output IDs") {
+        // Test with negative output ID
+        ulog_status result = ulog_output_level_set(-1, ULOG_LEVEL_INFO);
+        CHECK(result == ULOG_STATUS_INVALID_ARGUMENT);
+        
+        // Test with output ID that's too large
+        result = ulog_output_level_set(999, ULOG_LEVEL_INFO);
+        CHECK(result == ULOG_STATUS_INVALID_ARGUMENT);
+        
+        // Test removing invalid output IDs
+        ulog_output_remove(-1);  // Should not crash
+        ulog_output_remove(999); // Should not crash
+    }
+    
+    SUBCASE("Invalid levels") {
+        // Test with negative level
+        ulog_status result = ulog_output_level_set_all((ulog_level)-1);
+        CHECK(result == ULOG_STATUS_INVALID_ARGUMENT);
+        
+        // Test with level that's too large
+        result = ulog_output_level_set_all((ulog_level)99);
+        CHECK(result == ULOG_STATUS_INVALID_ARGUMENT);
+        
+        // Test setting level on specific output with invalid level
+        ulog_output_id output_id = ulog_output_add(custom_test_output_handler, nullptr, ULOG_LEVEL_TRACE);
+        REQUIRE(output_id != ULOG_OUTPUT_INVALID);
+        
+        result = ulog_output_level_set(output_id, (ulog_level)-1);
+        CHECK(result == ULOG_STATUS_INVALID_ARGUMENT);
+        
+        result = ulog_output_level_set(output_id, (ulog_level)99);
+        CHECK(result == ULOG_STATUS_INVALID_ARGUMENT);
+        
+        ulog_cleanup();
+    }
+    
+    SUBCASE("Setting level on non-existent output") {
+        // Remove all outputs
+        ulog_cleanup();
+        
+        // Try to set level on output that doesn't exist (use a higher index)
+        ulog_status result = ulog_output_level_set((ulog_output_id)5, ULOG_LEVEL_INFO);
+        CHECK(result == ULOG_STATUS_NOT_FOUND);
+    }
+}

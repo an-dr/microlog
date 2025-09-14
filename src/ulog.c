@@ -1801,7 +1801,7 @@ void log_fill_event(ulog_event *ev, const char *message, ulog_level level,
 // ================
 
 ulog_status ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size) {
-    if (out == NULL || out_size == 0) {
+    if (ev == NULL || out == NULL || out_size == 0) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }
     print_target tgt = {.type       = PRINT_TARGET_BUFFER,
