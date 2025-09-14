@@ -13,8 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replace default levels with generic `ULOG_LEVEL_0...7` - for custom level schemes.
 - New macros `ulog_t(level, topic, ...)` and `ulog(level, ...)` for dynamic level logging.
 - `ULOG_STATUS_DISABLED` status code for disabled features.
-- Syslog levels extension (`extensions/ulog_syslog.c/.h`) providing RFC 5424 style severities (DEBUG, INFO, NOTICE, WARN, ERR, CRIT, ALERT, EMERG)
-- New documentation page `doc/extensions.md` and README Extensions section.
+- Extensions:
+    - Syslog levels extension (`extensions/ulog_syslog.c/.h`) providing RFC 5424 style severities (DEBUG, INFO, NOTICE, WARN, ERR, CRIT, ALERT, EMERG)
+    - Thread-safe lock extensions for CMSIS-RTOS2, FreeRTOS, POSIX, ThreadX, and Windows.
+    - Generic logger interface extension for easier migration from/to other logging libraries.
+    - New documentation page `doc/extensions.md` and README Extensions section.
 
 ### Changed
 

@@ -10,11 +10,9 @@
 
 #include "ulog_lock_pthread.h"
 
-// --------------------------------------------------------------------------
-// Internal lock function
-// --------------------------------------------------------------------------
 /**
- * @brief Internal adapter; wraps pthread mutex operations in ulog_lock_fn signature.
+ * @brief Internal adapter; wraps pthread mutex operations in ulog_lock_fn
+ * signature.
  */
 static ulog_status pthread_lock_fn(bool lock, void *arg) {
     if (arg == NULL) {
@@ -36,10 +34,6 @@ static ulog_status pthread_lock_fn(bool lock, void *arg) {
     return ULOG_STATUS_OK;
 }
 
-// --------------------------------------------------------------------------
-// Public API
-// --------------------------------------------------------------------------
-
 /**
  * @copydoc ulog_lock_pthread_enable
  */
@@ -52,35 +46,8 @@ ulog_status ulog_lock_pthread_enable(pthread_mutex_t *mtx) {
     return ULOG_STATUS_OK;
 }
 
-/**
- * @copydoc ulog_lock_pthread_init_and_enable
- */
-ulog_status ulog_lock_pthread_init_and_enable(pthread_mutex_t *mtx) {
-    if (mtx == NULL) {
-        return ULOG_STATUS_INVALID_ARGUMENT;
-    }
-
-    if (pthread_mutex_init(mtx, NULL) != 0) {
-        return ULOG_STATUS_ERROR;
-    }
-    return ulog_lock_pthread_enable(mtx);
-}
-
 /** @copydoc ulog_lock_pthread_disable */
 ulog_status ulog_lock_pthread_disable(void) {
     ulog_lock_set_fn(NULL, NULL);
-    return ULOG_STATUS_OK;
-}
-
-/** @copydoc ulog_lock_pthread_destroy_and_disable */
-ulog_status ulog_lock_pthread_destroy_and_disable(pthread_mutex_t *mtx) {
-    if (mtx == NULL) {
-        return ULOG_STATUS_INVALID_ARGUMENT;
-    }
-    int rc = pthread_mutex_destroy(mtx);
-    ulog_lock_pthread_disable();
-    if (rc != 0) {
-        return ULOG_STATUS_ERROR;
-    }
     return ULOG_STATUS_OK;
 }
