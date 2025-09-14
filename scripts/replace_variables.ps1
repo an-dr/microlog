@@ -26,7 +26,7 @@ param (
 $content = Get-Content $InputFile -Raw
 
 foreach ($key in $Replacements.Keys) {
-    $pattern = "@{$key}@"
+    $pattern = "@$key@"
     $value = $Replacements[$key]
     $content = $content -replace [regex]::Escape($pattern), $value
 }

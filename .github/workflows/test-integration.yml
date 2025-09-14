@@ -11,16 +11,24 @@ jobs:
   test-packaging:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      # Checkout the appropriate ref. For workflow_call, github.event_name is
+      # 'workflow_call', so we fall back to github.sha.
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0  # full history (some packaging/version logic may rely on tags)
 
       - name: Install Meson and Ninja
         run: |
           sudo apt update
           sudo apt install -y meson ninja-build
 
+      - name: Test Meson Package
+        run: pwsh -File ./tests/integration/packaging/test_meson.ps1
+
       - name: Test CMake Package
         run: pwsh -File ./tests/integration/packaging/test_cmake.ps1
 
-      - name: Test Meson Package
-        run: pwsh -File ./tests/integration/packaging/test_meson.ps1
+      - name: Test CMake + CPM
+        run: pwsh -File ./tests/integration/cpm/test_cpm.ps1

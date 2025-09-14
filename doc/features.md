@@ -58,7 +58,7 @@ Part of features are configured compile-time. You can use defines in the compile
 For CMake projects, you can use the `add_compile_definitions` function.
 
 ```cmake
-add_compile_definitions(ULOG_BUILD_COLOR=1)
+target_compile_definitions(microlog PRIVATE ULOG_BUILD_COLOR=1)
 ```
 
 For Meson projects, you can use the `meson` command.

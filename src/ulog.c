@@ -1,6 +1,6 @@
 // *************************************************************************
 //
-// ulog v@{ULOG_VERSION}@ - A simple customizable logging library.
+// ulog v@ULOG_VERSION@ - A simple customizable logging library.
 // https://github.com/an-dr/microlog
 //
 // *************************************************************************
@@ -402,7 +402,7 @@ ulog_status ulog_color_config(bool enabled) {
 // Disabled Private
 // ================
 
-#define color_config_is_enabled(void) (ULOG_HAS_COLOR)
+#define color_config_is_enabled() (ULOG_HAS_COLOR)
 
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
@@ -502,7 +502,7 @@ ulog_status ulog_prefix_config(bool enabled) {
 // Disabled Private
 // ================
 
-#define prefix_config_is_enabled(void) (ULOG_HAS_PREFIX)
+#define prefix_config_is_enabled() (ULOG_HAS_PREFIX)
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
@@ -619,7 +619,7 @@ ulog_status ulog_time_config(bool enabled) {
 // Disabled Private
 // ================
 
-#define time_config_is_enabled(void) (ULOG_HAS_TIME)
+#define time_config_is_enabled() (ULOG_HAS_TIME)
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
@@ -1086,7 +1086,7 @@ ulog_status ulog_topic_config(bool enabled) {
 // Disabled Private
 // ================
 
-#define topic_config_is_enabled(void) (ULOG_HAS_TOPICS)
+#define topic_config_is_enabled() (ULOG_HAS_TOPICS)
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
@@ -1683,7 +1683,7 @@ ulog_status ulog_source_location_config(bool enabled) {
 // Disabled Private
 // ================
 
-#define src_loc_config_is_enabled(void) (ULOG_HAS_SOURCE_LOCATION)
+#define src_loc_config_is_enabled() (ULOG_HAS_SOURCE_LOCATION)
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================

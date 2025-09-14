@@ -79,7 +79,7 @@ find_package(microlog 1.2.3 REQUIRED)
 add_executable(example_package example.cpp)
 target_link_libraries(example_package PRIVATE microlog::microlog)
 
-add_compile_definitions(ULOG_BUILD_COLOR=1) # configuration
+target_compile_definitions(microlog PRIVATE ULOG_BUILD_COLOR=1) # configuration
 ```
 
 **Option 3 - Meson Package**:
@@ -107,9 +107,8 @@ exe = executable(
 ```cmake
 include(cpm/CPM.cmake)
 CPMAddPackage("gh:an-dr/microlog@6.4.5")
-#Add other CPM packages
 
-target_link_libraries(${PROJECT_NAME} PUBLIC microlog)
+target_link_libraries(${PROJECT_NAME} PUBLIC microlog::microlog)
 target_compile_definitions( microlog
         INTERFACE
         ULOG_BUILD_COLOR=1) # configuration
