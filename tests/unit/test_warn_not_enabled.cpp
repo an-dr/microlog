@@ -246,12 +246,11 @@ TEST_CASE_FIXTURE(WarnNotEnabledTestFixture, "Extra Output Functions Work In Bas
     SUBCASE("Output Add File Function Available") {
         // This should work since ULOG_BUILD_EXTRA_OUTPUTS=8 in base config
         FILE *temp_file = tmpfile();
-        if (temp_file) {
-            ulog_output_id result = ulog_output_add_file(temp_file, ULOG_LEVEL_TRACE);
-            CHECK(result != ULOG_OUTPUT_INVALID);
-            fclose(temp_file);
-        }
+        REQUIRE(temp_file != nullptr);
+        ulog_output_id result = ulog_output_add_file(temp_file, ULOG_LEVEL_TRACE);
+        CHECK(result != ULOG_OUTPUT_INVALID);
         ulog_cleanup();
+        fclose(temp_file);
     }
     
     SUBCASE("Output Remove Function Available") {
