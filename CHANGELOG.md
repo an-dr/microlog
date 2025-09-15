@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Thread-safe lock extensions for CMSIS-RTOS2, FreeRTOS, POSIX, ThreadX, and Windows.
     - Generic logger interface extension for easier migration from/to other logging libraries.
     - New documentation page `doc/extensions.md` and README Extensions section.
+- Unit tests. UT coverage: >85% lines, >90% functions
 
 ### Changed
 
@@ -30,8 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Minor consistency and formatting adjustments in feature documentation prior to extension introduction.
+- Memory (de)allocation for dynamic topics, adding (de)allocation of name string.
+- Potential problems with va_list in `ulog_event_get_message()` and `ulog_event_to_cstr()`
 
-## [v7.0.0-alpha.2]
+## [v7.0.0-alpha.2] - September 8, 2025
 
 ### Added
 

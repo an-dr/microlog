@@ -1,3 +1,9 @@
+# cmake_minimum_required(VERSION 3.14)
+# project(microlog_unit_tests)
+
+# # Enable testing
+# enable_testing()
+
 # CMakeLists.txt for microlog unit tests
 
 # Common sources and include directories
@@ -7,8 +13,10 @@ set(ULOG_INCLUDE_DIR ../../include)
 
 # Configure test environment
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-add_compile_options(--coverage -fprofile-arcs -ftest-coverage -g -O0 -Wall)
-add_link_options(--coverage -fprofile-arcs -ftest-coverage)
+if(NOT WIN32)
+    add_compile_options(--coverage -fprofile-arcs -ftest-coverage -g -O0 -Wall)
+    add_link_options(--coverage -fprofile-arcs -ftest-coverage)
+endif()
 
 # Microlog configs
 set(ULOG_CONFIG_BASE "-DULOG_BUILD_EXTRA_OUTPUTS=8" 
@@ -32,6 +40,19 @@ set(ULOG_CONFIG_TEST_TOPICS ${ULOG_CONFIG_BASE}
                             )
 
 set(ULOG_CONFIG_TEST_DYNAMIC_CONFIG "-DULOG_BUILD_DYNAMIC_CONFIG=1")
+
+set(ULOG_CONFIG_TEST_DYNAMIC_TOPICS "-DULOG_BUILD_TOPICS_NUM=-1"
+                                    "-DULOG_BUILD_EXTRA_OUTPUTS=8"
+                                    "-DULOG_BUILD_DYNAMIC_CONFIG=1"
+                                    "-DULOG_BUILD_TIME=1"
+                                    "-DULOG_BUILD_PREFIX_SIZE=16"
+                                    "-DULOG_BUILD_SOURCE_LOCATION=1"
+                                    )
+
+set(ULOG_CONFIG_TEST_EVENT_GETTERS ${ULOG_CONFIG_BASE}
+                                   "-DULOG_BUILD_TOPICS_NUM=4"
+                                   "-DULOG_BUILD_SOURCE_LOCATION=1"
+                                   )
 
 # --- Core Tests ---
 add_executable(test_core)
@@ -105,3 +126,39 @@ target_sources(test_cleanup PRIVATE ${ULOG_SRC}
 target_include_directories(test_cleanup PRIVATE ${ULOG_INCLUDE_DIR})
 target_compile_definitions(test_cleanup PRIVATE ${ULOG_CONFIG_TEST_CORE})
 add_test(NAME CleanupTest COMMAND test_cleanup)
+
+# --- Output Test ---
+add_executable(test_output)
+target_sources(test_output PRIVATE ${ULOG_SRC}
+                                    ut_callback.c
+                                    test_output.cpp)
+target_include_directories(test_output PRIVATE ${ULOG_INCLUDE_DIR})
+target_compile_definitions(test_output PRIVATE ${ULOG_CONFIG_BASE})
+add_test(NAME OutputTest COMMAND test_output)
+
+# --- Warn Not Enabled Test ---
+add_executable(test_warn_not_enabled)
+target_sources(test_warn_not_enabled PRIVATE ${ULOG_SRC}
+                                              ut_callback.c
+                                              test_warn_not_enabled.cpp)
+target_include_directories(test_warn_not_enabled PRIVATE ${ULOG_INCLUDE_DIR})
+target_compile_definitions(test_warn_not_enabled PRIVATE ${ULOG_CONFIG_BASE})
+add_test(NAME WarnNotEnabledTest COMMAND test_warn_not_enabled)
+
+# --- Dynamic Topics Test ---
+add_executable(test_dynamic_topics)
+target_sources(test_dynamic_topics PRIVATE ${ULOG_SRC}
+                                            ut_callback.c
+                                            test_dynamic_topics.cpp)
+target_include_directories(test_dynamic_topics PRIVATE ${ULOG_INCLUDE_DIR})
+target_compile_definitions(test_dynamic_topics PRIVATE ${ULOG_CONFIG_TEST_DYNAMIC_TOPICS})
+add_test(NAME DynamicTopicsTest COMMAND test_dynamic_topics)
+
+# --- Event Getters Test ---
+add_executable(test_event_getters)
+target_sources(test_event_getters PRIVATE ${ULOG_SRC}
+                                           ut_callback.c
+                                           test_event_getters.cpp)
+target_include_directories(test_event_getters PRIVATE ${ULOG_INCLUDE_DIR})
+target_compile_definitions(test_event_getters PRIVATE ${ULOG_CONFIG_TEST_EVENT_GETTERS})
+add_test(NAME EventGettersTest COMMAND test_event_getters)
