@@ -1,0 +1,64 @@
+/*
+  Basic Logging Example for microlog Arduino Library
+  
+  This example demonstrates basic logging functionality using the microlog library.
+  The library provides various log levels and can be configured for different needs.
+  
+  For more advanced features, see the documentation at:
+  https://github.com/an-dr/microlog
+  
+  Created by Andrei Gramakov
+  Licensed under MIT License
+*/
+
+#include <ulog.h>
+
+void setup() {
+  // Initialize serial communication
+  Serial.begin(115200);
+  while (!Serial) {
+    ; // Wait for serial port to connect (needed for some boards)
+  }
+  
+  Serial.println("microlog Arduino Library Example");
+  Serial.println("=================================");
+  
+  // Set log level to show all messages
+  ulog_output_level_set_all(ULOG_LEVEL_TRACE);
+  
+  // Basic logging examples
+  ulog_trace("This is a trace message - lowest priority");
+  ulog_debug("This is a debug message - for development");
+  ulog_info("This is an info message - general information");
+  ulog_warn("This is a warning message - potential issues");
+  ulog_error("This is an error message - something went wrong");
+  ulog_fatal("This is a fatal message - critical failures");
+  
+  Serial.println();
+  Serial.println("You can also log with format strings:");
+  
+  int sensor_value = 42;
+  float temperature = 23.5;
+  const char* device_name = "Arduino";
+  
+  ulog_info("Sensor reading: %d", sensor_value);
+  ulog_info("Temperature: %.1f°C", temperature);
+  ulog_info("Device: %s", device_name);
+  
+  Serial.println();
+  Serial.println("Example completed!");
+}
+
+void loop() {
+  // Log a message every 5 seconds
+  static unsigned long last_log = 0;
+  unsigned long current_time = millis();
+  
+  if (current_time - last_log >= 5000) {
+    ulog_info("Uptime: %lu seconds", current_time / 1000);
+    last_log = current_time;
+  }
+  
+  // Your main code here
+  delay(100);
+}

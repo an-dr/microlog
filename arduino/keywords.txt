@@ -1,0 +1,123 @@
+#######################################
+# Syntax Coloring Map For microlog
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+ulog_event	KEYWORD1
+ulog_level	KEYWORD1
+ulog_status	KEYWORD1
+ulog_topic_id	KEYWORD1
+ulog_output_id	KEYWORD1
+ulog_lock_fn	KEYWORD1
+ulog_prefix_fn	KEYWORD1
+ulog_output_handler_fn	KEYWORD1
+ulog_level_descriptor	KEYWORD1
+ulog_level_config_style	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+ulog	KEYWORD2
+ulog_log	KEYWORD2
+ulog_trace	KEYWORD2
+ulog_debug	KEYWORD2
+ulog_info	KEYWORD2
+ulog_warn	KEYWORD2
+ulog_error	KEYWORD2
+ulog_fatal	KEYWORD2
+
+ulog_topic_log	KEYWORD2
+ulog_t	KEYWORD2
+ulog_topic_trace	KEYWORD2
+ulog_t_trace	KEYWORD2
+ulog_topic_debug	KEYWORD2
+ulog_t_debug	KEYWORD2
+ulog_topic_info	KEYWORD2
+ulog_t_info	KEYWORD2
+ulog_topic_warn	KEYWORD2
+ulog_t_warn	KEYWORD2
+ulog_topic_error	KEYWORD2
+ulog_t_error	KEYWORD2
+ulog_topic_fatal	KEYWORD2
+ulog_t_fatal	KEYWORD2
+
+ulog_level_to_string	KEYWORD2
+ulog_level_set_new_levels	KEYWORD2
+ulog_level_reset_levels	KEYWORD2
+ulog_level_config	KEYWORD2
+
+ulog_event_to_cstr	KEYWORD2
+ulog_event_get_message	KEYWORD2
+ulog_event_get_topic	KEYWORD2
+ulog_event_get_line	KEYWORD2
+ulog_event_get_file	KEYWORD2
+ulog_event_get_level	KEYWORD2
+ulog_event_get_time	KEYWORD2
+
+ulog_lock_set_fn	KEYWORD2
+
+ulog_color_config	KEYWORD2
+ulog_prefix_config	KEYWORD2
+ulog_source_location_config	KEYWORD2
+ulog_time_config	KEYWORD2
+ulog_topic_config	KEYWORD2
+
+ulog_prefix_set_fn	KEYWORD2
+
+ulog_output_level_set	KEYWORD2
+ulog_output_level_set_all	KEYWORD2
+ulog_output_add	KEYWORD2
+ulog_output_add_file	KEYWORD2
+ulog_output_remove	KEYWORD2
+
+ulog_topic_add	KEYWORD2
+ulog_topic_remove	KEYWORD2
+ulog_topic_level_set	KEYWORD2
+ulog_topic_get_id	KEYWORD2
+ulog_topic_enable	KEYWORD2
+ulog_topic_disable	KEYWORD2
+ulog_topic_enable_all	KEYWORD2
+ulog_topic_disable_all	KEYWORD2
+
+ulog_cleanup	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+ULOG_LEVEL_0	LITERAL1
+ULOG_LEVEL_1	LITERAL1
+ULOG_LEVEL_2	LITERAL1
+ULOG_LEVEL_3	LITERAL1
+ULOG_LEVEL_4	LITERAL1
+ULOG_LEVEL_5	LITERAL1
+ULOG_LEVEL_6	LITERAL1
+ULOG_LEVEL_7	LITERAL1
+ULOG_LEVEL_TOTAL	LITERAL1
+
+ULOG_LEVEL_TRACE	LITERAL1
+ULOG_LEVEL_DEBUG	LITERAL1
+ULOG_LEVEL_INFO	LITERAL1
+ULOG_LEVEL_WARN	LITERAL1
+ULOG_LEVEL_ERROR	LITERAL1
+ULOG_LEVEL_FATAL	LITERAL1
+
+ULOG_STATUS_OK	LITERAL1
+ULOG_STATUS_ERROR	LITERAL1
+ULOG_STATUS_INVALID_ARGUMENT	LITERAL1
+ULOG_STATUS_NOT_FOUND	LITERAL1
+ULOG_STATUS_BUSY	LITERAL1
+ULOG_STATUS_DISABLED	LITERAL1
+
+ULOG_TOPIC_ID_INVALID	LITERAL1
+
+ULOG_OUTPUT_INVALID	LITERAL1
+ULOG_OUTPUT_STDOUT	LITERAL1
+ULOG_OUTPUT_ALL	LITERAL1
+
+ULOG_LEVEL_CONFIG_STYLE_DEFAULT	LITERAL1
+ULOG_LEVEL_CONFIG_STYLE_SHORT	LITERAL1
