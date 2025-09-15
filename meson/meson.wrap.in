@@ -1,0 +1,7 @@
+[wrap-git]
+url = https://github.com/an-dr/microlog.git
+revision = v@ULOG_VERSION@
+depth = 1
+
+[provide]
+microlog = microlog_dep

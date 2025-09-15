@@ -7,6 +7,7 @@ try {
     meson setup build --reconfigure --prefix=$PWD/install/meson/microlog
     meson compile -C build
     meson install -C build
+    
     Write-Host "Meson install complete. Installation directory: $PWD/install/meson/microlog"
     
     popd

@@ -99,7 +99,13 @@ exe = executable(
 )
 ```
 
-**Option 4 - CPM:**
+**Option 4 - Meson Wrap File**:
+
+- Download the wrap file from [Releases](https://github.com/an-dr/microlog/releases)
+- Place `microlog.wrap` in your `MyMesonProject/subprojects/` directory
+- Add to your dependencies as in Option 3
+
+**Option 5 - CPM:**
 
 - Download CPM (https://github.com/cpm-cmake/CPM.cmake)
 - Add microlog to your projects CMAKE file:
