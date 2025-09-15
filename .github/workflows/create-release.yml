@@ -2,6 +2,7 @@
 # Require artifacts:
 # - env.ARTIFACT_CMAKE
 # - env.ARTIFACT_MESON
+# - env.ARTIFACT_ARDUINO
 
 name: Release
 
@@ -111,9 +112,30 @@ jobs:
           name: meson-wrap-file
           path: ./install/wrap/microlog.wrap
 
+  build-arduino:
+    runs-on: ubuntu-latest
+    outputs:
+      package-name: ${{ steps.set-package-name.outputs.package_name }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set package name
+        id: set-package-name
+        run: echo "package_name=microlog-$(cat ./version)-arduino" >> $GITHUB_OUTPUT
+
+      - name: Run build script
+        run: pwsh -File ./scripts/build_arduino.ps1
+
+      - name: Upload Arduino package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.set-package-name.outputs.package_name }}
+          path: install/arduino/microlog-*.zip
+
   release:
     runs-on: ubuntu-latest
-    needs: [build-cmake, build-meson, build-src, build-wrap]
+    needs: [build-cmake, build-meson, build-src, build-wrap, build-arduino]
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -140,6 +162,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: meson-wrap-file
+          path: ./release-artifacts
+
+      - name: Download Arduino artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build-arduino.outputs.package-name }}
           path: ./release-artifacts
 
       - name: Create GitHub Release and Upload Artifact

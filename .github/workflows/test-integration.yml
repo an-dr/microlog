@@ -1,6 +1,7 @@
 # Tests packages:
 # - CMake
 # - Meson
+# - Arduino
 
 name: Integration Tests
 
@@ -32,3 +33,6 @@ jobs:
 
       - name: Test CMake + CPM
         run: pwsh -File ./tests/integration/cpm/test_cpm.ps1
+
+      - name: Test Arduino Library Package
+        run: pwsh -File ./tests/integration/arduino/test_arduino.ps1
