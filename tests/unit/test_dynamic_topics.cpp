@@ -324,7 +324,7 @@ TEST_CASE_FIXTURE(DynamicTopicsTestFixture, "Dynamic Topic Invalid Operations") 
 
 TEST_CASE_FIXTURE(DynamicTopicsTestFixture, "Dynamic Topic Memory Management") {
     // Test that we can add multiple topics without issues
-    const int NUM_TOPICS = 10;  // Back to a reasonable number
+    const int NUM_TOPICS = 10;
     ulog_topic_id topics[NUM_TOPICS];
     
     for (int i = 0; i < NUM_TOPICS; i++) {
