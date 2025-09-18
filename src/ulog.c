@@ -1163,7 +1163,6 @@ ulog_status ulog_topic_config(bool enabled) {
 typedef struct topic_t {
     ulog_topic_id id;
     const char *name;
-    bool enabled;
     ulog_level level;
     ulog_output_id output;
 
@@ -1206,20 +1205,10 @@ static ulog_topic_id topic_str_to_id(const char *str);
 /// @return Pointer to the topic if found, NULL otherwise
 static topic_t *topic_get(ulog_topic_id topic);
 
-/// @brief Enable all topics
-/// @return ulog_status
-static ulog_status topic_enable_all(void);
-
-/// @brief Disable all topics
-/// @return ulog_status
-static ulog_status topic_disable_all(void);
-
 /// @brief Add a new topic
 /// @param topic_name - Topic name
 /// @param output - Output id
-/// @param enable - Whether the topic is enabled after creation
-static ulog_topic_id topic_add(const char *topic_name, ulog_output_id output,
-                               bool enable);
+static ulog_topic_id topic_add(const char *topic_name, ulog_output_id output);
 
 /// @brief Remove a topic by name
 /// @param topic_name - Topic name
@@ -1263,34 +1252,10 @@ static bool topic_is_loggable(topic_t *t, ulog_level level) {
     if (t == NULL) {
         return false;  // Topic not found, cannot log
     }
-    if (!t->enabled || !level_is_allowed(level, t->level)) {
+    if (!level_is_allowed(level, t->level)) {
         return false;  // Topic is disabled, cannot log
     }
     return true;
-}
-
-/// @brief Enables the topic
-/// @param topic - Topic ID
-/// @return ULOG_STATUS_OK on success, ULOG_STATUS_NOT_FOUND if topic not found
-static ulog_status topic_enable(int topic) {
-    topic_t *t = topic_get(topic);
-    if (t != NULL) {
-        t->enabled = true;
-        return ULOG_STATUS_OK;
-    }
-    return ULOG_STATUS_NOT_FOUND;
-}
-
-/// @brief Disables the topic
-/// @param topic - Topic ID
-/// @return ULOG_STATUS_OK on success, ULOG_STATUS_NOT_FOUND if topic not found
-static ulog_status topic_disable(int topic) {
-    topic_t *t = topic_get(topic);
-    if (t != NULL) {
-        t->enabled = false;
-        return ULOG_STATUS_OK;
-    }
-    return ULOG_STATUS_NOT_FOUND;
 }
 
 /// @brief Processes the topic
@@ -1327,42 +1292,20 @@ ulog_status ulog_topic_level_set(const char *topic_name, ulog_level level) {
     return topic_set_level(topic_id, level);
 }
 
-ulog_status ulog_topic_enable(const char *topic_name) {
-    ulog_topic_id topic_id = ulog_topic_get_id(topic_name);
-    if (topic_id == ULOG_TOPIC_ID_INVALID) {
-        return ULOG_STATUS_NOT_FOUND;  // Topic not found, do nothing
-    }
-    return topic_enable(topic_id);
-}
-
-ulog_status ulog_topic_disable(const char *topic_name) {
-    ulog_topic_id topic_id = ulog_topic_get_id(topic_name);
-    if (topic_id == ULOG_TOPIC_ID_INVALID) {
-        return ULOG_STATUS_NOT_FOUND;  // Topic not found, do nothing
-    }
-    return topic_disable(topic_id);
-}
-
-ulog_status ulog_topic_enable_all(void) {
-    topic_data.new_topic_enabled = true;
-    return topic_enable_all();
-}
-
-ulog_status ulog_topic_disable_all(void) {
-    topic_data.new_topic_enabled = false;
-    return topic_disable_all();
-}
-
 ulog_topic_id ulog_topic_get_id(const char *topic_name) {
     return topic_str_to_id(topic_name);
 }
 
 ulog_topic_id ulog_topic_add(const char *topic_name, ulog_output_id output,
-                             bool enable) {
+                             ulog_level level) {
     if (is_str_empty(topic_name)) {
         return ULOG_TOPIC_ID_INVALID;  // Invalid topic name, do nothing
     }
-    return topic_add(topic_name, output, enable);
+    ulog_topic_id id = topic_add(topic_name, output);
+    if (id != ULOG_TOPIC_ID_INVALID) {
+        topic_set_level(id, level);
+    }
+    return id;
 }
 
 ulog_status ulog_topic_remove(const char *topic_name) {
@@ -1386,28 +1329,6 @@ ulog_status ulog_topic_level_set(const char *topic_name, ulog_level level) {
     return ULOG_STATUS_DISABLED;
 }
 
-ulog_status ulog_topic_enable(const char *topic_name) {
-    (void)(topic_name);
-    warn_not_enabled("ULOG_BUILD_TOPICS_NUM");
-    return ULOG_STATUS_DISABLED;
-}
-
-ulog_status ulog_topic_disable(const char *topic_name) {
-    (void)(topic_name);
-    warn_not_enabled("ULOG_BUILD_TOPICS_NUM");
-    return ULOG_STATUS_DISABLED;
-}
-
-ulog_status ulog_topic_enable_all(void) {
-    warn_not_enabled("ULOG_BUILD_TOPICS_NUM");
-    return ULOG_STATUS_DISABLED;
-}
-
-ulog_status ulog_topic_disable_all(void) {
-    warn_not_enabled("ULOG_BUILD_TOPICS_NUM");
-    return ULOG_STATUS_DISABLED;
-}
-
 ulog_topic_id ulog_topic_get_id(const char *topic_name) {
     (void)(topic_name);
     warn_not_enabled("ULOG_BUILD_TOPICS_NUM");
@@ -1415,10 +1336,10 @@ ulog_topic_id ulog_topic_get_id(const char *topic_name) {
 }
 
 ulog_topic_id ulog_topic_add(const char *topic_name, ulog_output_id output,
-                             bool enable) {
+                             ulog_level level) {
     (void)(topic_name);
     (void)(output);
-    (void)(enable);
+    (void)(level);
     warn_not_enabled("ULOG_BUILD_TOPICS_NUM");
     return ULOG_TOPIC_ID_INVALID;
 }
@@ -1443,26 +1364,6 @@ ulog_topic_id ulog_topic_add(const char *topic_name, ulog_output_id output,
 // Private
 // ================
 
-ulog_status topic_enable_all(void) {
-    for (int i = 0; i < TOPIC_STATIC_NUM; i++) {
-        if (is_str_empty(topic_data.topics[i].name)) {
-            continue;  // Skip empty slot; do not break to allow sparse reuse
-        }
-        topic_data.topics[i].enabled = true;
-    }
-    return ULOG_STATUS_OK;
-}
-
-ulog_status topic_disable_all(void) {
-    for (int i = 0; i < TOPIC_STATIC_NUM; i++) {
-        if (is_str_empty(topic_data.topics[i].name)) {
-            continue;  // Skip empty slot; allow sparse arrays
-        }
-        topic_data.topics[i].enabled = false;
-    }
-    return ULOG_STATUS_OK;
-}
-
 ulog_topic_id topic_str_to_id(const char *str) {
     for (int i = 0; i < TOPIC_STATIC_NUM; i++) {
         if (is_str_empty(topic_data.topics[i].name)) {
@@ -1482,8 +1383,7 @@ static topic_t *topic_get(ulog_topic_id topic) {
     return NULL;
 }
 
-static ulog_topic_id topic_add(const char *topic_name, ulog_output_id output,
-                               bool enable) {
+static ulog_topic_id topic_add(const char *topic_name, ulog_output_id output) {
     if (is_str_empty(topic_name)) {
         return ULOG_TOPIC_ID_INVALID;
     }
@@ -1493,11 +1393,10 @@ static ulog_topic_id topic_add(const char *topic_name, ulog_output_id output,
     for (int i = 0; i < TOPIC_STATIC_NUM; i++) {
         // If there is an empty slot
         if (is_str_empty(topic_data.topics[i].name)) {
-            topic_data.topics[i].id      = i;
-            topic_data.topics[i].name    = topic_name;
-            topic_data.topics[i].enabled = enable;
-            topic_data.topics[i].level   = TOPIC_LEVEL_DEFAULT;
-            topic_data.topics[i].output  = output;
+            topic_data.topics[i].id     = i;
+            topic_data.topics[i].name   = topic_name;
+            topic_data.topics[i].level  = TOPIC_LEVEL_DEFAULT;
+            topic_data.topics[i].output = output;
             (void)lock_unlock();  // Unlock the configuration
             return i;
         }
@@ -1563,20 +1462,6 @@ static topic_t *topic_get_last(void) {
     return last;
 }
 
-static ulog_status topic_enable_all(void) {
-    for (topic_t *t = topic_get_first(); t != NULL; t = topic_get_next(t)) {
-        t->enabled = true;
-    }
-    return ULOG_STATUS_OK;
-}
-
-static ulog_status topic_disable_all(void) {
-    for (topic_t *t = topic_get_first(); t != NULL; t = topic_get_next(t)) {
-        t->enabled = false;
-    }
-    return ULOG_STATUS_OK;
-}
-
 ulog_topic_id topic_str_to_id(const char *str) {
     for (topic_t *t = topic_get_first(); t != NULL; t = topic_get_next(t)) {
         if (!is_str_empty(t->name) && strcmp(t->name, str) == 0) {
@@ -1599,7 +1484,7 @@ static topic_t *topic_get(int topic) {
 }
 
 static topic_t *topic_allocate(int id, const char *topic_name,
-                               ulog_output_id output, bool enable) {
+                               ulog_output_id output) {
     if (is_str_empty(topic_name)) {
         return NULL;  // Invalid topic name, do not allocate
     }
@@ -1617,18 +1502,16 @@ static topic_t *topic_allocate(int id, const char *topic_name,
         }
         strcpy(name_copy, topic_name);
 
-        t->id      = id;
-        t->name    = name_copy;
-        t->enabled = enable;
-        t->level   = TOPIC_LEVEL_DEFAULT;
-        t->output  = output;
-        t->next    = NULL;
+        t->id     = id;
+        t->name   = name_copy;
+        t->level  = TOPIC_LEVEL_DEFAULT;
+        t->output = output;
+        t->next   = NULL;
     }
     return t;
 }
 
-static ulog_topic_id topic_add(const char *topic_name, ulog_output_id output,
-                               bool enable) {
+static ulog_topic_id topic_add(const char *topic_name, ulog_output_id output) {
     if (is_str_empty(topic_name)) {
         return ULOG_TOPIC_ID_INVALID;
     }
@@ -1646,7 +1529,7 @@ static ulog_topic_id topic_add(const char *topic_name, ulog_output_id output,
     }
     topic_t *t = topic_get_last();
     if (t == NULL) {
-        topic_data.topics = topic_allocate(0, topic_name, output, enable);
+        topic_data.topics = topic_allocate(0, topic_name, output);
         if (topic_data.topics != NULL) {
             (void)lock_unlock();
             return 0;
@@ -1656,7 +1539,7 @@ static ulog_topic_id topic_add(const char *topic_name, ulog_output_id output,
     }
 
     // If the beginning is not empty
-    t->next = topic_allocate(t->id + 1, topic_name, output, enable);
+    t->next = topic_allocate(t->id + 1, topic_name, output);
     if (t->next) {
         (void)lock_unlock();
         return t->id + 1;

@@ -316,12 +316,11 @@ All topic must be added before usage via `ulog_topic_add`. At this step it is po
 For example (static topics):
 
 ```c
-ulog_topic_add("network", ULOG_OUTPUT_ALL, true); // enabled by default
-ulog_topic_add("storage", ULOG_OUTPUT_ALL, false); // disabled by default
+ulog_topic_add("network", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE); // Added and initialized to TRACE level
+ulog_topic_add("storage", ULOG_OUTPUT_ALL, ULOG_LEVEL_INFO); // Added and initialized to INFO level
 
 ulog_topic_info("network", "Connected to server");
 
-ulog_topic_enable("storage");
 ulog_topic_warn("storage", "No free space");
 ```
 
@@ -337,14 +336,14 @@ ulog_topic_trace("network", "Disconnected from server");
 ulog_topic_fatal("video", "No signal");
 ```
 
-By default, the logging level of each topic is set to `ULOG_LEVEL_TRACE`. It is possible to alter this behavior by calling `ulog_topic_level_set()`. All topics below the level set by `ulog_output_level_set()` (`ULOG_LEVEL_TRACE` by default) will not generate log.
+The logging level of each topic is set to the value given as parameter. It is possible to alter this behavior by calling `ulog_topic_level_set()`. All topics below the level set by `ulog_output_level_set()` will not generate log.
 
 For example:
 
 ```c
-// By default, both topic logging levels are set to ULOG_LEVEL_TRACE
-ulog_topic_add("network", ULOG_OUTPUT_ALL, true);
-ulog_topic_add("storage", ULOG_OUTPUT_ALL, true);
+// Both topic logging levels are set to ULOG_LEVEL_TRACE
+ulog_topic_add("network", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
+ulog_topic_add("storage", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
 
 // Both topics generate log as global logging level is set to ULOG_LEVEL_TRACE
 ulog_topic_info("network", "Connected to server");
@@ -385,7 +384,7 @@ vs
 To write to a file open a file and pass it to the `ulog_output_add_file` function.
 
 ```c
-ulog_topic_add("Outputs", ULOG_OUTPUT_ALL, true);
+ulog_topic_add("Outputs", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
 FILE *fp = fopen("log.txt", "w");
 if (fp) {
     ulog_output_id file_output = ulog_output_add_file(fp, ULOG_LEVEL_INFO);

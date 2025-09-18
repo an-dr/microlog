@@ -54,7 +54,7 @@ TEST_CASE_FIXTURE(TestFixture,
     ulog_output_level_set_all(ULOG_LEVEL_TRACE);
 
     // Add a topic
-    ulog_topic_id test_topic = ulog_topic_add("TEST", ULOG_OUTPUT_ALL, true);
+    ulog_topic_id test_topic = ulog_topic_add("TEST", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
     CHECK(test_topic != ULOG_TOPIC_ID_INVALID);
 
     ulog_topic_info("TEST", "Message with topic");
@@ -141,7 +141,7 @@ TEST_CASE_FIXTURE(TestFixture,
     ulog_output_level_set_all(ULOG_LEVEL_INFO);
 
     // Add topic
-    ulog_topic_id topic = ulog_topic_add("COMBINED", ULOG_OUTPUT_ALL, true);
+    ulog_topic_id topic = ulog_topic_add("COMBINED", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
     CHECK(topic != ULOG_TOPIC_ID_INVALID);
 
     // Set prefix

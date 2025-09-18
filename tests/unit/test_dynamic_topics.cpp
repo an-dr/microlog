@@ -28,17 +28,17 @@ struct DynamicTopicsTestFixture {
 
 TEST_CASE_FIXTURE(DynamicTopicsTestFixture, "Dynamic Topic Add") {
     // Test adding topics with dynamic allocation
-    ulog_topic_id topic1 = ulog_topic_add("network", ULOG_OUTPUT_ALL, true);
+    ulog_topic_id topic1 = ulog_topic_add("network", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
     CHECK(topic1 != ULOG_TOPIC_ID_INVALID);
     
-    ulog_topic_id topic2 = ulog_topic_add("storage", ULOG_OUTPUT_ALL, false);
+    ulog_topic_id topic2 = ulog_topic_add("storage", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
     CHECK(topic2 != ULOG_TOPIC_ID_INVALID);
     
     // Topics should have different IDs
     CHECK(topic1 != topic2);
     
     // Test that duplicate topic names return the same ID
-    ulog_topic_id topic1_dup = ulog_topic_add("network", ULOG_OUTPUT_ALL, true);
+    ulog_topic_id topic1_dup = ulog_topic_add("network", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
     CHECK(topic1_dup == topic1);
 }
 
@@ -52,7 +52,7 @@ TEST_CASE_FIXTURE(DynamicTopicsTestFixture, "Dynamic Topic Get ID") {
     CHECK(empty_id == ULOG_TOPIC_ID_INVALID);
     
     // Add a topic and then try to get its ID
-    ulog_topic_id added_id = ulog_topic_add("testnet", ULOG_OUTPUT_ALL, true);
+    ulog_topic_id added_id = ulog_topic_add("testnet", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
     REQUIRE(added_id != ULOG_TOPIC_ID_INVALID);
     
     // Try to get the ID of the topic we just added
@@ -60,56 +60,26 @@ TEST_CASE_FIXTURE(DynamicTopicsTestFixture, "Dynamic Topic Get ID") {
     CHECK(found_id == added_id);
 }
 
-TEST_CASE_FIXTURE(DynamicTopicsTestFixture, "Dynamic Topic Logging") {
-    // Add topics with different states
-    ulog_topic_id enabled_topic = ulog_topic_add("enabled", ULOG_OUTPUT_ALL, true);
-    ulog_topic_id disabled_topic = ulog_topic_add("disabled", ULOG_OUTPUT_ALL, false);
-    REQUIRE(enabled_topic != ULOG_TOPIC_ID_INVALID);
-    REQUIRE(disabled_topic != ULOG_TOPIC_ID_INVALID);
+TEST_CASE_FIXTURE(DynamicTopicsTestFixture, "Dynamic Topic Initial Level Setting") {
+    // Add topics with different levels
+    ulog_topic_id topic_trace = ulog_topic_add("trace", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
+    ulog_topic_id topic_error = ulog_topic_add("error", ULOG_OUTPUT_ALL, ULOG_LEVEL_ERROR);
+    REQUIRE(topic_trace != ULOG_TOPIC_ID_INVALID);
+    REQUIRE(topic_error != ULOG_TOPIC_ID_INVALID);
     
     ut_callback_reset();
     
-    // Log to enabled topic - should appear
-    ulog_topic_info("enabled", "This should appear");
+    ulog_topic_info("trace", "This should appear"); // Should appear
     CHECK(ut_callback_get_message_count() == 1);
-    CHECK(strstr(ut_callback_get_last_message(), "[enabled]") != nullptr);
+    CHECK(strstr(ut_callback_get_last_message(), "[trace]") != nullptr);
     CHECK(strstr(ut_callback_get_last_message(), "This should appear") != nullptr);
     
-    // Log to disabled topic - should not appear
-    ulog_topic_info("disabled", "This should not appear");
-    CHECK(ut_callback_get_message_count() == 1); // Count should remain the same
-}
-
-TEST_CASE_FIXTURE(DynamicTopicsTestFixture, "Dynamic Topic Enable/Disable") {
-    ulog_topic_id topic = ulog_topic_add("toggle", ULOG_OUTPUT_ALL, false);
-    REQUIRE(topic != ULOG_TOPIC_ID_INVALID);
-    
-    ut_callback_reset();
-    
-    // Initially disabled - should not log
-    ulog_topic_info("toggle", "Message 1");
-    CHECK(ut_callback_get_message_count() == 0);
-    
-    // Enable topic
-    ulog_status result = ulog_topic_enable("toggle");
-    CHECK(result == ULOG_STATUS_OK);
-    
-    // Now should log
-    ulog_topic_info("toggle", "Message 2");
-    CHECK(ut_callback_get_message_count() == 1);
-    CHECK(strstr(ut_callback_get_last_message(), "[toggle]") != nullptr);
-    
-    // Disable topic again
-    result = ulog_topic_disable("toggle");
-    CHECK(result == ULOG_STATUS_OK);
-    
-    // Should not log anymore
-    ulog_topic_info("toggle", "Message 3");
+    ulog_topic_info("error", "This should not appear"); // Should be filtered (below ERROR)
     CHECK(ut_callback_get_message_count() == 1); // Count should remain the same
 }
 
 TEST_CASE_FIXTURE(DynamicTopicsTestFixture, "Dynamic Topic Level Setting") {
-    ulog_topic_id topic = ulog_topic_add("leveltest", ULOG_OUTPUT_ALL, true);
+    ulog_topic_id topic = ulog_topic_add("leveltest", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
     REQUIRE(topic != ULOG_TOPIC_ID_INVALID);
     
     ut_callback_reset();
@@ -144,52 +114,9 @@ TEST_CASE_FIXTURE(DynamicTopicsTestFixture, "Dynamic Topic Level Setting") {
     CHECK(ut_callback_get_message_count() == 2);
 }
 
-TEST_CASE_FIXTURE(DynamicTopicsTestFixture, "Dynamic Topic Enable/Disable All") {
-    // Add multiple topics
-    ulog_topic_id topic1 = ulog_topic_add("topic1", ULOG_OUTPUT_ALL, true);
-    ulog_topic_id topic2 = ulog_topic_add("topic2", ULOG_OUTPUT_ALL, false);
-    ulog_topic_id topic3 = ulog_topic_add("topic3", ULOG_OUTPUT_ALL, true);
-    
-    REQUIRE(topic1 != ULOG_TOPIC_ID_INVALID);
-    REQUIRE(topic2 != ULOG_TOPIC_ID_INVALID);
-    REQUIRE(topic3 != ULOG_TOPIC_ID_INVALID);
-    
-    ut_callback_reset();
-    
-    // topic1 and topic3 should be enabled, topic2 disabled
-    ulog_topic_info("topic1", "Message 1");
-    ulog_topic_info("topic2", "Message 2"); // should be filtered
-    ulog_topic_info("topic3", "Message 3");
-    CHECK(ut_callback_get_message_count() == 2);
-    
-    // Disable all topics
-    ulog_status result = ulog_topic_disable_all();
-    CHECK(result == ULOG_STATUS_OK);
-    
-    ut_callback_reset();
-    
-    // All should be disabled now
-    ulog_topic_info("topic1", "Message 4");
-    ulog_topic_info("topic2", "Message 5");
-    ulog_topic_info("topic3", "Message 6");
-    CHECK(ut_callback_get_message_count() == 0);
-    
-    // Enable all topics
-    result = ulog_topic_enable_all();
-    CHECK(result == ULOG_STATUS_OK);
-    
-    ut_callback_reset();
-    
-    // All should be enabled now
-    ulog_topic_info("topic1", "Message 7");
-    ulog_topic_info("topic2", "Message 8");
-    ulog_topic_info("topic3", "Message 9");
-    CHECK(ut_callback_get_message_count() == 3);
-}
-
 TEST_CASE_FIXTURE(DynamicTopicsTestFixture, "Dynamic Topic Remove") {
     // Add a topic
-    ulog_topic_id topic = ulog_topic_add("removeme", ULOG_OUTPUT_ALL, true);
+    ulog_topic_id topic = ulog_topic_add("removeme", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
     REQUIRE(topic != ULOG_TOPIC_ID_INVALID);
     
     // Verify it exists
@@ -237,7 +164,7 @@ TEST_CASE_FIXTURE(DynamicTopicsTestFixture, "Dynamic Topic Output Assignment") {
     REQUIRE(file_output != ULOG_OUTPUT_INVALID);
     
     // Add topic assigned to file output only
-    ulog_topic_id topic = ulog_topic_add("fileonly", file_output, true);
+    ulog_topic_id topic = ulog_topic_add("fileonly", file_output, ULOG_LEVEL_TRACE);
     REQUIRE(topic != ULOG_TOPIC_ID_INVALID);
     
     ut_callback_reset();
@@ -248,7 +175,7 @@ TEST_CASE_FIXTURE(DynamicTopicsTestFixture, "Dynamic Topic Output Assignment") {
     CHECK(ut_callback_get_message_count() == 0);
     
     // Test adding topic to all outputs
-    ulog_topic_id all_topic = ulog_topic_add("alloutputs", ULOG_OUTPUT_ALL, true);
+    ulog_topic_id all_topic = ulog_topic_add("alloutputs", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
     REQUIRE(all_topic != ULOG_TOPIC_ID_INVALID);
     
     ut_callback_reset();
@@ -260,65 +187,17 @@ TEST_CASE_FIXTURE(DynamicTopicsTestFixture, "Dynamic Topic Output Assignment") {
     fclose(temp_file);
 }
 
-TEST_CASE_FIXTURE(DynamicTopicsTestFixture, "Dynamic Topic New Topic Behavior") {
-    // Test default behavior for new topics
-    ut_callback_reset();
-    
-    // Initially, new topics should be disabled by default (and not exist)
-    ulog_topic_info("newtopic1", "Should not appear");
-    CHECK(ut_callback_get_message_count() == 0);
-    
-    // Enable all topics - this enables existing topics but doesn't auto-create new ones
-    ulog_topic_enable_all();
-    
-    ut_callback_reset();
-    
-    // New topics still should not appear since they don't exist
-    ulog_topic_info("newtopic2", "Should not appear");
-    CHECK(ut_callback_get_message_count() == 0);
-    
-    // However, if we explicitly create a topic after enable_all, it should be enabled
-    ulog_topic_id topic_id = ulog_topic_add("newtopic2", ULOG_OUTPUT_ALL, true);
-    REQUIRE(topic_id != ULOG_TOPIC_ID_INVALID);
-    
-    ut_callback_reset();
-    
-    // Now it should appear
-    ulog_topic_info("newtopic2", "Should appear");
-    CHECK(ut_callback_get_message_count() == 1);
-    CHECK(strstr(ut_callback_get_last_message(), "[newtopic2]") != nullptr);
-    
-    // Disable all topics - this sets new topic default to disabled
-    ulog_topic_disable_all();
-    
-    ut_callback_reset();
-    
-    // Existing topics should now be disabled
-    ulog_topic_info("newtopic2", "Should not appear");
-    CHECK(ut_callback_get_message_count() == 0);
-    
-    // And new topics still should not appear since they don't exist
-    ulog_topic_info("newtopic3", "Should not appear");
-    CHECK(ut_callback_get_message_count() == 0);
-}
-
 TEST_CASE_FIXTURE(DynamicTopicsTestFixture, "Dynamic Topic Invalid Operations") {
     // Test operations on non-existent topics
     
-    ulog_status result = ulog_topic_enable("nonexistent");
-    CHECK(result == ULOG_STATUS_NOT_FOUND);
-    
-    result = ulog_topic_disable("nonexistent");
-    CHECK(result == ULOG_STATUS_NOT_FOUND);
-    
-    result = ulog_topic_level_set("nonexistent", ULOG_LEVEL_WARN);
+    ulog_status result = ulog_topic_level_set("nonexistent", ULOG_LEVEL_WARN);
     CHECK(result == ULOG_STATUS_NOT_FOUND);
     
     // Test with invalid topic names
-    ulog_topic_id invalid_topic = ulog_topic_add("", ULOG_OUTPUT_ALL, true);
+    ulog_topic_id invalid_topic = ulog_topic_add("", ULOG_OUTPUT_ALL, ULOG_LEVEL_WARN);
     CHECK(invalid_topic == ULOG_TOPIC_ID_INVALID);
     
-    invalid_topic = ulog_topic_add(nullptr, ULOG_OUTPUT_ALL, true);
+    invalid_topic = ulog_topic_add(nullptr, ULOG_OUTPUT_ALL, ULOG_LEVEL_WARN);
     CHECK(invalid_topic == ULOG_TOPIC_ID_INVALID);
 }
 
@@ -330,7 +209,7 @@ TEST_CASE_FIXTURE(DynamicTopicsTestFixture, "Dynamic Topic Memory Management") {
     for (int i = 0; i < NUM_TOPICS; i++) {
         char topic_name[32];
         snprintf(topic_name, sizeof(topic_name), "topic_%d", i);
-        topics[i] = ulog_topic_add(topic_name, ULOG_OUTPUT_ALL, true);
+        topics[i] = ulog_topic_add(topic_name, ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
         CHECK(topics[i] != ULOG_TOPIC_ID_INVALID);
     }
     
@@ -365,7 +244,7 @@ TEST_CASE_FIXTURE(DynamicTopicsTestFixture, "Dynamic Topic Configuration") {
     
     if (result == ULOG_STATUS_OK) {
         // If topic config is available, test disabling/enabling topic display
-        ulog_topic_id topic = ulog_topic_add("configtest", ULOG_OUTPUT_ALL, true);
+        ulog_topic_id topic = ulog_topic_add("configtest", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
         REQUIRE(topic != ULOG_TOPIC_ID_INVALID);
         
         ut_callback_reset();
@@ -395,9 +274,9 @@ TEST_CASE_FIXTURE(DynamicTopicsTestFixture, "Dynamic Topic Complex Scenario") {
     // Complex scenario combining multiple features
     
     // Set up multiple topics with different configurations
-    ulog_topic_id net_topic = ulog_topic_add("network", ULOG_OUTPUT_ALL, true);
-    ulog_topic_id db_topic = ulog_topic_add("database", ULOG_OUTPUT_ALL, false);
-    ulog_topic_id ui_topic = ulog_topic_add("ui", ULOG_OUTPUT_ALL, true);
+    ulog_topic_id net_topic = ulog_topic_add("network", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
+    ulog_topic_id db_topic = ulog_topic_add("database", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
+    ulog_topic_id ui_topic = ulog_topic_add("ui", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
     
     REQUIRE(net_topic != ULOG_TOPIC_ID_INVALID);
     REQUIRE(db_topic != ULOG_TOPIC_ID_INVALID);
@@ -413,13 +292,10 @@ TEST_CASE_FIXTURE(DynamicTopicsTestFixture, "Dynamic Topic Complex Scenario") {
     // Test various combinations
     ulog_topic_trace("network", "Network trace"); // Should be filtered (below DEBUG)
     ulog_topic_debug("network", "Network debug"); // Should appear
-    ulog_topic_info("database", "DB info");       // Should be filtered (topic disabled)
+    ulog_topic_warn("database", "DB info");       // Should appear
     ulog_topic_info("ui", "UI info");             // Should appear
     
-    CHECK(ut_callback_get_message_count() == 2);
-    
-    // Enable database topic
-    ulog_topic_enable("database");
+    CHECK(ut_callback_get_message_count() == 3);
     
     ut_callback_reset();
     
@@ -447,11 +323,11 @@ TEST_CASE("Dynamic Topic Error Handling") {
     ulog_topic_id invalid_id;
     
     // Test empty topic name
-    invalid_id = ulog_topic_add("", ULOG_OUTPUT_ALL, true);
+    invalid_id = ulog_topic_add("", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
     CHECK(invalid_id == ULOG_TOPIC_ID_INVALID);
     
     // Test NULL topic name
-    invalid_id = ulog_topic_add(nullptr, ULOG_OUTPUT_ALL, true);
+    invalid_id = ulog_topic_add(nullptr, ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
     CHECK(invalid_id == ULOG_TOPIC_ID_INVALID);
     
     // Test removal with invalid parameters
@@ -466,19 +342,6 @@ TEST_CASE("Dynamic Topic Error Handling") {
     CHECK(result == ULOG_STATUS_NOT_FOUND);
     
     result = ulog_topic_level_set(nullptr, ULOG_LEVEL_INFO);
-    CHECK(result == ULOG_STATUS_NOT_FOUND);
-    
-    // Test enable/disable with invalid topics
-    result = ulog_topic_enable("");
-    CHECK(result == ULOG_STATUS_NOT_FOUND);
-    
-    result = ulog_topic_enable(nullptr);
-    CHECK(result == ULOG_STATUS_NOT_FOUND);
-    
-    result = ulog_topic_disable("");
-    CHECK(result == ULOG_STATUS_NOT_FOUND);
-    
-    result = ulog_topic_disable(nullptr);
     CHECK(result == ULOG_STATUS_NOT_FOUND);
     
     // Test getting ID for invalid topics

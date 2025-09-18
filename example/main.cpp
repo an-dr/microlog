@@ -124,12 +124,10 @@ int main(int argc, char *argv[]) {
     /* Topics =========================================== */
     printf("\n");
 
-    ulog_topic_add("Bluetooth", ULOG_OUTPUT_ALL, true);
-    ulog_topic_add("Serial", ULOG_OUTPUT_ALL, false);
-    ulog_topic_add("Audio", ULOG_OUTPUT_ALL, false);
-    ulog_t_warn("Audio", "Audio message 1 (disabled)");
-
-    ulog_topic_enable_all();
+    ulog_topic_add("Bluetooth", ULOG_OUTPUT_ALL, ULOG_LEVEL_INFO);
+    ulog_topic_add("Serial", ULOG_OUTPUT_ALL, ULOG_LEVEL_INFO);
+    ulog_topic_add("Audio", ULOG_OUTPUT_ALL, ULOG_LEVEL_INFO);
+    ulog_t_trace("Audio", "Audio message 1 (lower than topic level)");
 
     ulog_topic_debug("Bluetooth", "Bluetooth message 1");
     // Short alias: ulog_t_debug("Bluetooth", "Bluetooth message 1");
@@ -137,9 +135,6 @@ int main(int argc, char *argv[]) {
     ulog_t_warn("Audio", "Audio message 2");
     ulog_t_error("Serial", "Serial message 1");
     ulog_t_fatal("Serial", "Serial message 2");
-
-    ulog_topic_disable("Serial");
-    ulog_t_warn("Serial", "Serial message 3 (disabled)");
 
     ulog_output_level_set_all(ULOG_LEVEL_TRACE);
     ulog_topic_level_set("Bluetooth", ULOG_LEVEL_WARN);
@@ -156,7 +151,6 @@ int main(int argc, char *argv[]) {
                   "ALERT  |", "EMERG  |"}};
     ulog_level_set_new_levels(&syslog_levels);
 
-    ulog_topic_enable_all();
     ulog_topic_level_set("Audio", ULOG_LEVEL_0);
     ulog_topic_level_set("Bluetooth", ULOG_LEVEL_0);
     ulog_topic_level_set("Serial", ULOG_LEVEL_0);
