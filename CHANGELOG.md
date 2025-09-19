@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v7.0.0-alpha.4] - Unreleased
+
+### Removed
+
+- Move topics handling from enable/disable to level-based
+    - `ulog_topic_enable()`
+    - `ulog_topic_disable()`
+
 ## [v7.0.0-alpha.3] - September 17, 2025
 
 ### Added
