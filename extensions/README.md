@@ -1,8 +1,6 @@
-<!-- Extensions documentation -->
-
 # Microlog Extensions
 
-This document describes optional extensions that live under the `extensions/` folder. They are **opt-in**: nothing is compiled into the core unless you explicitly add the corresponding source file(s) to your build.
+This directory contains extensions for the Microlog logging library.
 
 The extensions are designed to be easy to understand and modify. They are not part of distributed packages (meson, CMake, etc.)! Feel free to copy-paste and adapt them to your needs. If you create a useful extension, please consider submitting a PR.
 

@@ -139,14 +139,14 @@ INFO  src/main.cpp:4: Hello, World
 
 ### 3. Extend
 
-Add missing functionalities via API or use predefined extensions. See [Extensions documentation](doc/extensions.md).
+Add missing functionalities via API or use predefined extensions. See [Extensions documentation](extensions/README.md).
 
    
 ## Advanced Usage
 
 [User Manual in `doc/features.md`](doc/features.md) - detailed information about the available features.
 
-[Extensions](doc/extensions.md) - Optional add-ons that use only the public API to enhance functionality.
+[Extensions](extensions/README.md) - Optional add-ons that use only the public API to enhance functionality.
 
 [See the example for more features in action: `example/main.cpp`](example/main.cpp).
 

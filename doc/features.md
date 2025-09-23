@@ -213,7 +213,7 @@ ulog_lock_set_fn(lock_function, mutex);
 
 ```
 
-For platform-specific convenience helpers (pthread, Windows, FreeRTOS, ThreadX, Zephyr, CMSIS‑RTOS2, macOS unfair lock) and the syslog level extension, see `doc/extensions.md`.
+For platform-specific convenience helpers (pthread, Windows, FreeRTOS, ThreadX, Zephyr, CMSIS‑RTOS2, macOS unfair lock) and the syslog level extension, see `extensions/README.md`.
 
 ### Cleanup
 
