@@ -41,6 +41,10 @@
 
 ===================================================================================================================== */
 
+/* ============================================================================
+   Optional Feature: Configuration Header
+============================================================================ */
+
 #ifdef ULOG_BUILD_CONFIG_HEADER_ENABLED
 
     // If ULOG_BUILD_CONFIG_HEADER_ENABLED is defined, no other ULOG_BUILD_* macros should be defined to avoid conflicts
@@ -78,7 +82,11 @@
     #endif
 
     #include ULOG_BUILD_CONFIG_HEADER_NAME
-#endif
+#endif // ULOG_BUILD_CONFIG_HEADER_ENABLED
+
+/* ============================================================================
+    Core Feature: Static Configuration
+============================================================================ */
 
 #ifndef ULOG_BUILD_COLOR
     #define ULOG_HAS_COLOR 0
@@ -137,6 +145,9 @@
     #define ULOG_HAS_TOPICS (ULOG_BUILD_TOPICS_NUM > 0 || ULOG_BUILD_TOPICS_NUM == -1)
 #endif
 
+/* ============================================================================
+   Optional Feature: Dynamic Configuration
+============================================================================ */
 
 #ifndef ULOG_BUILD_DYNAMIC_CONFIG
     #define ULOG_HAS_DYNAMIC_CONFIG 0

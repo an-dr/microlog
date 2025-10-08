@@ -124,13 +124,11 @@ include(cpm/CPM.cmake)
 CPMAddPackage("gh:an-dr/microlog@6.4.5")
 
 target_link_libraries(${PROJECT_NAME} PUBLIC microlog::microlog)
-target_compile_definitions( microlog
-        INTERFACE
-        ULOG_BUILD_COLOR=1) # configuration
+target_compile_definitions( microlog PRIVATE ULOG_BUILD_COLOR=1) # configuration
         
 # Or use a user-defined configuration header `ulog_config.h`:
-# ULOG_BUILD_CONFIG_HEADER_ENABLED=1
-# target_include_directories(microlog INTERFACE path/to/directory/containing/ulog_config.h)
+# target_compile_definitions(microlog PRIVATE ULOG_BUILD_CONFIG_HEADER_ENABLED=1)
+# target_include_directories(microlog PRIVATE path/to/directory/containing/ulog_config.h)
 ```
 
 ### 2. Use
