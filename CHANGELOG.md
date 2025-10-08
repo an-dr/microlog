@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add extensions to the release
+- Add Static Configuration Header `ulog_static_config.h` feature to simplify configuration
 
 ### Changed
 
