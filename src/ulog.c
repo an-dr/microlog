@@ -25,54 +25,59 @@
    Core Feature: Static Configuration
 =======================================================================================================================
 
-| Build Option                      | Default   | Dependent Macro(s)            | Purpose                  |
-| --------------------------------- | --------- | ----------------------------- | ------------------------ |
-| ULOG_BUILD_COLOR                  | 0         | ULOG_HAS_COLOR                | Compile color code paths |
-| ULOG_BUILD_PREFIX_SIZE            | 0         | ULOG_HAS_PREFIX               | Prefix buffer logic      |
-| ULOG_BUILD_EXTRA_OUTPUTS          | 0         | ULOG_HAS_EXTRA_OUTPUTS        | Extra output backends    |
-| ULOG_BUILD_SOURCE_LOCATION        | 1         | ULOG_HAS_SOURCE_LOCATION      | File\:line output        |
-| ULOG_BUILD_LEVEL_SHORT            | 0         | ULOG_LEVEL_HAS_SHORT/_LONG    | Short level style        |
-| ULOG_BUILD_TIME                   | 0         | ULOG_HAS_TIME                 | Timestamp support        |
-| ULOG_BUILD_TOPICS_NUM             | 0         | ULOG_HAS_TOPICS               | Topic filtering logic    |
-| ULOG_BUILD_DYNAMIC_CONFIG         | 0         | ULOG_HAS_DYNAMIC_CONFIG       | Runtime toggles          |
-| ULOG_BUILD_WARN_NOT_ENABLED       | 1         | ULOG_HAS_WARN_NOT_ENABLED     | Warning stubs            |
-| ULOG_BUILD_STATIC_CONFIG_HEADER   | 0         | -                             | Configuration header     |
+| Build Option                      | Default                | Dependent Macro(s)          | Purpose                  |
+| --------------------------------- | ---------------------- | --------------------------- | ------------------------ |
+| ULOG_BUILD_COLOR                  | 0                      | ULOG_HAS_COLOR              | Compile color code paths |
+| ULOG_BUILD_PREFIX_SIZE            | 0                      | ULOG_HAS_PREFIX             | Prefix buffer logic      |
+| ULOG_BUILD_EXTRA_OUTPUTS          | 0                      | ULOG_HAS_EXTRA_OUTPUTS      | Extra output backends    |
+| ULOG_BUILD_SOURCE_LOCATION        | 1                      | ULOG_HAS_SOURCE_LOCATION    | File\:line output        |
+| ULOG_BUILD_LEVEL_SHORT            | 0                      | ULOG_LEVEL_HAS_SHORT/_LONG  | Short level style        |
+| ULOG_BUILD_TIME                   | 0                      | ULOG_HAS_TIME               | Timestamp support        |
+| ULOG_BUILD_TOPICS_NUM             | 0                      | ULOG_HAS_TOPICS             | Topic filtering logic    |
+| ULOG_BUILD_DYNAMIC_CONFIG         | 0                      | ULOG_HAS_DYNAMIC_CONFIG     | Runtime toggles          |
+| ULOG_BUILD_WARN_NOT_ENABLED       | 1                      | ULOG_HAS_WARN_NOT_ENABLED   | Warning stubs            |
+| ULOG_BUILD_CONFIG_HEADER_ENABLED  | 0                      | -                           | Configuration header mode|
+| ULOG_BUILD_CONFIG_HEADER_NAME     | "ulog_config.h" | -                           | Configuration header name|   
 
 ===================================================================================================================== */
 
-#ifdef ULOG_BUILD_STATIC_CONFIG_HEADER
+#ifdef ULOG_BUILD_CONFIG_HEADER_ENABLED
 
-    // If ULOG_BUILD_STATIC_CONFIG_HEADER is defined, no other ULOG_BUILD_* macros should be defined to avoid conflicts
+    // If ULOG_BUILD_CONFIG_HEADER_ENABLED is defined, no other ULOG_BUILD_* macros should be defined to avoid conflicts
     #ifdef ULOG_BUILD_COLOR
-        #error "ULOG_BUILD_STATIC_CONFIG_HEADER cannot be used with ULOG_BUILD_COLOR"
+        #error "ULOG_BUILD_CONFIG_HEADER_ENABLED cannot be used with ULOG_BUILD_COLOR"
     #endif
     #ifdef ULOG_BUILD_PREFIX_SIZE
-        #error "ULOG_BUILD_STATIC_CONFIG_HEADER cannot be used with ULOG_BUILD_PREFIX_SIZE"
+        #error "ULOG_BUILD_CONFIG_HEADER_ENABLED cannot be used with ULOG_BUILD_PREFIX_SIZE"
     #endif
     #ifdef ULOG_BUILD_EXTRA_OUTPUTS
-        #error "ULOG_BUILD_STATIC_CONFIG_HEADER cannot be used with ULOG_BUILD_EXTRA_OUTPUTS"
+        #error "ULOG_BUILD_CONFIG_HEADER_ENABLED cannot be used with ULOG_BUILD_EXTRA_OUTPUTS"
     #endif
     #ifdef ULOG_BUILD_SOURCE_LOCATION
-        #error "ULOG_BUILD_STATIC_CONFIG_HEADER cannot be used with ULOG_BUILD_SOURCE_LOCATION"
+        #error "ULOG_BUILD_CONFIG_HEADER_ENABLED cannot be used with ULOG_BUILD_SOURCE_LOCATION"
     #endif
     #ifdef ULOG_BUILD_LEVEL_SHORT
-        #error "ULOG_BUILD_STATIC_CONFIG_HEADER cannot be used with ULOG_BUILD_LEVEL_SHORT"
+        #error "ULOG_BUILD_CONFIG_HEADER_ENABLED cannot be used with ULOG_BUILD_LEVEL_SHORT"
     #endif
     #ifdef ULOG_BUILD_TIME
-        #error "ULOG_BUILD_STATIC_CONFIG_HEADER cannot be used with ULOG_BUILD_TIME"
+        #error "ULOG_BUILD_CONFIG_HEADER_ENABLED cannot be used with ULOG_BUILD_TIME"
     #endif
     #ifdef ULOG_BUILD_TOPICS_NUM
-        #error "ULOG_BUILD_STATIC_CONFIG_HEADER cannot be used with ULOG_BUILD_TOPICS_NUM"
+        #error "ULOG_BUILD_CONFIG_HEADER_ENABLED cannot be used with ULOG_BUILD_TOPICS_NUM"
     #endif
     #ifdef ULOG_BUILD_DYNAMIC_CONFIG
-        #error "ULOG_BUILD_STATIC_CONFIG_HEADER cannot be used with ULOG_BUILD_DYNAMIC_CONFIG"
+        #error "ULOG_BUILD_CONFIG_HEADER_ENABLED cannot be used with ULOG_BUILD_DYNAMIC_CONFIG"
     #endif
     #ifdef ULOG_BUILD_WARN_NOT_ENABLED
-        #error "ULOG_BUILD_STATIC_CONFIG_HEADER cannot be used with ULOG_BUILD_WARN_NOT_ENABLED"
+        #error "ULOG_BUILD_CONFIG_HEADER_ENABLED cannot be used with ULOG_BUILD_WARN_NOT_ENABLED"
     #endif
 
     // The user provided configuration header
-    #include "ulog_static_config.h"
+    #ifndef ULOG_BUILD_CONFIG_HEADER_NAME
+        #define ULOG_BUILD_CONFIG_HEADER_NAME "ulog_config.h"
+    #endif
+
+    #include ULOG_BUILD_CONFIG_HEADER_NAME
 #endif
 
 #ifndef ULOG_BUILD_COLOR

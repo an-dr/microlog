@@ -1,6 +1,6 @@
 // Sample static configuration header for testing
-// ULOG_BUILD_STATIC_CONFIG_HEADER This file is included when
-// ULOG_BUILD_STATIC_CONFIG_HEADER is defined
+// ULOG_BUILD_CONFIG_HEADER_ENABLED This file is included when
+// ULOG_BUILD_CONFIG_HEADER_ENABLED is defined
 
 #pragma once
 

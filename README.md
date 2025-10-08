@@ -81,9 +81,9 @@ target_link_libraries(example_package PRIVATE microlog::microlog)
 
 target_compile_definitions(microlog PRIVATE ULOG_BUILD_COLOR=1) # configuration
 
-# Or use a user-defined configuration header `ulog_static_config.h`:
-# target_compile_definitions(microlog PRIVATE ULOG_BUILD_STATIC_CONFIG_HEADER=1)
-# target_include_directories(microlog PRIVATE path/to/directory/containing/ulog_static_config.h)
+# Or use a user-defined configuration header `ulog_config.h`:
+# target_compile_definitions(microlog PRIVATE ULOG_BUILD_CONFIG_HEADER_ENABLED=1)
+# target_include_directories(microlog PRIVATE path/to/directory/containing/ulog_config.h)
 ```
 
 **Option 3 - Meson Package**:
@@ -95,10 +95,10 @@ target_compile_definitions(microlog PRIVATE ULOG_BUILD_COLOR=1) # configuration
 ```meson
 add_global_arguments('-DULOG_BUILD_COLOR=1', language: ['cpp', 'c']) # configuration
 
-# Or use a user-defined configuration header `ulog_static_config.h`:
-# add_global_arguments('-DULOG_BUILD_STATIC_CONFIG_HEADER=1', language: ['cpp', 'c'])
-# And add include directory where ulog_static_config.h is located:
-# add_global_arguments('-Ipath/to/directory/containing/ulog_static_config.h', language: ['cpp', 'c'])
+# Or use a user-defined configuration header `ulog_config.h`:
+# add_global_arguments('-DULOG_BUILD_CONFIG_HEADER_ENABLED=1', language: ['cpp', 'c'])
+# And add include directory where ulog_config.h is located:
+# add_global_arguments('-Ipath/to/directory/containing/ulog_config.h', language: ['cpp', 'c'])
 
 exe = executable(
     meson.project_name(),
@@ -128,9 +128,9 @@ target_compile_definitions( microlog
         INTERFACE
         ULOG_BUILD_COLOR=1) # configuration
         
-# Or use a user-defined configuration header `ulog_static_config.h`:
-# ULOG_BUILD_STATIC_CONFIG_HEADER=1
-# target_include_directories(microlog INTERFACE path/to/directory/containing/ulog_static_config.h)
+# Or use a user-defined configuration header `ulog_config.h`:
+# ULOG_BUILD_CONFIG_HEADER_ENABLED=1
+# target_include_directories(microlog INTERFACE path/to/directory/containing/ulog_config.h)
 ```
 
 ### 2. Use

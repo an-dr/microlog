@@ -169,5 +169,5 @@ target_sources(test_static_config_header PRIVATE ${ULOG_SRC}
                                                   ut_callback.c
                                                   test_static_config_header.cpp)
 target_include_directories(test_static_config_header PRIVATE ${ULOG_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
-target_compile_definitions(test_static_config_header PRIVATE "-DULOG_BUILD_STATIC_CONFIG_HEADER=1")
+target_compile_definitions(test_static_config_header PRIVATE "-DULOG_BUILD_CONFIG_HEADER_ENABLED=1")
 add_test(NAME StaticConfigHeaderTest COMMAND test_static_config_header)
