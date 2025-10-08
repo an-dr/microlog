@@ -131,6 +131,26 @@ target_compile_definitions( microlog PRIVATE ULOG_BUILD_COLOR=1) # configuration
 # target_include_directories(microlog PRIVATE path/to/directory/containing/ulog_config.h)
 ```
 
+**Option 6 - PlatformIO:**
+
+- Add to your `platformio.ini`:
+
+```ini
+lib_deps = 
+    microlog
+```
+
+- Configure via build flags:
+
+```ini
+build_flags = 
+    -DULOG_BUILD_COLOR=1
+    -DULOG_BUILD_TIME=1
+    -DULOG_BUILD_SOURCE_LOCATION=1
+```
+
+- See [platformio/README.md](platformio/README.md) for detailed configuration options and examples.
+
 ### 2. Use
 
 ```cpp

@@ -1,0 +1,72 @@
+{
+  "$schema": "https://raw.githubusercontent.com/platformio/platformio-core/develop/platformio/assets/schema/library.json",
+  "name": "microlog",
+  "version": "@ULOG_VERSION@",
+  "description": "Extensible and configurable logging library for embedded and desktop applications with zero-cost abstraction and two-file core design.",
+  "keywords": [
+    "logging",
+    "embedded",
+    "microcontroller",
+    "debug",
+    "trace",
+    "printf",
+    "configurable",
+    "lightweight",
+    "arduino",
+    "esp32",
+    "stm32",
+    "embedded-systems",
+    "c",
+    "cpp"
+  ],
+  "homepage": "https://github.com/an-dr/microlog",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/an-dr/microlog.git"
+  },
+  "authors": [
+    {
+      "name": "Andrei Gramakov",
+      "email": "mail@agramakov.me",
+      "url": "https://agramakov.me",
+      "maintainer": true
+    }
+  ],
+  "license": "MIT",
+  "frameworks": "*",
+  "platforms": "*",
+  "headers": [
+    "ulog.h"
+  ],
+  "build": {
+    "includeDir": "include",
+    "srcDir": "src"
+  },
+  "export": {
+    "include": [
+      "include/*",
+      "src/*",
+      "LICENSE",
+      "README.md",
+      "examples/*"
+    ]
+  },
+  "examples": [
+    {
+      "name": "Basic Usage",
+      "base": "examples/basic",
+      "files": [
+        "main.cpp",
+        "platformio.ini"
+      ]
+    },
+    {
+      "name": "Advanced Usage with Topics",
+      "base": "examples/advanced",
+      "files": [
+        "main.cpp",
+        "platformio.ini"
+      ]
+    }
+  ]
+}
