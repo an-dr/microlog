@@ -96,7 +96,7 @@ TEST_CASE_FIXTURE(TestFixture,
     ulog_output_level_set_all(ULOG_LEVEL_INFO);
 
     // Set a prefix handler
-    auto prefix_handler = [](ulog_event *ev, char *prefix, size_t prefix_size) {
+    static auto prefix_handler = [](ulog_event *ev, char *prefix, size_t prefix_size) {
         snprintf(prefix, prefix_size, "[PREFIX] ");
     };
 
@@ -145,7 +145,7 @@ TEST_CASE_FIXTURE(TestFixture,
     CHECK(topic != ULOG_TOPIC_ID_INVALID);
 
     // Set prefix
-    auto prefix_handler = [](ulog_event *ev, char *prefix, size_t prefix_size) {
+    static auto prefix_handler = [](ulog_event *ev, char *prefix, size_t prefix_size) {
         snprintf(prefix, prefix_size, "[TEST] ");
     };
     ulog_prefix_set_fn(prefix_handler);

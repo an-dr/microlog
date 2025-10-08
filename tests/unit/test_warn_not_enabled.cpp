@@ -269,7 +269,7 @@ TEST_CASE_FIXTURE(WarnNotEnabledTestFixture, "Prefix Set Function Works In Base 
     // In the base config, ULOG_BUILD_PREFIX_SIZE=16, so prefix functions should work
     
     // Define a dummy prefix function
-    auto dummy_prefix_fn = [](ulog_event *ev, char *prefix, size_t prefix_size) {
+    static auto dummy_prefix_fn = [](ulog_event *ev, char *prefix, size_t prefix_size) {
         (void)ev; (void)prefix; (void)prefix_size;
     };
     
