@@ -42,33 +42,33 @@
 
 #ifdef ULOG_BUILD_STATIC_CONFIG_HEADER
 
-    // If ULOG_BUILD_CONFIG_HEADER is defined, no other ULOG_BUILD_* macros should be defined to avoid conflicts
+    // If ULOG_BUILD_STATIC_CONFIG_HEADER is defined, no other ULOG_BUILD_* macros should be defined to avoid conflicts
     #ifdef ULOG_BUILD_COLOR
-        #error "ULOG_BUILD_CONFIG_HEADER cannot be used with ULOG_BUILD_COLOR"
+        #error "ULOG_BUILD_STATIC_CONFIG_HEADER cannot be used with ULOG_BUILD_COLOR"
     #endif
     #ifdef ULOG_BUILD_PREFIX_SIZE
-        #error "ULOG_BUILD_CONFIG_HEADER cannot be used with ULOG_BUILD_PREFIX_SIZE"
+        #error "ULOG_BUILD_STATIC_CONFIG_HEADER cannot be used with ULOG_BUILD_PREFIX_SIZE"
     #endif
     #ifdef ULOG_BUILD_EXTRA_OUTPUTS
-        #error "ULOG_BUILD_CONFIG_HEADER cannot be used with ULOG_BUILD_EXTRA_OUTPUTS"
+        #error "ULOG_BUILD_STATIC_CONFIG_HEADER cannot be used with ULOG_BUILD_EXTRA_OUTPUTS"
     #endif
     #ifdef ULOG_BUILD_SOURCE_LOCATION
-        #error "ULOG_BUILD_CONFIG_HEADER cannot be used with ULOG_BUILD_SOURCE_LOCATION"
+        #error "ULOG_BUILD_STATIC_CONFIG_HEADER cannot be used with ULOG_BUILD_SOURCE_LOCATION"
     #endif
     #ifdef ULOG_BUILD_LEVEL_SHORT
-        #error "ULOG_BUILD_CONFIG_HEADER cannot be used with ULOG_BUILD_LEVEL_SHORT"
+        #error "ULOG_BUILD_STATIC_CONFIG_HEADER cannot be used with ULOG_BUILD_LEVEL_SHORT"
     #endif
     #ifdef ULOG_BUILD_TIME
-        #error "ULOG_BUILD_CONFIG_HEADER cannot be used with ULOG_BUILD_TIME"
+        #error "ULOG_BUILD_STATIC_CONFIG_HEADER cannot be used with ULOG_BUILD_TIME"
     #endif
     #ifdef ULOG_BUILD_TOPICS_NUM
-        #error "ULOG_BUILD_CONFIG_HEADER cannot be used with ULOG_BUILD_TOPICS_NUM"
+        #error "ULOG_BUILD_STATIC_CONFIG_HEADER cannot be used with ULOG_BUILD_TOPICS_NUM"
     #endif
     #ifdef ULOG_BUILD_DYNAMIC_CONFIG
-        #error "ULOG_BUILD_CONFIG_HEADER cannot be used with ULOG_BUILD_DYNAMIC_CONFIG"
+        #error "ULOG_BUILD_STATIC_CONFIG_HEADER cannot be used with ULOG_BUILD_DYNAMIC_CONFIG"
     #endif
     #ifdef ULOG_BUILD_WARN_NOT_ENABLED
-        #error "ULOG_BUILD_CONFIG_HEADER cannot be used with ULOG_BUILD_WARN_NOT_ENABLED"
+        #error "ULOG_BUILD_STATIC_CONFIG_HEADER cannot be used with ULOG_BUILD_WARN_NOT_ENABLED"
     #endif
 
     // The user provided configuration header
