@@ -80,6 +80,8 @@ add_executable(example_package example.cpp)
 target_link_libraries(example_package PRIVATE microlog::microlog)
 
 target_compile_definitions(microlog PRIVATE ULOG_BUILD_COLOR=1) # configuration
+# Or use a user-defined configuration header `ulog_static_config.h`:
+# target_compile_definitions(microlog PRIVATE ULOG_BUILD_STATIC_CONFIG_HEADER=1)
 ```
 
 **Option 3 - Meson Package**:
@@ -90,6 +92,8 @@ target_compile_definitions(microlog PRIVATE ULOG_BUILD_COLOR=1) # configuration
 
 ```meson
 add_global_arguments('-DULOG_BUILD_COLOR=1', language: ['cpp', 'c']) # configuration
+# Or use a user-defined configuration header `ulog_static_config.h`:
+# add_global_arguments('-DULOG_BUILD_STATIC_CONFIG_HEADER=1', language: ['cpp   , 'c'])
 
 exe = executable(
     meson.project_name(),
@@ -118,6 +122,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC microlog::microlog)
 target_compile_definitions( microlog
         INTERFACE
         ULOG_BUILD_COLOR=1) # configuration
+# Or use a user-defined configuration header `ulog_static_config.h`:
+# ULOG_BUILD_STATIC_CONFIG_HEADER=1
 ```
 
 ### 2. Use

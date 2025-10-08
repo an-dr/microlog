@@ -25,19 +25,55 @@
    Core Feature: Static Configuration
 =======================================================================================================================
 
-| Build Option                | Default               | Dependent Macro(s)            | Purpose                  |
-| --------------------------- | --------------------- | ----------------------------- | ------------------------ |
-| ULOG_BUILD_COLOR            | 0                     | ULOG_HAS_COLOR                | Compile color code paths |
-| ULOG_BUILD_PREFIX_SIZE      | 0                     | ULOG_HAS_PREFIX               | Prefix buffer logic      |
-| ULOG_BUILD_EXTRA_OUTPUTS    | 0                     | ULOG_HAS_EXTRA_OUTPUTS        | Extra output backends    |
-| ULOG_BUILD_SOURCE_LOCATION  | 1                     | ULOG_HAS_SOURCE_LOCATION      | File\:line output        |
-| ULOG_BUILD_LEVEL_SHORT      | 0                     | ULOG_LEVEL_HAS_SHORT/_LONG    | Short level style        |
-| ULOG_BUILD_TIME             | 0                     | ULOG_HAS_TIME                 | Timestamp support        |
-| ULOG_BUILD_TOPICS_NUM       | 0                     | ULOG_HAS_TOPICS               | Topic filtering logic    |
-| ULOG_BUILD_DYNAMIC_CONFIG   | 0                     | ULOG_HAS_DYNAMIC_CONFIG       | Runtime toggles          |
-| ULOG_BUILD_WARN_NOT_ENABLED | 1                     | ULOG_HAS_WARN_NOT_ENABLED     | Warning stubs            |
+| Build Option                      | Default   | Dependent Macro(s)            | Purpose                  |
+| --------------------------------- | --------- | ----------------------------- | ------------------------ |
+| ULOG_BUILD_COLOR                  | 0         | ULOG_HAS_COLOR                | Compile color code paths |
+| ULOG_BUILD_PREFIX_SIZE            | 0         | ULOG_HAS_PREFIX               | Prefix buffer logic      |
+| ULOG_BUILD_EXTRA_OUTPUTS          | 0         | ULOG_HAS_EXTRA_OUTPUTS        | Extra output backends    |
+| ULOG_BUILD_SOURCE_LOCATION        | 1         | ULOG_HAS_SOURCE_LOCATION      | File\:line output        |
+| ULOG_BUILD_LEVEL_SHORT            | 0         | ULOG_LEVEL_HAS_SHORT/_LONG    | Short level style        |
+| ULOG_BUILD_TIME                   | 0         | ULOG_HAS_TIME                 | Timestamp support        |
+| ULOG_BUILD_TOPICS_NUM             | 0         | ULOG_HAS_TOPICS               | Topic filtering logic    |
+| ULOG_BUILD_DYNAMIC_CONFIG         | 0         | ULOG_HAS_DYNAMIC_CONFIG       | Runtime toggles          |
+| ULOG_BUILD_WARN_NOT_ENABLED       | 1         | ULOG_HAS_WARN_NOT_ENABLED     | Warning stubs            |
+| ULOG_BUILD_STATIC_CONFIG_HEADER   | 0         | -                             | Configuration header     |
 
 ===================================================================================================================== */
+
+#ifdef ULOG_BUILD_STATIC_CONFIG_HEADER
+
+    // If ULOG_BUILD_CONFIG_HEADER is defined, no other ULOG_BUILD_* macros should be defined to avoid conflicts
+    #ifdef ULOG_BUILD_COLOR
+        #error "ULOG_BUILD_CONFIG_HEADER cannot be used with ULOG_BUILD_COLOR"
+    #endif
+    #ifdef ULOG_BUILD_PREFIX_SIZE
+        #error "ULOG_BUILD_CONFIG_HEADER cannot be used with ULOG_BUILD_PREFIX_SIZE"
+    #endif
+    #ifdef ULOG_BUILD_EXTRA_OUTPUTS
+        #error "ULOG_BUILD_CONFIG_HEADER cannot be used with ULOG_BUILD_EXTRA_OUTPUTS"
+    #endif
+    #ifdef ULOG_BUILD_SOURCE_LOCATION
+        #error "ULOG_BUILD_CONFIG_HEADER cannot be used with ULOG_BUILD_SOURCE_LOCATION"
+    #endif
+    #ifdef ULOG_BUILD_LEVEL_SHORT
+        #error "ULOG_BUILD_CONFIG_HEADER cannot be used with ULOG_BUILD_LEVEL_SHORT"
+    #endif
+    #ifdef ULOG_BUILD_TIME
+        #error "ULOG_BUILD_CONFIG_HEADER cannot be used with ULOG_BUILD_TIME"
+    #endif
+    #ifdef ULOG_BUILD_TOPICS_NUM
+        #error "ULOG_BUILD_CONFIG_HEADER cannot be used with ULOG_BUILD_TOPICS_NUM"
+    #endif
+    #ifdef ULOG_BUILD_DYNAMIC_CONFIG
+        #error "ULOG_BUILD_CONFIG_HEADER cannot be used with ULOG_BUILD_DYNAMIC_CONFIG"
+    #endif
+    #ifdef ULOG_BUILD_WARN_NOT_ENABLED
+        #error "ULOG_BUILD_CONFIG_HEADER cannot be used with ULOG_BUILD_WARN_NOT_ENABLED"
+    #endif
+
+    // The user provided configuration header
+    #include "ulog_static_config.h"
+#endif
 
 #ifndef ULOG_BUILD_COLOR
     #define ULOG_HAS_COLOR 0
@@ -273,9 +309,9 @@ ulog_status ulog_event_get_message(ulog_event *ev, char *buffer,
     // Create a copy of the event to avoid va_list issues
     ulog_event ev_copy = *ev;
     va_copy(ev_copy.message_format_args, ev->message_format_args);
-    
+
     log_print_message(&tgt, &ev_copy);
-    
+
     va_end(ev_copy.message_format_args);
     return ULOG_STATUS_OK;
 }
@@ -1564,7 +1600,7 @@ static topic_t *topic_allocate(int id, const char *topic_name,
             return NULL;  // Failed to allocate memory for name
         }
         strcpy(name_copy, topic_name);
-        
+
         t->id      = id;
         t->name    = name_copy;
         t->enabled = enable;
@@ -1633,8 +1669,8 @@ static ulog_status topic_remove(const char *topic_name) {
             } else {
                 t_prev->next = t->next;
             }
-            free((void*)t->name);  // Free the allocated topic name
-            free(t);  // Free the topic memory
+            free((void *)t->name);  // Free the allocated topic name
+            free(t);                // Free the topic memory
             return lock_unlock();
         }
         t_prev = t;
@@ -1806,13 +1842,13 @@ ulog_status ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size) {
     }
     print_target tgt = {.type       = PRINT_TARGET_BUFFER,
                         .dsc.buffer = {out, 0, out_size}};
-    
+
     // Create a copy of the event to avoid va_list issues
     ulog_event ev_copy = *ev;
     va_copy(ev_copy.message_format_args, ev->message_format_args);
-    
+
     log_print_event(&tgt, &ev_copy, false, false, false);
-    
+
     va_end(ev_copy.message_format_args);
     return ULOG_STATUS_OK;
 }
@@ -1877,7 +1913,7 @@ ulog_status ulog_cleanup(void) {
     topic_t *t = topic_data.topics;
     while (t != NULL) {
         topic_t *next = t->next;
-        free((void*)t->name);  // Free the allocated topic name
+        free((void *)t->name);  // Free the allocated topic name
         free(t);
         t = next;
     }

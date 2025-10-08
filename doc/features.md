@@ -75,17 +75,56 @@ add_global_arguments('-fmacro-prefix-map=../=',language: 'c')
 
 The full list of build options for static configuration is shown bellow:
 
-| Build Option                | Default | Purpose                                 |
-| --------------------------- | ------- | --------------------------------------- |
-| ULOG_BUILD_COLOR            | 0       | Compile color code paths                |
-| ULOG_BUILD_PREFIX_SIZE      | 0       | Prefix buffer logic                     |
-| ULOG_BUILD_EXTRA_OUTPUTS    | 0       | Extra output backends                   |
-| ULOG_BUILD_SOURCE_LOCATION  | 1       | File\:line output                       |
-| ULOG_BUILD_LEVEL_SHORT      | 0       | Print levels with short names, e.g. 'E' |
-| ULOG_BUILD_TIME             | 0       | Timestamp support                       |
-| ULOG_BUILD_TOPICS_NUM       | 0       | Topic filtering logic                   |
-| ULOG_BUILD_DYNAMIC_CONFIG   | 0       | Runtime toggles                         |
-| ULOG_BUILD_WARN_NOT_ENABLED | 1       | Warning stubs                           |
+| Build Option                      | Default | Purpose                                 |
+| --------------------------------- | ------- | --------------------------------------- |
+| ULOG_BUILD_COLOR                  | 0       | Compile color code paths                |
+| ULOG_BUILD_PREFIX_SIZE            | 0       | Prefix buffer logic                     |
+| ULOG_BUILD_EXTRA_OUTPUTS          | 0       | Extra output backends                   |
+| ULOG_BUILD_SOURCE_LOCATION        | 1       | File\:line output                       |
+| ULOG_BUILD_LEVEL_SHORT            | 0       | Print levels with short names, e.g. 'E' |
+| ULOG_BUILD_TIME                   | 0       | Timestamp support                       |
+| ULOG_BUILD_TOPICS_NUM             | 0       | Topic filtering logic                   |
+| ULOG_BUILD_DYNAMIC_CONFIG         | 0       | Runtime toggles                         |
+| ULOG_BUILD_WARN_NOT_ENABLED       | 1       | Warning stubs                           |
+| ULOG_BUILD_STATIC_CONFIG_HEADER   | 0       | Use external configuration header       |
+
+#### Using Static Configuration Header
+
+As an alternative to defining build options individually via compiler flags, you can define `ULOG_BUILD_STATIC_CONFIG_HEADER` to include a single header file named `ulog_static_config.h` that contains all configuration options. This approach simplifies configuration management by centralizing all build options in one file.
+
+When `ULOG_BUILD_STATIC_CONFIG_HEADER` is defined:
+- The library will include `ulog_static_config.h`
+- All other `ULOG_BUILD_*` macros must be defined in this header file
+- Defining other `ULOG_BUILD_*` macros via compiler flags will cause a compilation error
+
+Example `ulog_static_config.h`:
+
+```c
+#ifndef ULOG_STATIC_CONFIG_H
+#define ULOG_STATIC_CONFIG_H
+
+// Define all build options in one place
+#define ULOG_BUILD_COLOR 1
+#define ULOG_BUILD_PREFIX_SIZE 64
+#define ULOG_BUILD_EXTRA_OUTPUTS 8
+#define ULOG_BUILD_SOURCE_LOCATION 1
+#define ULOG_BUILD_LEVEL_SHORT 0
+#define ULOG_BUILD_TIME 1
+#define ULOG_BUILD_TOPICS_NUM 10
+#define ULOG_BUILD_DYNAMIC_CONFIG 0
+#define ULOG_BUILD_WARN_NOT_ENABLED 1
+
+#endif // ULOG_STATIC_CONFIG_H
+```
+
+Usage with CMake:
+
+```cmake
+target_compile_definitions(microlog PRIVATE ULOG_BUILD_STATIC_CONFIG_HEADER=1)
+target_include_directories(microlog PRIVATE path/to/config/directory)
+```
+
+This approach is particularly useful when you have multiple configurations or want to keep configuration separate from build scripts.
 
 ### Logging, Levels and Outputs
 
