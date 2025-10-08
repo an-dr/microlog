@@ -80,6 +80,10 @@ add_executable(example_package example.cpp)
 target_link_libraries(example_package PRIVATE microlog::microlog)
 
 target_compile_definitions(microlog PRIVATE ULOG_BUILD_COLOR=1) # configuration
+
+# Or use a user-defined configuration header `ulog_config.h`:
+# target_compile_definitions(microlog PRIVATE ULOG_BUILD_CONFIG_HEADER_ENABLED=1)
+# target_include_directories(microlog PRIVATE path/to/directory/containing/ulog_config.h)
 ```
 
 **Option 3 - Meson Package**:
@@ -90,6 +94,11 @@ target_compile_definitions(microlog PRIVATE ULOG_BUILD_COLOR=1) # configuration
 
 ```meson
 add_global_arguments('-DULOG_BUILD_COLOR=1', language: ['cpp', 'c']) # configuration
+
+# Or use a user-defined configuration header `ulog_config.h`:
+# add_global_arguments('-DULOG_BUILD_CONFIG_HEADER_ENABLED=1', language: ['cpp', 'c'])
+# And add include directory where ulog_config.h is located:
+# add_global_arguments('-Ipath/to/directory/containing/ulog_config.h', language: ['cpp', 'c'])
 
 exe = executable(
     meson.project_name(),
@@ -115,9 +124,11 @@ include(cpm/CPM.cmake)
 CPMAddPackage("gh:an-dr/microlog@6.4.5")
 
 target_link_libraries(${PROJECT_NAME} PUBLIC microlog::microlog)
-target_compile_definitions( microlog
-        INTERFACE
-        ULOG_BUILD_COLOR=1) # configuration
+target_compile_definitions( microlog PRIVATE ULOG_BUILD_COLOR=1) # configuration
+        
+# Or use a user-defined configuration header `ulog_config.h`:
+# target_compile_definitions(microlog PRIVATE ULOG_BUILD_CONFIG_HEADER_ENABLED=1)
+# target_include_directories(microlog PRIVATE path/to/directory/containing/ulog_config.h)
 ```
 
 ### 2. Use
@@ -141,7 +152,6 @@ INFO  src/main.cpp:4: Hello, World
 
 Add missing functionalities via API or use predefined extensions. See [Extensions documentation](extensions/README.md).
 
-   
 ## Advanced Usage
 
 [User Manual in `doc/features.md`](doc/features.md) - detailed information about the available features.

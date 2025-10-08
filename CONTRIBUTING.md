@@ -5,6 +5,7 @@ If you want to contribute feel free to open an issue or create Pull Request with
 - Library design: [design.md](doc/design.md).
 - Code organization: [code.md](doc/code.md).
 - Code style: [style.md](doc/style.md).
+- AI Assistant guide: [AGENTS.md](AGENTS.md) (for AI coding assistants).
 
 Recommended setup:
 

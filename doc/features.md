@@ -8,6 +8,7 @@
         - [Lock](#lock)
         - [Cleanup](#cleanup)
     - [Optional Features](#optional-features)
+        - [Configuration Header](#configuration-header)
         - [Topics](#topics)
         - [Extra Outputs](#extra-outputs)
             - [File Output](#file-output)
@@ -73,19 +74,23 @@ Note: For meson, you might want to adjust the compiler argument  `-fmacro-prefix
 add_global_arguments('-fmacro-prefix-map=../=',language: 'c')
 ```
 
+See also: [Configuration Header](#configuration-header) feature.
+
 The full list of build options for static configuration is shown bellow:
 
-| Build Option                | Default | Purpose                                 |
-| --------------------------- | ------- | --------------------------------------- |
-| ULOG_BUILD_COLOR            | 0       | Compile color code paths                |
-| ULOG_BUILD_PREFIX_SIZE      | 0       | Prefix buffer logic                     |
-| ULOG_BUILD_EXTRA_OUTPUTS    | 0       | Extra output backends                   |
-| ULOG_BUILD_SOURCE_LOCATION  | 1       | File\:line output                       |
-| ULOG_BUILD_LEVEL_SHORT      | 0       | Print levels with short names, e.g. 'E' |
-| ULOG_BUILD_TIME             | 0       | Timestamp support                       |
-| ULOG_BUILD_TOPICS_NUM       | 0       | Topic filtering logic                   |
-| ULOG_BUILD_DYNAMIC_CONFIG   | 0       | Runtime toggles                         |
-| ULOG_BUILD_WARN_NOT_ENABLED | 1       | Warning stubs                           |
+| Build Option                     | Default         | Purpose                                 |
+| -------------------------------- | --------------- | --------------------------------------- |
+| ULOG_BUILD_COLOR                 | 0               | Compile color code paths                |
+| ULOG_BUILD_PREFIX_SIZE           | 0               | Prefix buffer logic                     |
+| ULOG_BUILD_EXTRA_OUTPUTS         | 0               | Extra output backends                   |
+| ULOG_BUILD_SOURCE_LOCATION       | 1               | File\:line output                       |
+| ULOG_BUILD_LEVEL_SHORT           | 0               | Print levels with short names, e.g. 'E' |
+| ULOG_BUILD_TIME                  | 0               | Timestamp support                       |
+| ULOG_BUILD_TOPICS_NUM            | 0               | Topic filtering logic                   |
+| ULOG_BUILD_DYNAMIC_CONFIG        | 0               | Runtime toggles                         |
+| ULOG_BUILD_WARN_NOT_ENABLED      | 1               | Warning stubs                           |
+| ULOG_BUILD_CONFIG_HEADER_ENABLED | 0               | Use external configuration header       |
+| ULOG_BUILD_CONFIG_HEADER_NAME    | "ulog_config.h" | Configuration header name               |
 
 ### Logging, Levels and Outputs
 
@@ -227,6 +232,48 @@ ulog_cleanup();
 The clean up can be also used to remove all topics and outputs if needed during the program execution even if the allocation mode is static.
 
 ## Optional Features
+
+### Configuration Header
+
+- Static configuration options: `ULOG_BUILD_CONFIG_HEADER_ENABLED`, `ULOG_BUILD_CONFIG_HEADER_NAME`
+- Values (bool, string): `0/1`, `ANY`
+- Default: `0`, `"ulog_config.h"`
+
+As an alternative to defining build options individually via compiler flags, you can define `ULOG_BUILD_CONFIG_HEADER_ENABLED=1` to include a single header file named `ulog_config.h` that contains all configuration options. This approach simplifies configuration management by centralizing all build options in one file.
+
+When `ULOG_BUILD_CONFIG_HEADER_ENABLED` is defined:
+
+- The library will include `ulog_config.h`
+  - You can overwrite it with `ULOG_BUILD_CONFIG_HEADER_NAME="my_ulog_conf.h"`
+- All other `ULOG_BUILD_*` macros must be defined in this header file
+- Defining other `ULOG_BUILD_*` macros via compiler flags will cause a compilation error
+
+Example `ulog_config.h`:
+
+```c
+#pragma once
+
+// Define all build options in one place
+#define ULOG_BUILD_COLOR 1
+#define ULOG_BUILD_PREFIX_SIZE 64
+#define ULOG_BUILD_EXTRA_OUTPUTS 8
+#define ULOG_BUILD_SOURCE_LOCATION 1
+#define ULOG_BUILD_LEVEL_SHORT 0
+#define ULOG_BUILD_TIME 1
+#define ULOG_BUILD_TOPICS_NUM 10
+#define ULOG_BUILD_DYNAMIC_CONFIG 0
+#define ULOG_BUILD_WARN_NOT_ENABLED 1
+
+```
+
+Usage with CMake:
+
+```cmake
+target_compile_definitions(microlog PRIVATE ULOG_BUILD_CONFIG_HEADER_ENABLED=1)
+target_include_directories(microlog PRIVATE path/to/config/directory)
+```
+
+This approach is particularly useful when you have multiple configurations or want to keep configuration separate from build scripts.
 
 ### Topics
 
