@@ -251,7 +251,7 @@ When `ULOG_BUILD_CONFIG_HEADER_ENABLED` is defined:
 Example `ulog_config.h`:
 
 ```c
-#pragme once
+#pragma once
 
 // Define all build options in one place
 #define ULOG_BUILD_COLOR 1

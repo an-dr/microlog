@@ -37,7 +37,7 @@
 | ULOG_BUILD_DYNAMIC_CONFIG         | 0                      | ULOG_HAS_DYNAMIC_CONFIG     | Runtime toggles          |
 | ULOG_BUILD_WARN_NOT_ENABLED       | 1                      | ULOG_HAS_WARN_NOT_ENABLED   | Warning stubs            |
 | ULOG_BUILD_CONFIG_HEADER_ENABLED  | 0                      | -                           | Configuration header mode|
-| ULOG_BUILD_CONFIG_HEADER_NAME     | "ulog_config.h" | -                           | Configuration header name|   
+| ULOG_BUILD_CONFIG_HEADER_NAME     | "ulog_config.h"        | -                           | Configuration header name|
 
 ===================================================================================================================== */
 
@@ -153,7 +153,7 @@
     #define ULOG_HAS_DYNAMIC_CONFIG 0
 #else
     #define ULOG_HAS_DYNAMIC_CONFIG 1
-    
+
     // Undef macros to avoid conflicts
     #undef ULOG_BUILD_EXTRA_OUTPUTS
     #undef ULOG_BUILD_PREFIX_SIZE
@@ -167,7 +167,7 @@
     #undef ULOG_HAS_TIME
     #undef ULOG_HAS_TOPICS
     #undef ULOG_HAS_WARN_NOT_ENABLED
-    
+
     // Configure features based on runtime config
     #define ULOG_BUILD_EXTRA_OUTPUTS 8
     #define ULOG_BUILD_PREFIX_SIZE 64
