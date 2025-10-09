@@ -76,17 +76,17 @@ Each section is self-contained and depends only on core functionality or explici
 
 Features are controlled via compile-time defines (no feature = no code):
 
-| Define                      | Default | Purpose                          |
-|-----------------------------|---------|----------------------------------|
-| ULOG_BUILD_COLOR            | 0       | ANSI color codes                 |
-| ULOG_BUILD_TIME             | 0       | Timestamps                       |
-| ULOG_BUILD_PREFIX_SIZE      | 0       | Custom prefix (0 = disabled)     |
-| ULOG_BUILD_SOURCE_LOCATION  | 1       | file:line output                 |
-| ULOG_BUILD_LEVEL_SHORT      | 0       | Short level names (T/D/I/W/E/F)  |
+| Define                      | Default                    | Purpose                               |
+| --------------------------- | -------------------------- | ------------------------------------- |
+| ULOG_BUILD_COLOR            | 0                          | ANSI color codes                      |
+| ULOG_BUILD_TIME             | 0                          | Timestamps                            |
+| ULOG_BUILD_PREFIX_SIZE      | 0                          | Custom prefix (0 = disabled)          |
+| ULOG_BUILD_SOURCE_LOCATION  | 1                          | file:line output                      |
+| ULOG_BUILD_LEVEL_SHORT      | 0                          | Short level names (T/D/I/W/E/F)       |
 | ULOG_BUILD_TOPICS_MODE      | ULOG_BUILD_TOPICS_MODE_OFF | Topic filtering mode (STATIC/DYNAMIC) |
-| ULOG_BUILD_EXTRA_OUTPUTS    | 0       | File/custom outputs              |
-| ULOG_BUILD_DYNAMIC_CONFIG   | 0       | Runtime toggles (enables all)    |
-| ULOG_BUILD_WARN_NOT_ENABLED | 1       | Warning stubs for disabled APIs  |
+| ULOG_BUILD_EXTRA_OUTPUTS    | 0                          | File/custom outputs                   |
+| ULOG_BUILD_DYNAMIC_CONFIG   | 0                          | Runtime toggles (enables all)         |
+| ULOG_BUILD_WARN_NOT_ENABLED | 1                          | Warning stubs for disabled APIs       |
 
 Example (CMake):
 ```cmake
@@ -112,8 +112,8 @@ Custom levels can be set via `ulog_level_set_new_levels()`.
 
 Optional subsystem-based filtering (e.g., "network", "storage"):
 
-- **Static allocation**: `ULOG_BUILD_TOPICS_STATIC_NUM=N` (fixed count)
-- **Dynamic allocation**: `ULOG_BUILD_TOPICS_STATIC_NUM=-1` (heap)
+- **Static allocation**: `ULOG_BUILD_TOPICS_MODE=ULOG_BUILD_TOPICS_MODE_STATIC` + `ULOG_BUILD_TOPICS_STATIC_NUM=N` (fixed count)
+- **Dynamic allocation**: `ULOG_BUILD_TOPICS_MODE=ULOG_BUILD_TOPICS_MODE_DYNAMIC` (heap)
 
 Usage:
 ```c
@@ -284,7 +284,7 @@ Extensions use **only the public API** and are not part of distributed packages.
 // Basic logging
 ulog_trace/debug/info/warn/error/fatal("message %d", value);
 
-// With topics (requires ULOG_BUILD_TOPICS_STATIC_NUM != 0)
+// With topics (requires ULOG_BUILD_TOPICS_MODE != ULOG_BUILD_TOPICS_MODE_OFF)
 ulog_topic_info("network", "Connected");
 
 // Configuration

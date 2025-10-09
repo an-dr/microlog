@@ -87,7 +87,7 @@ The full list of build options for static configuration is shown bellow:
 | ULOG_BUILD_LEVEL_SHORT           | 0                          | Print levels with short names, e.g. 'E' |
 | ULOG_BUILD_TIME                  | 0                          | Timestamp support                       |
 | ULOG_BUILD_TOPICS_MODE           | ULOG_BUILD_TOPICS_MODE_OFF | Topic allocation mode                   |
-| ULOG_BUILD_TOPICS_NUM            | 0                          | Number of static topics (0 = disabled)  |
+| ULOG_BUILD_TOPICS_STATIC_NUM     | 0                          | Number of static topics (0 = disabled)  |
 | ULOG_BUILD_DYNAMIC_CONFIG        | 0                          | Runtime toggles                         |
 | ULOG_BUILD_WARN_NOT_ENABLED      | 1                          | Warning stubs                           |
 | ULOG_BUILD_CONFIG_HEADER_ENABLED | 0                          | Use external configuration header       |
