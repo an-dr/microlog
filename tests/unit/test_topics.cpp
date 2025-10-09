@@ -26,8 +26,7 @@ bool TestFixture::callback_is_set = false;
 TEST_CASE_FIXTURE(TestFixture, "Topics: Levels") {
     ulog_topic_add("testtopic", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
 
-    ulog_t_trace("testtopic",
-               "Topic enabled - At topic level - should appear");
+    ulog_t_trace("testtopic", "Topic enabled - At topic level - should appear");
     CHECK(ut_callback_get_message_count() == 1);
 
     ulog_t_error("testtopic", "Above topic level - should appear");
@@ -74,23 +73,28 @@ TEST_CASE_FIXTURE(TestFixture, "Topics: Cannot create duplicate") {
     res = ulog_topic_add("testtopic_2", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
     CHECK(res == 1);
     ulog_t_error("testtopic_2",
-               "Should appear because there is still one free slot");
+                 "Should appear because there is still one free slot");
     CHECK(ut_callback_get_message_count() == 2);
 }
 
-TEST_CASE_FIXTURE(TestFixture,
-                  "Topics: Cannot create more than ULOG_BUILD_TOPICS_NUM topics") {
+TEST_CASE_FIXTURE(
+    TestFixture,
+    "Topics: Cannot create more than ULOG_BUILD_TOPICS_STATIC_NUM topics") {
     int res;
 
     res = ulog_topic_add("testtopic_3", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
     CHECK(res == -1);
-    ulog_t_error("testtopic_3",
-               "Should not appear because static allocation is set to 2 slots");
+    ulog_t_error(
+        "testtopic_3",
+        "Should not appear because static allocation is set to 2 slots");
     CHECK(ut_callback_get_message_count() == 0);
 }
 
-TEST_CASE_FIXTURE(TestFixture, "Topics: Remove existing topic and re-add within static capacity") {
-    // Precondition: earlier tests created 'testtopic' (id 0) and 'testtopic_2' (id 1)
+TEST_CASE_FIXTURE(
+    TestFixture,
+    "Topics: Remove existing topic and re-add within static capacity") {
+    // Precondition: earlier tests created 'testtopic' (id 0) and 'testtopic_2'
+    // (id 1)
     int existing_id = ulog_topic_get_id("testtopic_2");
     CHECK(existing_id == 1);
 
@@ -110,8 +114,10 @@ TEST_CASE_FIXTURE(TestFixture, "Topics: Remove existing topic and re-add within 
     st = ulog_topic_remove("testtopic_2");
     CHECK(st == ULOG_STATUS_NOT_FOUND);
 
-    // Re-add topic (should reuse freed slot, id expected 1 but just check valid)
-    int new_id = ulog_topic_add("testtopic_2", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
+    // Re-add topic (should reuse freed slot, id expected 1 but just check
+    // valid)
+    int new_id =
+        ulog_topic_add("testtopic_2", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
     CHECK(new_id != ULOG_TOPIC_ID_INVALID);
 
     // Logging again should appear

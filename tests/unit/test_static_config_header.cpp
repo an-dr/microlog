@@ -4,23 +4,35 @@
 #include "ulog.h"
 #include "ut_callback.h"
 
+static void test_prefix_handler(ulog_event *ev, char *prefix,
+                                size_t prefix_size) {
+    (void)ev;  // Unused parameter
+    snprintf(prefix, prefix_size, "[PREFIX] ");
+}
+
+static void combined_prefix_handler(ulog_event *ev, char *prefix,
+                                    size_t prefix_size) {
+    (void)ev;  // Unused parameter
+    snprintf(prefix, prefix_size, "[TEST] ");
+}
+
 struct TestFixture {
   public:
-    static bool callback_is_set;
-
     TestFixture() {
-        // Per-test setup
-        if (!callback_is_set) {
-            ulog_output_add(ut_callback, nullptr, ULOG_LEVEL_TRACE);
-            callback_is_set = true;
-        }
+        // Clean up any previous state
+        ulog_cleanup();
         ut_callback_reset();
+
+        // Set up test environment
+        ulog_output_add(ut_callback, nullptr, ULOG_LEVEL_TRACE);
+        ulog_output_level_set_all(ULOG_LEVEL_TRACE);
     }
 
-    ~TestFixture() = default;
+    ~TestFixture() {
+        // Clean up after each test
+        ulog_cleanup();
+    }
 };
-
-bool TestFixture::callback_is_set = false;
 
 TEST_CASE_FIXTURE(TestFixture, "Static Config Header - Basic Logging") {
     ulog_output_level_set_all(ULOG_LEVEL_TRACE);
@@ -75,6 +87,9 @@ TEST_CASE_FIXTURE(TestFixture, "Static Config Header - Extra Outputs Enabled") {
     CHECK(file_output != ULOG_OUTPUT_INVALID);
 
     ulog_info("Message to file");
+
+    // Remove the output handler before closing the file
+    ulog_output_remove(file_output);
     fclose(fp);
 
     // Verify file was written
@@ -95,12 +110,7 @@ TEST_CASE_FIXTURE(TestFixture,
                   "Static Config Header - Prefix Feature Enabled") {
     ulog_output_level_set_all(ULOG_LEVEL_INFO);
 
-    // Set a prefix handler
-    static auto prefix_handler = [](ulog_event *ev, char *prefix, size_t prefix_size) {
-        snprintf(prefix, prefix_size, "[PREFIX] ");
-    };
-
-    ulog_status status = ulog_prefix_set_fn(prefix_handler);
+    ulog_status status = ulog_prefix_set_fn(test_prefix_handler);
     CHECK(status == ULOG_STATUS_OK);
 
     ulog_info("Test with prefix");
@@ -145,10 +155,7 @@ TEST_CASE_FIXTURE(TestFixture,
     CHECK(topic != ULOG_TOPIC_ID_INVALID);
 
     // Set prefix
-    static auto prefix_handler = [](ulog_event *ev, char *prefix, size_t prefix_size) {
-        snprintf(prefix, prefix_size, "[TEST] ");
-    };
-    ulog_prefix_set_fn(prefix_handler);
+    ulog_prefix_set_fn(combined_prefix_handler);
 
     ulog_topic_info("COMBINED", "All features active");
 

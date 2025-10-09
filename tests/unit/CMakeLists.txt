@@ -26,22 +26,24 @@ set(ULOG_CONFIG_BASE "-DULOG_BUILD_EXTRA_OUTPUTS=8"
 
 set(ULOG_CONFIG_NO_PREFIX "-DULOG_BUILD_EXTRA_OUTPUTS=8" 
                                 "-DULOG_BUILD_TIME=1"
-                                "-DULOG_BUILD_TOPICS_NUM=8"
+                                "-DULOG_BUILD_TOPICS_MODE=ULOG_BUILD_TOPICS_MODE_STATIC"
+                                "-DULOG_BUILD_TOPICS_STATIC_NUM=8"
                                 )
 
 set(ULOG_CONFIG_TEST_CORE ${ULOG_CONFIG_BASE}
                           "-DULOG_DEFAULT_LOG_LEVEL=ULOG_LEVEL_DEBUG"
-                          "-DULOG_BUILD_TOPICS_NUM=-1"
+                          "-DULOG_BUILD_TOPICS_MODE=ULOG_BUILD_TOPICS_MODE_DYNAMIC"
                           )
 
 set(ULOG_CONFIG_TEST_TOPICS ${ULOG_CONFIG_BASE}
                             "-DULOG_DEFAULT_LOG_LEVEL=ULOG_LEVEL_WARN"
-                            "-DULOG_BUILD_TOPICS_NUM=2"
+                            "-DULOG_BUILD_TOPICS_MODE=ULOG_BUILD_TOPICS_MODE_STATIC"
+                            "-DULOG_BUILD_TOPICS_STATIC_NUM=2"
                             )
 
 set(ULOG_CONFIG_TEST_DYNAMIC_CONFIG "-DULOG_BUILD_DYNAMIC_CONFIG=1")
 
-set(ULOG_CONFIG_TEST_DYNAMIC_TOPICS "-DULOG_BUILD_TOPICS_NUM=-1"
+set(ULOG_CONFIG_TEST_DYNAMIC_TOPICS "-DULOG_BUILD_TOPICS_MODE=ULOG_BUILD_TOPICS_MODE_DYNAMIC"
                                     "-DULOG_BUILD_EXTRA_OUTPUTS=8"
                                     "-DULOG_BUILD_DYNAMIC_CONFIG=1"
                                     "-DULOG_BUILD_TIME=1"
@@ -50,7 +52,8 @@ set(ULOG_CONFIG_TEST_DYNAMIC_TOPICS "-DULOG_BUILD_TOPICS_NUM=-1"
                                     )
 
 set(ULOG_CONFIG_TEST_EVENT_GETTERS ${ULOG_CONFIG_BASE}
-                                   "-DULOG_BUILD_TOPICS_NUM=4"
+                                   "-DULOG_BUILD_TOPICS_MODE=ULOG_BUILD_TOPICS_MODE_STATIC"
+                                   "-DULOG_BUILD_TOPICS_STATIC_NUM=4"
                                    "-DULOG_BUILD_SOURCE_LOCATION=1"
                                    )
 

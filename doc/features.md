@@ -78,19 +78,20 @@ See also: [Configuration Header](#configuration-header) feature.
 
 The full list of build options for static configuration is shown bellow:
 
-| Build Option                     | Default         | Purpose                                 |
-| -------------------------------- | --------------- | --------------------------------------- |
-| ULOG_BUILD_COLOR                 | 0               | Compile color code paths                |
-| ULOG_BUILD_PREFIX_SIZE           | 0               | Prefix buffer logic                     |
-| ULOG_BUILD_EXTRA_OUTPUTS         | 0               | Extra output backends                   |
-| ULOG_BUILD_SOURCE_LOCATION       | 1               | File\:line output                       |
-| ULOG_BUILD_LEVEL_SHORT           | 0               | Print levels with short names, e.g. 'E' |
-| ULOG_BUILD_TIME                  | 0               | Timestamp support                       |
-| ULOG_BUILD_TOPICS_NUM            | 0               | Topic filtering logic                   |
-| ULOG_BUILD_DYNAMIC_CONFIG        | 0               | Runtime toggles                         |
-| ULOG_BUILD_WARN_NOT_ENABLED      | 1               | Warning stubs                           |
-| ULOG_BUILD_CONFIG_HEADER_ENABLED | 0               | Use external configuration header       |
-| ULOG_BUILD_CONFIG_HEADER_NAME    | "ulog_config.h" | Configuration header name               |
+| Build Option                     | Default                    | Purpose                                 |
+| -------------------------------- | -------------------------- | --------------------------------------- |
+| ULOG_BUILD_COLOR                 | 0                          | Compile color code paths                |
+| ULOG_BUILD_PREFIX_SIZE           | 0                          | Prefix buffer logic                     |
+| ULOG_BUILD_EXTRA_OUTPUTS         | 0                          | Extra output backends                   |
+| ULOG_BUILD_SOURCE_LOCATION       | 1                          | File\:line output                       |
+| ULOG_BUILD_LEVEL_SHORT           | 0                          | Print levels with short names, e.g. 'E' |
+| ULOG_BUILD_TIME                  | 0                          | Timestamp support                       |
+| ULOG_BUILD_TOPICS_MODE           | ULOG_BUILD_TOPICS_MODE_OFF | Topic allocation mode                   |
+| ULOG_BUILD_TOPICS_STATIC_NUM     | 0                          | Number of static topics (0 = disabled)  |
+| ULOG_BUILD_DYNAMIC_CONFIG        | 0                          | Runtime toggles                         |
+| ULOG_BUILD_WARN_NOT_ENABLED      | 1                          | Warning stubs                           |
+| ULOG_BUILD_CONFIG_HEADER_ENABLED | 0                          | Use external configuration header       |
+| ULOG_BUILD_CONFIG_HEADER_NAME    | "ulog_config.h"            | Configuration header name               |
 
 ### Logging, Levels and Outputs
 
@@ -260,7 +261,8 @@ Example `ulog_config.h`:
 #define ULOG_BUILD_SOURCE_LOCATION 1
 #define ULOG_BUILD_LEVEL_SHORT 0
 #define ULOG_BUILD_TIME 1
-#define ULOG_BUILD_TOPICS_NUM 10
+#define ULOG_BUILD_TOPICS_MODE ULOG_BUILD_TOPICS_MODE_STATIC
+#define ULOG_BUILD_TOPICS_STATIC_NUM 10
 #define ULOG_BUILD_DYNAMIC_CONFIG 0
 #define ULOG_BUILD_WARN_NOT_ENABLED 1
 
@@ -277,18 +279,18 @@ This approach is particularly useful when you have multiple configurations or wa
 
 ### Topics
 
-- Static configuration options: `ULOG_BUILD_TOPICS_NUM`
-- Values (int): `-1...INT_MAX`
-- Default: `0`.
+ - Static configuration options: `ULOG_BUILD_TOPICS_MODE`, `ULOG_BUILD_TOPICS_STATIC_NUM`
+- Values (enum, int): `ULOG_BUILD_TOPICS_MODE_OFF`, `ULOG_BUILD_TOPICS_MODE_STATIC`, `ULOG_BUILD_TOPICS_MODE_DYNAMIC`, `0...UINT_MAX`
+- Default: `ULOG_BUILD_TOPICS_MODE_OFF`, `0`.
 
-The feature is controlled by `ULOG_BUILD_TOPICS_NUM`. It allows to filter log messages by subsystems, e.g. "network", "storage", etc.
+The feature is controlled by `ULOG_BUILD_TOPICS_MODE`. It allows to filter log messages by subsystems, e.g. "network", "storage", etc. Use `ULOG_BUILD_TOPICS_MODE_STATIC` with `ULOG_BUILD_TOPICS_STATIC_NUM` for a fixed number of topics, or `ULOG_BUILD_TOPICS_MODE_DYNAMIC` for runtime allocation.
 
 There are two mechanism of working with the topics:
 
 - **Dynamic** allocation - slightly slower than static allocation
 - **Static** allocation - faster
 
-If you want to use dynamic topics, you need to define `ULOG_BUILD_TOPICS_NUM` to be -1. Otherwise, you need to define the number of topics for static allocation.
+If you want to use dynamic topics, set `ULOG_BUILD_TOPICS_MODE` to `ULOG_BUILD_TOPICS_MODE_DYNAMIC`. For static allocation set `ULOG_BUILD_TOPICS_MODE` to `ULOG_BUILD_TOPICS_MODE_STATIC` and define `ULOG_BUILD_TOPICS_STATIC_NUM` to the desired number of topics.
 
 Printing the log message with the topic is done by the set of function-like macros similar to `ulog_xxx`, but with the topic as the first argument:
 
@@ -530,16 +532,16 @@ Allows to use short level strings, e.g. "T" for "TRACE", "I" for "INFO":
 
 Most of the library features are configured compile time to reduce the code size and complexity. However, if the code size is not a concern, you can enable Dynamic Config by defining `ULOG_BUILD_DYNAMIC_CONFIG=1`. When the feature is enables all other features are enabled too in some default mode described in bellow. All Dynamic Config functions named like: `ulog_FEATURE_config`. The default configuration is following:
 
-| Build Config                | Default Value |
-| --------------------------- | ------------- |
-| ULOG_BUILD_PREFIX_SIZE      | 64            |
-| ULOG_BUILD_EXTRA_OUTPUTS    | 8             |
-| ULOG_BUILD_TIME             | 1             |
-| ULOG_BUILD_SOURCE_LOCATION  | 1             |
-| ULOG_BUILD_COLOR            | 1             |
-| ULOG_BUILD_LEVEL_SHORT      | 0             |
-| ULOG_BUILD_TOPICS_NUM       | -1            |
-| ULOG_BUILD_WARN_NOT_ENABLED | 0             |
+| Build Config                | Default Value                  |
+| --------------------------- | ------------------------------ |
+| ULOG_BUILD_PREFIX_SIZE      | 64                             |
+| ULOG_BUILD_EXTRA_OUTPUTS    | 8                              |
+| ULOG_BUILD_TIME             | 1                              |
+| ULOG_BUILD_SOURCE_LOCATION  | 1                              |
+| ULOG_BUILD_COLOR            | 1                              |
+| ULOG_BUILD_LEVEL_SHORT      | 0                              |
+| ULOG_BUILD_TOPICS_MODE      | ULOG_BUILD_TOPICS_MODE_DYNAMIC |
+| ULOG_BUILD_WARN_NOT_ENABLED | 0                              |
 
 #### Topics Configuration
 
