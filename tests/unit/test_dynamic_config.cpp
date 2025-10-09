@@ -124,7 +124,7 @@ TEST_CASE_FIXTURE(TestFixture, "Dynamic Config - Time") {
 
 TEST_CASE_FIXTURE(TestFixture, "Dynamic Config - Topics") {
     // Add a test topic first
-    ulog_topic_add("test_dynamic_cfg_topic", ULOG_OUTPUT_ALL, true);
+    ulog_topic_add("test_dynamic_cfg_topic", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
 
     // Test topics enable/disable
     REQUIRE(ulog_topic_config(true) == ULOG_STATUS_OK);

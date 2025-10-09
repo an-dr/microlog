@@ -16,6 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Move extensions documentation from `doc/extensions.md` to `extensions/README.md` for better visibility
+- Revamp topics handling from enable/disable to level-based
+    - `ulog_topic_add()` now takes a level parameter instead of enabled/disabled state
+
+### Removed
+
+- Revamp topics handling from enable/disable to level-based
+    - `ulog_topic_enable()` and `ulog_topic_enable_all()`
+    - `ulog_topic_disable()` and `ulog_topic_disable_all()`
 
 ## [v7.0.0-alpha.3] - September 17, 2025
 

@@ -163,50 +163,6 @@ TEST_CASE_FIXTURE(WarnNotEnabledTestFixture, "Topic Functions Warnings") {
         CHECK(strstr(warning_last_message, "ULOG_BUILD_TOPICS_NUM disabled") != nullptr);
     }
     
-    SUBCASE("Topic Enable Warning") {
-        reset_warning_callback();
-        
-        ulog_status result = ulog_topic_enable("test_topic");
-        
-        CHECK(result == ULOG_STATUS_DISABLED);
-        CHECK(warning_callback_count == 1);
-        CHECK(strstr(warning_last_message, "ulog_topic_enable") != nullptr);
-        CHECK(strstr(warning_last_message, "ULOG_BUILD_TOPICS_NUM disabled") != nullptr);
-    }
-    
-    SUBCASE("Topic Disable Warning") {
-        reset_warning_callback();
-        
-        ulog_status result = ulog_topic_disable("test_topic");
-        
-        CHECK(result == ULOG_STATUS_DISABLED);
-        CHECK(warning_callback_count == 1);
-        CHECK(strstr(warning_last_message, "ulog_topic_disable") != nullptr);
-        CHECK(strstr(warning_last_message, "ULOG_BUILD_TOPICS_NUM disabled") != nullptr);
-    }
-    
-    SUBCASE("Topic Enable All Warning") {
-        reset_warning_callback();
-        
-        ulog_status result = ulog_topic_enable_all();
-        
-        CHECK(result == ULOG_STATUS_DISABLED);
-        CHECK(warning_callback_count == 1);
-        CHECK(strstr(warning_last_message, "ulog_topic_enable_all") != nullptr);
-        CHECK(strstr(warning_last_message, "ULOG_BUILD_TOPICS_NUM disabled") != nullptr);
-    }
-    
-    SUBCASE("Topic Disable All Warning") {
-        reset_warning_callback();
-        
-        ulog_status result = ulog_topic_disable_all();
-        
-        CHECK(result == ULOG_STATUS_DISABLED);
-        CHECK(warning_callback_count == 1);
-        CHECK(strstr(warning_last_message, "ulog_topic_disable_all") != nullptr);
-        CHECK(strstr(warning_last_message, "ULOG_BUILD_TOPICS_NUM disabled") != nullptr);
-    }
-    
     SUBCASE("Topic Get ID Warning") {
         reset_warning_callback();
         
@@ -221,7 +177,7 @@ TEST_CASE_FIXTURE(WarnNotEnabledTestFixture, "Topic Functions Warnings") {
     SUBCASE("Topic Add Warning") {
         reset_warning_callback();
         
-        ulog_topic_id result = ulog_topic_add("test_topic", ULOG_OUTPUT_ALL, true);
+        ulog_topic_id result = ulog_topic_add("test_topic", ULOG_OUTPUT_ALL, ULOG_LEVEL_INFO);
         
         CHECK(result == ULOG_TOPIC_ID_INVALID);
         CHECK(warning_callback_count == 1);
@@ -306,10 +262,9 @@ TEST_CASE_FIXTURE(WarnNotEnabledTestFixture, "Multiple Warning Calls") {
     // Call multiple disabled functions
     ulog_color_config(true);
     ulog_time_config(false);
-    ulog_topic_enable("test");
     
-    // Should generate 3 warnings
-    CHECK(warning_callback_count == 3);
+    // Should generate 2 warnings
+    CHECK(warning_callback_count == 2);
     
     ulog_cleanup();
 }

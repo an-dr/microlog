@@ -25,7 +25,7 @@ TEST_CASE("Cleanup: outputs, topics, prefix reset") {
 
     // 2) Add prefix and topic and log
     ulog_prefix_set_fn(test_prefix);
-    ulog_topic_add("cleanup_topic", ULOG_OUTPUT_ALL, true);
+    ulog_topic_add("cleanup_topic", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
     ulog_t_info("cleanup_topic", "With prefix and topic");
     CHECK(ut_callback_get_message_count() == 2);
     const char *msg = ut_callback_get_last_message();
@@ -49,7 +49,7 @@ TEST_CASE("Cleanup: outputs, topics, prefix reset") {
     CHECK(strstr(msg, "[PFX]") == nullptr); // prefix function cleared
 
     // 5) Recreate topic and ensure it works again (ID may restart)
-    ulog_topic_add("cleanup_topic", ULOG_OUTPUT_ALL, true);
+    ulog_topic_add("cleanup_topic", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
     ulog_t_info("cleanup_topic", "Recreated topic");
     CHECK(ut_callback_get_message_count() == 4);
     msg = ut_callback_get_last_message();
