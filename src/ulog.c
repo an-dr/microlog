@@ -25,19 +25,20 @@
    Core Feature: Static Configuration
 =======================================================================================================================
 
-| Build Option                      | Default                | Dependent Macro(s)          | Purpose                  |
-| --------------------------------- | ---------------------- | --------------------------- | ------------------------ |
-| ULOG_BUILD_COLOR                  | 0                      | ULOG_HAS_COLOR              | Compile color code paths |
-| ULOG_BUILD_PREFIX_SIZE            | 0                      | ULOG_HAS_PREFIX             | Prefix buffer logic      |
-| ULOG_BUILD_EXTRA_OUTPUTS          | 0                      | ULOG_HAS_EXTRA_OUTPUTS      | Extra output backends    |
-| ULOG_BUILD_SOURCE_LOCATION        | 1                      | ULOG_HAS_SOURCE_LOCATION    | File\:line output        |
-| ULOG_BUILD_LEVEL_SHORT            | 0                      | ULOG_LEVEL_HAS_SHORT/_LONG  | Short level style        |
-| ULOG_BUILD_TIME                   | 0                      | ULOG_HAS_TIME               | Timestamp support        |
-| ULOG_BUILD_TOPICS_NUM             | 0                      | ULOG_HAS_TOPICS             | Topic filtering logic    |
-| ULOG_BUILD_DYNAMIC_CONFIG         | 0                      | ULOG_HAS_DYNAMIC_CONFIG     | Runtime toggles          |
-| ULOG_BUILD_WARN_NOT_ENABLED       | 1                      | ULOG_HAS_WARN_NOT_ENABLED   | Warning stubs            |
-| ULOG_BUILD_CONFIG_HEADER_ENABLED  | 0                      | -                           | Configuration header mode|
-| ULOG_BUILD_CONFIG_HEADER_NAME     | "ulog_config.h"        | -                           | Configuration header name|
+| Build Option                     | Default                    | Dependent Macro(s)        | Purpose                  |
+| -------------------------------- | -------------------------- | ------------------------- | ------------------------ |
+| ULOG_BUILD_COLOR                 | 0                          | ULOG_HAS_COLOR            | Compile color code paths |
+| ULOG_BUILD_PREFIX_SIZE           | 0                          | ULOG_HAS_PREFIX           | Prefix buffer logic      |
+| ULOG_BUILD_EXTRA_OUTPUTS         | 0                          | ULOG_HAS_EXTRA_OUTPUTS    | Extra output backends    |
+| ULOG_BUILD_SOURCE_LOCATION       | 1                          | ULOG_HAS_SOURCE_LOCATION  | File\:line output        |
+| ULOG_BUILD_LEVEL_SHORT           | 0                          | ULOG_LEVEL_HAS_SHORT/_LONG| Short level style        |
+| ULOG_BUILD_TIME                  | 0                          | ULOG_HAS_TIME             | Timestamp support        |
+| ULOG_BUILD_TOPICS_MODE           | ULOG_BUILD_TOPICS_MODE_OFF | ULOG_HAS_TOPICS           | Topics mode              |
+| ULOG_BUILD_TOPICS_STATIC_NUM     | 0                          | -                         | Topic number             |
+| ULOG_BUILD_DYNAMIC_CONFIG        | 0                          | ULOG_HAS_DYNAMIC_CONFIG   | Runtime toggles          |
+| ULOG_BUILD_WARN_NOT_ENABLED      | 1                          | ULOG_HAS_WARN_NOT_ENABLED | Warning stubs            |
+| ULOG_BUILD_CONFIG_HEADER_ENABLED | 0                          | -                         | Configuration header mode|
+| ULOG_BUILD_CONFIG_HEADER_NAME    | "ulog_config.h"            | -                         | Configuration header name|
 
 ===================================================================================================================== */
 
@@ -66,8 +67,8 @@
     #ifdef ULOG_BUILD_TIME
         #error "ULOG_BUILD_CONFIG_HEADER_ENABLED cannot be used with ULOG_BUILD_TIME"
     #endif
-    #ifdef ULOG_BUILD_TOPICS_NUM
-        #error "ULOG_BUILD_CONFIG_HEADER_ENABLED cannot be used with ULOG_BUILD_TOPICS_NUM"
+    #ifdef ULOG_BUILD_TOPICS_MODE
+        #error "ULOG_BUILD_CONFIG_HEADER_ENABLED cannot be used with ULOG_BUILD_TOPICS_MODE"
     #endif
     #ifdef ULOG_BUILD_DYNAMIC_CONFIG
         #error "ULOG_BUILD_CONFIG_HEADER_ENABLED cannot be used with ULOG_BUILD_DYNAMIC_CONFIG"
@@ -139,10 +140,12 @@
 #endif
 
 
-#ifndef ULOG_BUILD_TOPICS_NUM
+
+#ifndef ULOG_BUILD_TOPICS_MODE
     #define ULOG_HAS_TOPICS 0
 #else
-    #define ULOG_HAS_TOPICS (ULOG_BUILD_TOPICS_NUM > 0 || ULOG_BUILD_TOPICS_NUM == -1)
+    /* Topics enabled when mode is not OFF (STATIC or DYNAMIC) */
+    #define ULOG_HAS_TOPICS (ULOG_BUILD_TOPICS_MODE != ULOG_BUILD_TOPICS_MODE_OFF)
 #endif
 
 /* ============================================================================
@@ -157,7 +160,7 @@
     // Undef macros to avoid conflicts
     #undef ULOG_BUILD_EXTRA_OUTPUTS
     #undef ULOG_BUILD_PREFIX_SIZE
-    #undef ULOG_BUILD_TOPICS_NUM
+    #undef ULOG_BUILD_TOPICS_MODE
     #undef ULOG_HAS_COLOR
     #undef ULOG_HAS_EXTRA_OUTPUTS
     #undef ULOG_HAS_LEVEL_LONG
@@ -171,7 +174,8 @@
     // Configure features based on runtime config
     #define ULOG_BUILD_EXTRA_OUTPUTS 8
     #define ULOG_BUILD_PREFIX_SIZE 64
-    #define ULOG_BUILD_TOPICS_NUM -1
+    /* In dynamic configuration mode we enable dynamic topics */
+    #define ULOG_BUILD_TOPICS_MODE ULOG_BUILD_TOPICS_MODE_DYNAMIC
     #define ULOG_HAS_COLOR 1
     #define ULOG_HAS_EXTRA_OUTPUTS 1
     #define ULOG_HAS_LEVEL_LONG 1
@@ -1156,8 +1160,14 @@ ulog_status ulog_topic_config(bool enabled) {
 
 // Private
 // ================
-#define TOPIC_IS_DYNAMIC (ULOG_BUILD_TOPICS_NUM < 0)
-#define TOPIC_STATIC_NUM ULOG_BUILD_TOPICS_NUM
+#ifndef ULOG_BUILD_TOPICS_STATIC_NUM
+    /* If static count not provided, default to 0 */
+    #define ULOG_BUILD_TOPICS_STATIC_NUM 0
+#endif
+
+/* Dynamic if mode equals DYNAMIC */
+#define TOPIC_IS_DYNAMIC (ULOG_BUILD_TOPICS_MODE == ULOG_BUILD_TOPICS_MODE_DYNAMIC)
+#define TOPIC_STATIC_NUM ULOG_BUILD_TOPICS_STATIC_NUM
 #define TOPIC_LEVEL_DEFAULT ULOG_LEVEL_TRACE
 
 typedef struct topic_t {
@@ -1325,13 +1335,13 @@ ulog_status ulog_topic_remove(const char *topic_name) {
 ulog_status ulog_topic_level_set(const char *topic_name, ulog_level level) {
     (void)(topic_name);
     (void)(level);
-    warn_not_enabled("ULOG_BUILD_TOPICS_NUM");
+    warn_not_enabled("ULOG_BUILD_TOPICS_MODE");
     return ULOG_STATUS_DISABLED;
 }
 
 ulog_topic_id ulog_topic_get_id(const char *topic_name) {
     (void)(topic_name);
-    warn_not_enabled("ULOG_BUILD_TOPICS_NUM");
+    warn_not_enabled("ULOG_BUILD_TOPICS_MODE");
     return ULOG_TOPIC_ID_INVALID;
 }
 
@@ -1340,7 +1350,7 @@ ulog_topic_id ulog_topic_add(const char *topic_name, ulog_output_id output,
     (void)(topic_name);
     (void)(output);
     (void)(level);
-    warn_not_enabled("ULOG_BUILD_TOPICS_NUM");
+    warn_not_enabled("ULOG_BUILD_TOPICS_MODE");
     return ULOG_TOPIC_ID_INVALID;
 }
 

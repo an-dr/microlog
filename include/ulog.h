@@ -290,6 +290,12 @@ ulog_status ulog_output_remove(ulog_output_id output);
 
 // clang-format off
 
+enum {
+    ULOG_BUILD_TOPICS_MODE_OFF = 0,  ///< Topics feature is disabled
+    ULOG_BUILD_TOPICS_MODE_STATIC,  ///< Static topics (fixed number at compile time)
+    ULOG_BUILD_TOPICS_MODE_DYNAMIC, ///< Dynamic topics (add/remove at runtime)
+};
+
 /// @brief Alias: `ulog_t`. Log a message with topic (requires ULOG_BUILD_TOPICS!=0 or
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
 /// @param LEVEL Log level
@@ -347,7 +353,8 @@ ulog_status ulog_output_remove(ulog_output_id output);
 /// @param output Output handle to associate with this topic (ULOG_OUTPUT_ALL)
 /// @param level Minimum log level for this topic
 /// @return Topic ID on success, ULOG_TOPIC_ID_INVALID on failure
-ulog_topic_id ulog_topic_add(const char *topic_name, ulog_output_id output, ulog_level level);
+ulog_topic_id
+ulog_topic_add(const char *topic_name, ulog_output_id output, ulog_level level);
 
 /// @brief Removes a topic  (requires ULOG_BUILD_TOPICS!=0 or
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)

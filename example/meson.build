@@ -15,7 +15,7 @@ add_global_arguments('-DULOG_BUILD_COLOR=1', language : ['cpp', 'c'])
 add_global_arguments('-DULOG_BUILD_TIME=1', language: ['cpp', 'c'])
 add_global_arguments('-DULOG_BUILD_PREFIX_SIZE=16', language : ['cpp', 'c'])
 add_global_arguments('-DULOG_BUILD_EXTRA_OUTPUTS=2', language: ['cpp', 'c'])
-add_global_arguments('-DULOG_BUILD_TOPICS_NUM=3', language: ['cpp', 'c'])
+add_global_arguments('-DULOG_BUILD_TOPICS_MODE=ULOG_BUILD_TOPICS_MODE_STATIC', '-DULOG_BUILD_TOPICS_STATIC_NUM=3', language: ['cpp', 'c'])
 
 
 exe = executable(

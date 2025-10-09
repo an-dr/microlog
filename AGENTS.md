@@ -25,18 +25,11 @@ microlog/
 ├── include/
 │   └── ulog.h              # Public API header
 ├── extensions/             # Optional add-ons using only public API
-│   ├── ulog_syslog.h/.c   # RFC 5424 syslog levels
-│   ├── ulog_lock_*.h/.c   # Platform-specific thread safety helpers
-│   └── ulog_generic_interface.h  # Generic logger interface
 ├── tests/
 │   ├── unit/              # Unit tests (doctest framework)
 │   └── integration/       # Package integration tests
 ├── example/               # Usage examples
 ├── doc/                   # Documentation
-│   ├── features.md        # Feature documentation
-│   ├── design.md          # Architecture overview
-│   ├── code.md            # Code organization
-│   └── style.md           # Coding style guide
 └── scripts/               # Build and release scripts (PowerShell)
 ```
 
@@ -90,7 +83,7 @@ Features are controlled via compile-time defines (no feature = no code):
 | ULOG_BUILD_PREFIX_SIZE      | 0       | Custom prefix (0 = disabled)     |
 | ULOG_BUILD_SOURCE_LOCATION  | 1       | file:line output                 |
 | ULOG_BUILD_LEVEL_SHORT      | 0       | Short level names (T/D/I/W/E/F)  |
-| ULOG_BUILD_TOPICS_NUM       | 0       | Topic filtering (-1 = dynamic)   |
+| ULOG_BUILD_TOPICS_MODE      | ULOG_BUILD_TOPICS_MODE_OFF | Topic filtering mode (STATIC/DYNAMIC) |
 | ULOG_BUILD_EXTRA_OUTPUTS    | 0       | File/custom outputs              |
 | ULOG_BUILD_DYNAMIC_CONFIG   | 0       | Runtime toggles (enables all)    |
 | ULOG_BUILD_WARN_NOT_ENABLED | 1       | Warning stubs for disabled APIs  |
@@ -119,8 +112,8 @@ Custom levels can be set via `ulog_level_set_new_levels()`.
 
 Optional subsystem-based filtering (e.g., "network", "storage"):
 
-- **Static allocation**: `ULOG_BUILD_TOPICS_NUM=N` (fixed count)
-- **Dynamic allocation**: `ULOG_BUILD_TOPICS_NUM=-1` (heap)
+- **Static allocation**: `ULOG_BUILD_TOPICS_STATIC_NUM=N` (fixed count)
+- **Dynamic allocation**: `ULOG_BUILD_TOPICS_STATIC_NUM=-1` (heap)
 
 Usage:
 ```c
@@ -262,15 +255,6 @@ Extensions use **only the public API** and are not part of distributed packages.
 4. Add configuration option if needed
 5. Test with different terminals
 
-### User reports memory leak with topics
-
-**Debug path**:
-1. Check topic allocation mode: static (`ULOG_BUILD_TOPICS_NUM > 0`) or dynamic (`-1`)?
-2. Review Topic section in [src/ulog.c](src/ulog.c)
-3. Check `ulog_cleanup()` implementation
-4. Verify user calls `ulog_topic_remove()` or `ulog_cleanup()`
-5. Add unit test reproducing leak
-
 ### Porting to new RTOS
 
 **Extension approach**:
@@ -300,7 +284,7 @@ Extensions use **only the public API** and are not part of distributed packages.
 // Basic logging
 ulog_trace/debug/info/warn/error/fatal("message %d", value);
 
-// With topics (requires ULOG_BUILD_TOPICS_NUM != 0)
+// With topics (requires ULOG_BUILD_TOPICS_STATIC_NUM != 0)
 ulog_topic_info("network", "Connected");
 
 // Configuration

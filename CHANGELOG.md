@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [unreleased, v7.0.0-alpha.4]
+## [v7.0.0-alpha.4]
 
 ### Added
 
@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Move extensions documentation from `doc/extensions.md` to `extensions/README.md` for better visibility
 - Revamp topics handling from enable/disable to level-based
     - `ulog_topic_add()` now takes a level parameter instead of enabled/disabled state
+- `ULOG_BUILD_TOPICS_NUM` is replaced with `ULOG_BUILD_TOPICS_MODE` and `ULOG_BUILD_TOPICS_STATIC_NUM`
 
 ### Removed
 
