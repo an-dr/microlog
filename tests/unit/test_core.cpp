@@ -2,6 +2,7 @@
 #include "doctest/doctest.h"
 
 #include <chrono>
+#include <cstring>
 #include <ctime>
 #include "ulog.h"
 #include "ut_callback.h"
@@ -80,14 +81,14 @@ TEST_CASE_FIXTURE(TestFixture, "Invalid Level Handling") {
     // Test ulog_level_to_string with invalid levels
     const char *invalid_level_str = ulog_level_to_string((ulog_level)-1);
     CHECK(strcmp(invalid_level_str, "?") == 0);
-    
+
     invalid_level_str = ulog_level_to_string((ulog_level)99);
     CHECK(strcmp(invalid_level_str, "?") == 0);
-    
+
     // Test ulog_level_set_new_levels with NULL
     ulog_status result = ulog_level_set_new_levels(nullptr);
     CHECK(result == ULOG_STATUS_INVALID_ARGUMENT);
-    
+
     // Test with invalid level descriptor (NULL names)
     ulog_level_descriptor invalid_desc = {
         .max_level = (ulog_level)6,
@@ -95,7 +96,7 @@ TEST_CASE_FIXTURE(TestFixture, "Invalid Level Handling") {
     };
     result = ulog_level_set_new_levels(&invalid_desc);
     CHECK(result == ULOG_STATUS_INVALID_ARGUMENT);
-    
+
     // Test with invalid max_level
     const char *valid_names[] = {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL", nullptr, nullptr};
     ulog_level_descriptor invalid_max_desc = {

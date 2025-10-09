@@ -70,7 +70,7 @@ typedef const char *ulog_level_names[ULOG_LEVEL_TOTAL];
 
 typedef struct {
     ulog_level max_level;          // maximum log level
-    const ulog_level_names names;  // level names
+    ulog_level_names names;        // level names
 } ulog_level_descriptor;
 
 /// @brief Returns the string representation of the log level
@@ -290,11 +290,10 @@ ulog_status ulog_output_remove(ulog_output_id output);
 
 // clang-format off
 
-enum {
-    ULOG_BUILD_TOPICS_MODE_OFF = 0,  ///< Topics feature is disabled
-    ULOG_BUILD_TOPICS_MODE_STATIC,  ///< Static topics (fixed number at compile time)
-    ULOG_BUILD_TOPICS_MODE_DYNAMIC, ///< Dynamic topics (add/remove at runtime)
-};
+// Topics mode constants
+#define ULOG_BUILD_TOPICS_MODE_OFF     0
+#define ULOG_BUILD_TOPICS_MODE_STATIC  1
+#define ULOG_BUILD_TOPICS_MODE_DYNAMIC 2
 
 /// @brief Alias: `ulog_t`. Log a message with topic (requires ULOG_BUILD_TOPICS!=0 or
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)

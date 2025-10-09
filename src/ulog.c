@@ -139,8 +139,6 @@
     #define ULOG_HAS_WARN_NOT_ENABLED (ULOG_BUILD_WARN_NOT_ENABLED==1)
 #endif
 
-
-
 #ifndef ULOG_BUILD_TOPICS_MODE
     #define ULOG_HAS_TOPICS 0
 #else
@@ -1352,6 +1350,12 @@ ulog_topic_id ulog_topic_add(const char *topic_name, ulog_output_id output,
     (void)(level);
     warn_not_enabled("ULOG_BUILD_TOPICS_MODE");
     return ULOG_TOPIC_ID_INVALID;
+}
+
+ulog_status ulog_topic_remove(const char *topic_name) {
+    (void)(topic_name);
+    warn_not_enabled("ULOG_BUILD_TOPICS_MODE");
+    return ULOG_STATUS_DISABLED;
 }
 
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
