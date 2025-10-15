@@ -8,6 +8,7 @@
         - [Lock](#lock)
         - [Cleanup](#cleanup)
     - [Optional Features](#optional-features)
+        - [Disable](#disable)
         - [Configuration Header](#configuration-header)
         - [Topics](#topics)
         - [Extra Outputs](#extra-outputs)
@@ -92,6 +93,9 @@ The full list of build options for static configuration is shown bellow:
 | ULOG_BUILD_WARN_NOT_ENABLED      | 1                          | Warning stubs                           |
 | ULOG_BUILD_CONFIG_HEADER_ENABLED | 0                          | Use external configuration header       |
 | ULOG_BUILD_CONFIG_HEADER_NAME    | "ulog_config.h"            | Configuration header name               |
+| ULOG_BUILD_DISABLED              | 0                          | Disable microlog completely             |
+
+WARNING! Do not use ULOG_BUILD_* options with a precompiled microlog library. Use dynamic configuration instead.
 
 ### Logging, Levels and Outputs
 
@@ -234,6 +238,61 @@ The clean up can be also used to remove all topics and outputs if needed during 
 
 ## Optional Features
 
+### Disable
+
+- Static configuration options: `ULOG_BUILD_DISABLED`
+- Values (bool): `0/1`
+- Default: `0`.
+
+NOTE: ULOG_BUILD_DISABLED=1 overrides all other ULOG_BUILD_* feature flags.
+
+This feature allows disabling all logging calls at compile time for **zero-overhead** logging. To enable this feature, define `ULOG_BUILD_DISABLED=1` in the compiler options.
+
+When the feature is enabled, all logging macros are replaced with `((void)0)` and function calls return disabled status codes. **Important:** Logging macros become true no-ops - their arguments are not evaluated, providing complete **zero-overhead** when disabled.
+
+Example:
+
+```c
+int expensive_calculation() { /* ... */ }
+
+// When ULOG_BUILD_DISABLED=1:
+ulog_info("Result: %d", expensive_calculation());  // expensive_calculation() is NOT called
+```
+
+When the feature is enabled all logging macros are replaced with empty stubs or return negative status codes:
+
+| Function                    | Return Value When Disabled |
+| --------------------------- | -------------------------- |
+| ulog_cleanup                | `ULOG_STATUS_DISABLED`     |
+| ulog_color_config           | `ULOG_STATUS_DISABLED`     |
+| ulog_event_get_file         | `""`                       |
+| ulog_event_get_level        | `ULOG_LEVEL_0`             |
+| ulog_event_get_line         | `-1`                       |
+| ulog_event_get_message      | `ULOG_STATUS_DISABLED`     |
+| ulog_event_get_time         | `NULL`                     |
+| ulog_event_get_topic        | `ULOG_TOPIC_ID_INVALID`    |
+| ulog_event_to_cstr          | `ULOG_STATUS_DISABLED`     |
+| ulog_level_config           | `ULOG_STATUS_DISABLED`     |
+| ulog_level_reset_levels     | `ULOG_STATUS_DISABLED`     |
+| ulog_level_set_new_levels   | `ULOG_STATUS_DISABLED`     |
+| ulog_level_to_string        | `"?"`                      |
+| ulog_lock_set_fn            | `ULOG_STATUS_DISABLED`     |
+| ulog_log                    | `(void)0`                  |
+| ulog_output_add             | `ULOG_OUTPUT_INVALID`      |
+| ulog_output_add_file        | `ULOG_OUTPUT_INVALID`      |
+| ulog_output_level_set       | `ULOG_STATUS_DISABLED`     |
+| ulog_output_level_set_all   | `ULOG_STATUS_DISABLED`     |
+| ulog_output_remove          | `ULOG_STATUS_DISABLED`     |
+| ulog_prefix_config          | `ULOG_STATUS_DISABLED`     |
+| ulog_prefix_set_fn          | `ULOG_STATUS_DISABLED`     |
+| ulog_source_location_config | `ULOG_STATUS_DISABLED`     |
+| ulog_time_config            | `ULOG_STATUS_DISABLED`     |
+| ulog_topic_add              | `ULOG_TOPIC_ID_INVALID`    |
+| ulog_topic_config           | `ULOG_STATUS_DISABLED`     |
+| ulog_topic_get_id           | `ULOG_TOPIC_ID_INVALID`    |
+| ulog_topic_level_set        | `ULOG_STATUS_DISABLED`     |
+| ulog_topic_remove           | `ULOG_STATUS_DISABLED`     |
+
 ### Configuration Header
 
 - Static configuration options: `ULOG_BUILD_CONFIG_HEADER_ENABLED`, `ULOG_BUILD_CONFIG_HEADER_NAME`
@@ -279,7 +338,7 @@ This approach is particularly useful when you have multiple configurations or wa
 
 ### Topics
 
- - Static configuration options: `ULOG_BUILD_TOPICS_MODE`, `ULOG_BUILD_TOPICS_STATIC_NUM`
+- Static configuration options: `ULOG_BUILD_TOPICS_MODE`, `ULOG_BUILD_TOPICS_STATIC_NUM`
 - Values (enum, int): `ULOG_BUILD_TOPICS_MODE_OFF`, `ULOG_BUILD_TOPICS_MODE_STATIC`, `ULOG_BUILD_TOPICS_MODE_DYNAMIC`, `0...UINT_MAX`
 - Default: `ULOG_BUILD_TOPICS_MODE_OFF`, `0`.
 

@@ -69,8 +69,8 @@ typedef enum ulog_level_enum {
 typedef const char *ulog_level_names[ULOG_LEVEL_TOTAL];
 
 typedef struct {
-    ulog_level max_level;          // maximum log level
-    ulog_level_names names;        // level names
+    ulog_level max_level;    // maximum log level
+    ulog_level_names names;  // level names
 } ulog_level_descriptor;
 
 /// @brief Returns the string representation of the log level
@@ -159,7 +159,9 @@ typedef ulog_status (*ulog_lock_fn)(bool lock, void *lock_arg);
 /// @brief Sets the thread synchronization lock function
 /// @param function Lock function to use, or NULL to disable locking
 /// @param lock_arg User argument passed to the lock function
-void ulog_lock_set_fn(ulog_lock_fn function, void *lock_arg);
+/// @return ULOG_STATUS_OK on success, ULOG_STATUS_INVALID_ARGUMENT if function
+/// is NULL
+ulog_status ulog_lock_set_fn(ulog_lock_fn function, void *lock_arg);
 
 /* ============================================================================
    Feature: Dynamic Config
@@ -352,8 +354,8 @@ ulog_status ulog_output_remove(ulog_output_id output);
 /// @param output Output handle to associate with this topic (ULOG_OUTPUT_ALL)
 /// @param level Minimum log level for this topic
 /// @return Topic ID on success, ULOG_TOPIC_ID_INVALID on failure
-ulog_topic_id
-ulog_topic_add(const char *topic_name, ulog_output_id output, ulog_level level);
+ulog_topic_id ulog_topic_add(const char *topic_name, ulog_output_id output,
+                             ulog_level level);
 
 /// @brief Removes a topic  (requires ULOG_BUILD_TOPICS!=0 or
 /// ULOG_BUILD_DYNAMIC_CONFIG=1)
@@ -425,6 +427,159 @@ void ulog_log(ulog_level level, const char *file,
 
 /// @brief Clean up all topic, outputs and other dynamic resources
 ulog_status ulog_cleanup(void);
+
+/* ============================================================================
+   Optional Feature: Disable
+============================================================================ */
+
+#if ULOG_BUILD_DISABLED == 1
+
+// If logging is disabled, replace all functions with zero-overhead inline functions
+#if defined(__GNUC__) || defined(__clang__) || defined(__TI_COMPILER_VERSION__)
+#define ULOG_INLINE inline __attribute__((always_inline))
+#elif defined(_MSC_VER)
+#define ULOG_INLINE __forceinline
+#elif defined(__IAR_SYSTEMS_ICC__)
+#define ULOG_INLINE _Pragma("inline=forced") inline
+#else
+#define ULOG_INLINE inline
+#endif
+
+// clang-format off
+ULOG_INLINE ulog_status ulog_cleanup(void) 
+    { return ULOG_STATUS_DISABLED; }
+    
+ULOG_INLINE ulog_status ulog_color_config(bool enabled) 
+    { (void)enabled; return ULOG_STATUS_DISABLED; }
+    
+ULOG_INLINE const char* ulog_event_get_file(ulog_event *ev) 
+    { (void)ev; return ""; }
+    
+ULOG_INLINE ulog_level ulog_event_get_level(ulog_event *ev) 
+    { (void)ev; return ULOG_LEVEL_0; }
+    
+ULOG_INLINE int ulog_event_get_line(ulog_event *ev) 
+    { (void)ev; return -1; }
+    
+ULOG_INLINE ulog_status ulog_event_get_message(ulog_event *ev, char *buffer, size_t buffer_size) 
+    { (void)ev; (void)buffer; (void)buffer_size; return ULOG_STATUS_DISABLED; }
+    
+ULOG_INLINE struct tm* ulog_event_get_time(ulog_event *ev) 
+    { (void)ev; return NULL; }
+    
+ULOG_INLINE ulog_topic_id ulog_event_get_topic(ulog_event *ev) 
+    { (void)ev; return ULOG_TOPIC_ID_INVALID; }
+    
+ULOG_INLINE ulog_status ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size) 
+    { (void)ev; (void)out; (void)out_size; return ULOG_STATUS_DISABLED; }
+    
+ULOG_INLINE ulog_status ulog_level_config(ulog_level_config_style style) 
+    { (void)style; return ULOG_STATUS_DISABLED; }
+    
+ULOG_INLINE ulog_status ulog_level_reset_levels(void) 
+    { return ULOG_STATUS_DISABLED; }
+    
+ULOG_INLINE ulog_status ulog_level_set_new_levels(const ulog_level_descriptor *new_levels) 
+    { (void)new_levels; return ULOG_STATUS_DISABLED; }
+    
+ULOG_INLINE const char* ulog_level_to_string(ulog_level level) 
+    { (void)level; return "?"; }
+    
+ULOG_INLINE ulog_status ulog_lock_set_fn(ulog_lock_fn function, void *lock_arg) 
+    { (void)function; (void)lock_arg; return ULOG_STATUS_DISABLED; }
+    
+ULOG_INLINE void ulog_log(ulog_level level, const char *file, int line, const char *topic, const char *message, ...) 
+    { (void)level; (void)file; (void)line; (void)topic; (void)message; }
+    
+ULOG_INLINE ulog_output_id ulog_output_add(ulog_output_handler_fn handler, void *arg, ulog_level level) 
+    { (void)handler; (void)arg; (void)level; return ULOG_OUTPUT_INVALID; }
+    
+ULOG_INLINE ulog_output_id ulog_output_add_file(FILE *file, ulog_level level) 
+    { (void)file; (void)level; return ULOG_OUTPUT_INVALID; }
+    
+ULOG_INLINE ulog_status ulog_output_level_set(ulog_output_id output, ulog_level level) 
+    { (void)output; (void)level; return ULOG_STATUS_DISABLED; }
+    
+ULOG_INLINE ulog_status ulog_output_level_set_all(ulog_level level) 
+    { (void)level; return ULOG_STATUS_DISABLED; }
+    
+ULOG_INLINE ulog_status ulog_output_remove(ulog_output_id output) 
+    { (void)output; return ULOG_STATUS_DISABLED; }
+    
+ULOG_INLINE ulog_status ulog_prefix_config(bool enabled) 
+    { (void)enabled; return ULOG_STATUS_DISABLED; }
+    
+ULOG_INLINE ulog_status ulog_prefix_set_fn(ulog_prefix_fn function) 
+    { (void)function; return ULOG_STATUS_DISABLED; }
+    
+ULOG_INLINE ulog_status ulog_source_location_config(bool enabled) 
+    { (void)enabled; return ULOG_STATUS_DISABLED; }
+    
+ULOG_INLINE ulog_status ulog_time_config(bool enabled) 
+    { (void)enabled; return ULOG_STATUS_DISABLED; }
+    
+ULOG_INLINE ulog_topic_id ulog_topic_add(const char *topic_name, ulog_output_id output, ulog_level level) 
+    { (void)topic_name; (void)output; (void)level; return ULOG_TOPIC_ID_INVALID; }
+    
+ULOG_INLINE ulog_status ulog_topic_config(bool enabled) 
+    { (void)enabled; return ULOG_STATUS_DISABLED; }
+    
+ULOG_INLINE ulog_topic_id ulog_topic_get_id(const char *topic_name) 
+    { (void)topic_name; return ULOG_TOPIC_ID_INVALID; }
+    
+ULOG_INLINE ulog_status ulog_topic_level_set(const char *topic_name, ulog_level level) 
+    { (void)topic_name; (void)level; return ULOG_STATUS_DISABLED; }
+    
+ULOG_INLINE ulog_status ulog_topic_remove(const char *topic_name) 
+    { (void)topic_name; return ULOG_STATUS_DISABLED; }
+
+// Redefine logging macros to be no-ops when disabled
+#undef ulog_trace
+#undef ulog_debug
+#undef ulog_info
+#undef ulog_warn
+#undef ulog_error
+#undef ulog_fatal
+#undef ulog
+#undef ulog_topic_trace
+#undef ulog_topic_debug
+#undef ulog_topic_info
+#undef ulog_topic_warn
+#undef ulog_topic_error
+#undef ulog_topic_fatal
+#undef ulog_topic_log
+#undef ulog_t_trace
+#undef ulog_t_debug
+#undef ulog_t_info
+#undef ulog_t_warn
+#undef ulog_t_error
+#undef ulog_t_fatal
+#undef ulog_t
+#define ulog_trace(...) ((void)0)
+#define ulog_debug(...) ((void)0)
+#define ulog_info(...) ((void)0)
+#define ulog_warn(...) ((void)0)
+#define ulog_error(...) ((void)0)
+#define ulog_fatal(...) ((void)0)
+#define ulog(...) ((void)0)
+#define ulog_topic_trace(...) ((void)0)
+#define ulog_topic_debug(...) ((void)0)
+#define ulog_topic_info(...) ((void)0)
+#define ulog_topic_warn(...) ((void)0)
+#define ulog_topic_error(...) ((void)0)
+#define ulog_topic_fatal(...) ((void)0)
+#define ulog_topic_log(...) ((void)0)
+#define ulog_t_trace(...) ((void)0)
+#define ulog_t_debug(...) ((void)0)
+#define ulog_t_info(...) ((void)0)
+#define ulog_t_warn(...) ((void)0)
+#define ulog_t_error(...) ((void)0)
+#define ulog_t_fatal(...) ((void)0)
+#define ulog_t(...) ((void)0)
+
+#undef ULOG_INLINE // not to expose it
+// clang-format on
+#endif  // ULOG_BUILD_DISABLED
 
 #ifdef __cplusplus
 }

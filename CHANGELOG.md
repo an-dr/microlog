@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v7.0.0-beta.2] - October 15, 2025
+
+### Added
+
+- ULOG_BUILD_DISABLED option to completely disable the library at compile time.
+- Disabled feature test to ensure no code is included when disabled.
+
+### Changed
+
+- `ulog_lock_set_fn` now returns `ulog_status` for error handling when locking fails.
+
 ## [v7.0.0-beta.1] - October 9, 2025
 
 > 🚨 **BREAKING CHANGES**: Complete API redesign from v6.5.0. This is a major architectural overhaul with new type system, function names, and build configuration.
@@ -16,41 +27,43 @@ The changelog below consolidates all changes from alpha versions leading up to t
 #### Core Features
 
 - **Output Management System**: Unified system replacing callbacks for logging destinations
+
   - `ulog_output_add()` - Add custom callback outputs
   - `ulog_output_add_file()` - Add file outputs
   - `ulog_output_remove()` - Remove outputs dynamically
   - `ulog_output_level_set()` / `ulog_output_level_set_all()` - Per-output level control
   - `ULOG_OUTPUT_STDOUT` - Predefined output for stdout
   - Topics can be bound to specific outputs via `ulog_topic_add(TOPIC, OUTPUT, LEVEL)`
-
 - **Enhanced Type System**: Modern C enum types for better type safety
+
   - `ulog_level` enum: `ULOG_LEVEL_TRACE`, `ULOG_LEVEL_DEBUG`, `ULOG_LEVEL_INFO`, `ULOG_LEVEL_WARN`, `ULOG_LEVEL_ERROR`, `ULOG_LEVEL_FATAL`
   - `ulog_status` enum: `ULOG_STATUS_OK`, `ULOG_STATUS_ERROR`, `ULOG_STATUS_INVALID_ARGUMENT`, `ULOG_STATUS_NOT_FOUND`, `ULOG_STATUS_BUSY`, `ULOG_STATUS_DISABLED`
   - `ulog_topic_id` type for topic identification
   - `ulog_output` type for output handles
-
 - **Custom Log Levels**: Define your own level schemes
+
   - `ulog_level_set_new_levels(ulog_level_descriptor)` - Set custom levels
   - `ulog_level_reset_levels()` - Reset to defaults
   - Generic `ULOG_LEVEL_0...7` available for custom schemes
   - New macros `ulog_t(level, topic, ...)` and `ulog(level, ...)` for dynamic level logging
-
 - **Static Configuration Header**: Simplified build-time configuration
+
   - Enable with `ULOG_BUILD_CONFIG_HEADER_ENABLED=1`
   - Use `ulog_config.h` by default or customize with `ULOG_BUILD_CONFIG_HEADER_NAME`
 
 #### Extensions
 
 - **Syslog Levels Extension** (`extensions/ulog_syslog.c/.h`)
+
   - RFC 5424 style severities: DEBUG, INFO, NOTICE, WARN, ERR, CRIT, ALERT, EMERG
-  
 - **Thread-Safe Lock Extensions** for multiple platforms:
+
   - CMSIS-RTOS2, FreeRTOS, POSIX, ThreadX, and Windows
-  
 - **Generic Logger Interface Extension**
+
   - Easier migration from/to other logging libraries
-  
 - **Comprehensive Documentation**
+
   - Extensions included in releases
   - Documentation moved to `extensions/README.md` for better visibility
 
@@ -77,11 +90,12 @@ The changelog below consolidates all changes from alpha versions leading up to t
 #### API Redesign
 
 - **Macro System**: Dual macro system with improved naming
+
   - Primary: `ulog_trace()`, `ulog_debug()`, `ulog_info()`, `ulog_warn()`, `ulog_error()`, `ulog_fatal()`
   - Topic macros: `ulog_t_*()` (renamed from `logt_*`)
   - Basic `log_*` aliases removed - use `ulog_*` directly
-
 - **Function Renaming** for consistency (selected examples):
+
   - `ulog_get_level_string()` → `ulog_level_to_string()`
   - `ulog_set_level()` → `ulog_output_level_set_all()`
   - `ulog_set_quiet()` → `ulog_output_level_set(ULOG_OUTPUT_STDOUT, level)`
@@ -91,8 +105,8 @@ The changelog below consolidates all changes from alpha versions leading up to t
   - `ulog_set_prefix_fn()` → `ulog_prefix_set_fn()`
   - All topic functions now use `ulog_topic_*` prefix
   - All configuration functions now use `*_config` suffix
-
 - **Type Naming**: Consistent snake_case convention
+
   - `ulog_Event` → `ulog_event`
   - `ulog_LogFn` → `ulog_log_fn`
   - `ulog_LockFn` → `ulog_lock_fn`
@@ -102,25 +116,24 @@ The changelog below consolidates all changes from alpha versions leading up to t
 
 All build configuration now uses unified `ULOG_BUILD_*` pattern:
 
-| Old | New |
-|-----|-----|
-| `!ULOG_NO_COLOR` | `ULOG_BUILD_COLOR=1` |
-| `ULOG_HAVE_TIME` | `ULOG_BUILD_TIME=1` |
-| `ULOG_CUSTOM_PREFIX_SIZE` | `ULOG_BUILD_PREFIX_SIZE=N` |
-| `ULOG_EXTRA_OUTPUTS` | `ULOG_BUILD_EXTRA_OUTPUTS=N` |
-| `!ULOG_HIDE_FILE_STRING` | `ULOG_BUILD_SOURCE_LOCATION=1` |
-| `ULOG_SHORT_LEVEL_STRINGS` | `ULOG_BUILD_LEVEL_SHORT=1` |
-| `ULOG_TOPICS_NUM` | `ULOG_BUILD_TOPICS_MODE` + `ULOG_BUILD_TOPICS_STATIC_NUM` |
-| `ULOG_RUNTIME_MODE` | `ULOG_BUILD_DYNAMIC_CONFIG=1` |
+| Old                          | New                                                           |
+| ---------------------------- | ------------------------------------------------------------- |
+| `!ULOG_NO_COLOR`           | `ULOG_BUILD_COLOR=1`                                        |
+| `ULOG_HAVE_TIME`           | `ULOG_BUILD_TIME=1`                                         |
+| `ULOG_CUSTOM_PREFIX_SIZE`  | `ULOG_BUILD_PREFIX_SIZE=N`                                  |
+| `ULOG_EXTRA_OUTPUTS`       | `ULOG_BUILD_EXTRA_OUTPUTS=N`                                |
+| `!ULOG_HIDE_FILE_STRING`   | `ULOG_BUILD_SOURCE_LOCATION=1`                              |
+| `ULOG_SHORT_LEVEL_STRINGS` | `ULOG_BUILD_LEVEL_SHORT=1`                                  |
+| `ULOG_TOPICS_NUM`          | `ULOG_BUILD_TOPICS_MODE` + `ULOG_BUILD_TOPICS_STATIC_NUM` |
+| `ULOG_RUNTIME_MODE`        | `ULOG_BUILD_DYNAMIC_CONFIG=1`                               |
 
 #### Topics Overhaul
 
 - **Level-Based Control**: Topics now use log levels instead of simple enable/disable
+
   - `ulog_topic_add()` now takes a level parameter
   - Replaces previous binary enabled/disabled state
-  
 - **Registration Required**: All topics (static and dynamic) must use `ulog_topic_add()`
-
 - **Display Format**: Changed from `[Topic] LEVEL` to `LEVEL [Topic]`
 
 #### Enhanced Behavior
@@ -170,14 +183,14 @@ All build configuration now uses unified `ULOG_BUILD_*` pattern:
 
 - Move extensions documentation from `doc/extensions.md` to `extensions/README.md` for better visibility
 - Revamp topics handling from enable/disable to level-based
-    - `ulog_topic_add()` now takes a level parameter instead of enabled/disabled state
+  - `ulog_topic_add()` now takes a level parameter instead of enabled/disabled state
 - `ULOG_BUILD_TOPICS_NUM` is replaced with `ULOG_BUILD_TOPICS_MODE` and `ULOG_BUILD_TOPICS_STATIC_NUM`
 
 ### Removed
 
 - Revamp topics handling from enable/disable to level-based
-    - `ulog_topic_enable()` and `ulog_topic_enable_all()`
-    - `ulog_topic_disable()` and `ulog_topic_disable_all()`
+  - `ulog_topic_enable()` and `ulog_topic_enable_all()`
+  - `ulog_topic_disable()` and `ulog_topic_disable_all()`
 
 ## [v7.0.0-alpha.3] - September 17, 2025
 
@@ -188,10 +201,10 @@ All build configuration now uses unified `ULOG_BUILD_*` pattern:
 - New macros `ulog_t(level, topic, ...)` and `ulog(level, ...)` for dynamic level logging.
 - `ULOG_STATUS_DISABLED` status code for disabled features.
 - Extensions:
-    - Syslog levels extension (`extensions/ulog_syslog.c/.h`) providing RFC 5424 style severities (DEBUG, INFO, NOTICE, WARN, ERR, CRIT, ALERT, EMERG)
-    - Thread-safe lock extensions for CMSIS-RTOS2, FreeRTOS, POSIX, ThreadX, and Windows.
-    - Generic logger interface extension for easier migration from/to other logging libraries.
-    - New documentation page `doc/extensions.md` and README Extensions section.
+  - Syslog levels extension (`extensions/ulog_syslog.c/.h`) providing RFC 5424 style severities (DEBUG, INFO, NOTICE, WARN, ERR, CRIT, ALERT, EMERG)
+  - Thread-safe lock extensions for CMSIS-RTOS2, FreeRTOS, POSIX, ThreadX, and Windows.
+  - Generic logger interface extension for easier migration from/to other logging libraries.
+  - New documentation page `doc/extensions.md` and README Extensions section.
 - Unit tests. UT coverage: >85% lines, >90% functions
 
 ### Changed
@@ -214,8 +227,8 @@ All build configuration now uses unified `ULOG_BUILD_*` pattern:
 
 - Binding topic to a specific output via `ulog_topic_add(TOPIC, OUTPUT, ENABLED)`
 - New status codes:
-    - `ULOG_STATUS_NOT_FOUND` returned when a topic or output is not present (previously returned `ULOG_STATUS_ERROR`)
-    - `ULOG_STATUS_BUSY` for lock timeouts / failed lock attempts
+  - `ULOG_STATUS_NOT_FOUND` returned when a topic or output is not present (previously returned `ULOG_STATUS_ERROR`)
+  - `ULOG_STATUS_BUSY` for lock timeouts / failed lock attempts
 - `ulog_topic_remove(TOPIC)`
 - `ulog_cleanup()` to free all dynamic resources and reset added entities (topics, outputs, etc.)
 
@@ -255,68 +268,68 @@ All build configuration now uses unified `ULOG_BUILD_*` pattern:
 ### Changed
 
 - Renamed Features:
-    - Custom Prefix → Prefix: Simplified naming (`ULOG_BUILD_PREFIX_SIZE`)
-    - Extra Outputs → Outputs: Unified output system (`ULOG_BUILD_EXTRA_OUTPUTS`)
-    - File String → Source Location: More descriptive (`ULOG_BUILD_SOURCE_LOCATION`)
-    - Runtime Mode → Dynamic Config: More accurate (`ULOG_BUILD_DYNAMIC_CONFIG`)
+  - Custom Prefix → Prefix: Simplified naming (`ULOG_BUILD_PREFIX_SIZE`)
+  - Extra Outputs → Outputs: Unified output system (`ULOG_BUILD_EXTRA_OUTPUTS`)
+  - File String → Source Location: More descriptive (`ULOG_BUILD_SOURCE_LOCATION`)
+  - Runtime Mode → Dynamic Config: More accurate (`ULOG_BUILD_DYNAMIC_CONFIG`)
 - Enhanced Macro System: Dual macro system with backward compatibility
   - Primary: `ulog_trace()`, `ulog_debug()`, `ulog_info()`, `ulog_warn()`, `ulog_error()`, `ulog_fatal()`
   - Aliases: `log_trace()`, `log_debug()`, etc. (unchanged for compatibility)
   - Topic macros: `ulog_topic_*(topic, ...)` with `logt_*()` aliases
 - Build Configuration Revolution
-    - Old System: Feature flags (`ULOG_FEATURE_*`, `ULOG_NO_COLOR`, `ULOG_HAVE_TIME`, `ULOG_CUSTOM_PREFIX_SIZE`, etc.)
-    - New System: Unified `ULOG_BUILD_*` pattern with consistent semantics:
-    - `ULOG_BUILD_COLOR=1` (replaces `!ULOG_NO_COLOR`)
-    - `ULOG_BUILD_TIME=1` (replaces `ULOG_HAVE_TIME`)
-    - `ULOG_BUILD_PREFIX_SIZE=N` (replaces `ULOG_CUSTOM_PREFIX_SIZE`)
-    - `ULOG_BUILD_EXTRA_OUTPUTS=N` (replaces `ULOG_EXTRA_OUTPUTS`)
-    - `ULOG_BUILD_SOURCE_LOCATION=1` (replaces `!ULOG_HIDE_FILE_STRING`)
-    - `ULOG_BUILD_LEVEL_STYLE` (replaces `ULOG_SHORT_LEVEL_STRINGS`)
-    - `ULOG_BUILD_TOPICS_NUM=N` (replaces `ULOG_TOPICS_NUM`)
-    - `ULOG_BUILD_DYNAMIC_CONFIG=1` (replaces `ULOG_RUNTIME_MODE`)
+  - Old System: Feature flags (`ULOG_FEATURE_*`, `ULOG_NO_COLOR`, `ULOG_HAVE_TIME`, `ULOG_CUSTOM_PREFIX_SIZE`, etc.)
+  - New System: Unified `ULOG_BUILD_*` pattern with consistent semantics:
+  - `ULOG_BUILD_COLOR=1` (replaces `!ULOG_NO_COLOR`)
+  - `ULOG_BUILD_TIME=1` (replaces `ULOG_HAVE_TIME`)
+  - `ULOG_BUILD_PREFIX_SIZE=N` (replaces `ULOG_CUSTOM_PREFIX_SIZE`)
+  - `ULOG_BUILD_EXTRA_OUTPUTS=N` (replaces `ULOG_EXTRA_OUTPUTS`)
+  - `ULOG_BUILD_SOURCE_LOCATION=1` (replaces `!ULOG_HIDE_FILE_STRING`)
+  - `ULOG_BUILD_LEVEL_STYLE` (replaces `ULOG_SHORT_LEVEL_STRINGS`)
+  - `ULOG_BUILD_TOPICS_NUM=N` (replaces `ULOG_TOPICS_NUM`)
+  - `ULOG_BUILD_DYNAMIC_CONFIG=1` (replaces `ULOG_RUNTIME_MODE`)
 - Level Constants Migration
-    - Old: `LOG_TRACE`, `LOG_DEBUG`, `LOG_INFO`, `LOG_WARN`, `LOG_ERROR`, `LOG_FATAL`
-    - New: `ULOG_LEVEL_TRACE`, `ULOG_LEVEL_DEBUG`, `ULOG_LEVEL_INFO`, `ULOG_LEVEL_WARN`, `ULOG_LEVEL_ERROR`, `ULOG_LEVEL_FATAL`
+  - Old: `LOG_TRACE`, `LOG_DEBUG`, `LOG_INFO`, `LOG_WARN`, `LOG_ERROR`, `LOG_FATAL`
+  - New: `ULOG_LEVEL_TRACE`, `ULOG_LEVEL_DEBUG`, `ULOG_LEVEL_INFO`, `ULOG_LEVEL_WARN`, `ULOG_LEVEL_ERROR`, `ULOG_LEVEL_FATAL`
 - Function Renaming for Consistency
-    - Core Functions:
-        - `ulog_get_level_string()` → `ulog_level_to_string()`
-        - `ulog_set_level()` → `ulog_output_level_set_all()`
-        - `ulog_set_quiet()` → `ulog_output_level_set(ULOG_OUTPUT_STDOUT, level)`
-    - Output Management:
-        - `ulog_add_callback()` → `ulog_output_add()`
-        - `ulog_add_fp()` → `ulog_output_add_file()`
-    - Configuration Functions:
-        - `ulog_configure_levels()` → `ulog_level_config()`
-        - `ulog_configure_prefix()` → `ulog_prefix_config()`
-        - `ulog_configure_color()` → `ulog_color_config()`
-        - `ulog_configure_time()` → `ulog_time_config()`
-        - `ulog_configure_topics()` → `ulog_topic_config()`
-        - `ulog_configure_file_string()` → `ulog_source_location_config()`
-    - Topic Functions (complete renaming):
-        - `ulog_add_topic()` → `ulog_topic_add()`
-        - `ulog_set_topic_level()` → `ulog_topic_level_set()`
-        - `ulog_get_topic_id()` → `ulog_topic_get_id()`
-        - `ulog_enable_topic()` → `ulog_topic_enable()`
-        - `ulog_disable_topic()` → `ulog_topic_disable()`
-        - `ulog_enable_all_topics()` → `ulog_topic_enable_all()`
-        - `ulog_disable_all_topics()` → `ulog_topic_disable_all()`
-    - Other Functions:
-        - `ulog_set_lock()` → `ulog_lock_set_fn()`
-        - `ulog_set_prefix_fn()` → `ulog_prefix_set_fn()`
+  - Core Functions:
+    - `ulog_get_level_string()` → `ulog_level_to_string()`
+    - `ulog_set_level()` → `ulog_output_level_set_all()`
+    - `ulog_set_quiet()` → `ulog_output_level_set(ULOG_OUTPUT_STDOUT, level)`
+  - Output Management:
+    - `ulog_add_callback()` → `ulog_output_add()`
+    - `ulog_add_fp()` → `ulog_output_add_file()`
+  - Configuration Functions:
+    - `ulog_configure_levels()` → `ulog_level_config()`
+    - `ulog_configure_prefix()` → `ulog_prefix_config()`
+    - `ulog_configure_color()` → `ulog_color_config()`
+    - `ulog_configure_time()` → `ulog_time_config()`
+    - `ulog_configure_topics()` → `ulog_topic_config()`
+    - `ulog_configure_file_string()` → `ulog_source_location_config()`
+  - Topic Functions (complete renaming):
+    - `ulog_add_topic()` → `ulog_topic_add()`
+    - `ulog_set_topic_level()` → `ulog_topic_level_set()`
+    - `ulog_get_topic_id()` → `ulog_topic_get_id()`
+    - `ulog_enable_topic()` → `ulog_topic_enable()`
+    - `ulog_disable_topic()` → `ulog_topic_disable()`
+    - `ulog_enable_all_topics()` → `ulog_topic_enable_all()`
+    - `ulog_disable_all_topics()` → `ulog_topic_disable_all()`
+  - Other Functions:
+    - `ulog_set_lock()` → `ulog_lock_set_fn()`
+    - `ulog_set_prefix_fn()` → `ulog_prefix_set_fn()`
 - Type Naming Standardization
-    - Old: Mixed case (`ulog_Event`, `ulog_LogFn`, `ulog_LockFn`, `ulog_PrefixFn`)
-    - New: Consistent lowercase with underscores (`ulog_event`, `ulog_log_fn`, `ulog_lock_fn`, `ulog_prefix_fn`)
+  - Old: Mixed case (`ulog_Event`, `ulog_LogFn`, `ulog_LockFn`, `ulog_PrefixFn`)
+  - New: Consistent lowercase with underscores (`ulog_event`, `ulog_log_fn`, `ulog_lock_fn`, `ulog_prefix_fn`)
 - Topic Display Format
-    - Old: `[Topic] LEVEL` format
-    - New: `LEVEL [Topic]` format for better readability
+  - Old: `[Topic] LEVEL` format
+  - New: `LEVEL [Topic]` format for better readability
 - Testing:
-    - Updated all test cases to use new API functions
-    - `test_runtime_config.cpp` → `test_dynamic_config.cpp`
-    - `test_custom_prefix.cpp` → `test_prefix.cpp`
+  - Updated all test cases to use new API functions
+  - `test_runtime_config.cpp` → `test_dynamic_config.cpp`
+  - `test_custom_prefix.cpp` → `test_prefix.cpp`
 - Example Application:
-    - Complete rewrite using new v7.0 API
-    - Demonstrates new output management system
-    - Better inline documentation
+  - Complete rewrite using new v7.0 API
+  - Demonstrates new output management system
+  - Better inline documentation
 
 ### Removed
 
@@ -324,7 +337,7 @@ All build configuration now uses unified `ULOG_BUILD_*` pattern:
 - Remove event from public API: Access to private data through standardized getters
   - `ulog_event_get_message()` - Extract formatted message to buffer
   - `ulog_event_get_topic()` - Get topic ID from event
-  - `ulog_event_get_time()` - Get timestamp from event  
+  - `ulog_event_get_time()` - Get timestamp from event
   - `ulog_event_get_file()` / `ulog_event_get_line()` - Get source location
   - `ulog_event_get_level()` - Get log level from event
 
