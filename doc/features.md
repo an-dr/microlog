@@ -8,6 +8,7 @@
         - [Lock](#lock)
         - [Cleanup](#cleanup)
     - [Optional Features](#optional-features)
+        - [Disable](#disable)
         - [Configuration Header](#configuration-header)
         - [Topics](#topics)
         - [Extra Outputs](#extra-outputs)
@@ -233,6 +234,48 @@ ulog_cleanup();
 The clean up can be also used to remove all topics and outputs if needed during the program execution even if the allocation mode is static.
 
 ## Optional Features
+
+### Disable
+
+- Static configuration options: `ULOG_BUILD_DISABLED`
+- Values (bool): `0/1`
+- Default: `0`.
+
+This feature allow to disable all logging calls at compile time. To do this define `ULOG_BUILD_DISABLED=1` in the compiler options.
+
+When the feature is enabled all logging macros are replaced with empty stubs or return negative status codes. E.g.
+
+| Function                    | Return Value When Disabled |
+| --------------------------- | -------------------------- |
+| ulog_cleanup                | `ULOG_STATUS_DISABLED`     |
+| ulog_color_config           | `ULOG_STATUS_DISABLED`     |
+| ulog_event_get_file         | `""`                       |
+| ulog_event_get_level        | `ULOG_LEVEL_0`             |
+| ulog_event_get_line         | `-1`                       |
+| ulog_event_get_message      | `ULOG_STATUS_DISABLED`     |
+| ulog_event_get_time         | `NULL`                     |
+| ulog_event_get_topic        | `ULOG_TOPIC_ID_INVALID`    |
+| ulog_event_to_cstr          | `ULOG_STATUS_DISABLED`     |
+| ulog_level_config           | `ULOG_STATUS_DISABLED`     |
+| ulog_level_reset_levels     | `ULOG_STATUS_DISABLED`     |
+| ulog_level_set_new_levels   | `ULOG_STATUS_DISABLED`     |
+| ulog_level_to_string        | `"?"`                      |
+| ulog_lock_set_fn            | `ULOG_STATUS_DISABLED`     |
+| ulog_log                    | `(void)0`                  |
+| ulog_output_add             | `ULOG_OUTPUT_INVALID`     |
+| ulog_output_add_file        | `ULOG_OUTPUT_INVALID`     |
+| ulog_output_level_set       | `ULOG_STATUS_DISABLED`     |
+| ulog_output_level_set_all   | `ULOG_STATUS_DISABLED`     |
+| ulog_output_remove          | `ULOG_STATUS_DISABLED`     |
+| ulog_prefix_config          | `ULOG_STATUS_DISABLED`     |
+| ulog_prefix_set_fn          | `ULOG_STATUS_DISABLED`     |
+| ulog_source_location_config | `ULOG_STATUS_DISABLED`     |
+| ulog_time_config            | `ULOG_STATUS_DISABLED`     |
+| ulog_topic_add              | `ULOG_TOPIC_ID_INVALID`    |
+| ulog_topic_config           | `ULOG_STATUS_DISABLED`     |
+| ulog_topic_get_id           | `ULOG_TOPIC_ID_INVALID`    |
+| ulog_topic_level_set        | `ULOG_STATUS_DISABLED`     |
+| ulog_topic_remove           | `ULOG_STATUS_DISABLED`     |
 
 ### Configuration Header
 

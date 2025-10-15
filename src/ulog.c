@@ -410,9 +410,13 @@ static ulog_status lock_unlock(void) {
 // ================
 
 /// @brief  Sets the lock function and user data
-void ulog_lock_set_fn(ulog_lock_fn function, void *lock_arg) {
+ulog_status ulog_lock_set_fn(ulog_lock_fn function, void *lock_arg) {
+    if (function == NULL) {
+        return ULOG_STATUS_INVALID_ARGUMENT;
+    }
     lock_data.function = function;
     lock_data.args     = lock_arg;
+    return ULOG_STATUS_OK;
 }
 /* ============================================================================
    Optional Feature: Dynamic Configuration - Color
