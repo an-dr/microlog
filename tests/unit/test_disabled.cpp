@@ -98,7 +98,10 @@ TEST_CASE_FIXTURE(TestFixture, "Disabled - Event Functions") {
     CHECK(ulog_event_get_file(nullptr) != nullptr);
     CHECK(strcmp(ulog_event_get_file(nullptr), "") == 0);
     CHECK(ulog_event_get_level(nullptr) == ULOG_LEVEL_0);
-    CHECK(ulog_event_get_time(nullptr) == NULL);  // Use NULL instead of nullptr for C compatibility
+    
+    // Store result in variable first to avoid doctest rvalue reference issue
+    struct tm* time_result = ulog_event_get_time(nullptr);
+    CHECK(time_result == NULL);
 }
 
 // Test output functions

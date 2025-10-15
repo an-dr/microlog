@@ -39,8 +39,15 @@
 | ULOG_BUILD_WARN_NOT_ENABLED      | 1                          | ULOG_HAS_WARN_NOT_ENABLED | Warning stubs            |
 | ULOG_BUILD_CONFIG_HEADER_ENABLED | 0                          | -                         | Configuration header mode|
 | ULOG_BUILD_CONFIG_HEADER_NAME    | "ulog_config.h"            | -                         | Configuration header name|
+| ULOG_BUILD_DISABLED              | 0                          | -                         | Disable ulog completely  |
 
 ===================================================================================================================== */
+
+/* ============================================================================
+   Optional Feature: Disabled
+============================================================================ */
+
+#if ULOG_BUILD_DISABLED == 0
 
 /* ============================================================================
    Optional Feature: Configuration Header
@@ -1859,3 +1866,5 @@ ulog_status ulog_cleanup(void) {
 
     return lock_unlock();
 }
+
+#endif  // ULOG_BUILD_DISABLED

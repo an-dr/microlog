@@ -93,7 +93,9 @@ The full list of build options for static configuration is shown bellow:
 | ULOG_BUILD_WARN_NOT_ENABLED      | 1                          | Warning stubs                           |
 | ULOG_BUILD_CONFIG_HEADER_ENABLED | 0                          | Use external configuration header       |
 | ULOG_BUILD_CONFIG_HEADER_NAME    | "ulog_config.h"            | Configuration header name               |
-|                                  |                            |                                         |
+| ULOG_BUILD_DISABLED              | 0                          | Disable microlog completely             |
+
+WARNING! Do not use ULOG_BUILD_* options with a precompiled microlog library. Use dynamic configuration instead.
 
 ### Logging, Levels and Outputs
 

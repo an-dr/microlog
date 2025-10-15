@@ -435,10 +435,14 @@ ulog_status ulog_cleanup(void);
 #if ULOG_BUILD_DISABLED == 1
 
 // If logging is disabled, replace all functions with zero-overhead inline functions
-#ifdef __GNUC__
-#define ULOG_INLINE static inline __attribute__((always_inline))
+#if defined(__GNUC__) || defined(__clang__) || defined(__TI_COMPILER_VERSION__)
+#define ULOG_INLINE inline __attribute__((always_inline))
+#elif defined(_MSC_VER)
+#define ULOG_INLINE __forceinline
+#elif defined(__IAR_SYSTEMS_ICC__)
+#define ULOG_INLINE _Pragma("inline=forced") inline
 #else
-#define ULOG_INLINE static inline
+#define ULOG_INLINE inline
 #endif
 
 // clang-format off
@@ -528,6 +532,50 @@ ULOG_INLINE ulog_status ulog_topic_level_set(const char *topic_name, ulog_level 
     
 ULOG_INLINE ulog_status ulog_topic_remove(const char *topic_name) 
     { (void)topic_name; return ULOG_STATUS_DISABLED; }
+
+// Redefine logging macros to be no-ops when disabled
+#undef ulog_trace
+#undef ulog_debug
+#undef ulog_info
+#undef ulog_warn
+#undef ulog_error
+#undef ulog_fatal
+#undef ulog
+#undef ulog_topic_trace
+#undef ulog_topic_debug
+#undef ulog_topic_info
+#undef ulog_topic_warn
+#undef ulog_topic_error
+#undef ulog_topic_fatal
+#undef ulog_topic_log
+#undef ulog_t_trace
+#undef ulog_t_debug
+#undef ulog_t_info
+#undef ulog_t_warn
+#undef ulog_t_error
+#undef ulog_t_fatal
+#undef ulog_t
+#define ulog_trace(...) ((void)0)
+#define ulog_debug(...) ((void)0)
+#define ulog_info(...) ((void)0)
+#define ulog_warn(...) ((void)0)
+#define ulog_error(...) ((void)0)
+#define ulog_fatal(...) ((void)0)
+#define ulog(...) ((void)0)
+#define ulog_topic_trace(...) ((void)0)
+#define ulog_topic_debug(...) ((void)0)
+#define ulog_topic_info(...) ((void)0)
+#define ulog_topic_warn(...) ((void)0)
+#define ulog_topic_error(...) ((void)0)
+#define ulog_topic_fatal(...) ((void)0)
+#define ulog_topic_log(...) ((void)0)
+#define ulog_t_trace(...) ((void)0)
+#define ulog_t_debug(...) ((void)0)
+#define ulog_t_info(...) ((void)0)
+#define ulog_t_warn(...) ((void)0)
+#define ulog_t_error(...) ((void)0)
+#define ulog_t_fatal(...) ((void)0)
+#define ulog_t(...) ((void)0)
 
 #undef ULOG_INLINE // not to expose it
 // clang-format on
