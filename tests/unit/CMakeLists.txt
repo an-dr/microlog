@@ -174,3 +174,10 @@ target_sources(test_static_config_header PRIVATE ${ULOG_SRC}
 target_include_directories(test_static_config_header PRIVATE ${ULOG_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(test_static_config_header PRIVATE "-DULOG_BUILD_CONFIG_HEADER_ENABLED=1")
 add_test(NAME StaticConfigHeaderTest COMMAND test_static_config_header)
+
+# --- Disabled Feature Test ---
+add_executable(test_disabled)
+target_sources(test_disabled PRIVATE test_disabled.cpp)  # No ulog.c source when disabled
+target_include_directories(test_disabled PRIVATE ${ULOG_INCLUDE_DIR})
+target_compile_definitions(test_disabled PRIVATE "-DULOG_BUILD_DISABLED=1")
+add_test(NAME DisabledFeatureTest COMMAND test_disabled)
