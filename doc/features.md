@@ -241,9 +241,20 @@ The clean up can be also used to remove all topics and outputs if needed during 
 - Values (bool): `0/1`
 - Default: `0`.
 
-This feature allow to disable all logging calls at compile time. To do this define `ULOG_BUILD_DISABLED=1` in the compiler options.
+This feature allows disabling all logging calls at compile time for zero-overhead logging. To enable this feature, define `ULOG_BUILD_DISABLED=1` in the compiler options.
 
-When the feature is enabled all logging macros are replaced with empty stubs or return negative status codes. E.g.
+When the feature is enabled, all logging macros are replaced with `((void)0)` and function calls return disabled status codes. **Important:** Logging macros become true no-ops - their arguments are not evaluated, providing complete zero-overhead when disabled.
+
+Example:
+
+```c
+int expensive_calculation() { /* ... */ }
+
+// When ULOG_BUILD_DISABLED=1:
+ulog_info("Result: %d", expensive_calculation());  // expensive_calculation() is NOT called
+```
+
+When the feature is enabled all logging macros are replaced with empty stubs or return negative status codes:
 
 | Function                    | Return Value When Disabled |
 | --------------------------- | -------------------------- |
