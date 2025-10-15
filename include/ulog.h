@@ -429,7 +429,7 @@ void ulog_log(ulog_level level, const char *file,
 ulog_status ulog_cleanup(void);
 
 /* ============================================================================
-   Optional Feature: Disabled
+   Optional Feature: Disable
 ============================================================================ */
 
 #if ULOG_BUILD_DISABLED == 1
