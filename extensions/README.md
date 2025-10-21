@@ -43,7 +43,7 @@ This set of extensions provides additional logging features and integrations.
 | Extension                | Description                                                                                       | Main Header                                                          |
 | ------------------------ | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | Generic Logger Interface | Provides a generic logging interface that can simplify migration from/to other logging libraries. | [`ulog_generic_interface.h`](../extensions/ulog_generic_interface.h) |
-| microlog6 Compatibility  | Backward compatibility layer for code written against microlog v6.x API.                          | [`ulog_microlog6_compat.h`](../extensions/ulog_microlog6_compat.h)  |
+| microlog6 Compatibility  | Backward compatibility layer for code written against microlog v6.x API.                          | [`ulog_microlog6.h`](../extensions/ulog_microlog6.h)  |
 
 ## Adding Your Own Extension
 

@@ -3,7 +3,7 @@
 
 #include <cstring>
 #include "ulog.h"
-#include "../../extensions/ulog_microlog6_compat.h"
+#include "../../extensions/ulog_microlog6.h"
 #include "ut_callback.h"
 
 struct TestFixture {
@@ -99,15 +99,12 @@ TEST_CASE_FIXTURE(TestFixture, "microlog6_compat: Type aliases") {
 ============================================================================ */
 
 TEST_CASE_FIXTURE(TestFixture, "microlog6_compat: ulog_get_level_string") {
-    // Note: The v7.x default level names use "INFO " and "WARN " with spaces for alignment
     CHECK(strcmp(ulog_get_level_string(LOG_TRACE), "TRACE") == 0);
     CHECK(strcmp(ulog_get_level_string(LOG_DEBUG), "DEBUG") == 0);
-    CHECK(strcmp(ulog_get_level_string(LOG_INFO), "INFO ") == 0);  // Has trailing space
-    CHECK(strcmp(ulog_get_level_string(LOG_WARN), "WARN ") == 0);  // Has trailing space
+    CHECK(strcmp(ulog_get_level_string(LOG_INFO), "INFO ") == 0);
+    CHECK(strcmp(ulog_get_level_string(LOG_WARN), "WARN ") == 0);
     CHECK(strcmp(ulog_get_level_string(LOG_ERROR), "ERROR") == 0);
-    // Note: FATAL level test skipped due to core library bug in ulog_level_to_string
-    // (uses >= instead of > for max_level check, so FATAL returns "?")
-    // CHECK(strcmp(ulog_get_level_string(LOG_FATAL), "FATAL") == 0);
+    CHECK(strcmp(ulog_get_level_string(LOG_FATAL), "FATAL") == 0);
 }
 
 TEST_CASE_FIXTURE(TestFixture, "microlog6_compat: ulog_set_level") {

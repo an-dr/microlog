@@ -1,34 +1,11 @@
-// *************************************************************************
-//
-// ulog microlog6 compatibility extension
-// https://github.com/an-dr/microlog
-//
-// *************************************************************************
-//
-// Copyright (c) 2025 Andrei Gramakov. All rights reserved.
-//
-// This file is licensed under the terms of the MIT license.
-// For a copy, see: https://opensource.org/licenses/MIT
-//
-// *************************************************************************
-
-#pragma once
-
-#include "ulog.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* ============================================================================
-   microlog6 Compatibility Layer
+   microlog extension: microlog6 Compatibility Layer
 
    This extension provides backward compatibility for code written against
    microlog v6.x API. It maps the old API to the new v7.x API.
 
    Usage:
-       #include "ulog.h"
-       #include "extensions/ulog_microlog6_compat.h"
+       #include "ulog_microlog6.h"
 
    Note: Build-time configuration macros need manual mapping:
        - ULOG_NO_COLOR          → ULOG_BUILD_COLOR=0
@@ -42,6 +19,14 @@ extern "C" {
        - ULOG_TOPICS_NUM=-1       → ULOG_BUILD_TOPICS_MODE=2
        - ULOG_RUNTIME_MODE        → ULOG_BUILD_DYNAMIC_CONFIG=1
 ============================================================================ */
+
+#pragma once
+
+#include "ulog.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* ============================================================================
    Core: Log Level Enum Compatibility
