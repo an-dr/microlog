@@ -39,8 +39,15 @@
 | ULOG_BUILD_WARN_NOT_ENABLED      | 1                          | ULOG_HAS_WARN_NOT_ENABLED | Warning stubs            |
 | ULOG_BUILD_CONFIG_HEADER_ENABLED | 0                          | -                         | Configuration header mode|
 | ULOG_BUILD_CONFIG_HEADER_NAME    | "ulog_config.h"            | -                         | Configuration header name|
+| ULOG_BUILD_DISABLED              | 0                          | -                         | Disable ulog completely  |
 
 ===================================================================================================================== */
+
+/* ============================================================================
+   Optional Feature: Disable
+============================================================================ */
+
+#if ULOG_BUILD_DISABLED == 0
 
 /* ============================================================================
    Optional Feature: Configuration Header
@@ -410,9 +417,13 @@ static ulog_status lock_unlock(void) {
 // ================
 
 /// @brief  Sets the lock function and user data
-void ulog_lock_set_fn(ulog_lock_fn function, void *lock_arg) {
+ulog_status ulog_lock_set_fn(ulog_lock_fn function, void *lock_arg) {
+    if (function == NULL) {
+        return ULOG_STATUS_INVALID_ARGUMENT;
+    }
     lock_data.function = function;
     lock_data.args     = lock_arg;
+    return ULOG_STATUS_OK;
 }
 /* ============================================================================
    Optional Feature: Dynamic Configuration - Color
@@ -1855,3 +1866,5 @@ ulog_status ulog_cleanup(void) {
 
     return lock_unlock();
 }
+
+#endif  // ULOG_BUILD_DISABLED
