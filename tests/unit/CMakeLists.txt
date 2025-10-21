@@ -174,3 +174,12 @@ target_sources(test_static_config_header PRIVATE ${ULOG_SRC}
 target_include_directories(test_static_config_header PRIVATE ${ULOG_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(test_static_config_header PRIVATE "-DULOG_BUILD_CONFIG_HEADER_ENABLED=1")
 add_test(NAME StaticConfigHeaderTest COMMAND test_static_config_header)
+
+# --- microlog6 Compatibility Test ---
+add_executable(test_microlog6_compat)
+target_sources(test_microlog6_compat PRIVATE ${ULOG_SRC}
+                                              ut_callback.c
+                                              test_microlog6_compat.cpp)
+target_include_directories(test_microlog6_compat PRIVATE ${ULOG_INCLUDE_DIR})
+target_compile_definitions(test_microlog6_compat PRIVATE ${ULOG_CONFIG_TEST_DYNAMIC_CONFIG})
+add_test(NAME Microlog6CompatTest COMMAND test_microlog6_compat)
