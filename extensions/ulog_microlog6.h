@@ -32,15 +32,13 @@ extern "C" {
    Core: Log Level Enum Compatibility
 ============================================================================ */
 
-// Map old log level enum to new ones
-enum {
-    LOG_TRACE = ULOG_LEVEL_TRACE,
-    LOG_DEBUG = ULOG_LEVEL_DEBUG,
-    LOG_INFO  = ULOG_LEVEL_INFO,
-    LOG_WARN  = ULOG_LEVEL_WARN,
-    LOG_ERROR = ULOG_LEVEL_ERROR,
-    LOG_FATAL = ULOG_LEVEL_FATAL
-};
+// Map old log level enum to new ones (keep macro form to avoid enum mismatches)
+#define LOG_TRACE ULOG_LEVEL_TRACE
+#define LOG_DEBUG ULOG_LEVEL_DEBUG
+#define LOG_INFO  ULOG_LEVEL_INFO
+#define LOG_WARN  ULOG_LEVEL_WARN
+#define LOG_ERROR ULOG_LEVEL_ERROR
+#define LOG_FATAL ULOG_LEVEL_FATAL
 
 /* ============================================================================
    Core: Basic Logging Macros
@@ -67,7 +65,24 @@ typedef ulog_output_handler_fn ulog_LogFn;
 
 /// @brief Returns the string representation of the level (compatible)
 static inline const char *ulog_get_level_string(int level) {
-    return ulog_level_to_string((ulog_level)level);
+    const char *name = ulog_level_to_string((ulog_level)level);
+    if (name == NULL) {
+        name = "?";
+    }
+
+    // If short style is active (single character), fall back to default long names
+    if (name[0] != '\0' && name[1] == '\0') {
+        switch (level) {
+            case LOG_TRACE: return "TRACE";
+            case LOG_DEBUG: return "DEBUG";
+            case LOG_INFO:  return "INFO";
+            case LOG_WARN:  return "WARN";
+            case LOG_ERROR: return "ERROR";
+            case LOG_FATAL: return "FATAL";
+            default: break;
+        }
+    }
+    return name;
 }
 
 /// @brief Sets the debug level for all outputs
@@ -79,9 +94,8 @@ static inline void ulog_set_level(int level) {
 /// @param enable true = quiet mode (disable stdout), false = enable stdout
 static inline void ulog_set_quiet(bool enable) {
     if (enable) {
-        // Set stdout to a level higher than FATAL to effectively disable it
-        (void)ulog_output_level_set(ULOG_OUTPUT_STDOUT,
-                                    (ulog_level)(ULOG_LEVEL_FATAL + 1));
+        // Raise stdout threshold so regular logs are filtered out
+        (void)ulog_output_level_set(ULOG_OUTPUT_STDOUT, ULOG_LEVEL_FATAL);
     } else {
         // Re-enable stdout at TRACE level
         (void)ulog_output_level_set(ULOG_OUTPUT_STDOUT, ULOG_LEVEL_TRACE);
@@ -172,6 +186,9 @@ typedef void (*ulog_PrefixFn)(ulog_Event *ev, char *prefix, size_t prefix_size);
 static inline void ulog_set_prefix_fn(ulog_PrefixFn function) {
     // The signatures are compatible, just cast
     (void)ulog_prefix_set_fn((ulog_prefix_fn)function);
+#if defined(ULOG_BUILD_DYNAMIC_CONFIG) && ULOG_BUILD_DYNAMIC_CONFIG == 1
+    (void)ulog_prefix_config(function != NULL);
+#endif
 }
 
 #endif  // ULOG_BUILD_PREFIX_SIZE || ULOG_BUILD_DYNAMIC_CONFIG
@@ -221,10 +238,22 @@ static inline int ulog_add_fp(FILE *fp, int level) {
 /// @param enable true to enable topic, false to disable
 /// @return Topic ID if success, -1 if failed
 static inline int ulog_add_topic(const char *topic_name, bool enable) {
-    // In v6, enable meant setting level to TRACE (enabled) or a high level (disabled)
-    ulog_level level = enable ? ULOG_LEVEL_TRACE : (ulog_level)(ULOG_LEVEL_FATAL + 1);
-    ulog_topic_id id = ulog_topic_add(topic_name, ULOG_OUTPUT_ALL, level);
-    return (id == ULOG_TOPIC_ID_INVALID) ? -1 : (int)id;
+    if (topic_name == NULL || topic_name[0] == '\0') {
+        return -1;
+    }
+
+    ulog_topic_id id = ulog_topic_add(topic_name, ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
+    if (id == ULOG_TOPIC_ID_INVALID) {
+        return -1;
+    }
+
+    if (!enable) {
+        ulog_status status = ulog_topic_level_set(topic_name, ULOG_LEVEL_FATAL);
+        if (status != ULOG_STATUS_OK) {
+            return -1;
+        }
+    }
+    return (int)id;
 }
 
 /// @brief Sets the debug level of a given topic (returns int for compatibility)
@@ -247,11 +276,10 @@ static inline int ulog_enable_topic(const char *topic_name) {
     return (status == ULOG_STATUS_OK) ? 0 : -1;
 }
 
-/// @brief Disables the topic (sets level higher than FATAL)
+/// @brief Disables the topic (sets level to highest severity)
 /// @return 0 if success, -1 if failed
 static inline int ulog_disable_topic(const char *topic_name) {
-    ulog_status status = ulog_topic_level_set(topic_name,
-                                              (ulog_level)(ULOG_LEVEL_FATAL + 1));
+    ulog_status status = ulog_topic_level_set(topic_name, ULOG_LEVEL_FATAL);
     return (status == ULOG_STATUS_OK) ? 0 : -1;
 }
 

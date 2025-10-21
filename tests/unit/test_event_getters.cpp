@@ -255,8 +255,13 @@ TEST_CASE_FIXTURE(EventGettersTestFixture, "Event Getters with Complex Log") {
     REQUIRE(topic_id != ULOG_TOPIC_ID_INVALID);
 #endif
     
+    #if ULOG_HAS_TIME
     time_t before_log = time(nullptr);
+    #endif
+
+    #if ULOG_HAS_SOURCE_LOCATION
     int test_line = __LINE__ + 4;
+    #endif
     
     reset_event_capture();
 #if ULOG_HAS_TOPICS
@@ -264,7 +269,9 @@ TEST_CASE_FIXTURE(EventGettersTestFixture, "Event Getters with Complex Log") {
 #else
     ulog_warn("Complex message with number %d and string %s", 123, "abc");
 #endif
+    #if ULOG_HAS_TIME
     time_t after_log = time(nullptr);
+    #endif
     
     REQUIRE(event_captured);
     
