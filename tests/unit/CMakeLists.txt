@@ -181,3 +181,12 @@ target_sources(test_disabled PRIVATE test_disabled.cpp)  # No ulog.c source when
 target_include_directories(test_disabled PRIVATE ${ULOG_INCLUDE_DIR})
 target_compile_definitions(test_disabled PRIVATE "-DULOG_BUILD_DISABLED=1")
 add_test(NAME DisabledFeatureTest COMMAND test_disabled)
+
+# --- microlog6 Compatibility Test ---
+add_executable(test_microlog6_compat)
+target_sources(test_microlog6_compat PRIVATE ${ULOG_SRC}
+                                              ut_callback.c
+                                              test_microlog6_compat.cpp)
+target_include_directories(test_microlog6_compat PRIVATE ${ULOG_INCLUDE_DIR})
+target_compile_definitions(test_microlog6_compat PRIVATE ${ULOG_CONFIG_TEST_DYNAMIC_CONFIG})
+add_test(NAME Microlog6CompatTest COMMAND test_microlog6_compat)

@@ -419,7 +419,12 @@ TEST_CASE_FIXTURE(OutputTestFixture, "Output Integration") {
         
         // Should have added at least one output
         CHECK(successful_additions > 0);
-        
+
+        // Cleanup explicitly remove outputs we added
+        for (int i = 0; i < successful_additions; i++) {
+            ulog_output_remove(outputs[i]);
+        }
+
         // Cleanup
         ulog_cleanup();
     }
