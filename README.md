@@ -191,8 +191,10 @@ a minimal build can match log.c's footprint.
 | **Build Systems**         | Manual integration                         | ✅ CMake, Meson, CPM packages                                                   |
 | **Platform Helpers**      | DIY                                        | ✅ FreeRTOS, Zephyr, ThreadX, pthread, Win32                                    |
 
-**When to choose log.c**: Small projects needing basic logging with minimal setup.
-**When to choose microlog**: Embedded systems, multi-subsystem applications, or projects requiring fine-grained control.
+TL;DR:
+
+- **When to choose log.c**: Small projects needing basic logging with minimal setup.
+- **When to choose microlog**: Embedded systems, multi-subsystem applications, or projects requiring fine-grained control.
 
 ### Key Capabilities Unique to microlog
 
