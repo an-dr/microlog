@@ -17,19 +17,19 @@
 
 In the default configuration it looks like this:
 
-| `<img src="doc/README/demo0.png" width="800">`                                                       |
+| `<img src="doc/README/demo0.png" width="800">`                                                         |
 | ------------------------------------------------------------------------------------------------------ |
 | Picture 1 - default configuration: no time, long default levels, source location, no topics, no colors |
 
 ...but in can be very minimalistic :
 
-| `<img src="doc/README/demo1.png" width="800">`                 |
+| `<img src="doc/README/demo1.png" width="800">`                   |
 | ---------------------------------------------------------------- |
 | Picture 2 - short levels, no colors, no time, no source location |
 
 ... or feature-rich:
 
-| `<img src="doc/README/demo2.png" width="800">`                                                 |
+| `<img src="doc/README/demo2.png" width="800">`                                                   |
 | ------------------------------------------------------------------------------------------------ |
 | Picture 3 - time, custom prefix for MsgID, custom syslog levels, topics, source location, colors |
 
@@ -169,32 +169,34 @@ Contributions are welcome! Please read the [CONTRIBUTING.md](CONTRIBUTING.md) fo
 
 ## Comparison with log.c
 
-microlog started as a fork of [rxi/log.c](https://github.com/rxi/log.c) (~150 lines, 3.3k stars) but evolved into a fundamentally different architecture (~2,500 lines) optimized for embedded systems and advanced filtering. microlog's larger codebase is offset by compile-time feature stripping - 
-a minimal build can match log.c's footprint.
+microlog started as a fork of [rxi/log.c](https://github.com/rxi/log.c) (~150 lines, 3.3k stars) but evolved into a fundamentally different architecture (~2,500 lines) optimized for embedded systems and advanced filtering. Thanks to compile-time feature stripping, unused features are excluded from the build—so a minimal microlog configuration can match log.c’s footprint in both size and performance.
 
 ### Core Differences
 
 **rxi/log.c**: Minimalist and ready to use. Fixed footprint, 6 levels, simple callbacks.
 **microlog**: Compile-time feature selection. Configurable footprint, 8 renameable levels, multi-dimensional filtering. 
 
-| Feature                         | log.c                                      | microlog                                                                        |
-| ------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------- |
-| **Philosophy**             | Simple-to-use,  Minimalist for average use | Simple-to-use, extensible and configurable for diverse needs                    |
+| Feature                   | log.c                                      | microlog                                                                       |
+| ------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------ |
+| **Philosophy**            | Simple-to-use,  Minimalist for average use | Simple-to-use, extensible and configurable for diverse needs                   |
 | **Configuration**         | Color, verbosity                           | ✅ Compile-time feature selection + optional runtime                            |
 | **Runtime Configuration** | Only verbosity                             | ✅ Verbosity, color, time, prefix, source location, topics (Disablable feature) |
-| **Zero-Overhead Disable** | Arguments still evaluated                  | ✅ True no-op with `ULOG_BUILD_DISABLED`                                      |
-| **Log Levels**            | 6 fixed                                    | 8, runtime renameable (e.g., syslog)                                            |
-| **Filtering**             | Global + per-callback                      | Per-output + per-topic + global                                                 |
+| **Zero-Overhead Disable** | Arguments still evaluated                  | ✅ True no-op with `ULOG_BUILD_DISABLED`                                        |
+| **Log Levels**            | 6 fixed                                    | 8, runtime renameable (e.g., syslog)                                           |
+| **Filtering**             | Global + per-callback                      | Per-output + per-topic + global                                                |
 | **Topics/Subsystems**     | Manual prefixes                            | ✅ Full support with filtering per topic and routing                            |
-| **Output Routing**        | All outputs get all logs                   | ✅ Route topics to specific or all outputs                                     |
+| **Output Routing**        | All outputs get all logs                   | ✅ Route topics to specific or all outputs                                      |
 | **Memory**                | Static                                     | ✅ Static or dynamic (user choice)                                              |
 | **Build Systems**         | Manual integration                         | ✅ CMake, Meson, CPM packages                                                   |
 | **Platform Helpers**      | DIY                                        | ✅ FreeRTOS, Zephyr, ThreadX, pthread, Win32                                    |
 
 TL;DR:
 
-- **When to choose log.c**: Small projects needing basic logging with minimal setup.
-- **When to choose microlog**: Embedded systems, multi-subsystem applications, or projects requiring fine-grained control.
+- **When to choose log.c**:
+    - Small projects needing basic logging with minimal setup.
+- **When to choose microlog**:
+    - Same scenarios, as default setup is just as simple.
+    - Plus: embedded systems, multi-subsystem applications, or projects requiring fine-grained control and advanced filtering.
 
 ### Key Capabilities Unique to microlog
 
