@@ -17,21 +17,21 @@
 
 In the default configuration it looks like this:
 
-|<img src="doc/README/demo0.png" width="800">|
-|-|
-|Picture 1 - default configuration: no time, long default levels, source location, no topics, no colors|
+| `<img src="doc/README/demo0.png" width="800">`                                                         |
+| ------------------------------------------------------------------------------------------------------ |
+| Picture 1 - default configuration: no time, long default levels, source location, no topics, no colors |
 
 ...but in can be very minimalistic :
 
-|<img src="doc/README/demo1.png" width="800">|
-|-|
-|Picture 2 - short levels, no colors, no time, no source location|
+| `<img src="doc/README/demo1.png" width="800">`                   |
+| ---------------------------------------------------------------- |
+| Picture 2 - short levels, no colors, no time, no source location |
 
 ... or feature-rich:
 
-|<img src="doc/README/demo2.png" width="800"> |
-|-|
-|Picture 3 - time, custom prefix for MsgID, custom syslog levels, topics, source location, colors|
+| `<img src="doc/README/demo2.png" width="800">`                                                   |
+| ------------------------------------------------------------------------------------------------ |
+| Picture 3 - time, custom prefix for MsgID, custom syslog levels, topics, source location, colors |
 
 The project is based on the following core principles:
 
@@ -52,6 +52,9 @@ The project is based on the following core principles:
         - [3. Extend](#3-extend)
     - [Advanced Usage](#advanced-usage)
     - [Contributing](#contributing)
+    - [Comparison with log.c](#comparison-with-logc)
+        - [Core Differences](#core-differences)
+        - [Key Capabilities Unique to microlog](#key-capabilities-unique-to-microlog)
     - [Changelog](#changelog)
     - [License](#license)
     - [Credits](#credits)
@@ -125,7 +128,7 @@ CPMAddPackage("gh:an-dr/microlog@6.4.5")
 
 target_link_libraries(${PROJECT_NAME} PUBLIC microlog::microlog)
 target_compile_definitions( microlog PRIVATE ULOG_BUILD_COLOR=1) # configuration
-        
+      
 # Or use a user-defined configuration header `ulog_config.h`:
 # target_compile_definitions(microlog PRIVATE ULOG_BUILD_CONFIG_HEADER_ENABLED=1)
 # target_include_directories(microlog PRIVATE path/to/directory/containing/ulog_config.h)
@@ -163,6 +166,62 @@ Add missing functionalities via API or use predefined extensions. See [Extension
 ## Contributing
 
 Contributions are welcome! Please read the [CONTRIBUTING.md](CONTRIBUTING.md) for details, I tried to keep it simple.
+
+## Comparison with log.c
+
+microlog started as a fork of [rxi/log.c](https://github.com/rxi/log.c) (~150 lines, 3.3k stars) but evolved into a fundamentally different architecture (~2,500 lines) optimized for embedded systems and advanced filtering.
+
+### Core Differences
+
+**rxi/log.c**: Minimalist runtime-only config. Fixed ~5KB footprint, 6 levels, simple callbacks.
+**microlog**: Compile-time feature selection. Configurable 200 bytes to ~15KB, 8 renameable levels, multi-dimensional filtering.
+
+| Feature                   | log.c                                      | microlog                                                                       |
+| ------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------ |
+| **Philosofy**             | Simple-to-use,  Minimalist for average use | Simple-to-use, extensible and configurable for diverse needs                   |
+| **Configuration**         | Color, verbosity                           | ✅ Compile-time feature selection + optional runtime                            |
+| **Runtime Configuration** | Only verbosity                             | ✅ Verbosity, color, time, prefix, source location, topics (Disablable feature) |
+| **Zero-Overhead Disable** | Args are evaluated                         | ✅ True no-op with `ULOG_BUILD_DISABLED`                                        |
+| **Log Levels**            | 6 fixed                                    | 8, runtime renameable (e.g., syslog)                                           |
+| **Filtering**             | Global + per-callback                      | Per-output + per-topic + global                                                |
+| **Topics/Subsystems**     | Manual prefixes                            | ✅ Full support with filtering per topic and routing                            |
+| **Output Routing**        | All outputs get all logs                   | ✅ Route topics to specific or all outputs                                      |
+| **Memory**                | Static                                     | ✅ Static or dynamic (user choice)                                              |
+| **Build Systems**         | Manual integration                         | ✅ CMake, Meson, CPM packages                                                   |
+| **Platform Helpers**      | DIY                                        | ✅ FreeRTOS, Zephyr, ThreadX, pthread, Win32                                    |
+
+### Key Capabilities Unique to microlog
+
+**1. Multi-Dimensional Filtering** - Per-output AND per-topic levels:
+
+```c
+ulog_topic_add("Credentials", secure_file_only, ULOG_LEVEL_TRACE);
+ulog_topic_add("Network", ULOG_OUTPUT_ALL, ULOG_LEVEL_DEBUG);
+ulog_output_level_set(ULOG_OUTPUT_STDOUT, ULOG_LEVEL_ERROR); // Console: errors only
+```
+
+**2. True Zero-Overhead Disable** - Arguments not evaluated:
+
+```c
+ulog_info("Result: %d", expensive()); // With ULOG_BUILD_DISABLED=1 → ((void)0)
+```
+
+**3. Custom Log Levels** - Redefine all 8 at runtime:
+
+```c
+ulog_level_descriptor syslog = {ULOG_LEVEL_7,
+    {"DEBUG", "INFO", "NOTICE", "WARN", "ERR", "CRIT", "ALERT", "EMERG"}};
+ulog_level_set_new_levels(&syslog);
+```
+
+**4. Fine-Grained Code Control** - 12+ build flags to strip features:
+
+```
+-DULOG_BUILD_SOURCE_LOCATION 0  // Remove file:line
+-DULOG_BUILD_TIME 0              // Remove timestamps
+-DULOG_BUILD_COLOR 0             // Remove ANSI codes
+...
+```
 
 ## Changelog
 

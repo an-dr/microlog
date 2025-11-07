@@ -1,6 +1,7 @@
 MIT License
 
-Copyright (c) 2025 Andrei Gramakov
+Copyright (c) 2020 rxi (original log.c)
+Copyright (c) 2025 Andrei Gramakov (microlog modifications and extensions)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
