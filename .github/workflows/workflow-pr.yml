@@ -13,3 +13,7 @@ jobs:
     name: Verify Version
     uses: ./.github/workflows/verify-version.yml
 
+  clang-tidy:
+    name: Clang-Tidy Check
+    uses: ./.github/workflows/clang-tidy.yml
+
