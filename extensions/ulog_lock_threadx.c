@@ -2,6 +2,8 @@
 // microlog extension: ThreadX mutex lock helper (implementation)
 // *************************************************************************
 #include "ulog_lock_threadx.h"
+#include <stddef.h>
+#include "ulog.h"
 
 /** @brief Internal ThreadX mutex adapter. */
 static ulog_status threadx_lock_fn(bool lock, void *arg) {

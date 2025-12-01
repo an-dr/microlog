@@ -48,6 +48,7 @@ Checks: >
   -modernize-avoid-c-arrays,
   performance-*,
   portability-*,
+  -portability-avoid-pragma-once,
   readability-*,
   -readability-magic-numbers,
   -readability-function-cognitive-complexity,
@@ -76,21 +77,17 @@ CheckOptions:
   - key: readability-identifier-naming.TypedefCase
     value: lower_case
   - key: readability-identifier-naming.TypedefSuffix
-    value: ''
+    value: ""
   - key: readability-identifier-naming.StructCase
     value: lower_case
   - key: readability-identifier-naming.UnionCase
     value: lower_case
 
-  # Enforce SCREAMING_SNAKE_CASE for macros
-  - key: readability-identifier-naming.MacroDefinitionCase
-    value: UPPER_CASE
-  - key: readability-identifier-naming.EnumConstantCase
-    value: UPPER_CASE
-
   # Enforce UPPER_CASE for enum types (ulog_level, ulog_status)
   - key: readability-identifier-naming.EnumCase
     value: lower_case
+  - key: readability-identifier-naming.EnumConstantCase
+    value: UPPER_CASE
 
   # Constants should be in lower_case (following project style)
   - key: readability-identifier-naming.ConstantCase
@@ -130,11 +127,11 @@ CheckOptions:
 
   # Configure memory management checks
   - key: cppcoreguidelines-no-malloc.Allocations
-    value: 'malloc,calloc,realloc'
+    value: "malloc,calloc,realloc"
   - key: cppcoreguidelines-no-malloc.Deallocations
-    value: 'free'
+    value: "free"
   - key: cppcoreguidelines-no-malloc.Reallocations
-    value: 'realloc'
+    value: "realloc"
 
   # Allow some narrowing for embedded systems
   - key: cppcoreguidelines-narrowing-conversions.WarnOnIntegerNarrowingConversion
@@ -146,7 +143,7 @@ CheckOptions:
 
   # Configure bugprone checks
   - key: bugprone-assert-side-effect.AssertMacros
-    value: 'assert'
+    value: "assert"
   - key: bugprone-suspicious-string-compare.WarnOnImplicitComparison
     value: true
   - key: bugprone-suspicious-string-compare.WarnOnLogicalNotComparison
@@ -156,11 +153,11 @@ CheckOptions:
   - key: performance-move-const-arg.CheckTriviallyCopyableMove
     value: false
   - key: performance-unnecessary-value-param.AllowedTypes
-    value: ''
+    value: ""
 
   # Modernize settings (be conservative for C99 compatibility)
   - key: modernize-use-nullptr.NullMacros
-    value: 'NULL'
+    value: "NULL"
   - key: modernize-use-default-member-init.UseAssignment
     value: true
   - key: modernize-use-default-member-init.IgnoreMacros
@@ -180,7 +177,7 @@ CheckOptions:
 HeaderFilterRegex: '(include|src|extensions)/.*\.(h|c)$'
 
 # Exclude third-party code and build directories
-ExcludeHeaderFilterRegex: '(tests/unit/doctest|example/build|build)/.*'
+ExcludeHeaderFilterRegex: "(tests/unit/doctest|example/build|build)/.*"
 
 # Warning as errors for critical issues
 WarningsAsErrors: >

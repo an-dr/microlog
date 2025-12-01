@@ -3,7 +3,9 @@
 // *************************************************************************
 
 #include "ulog_lock_cmsis.h"
+#include <stddef.h>
 #include "cmsis_os2.h"
+#include "ulog.h"
 
 /** @brief Internal CMSIS-RTOS2 mutex adapter. */
 static ulog_status cmsis_lock_fn(bool lock, void *arg) {

@@ -218,25 +218,24 @@ static inline bool is_str_empty(const char *str) {
    (`warn_not_enabled`, depends on: - )
 ============================================================================ */
 #if ULOG_HAS_WARN_NOT_ENABLED
-// NOLINTBEGIN
 
 // Macro to log a warning when a feature is not enabled
 // Usage: warn_not_enabled("ULOG_BUILD_TIME")
 // Output:
 //   WARN src/main.c:42: 'ulog_configure_time' ignored: ULOG_BUILD_TIME disabled
 #define warn_not_enabled(feature)                                              \
-    warn_non_enabled_full(__func__, feature, __FILE__, __LINE__)  // NOLINT
+    warn_non_enabled_full(__func__, feature, __FILE__, __LINE__)
 
 #define warn_non_enabled_full(func, feature, file, line)                       \
     ulog_log(ULOG_LEVEL_WARN, file, line, NULL,                                \
              "'%s' called with %s disabled", func, feature)
 
-// NOLINTEND
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
 /* ============================================================================
    Core Feature: Print
    (`print_*`, depends on: - )
-============================================================================ */
+============================================================================
+*/
 
 //  Private
 // ================
@@ -477,7 +476,7 @@ ulog_status ulog_color_config(bool enabled) {
 // Disabled Private
 // ================
 
-#define color_config_is_enabled() (ULOG_HAS_COLOR)  // NOLINT
+#define color_config_is_enabled() (ULOG_HAS_COLOR)
 
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
@@ -524,8 +523,8 @@ static void color_print_end(print_target *tgt) {
 // Disabled Private
 // ================
 
-#define color_print_start(tgt, ev) (void)(tgt), (void)(ev)  // NOLINT
-#define color_print_end(tgt) (void)(tgt)                    // NOLINT
+#define color_print_start(tgt, ev) (void)(tgt), (void)(ev)
+#define color_print_end(tgt) (void)(tgt)
 
 #endif  // ULOG_HAS_COLOR
 
@@ -577,8 +576,8 @@ ulog_status ulog_prefix_config(bool enabled) {
 // Disabled Private
 // ================
 
-#define prefix_config_is_enabled() (ULOG_HAS_PREFIX)  // NOLINT
-#endif                                                // ULOG_HAS_DYNAMIC_CONFIG
+#define prefix_config_is_enabled() (ULOG_HAS_PREFIX)
+#endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
    Optional Feature: Prefix
@@ -642,9 +641,9 @@ ulog_status ulog_prefix_set_fn(ulog_prefix_fn function) {
 // Disabled Private
 // ================
 
-#define prefix_print(tgt) (void)(tgt)  // NOLINT
-#define prefix_update(ev) (void)(ev)   // NOLINT
-#endif                                 // ULOG_HAS_PREFIX
+#define prefix_print(tgt) (void)(tgt)
+#define prefix_update(ev) (void)(ev)
+#endif  // ULOG_HAS_PREFIX
 
 /* ============================================================================
    Optional Feature: Dynamic Configuration - Time
@@ -694,8 +693,8 @@ ulog_status ulog_time_config(bool enabled) {
 // Disabled Private
 // ================
 
-#define time_config_is_enabled() (ULOG_HAS_TIME)  // NOLINT
-#endif                                            // ULOG_HAS_DYNAMIC_CONFIG
+#define time_config_is_enabled() (ULOG_HAS_TIME)
+#endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
    Optional Feature: Time
@@ -758,10 +757,10 @@ static void time_print_full(print_target *tgt, ulog_event *ev,
 // Disabled Private
 // ================
 
-#define time_print_short(tgt, ev, append_space) (void)(0)  // NOLINT
-#define time_print_full(tgt, ev, append_space) (void)(0)   // NOLINT
-#define time_fill_current_time(ev) (void)(ev)              // NOLINT
-#endif                                                     // ULOG_HAS_TIME
+#define time_print_short(tgt, ev, append_space) (void)(0)
+#define time_print_full(tgt, ev, append_space) (void)(0)
+#define time_fill_current_time(ev) (void)(ev)
+#endif  // ULOG_HAS_TIME
 
 /* ============================================================================
    Core Feature: Levels
@@ -906,7 +905,7 @@ ulog_status ulog_level_config(ulog_level_config_style style) {
 // Disabled Private
 // ================
 
-#define level_config_is_short(void) (ULOG_HAS_LEVEL_SHORT)  // NOLINT
+#define level_config_is_short(void) (ULOG_HAS_LEVEL_SHORT)
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
@@ -1161,8 +1160,8 @@ ulog_status ulog_topic_config(bool enabled) {
 // Disabled Private
 // ================
 
-#define topic_config_is_enabled() (ULOG_HAS_TOPICS)  // NOLINT
-#endif                                               // ULOG_HAS_DYNAMIC_CONFIG
+#define topic_config_is_enabled() (ULOG_HAS_TOPICS)
+#endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================
    Optional Feature: Topics
@@ -1375,7 +1374,6 @@ ulog_status ulog_topic_remove(const char *topic_name) {
 }
 
 #endif  // ULOG_HAS_WARN_NOT_ENABLED
-// NOLINTBEGIN
 
 // Disabled Private
 // ================
@@ -1384,7 +1382,6 @@ ulog_status ulog_topic_remove(const char *topic_name) {
     (void)(topic), (void)(level), (void)(is_log_allowed), (void)(topic_id),    \
         (void)(output)
 
-// NOLINTEND
 #endif  // ULOG_HAS_TOPICS
 
 /* ============================================================================
@@ -1665,7 +1662,7 @@ ulog_status ulog_source_location_config(bool enabled) {
 // Disabled Private
 // ================
 
-#define src_loc_config_is_enabled() (ULOG_HAS_SOURCE_LOCATION)  // NOLINT
+#define src_loc_config_is_enabled() (ULOG_HAS_SOURCE_LOCATION)
 #endif  // ULOG_HAS_DYNAMIC_CONFIG
 
 /* ============================================================================

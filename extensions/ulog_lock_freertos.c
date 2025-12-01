@@ -4,8 +4,10 @@
 // *************************************************************************
 
 #include "ulog_lock_freertos.h"
+#include <stddef.h>
 #include "FreeRTOS.h"
 #include "semphr.h"
+#include "ulog.h"
 
 /** @brief Internal FreeRTOS mutex adapter. */
 static ulog_status freertos_lock_fn(bool lock, void *arg) {

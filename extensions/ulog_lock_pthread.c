@@ -9,6 +9,9 @@
 // *************************************************************************
 
 #include "ulog_lock_pthread.h"
+#include <pthread.h>
+#include <stddef.h>
+#include "ulog.h"
 
 /**
  * @brief Internal adapter; wraps pthread mutex operations in ulog_lock_fn

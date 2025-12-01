@@ -2,6 +2,7 @@
 // microlog extension: Syslog Levels (implementation)
 // *************************************************************************
 
+#include "ulog.h"
 #include "ulog_syslog.h"
 
 static ulog_level_descriptor syslog_levels = {
