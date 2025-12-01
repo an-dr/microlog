@@ -1,0 +1,46 @@
+name: Clang-Tidy
+
+on:
+  workflow_call:
+  pull_request:
+    branches:
+      - main
+      - release/*
+    paths:
+      - '**.c'
+      - '**.h'
+      - '**.cpp'
+      - '**.hpp'
+      - '.clang-tidy'
+      - 'scripts/check-clang-tidy.ps1'
+  push:
+    branches:
+      - main
+    paths:
+      - '**.c'
+      - '**.h'
+      - '**.cpp'
+      - '**.hpp'
+      - '.clang-tidy'
+
+jobs:
+  clang-tidy:
+    name: Run Clang-Tidy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for all branches and tags
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-tidy cmake ninja-build
+
+      - name: Run clang-tidy check
+        run: |
+          pwsh scripts/check-clang-tidy.ps1 -BaseBranch origin/main
+        env:
+          BASE_BRANCH: origin/main

@@ -17,6 +17,9 @@
 // *************************************************************************
 
 #include "ulog.h"
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -232,7 +235,8 @@ static inline bool is_str_empty(const char *str) {
 /* ============================================================================
    Core Feature: Print
    (`print_*`, depends on: - )
-============================================================================ */
+============================================================================
+*/
 
 //  Private
 // ================
@@ -1170,12 +1174,13 @@ ulog_status ulog_topic_config(bool enabled) {
 // Private
 // ================
 #ifndef ULOG_BUILD_TOPICS_STATIC_NUM
-    /* If static count not provided, default to 0 */
-    #define ULOG_BUILD_TOPICS_STATIC_NUM 0
+/* If static count not provided, default to 0 */
+#define ULOG_BUILD_TOPICS_STATIC_NUM 0
 #endif
 
 /* Dynamic if mode equals DYNAMIC */
-#define TOPIC_IS_DYNAMIC (ULOG_BUILD_TOPICS_MODE == ULOG_BUILD_TOPICS_MODE_DYNAMIC)
+#define TOPIC_IS_DYNAMIC                                                       \
+    (ULOG_BUILD_TOPICS_MODE == ULOG_BUILD_TOPICS_MODE_DYNAMIC)
 #define TOPIC_STATIC_NUM ULOG_BUILD_TOPICS_STATIC_NUM
 #define TOPIC_LEVEL_DEFAULT ULOG_LEVEL_TRACE
 
@@ -1373,7 +1378,6 @@ ulog_status ulog_topic_remove(const char *topic_name) {
 
 // Disabled Private
 // ================
-
 #define topic_print(tgt, ev) (void)(tgt), (void)(ev)
 #define topic_process(topic, level, is_log_allowed, topic_id, output)          \
     (void)(topic), (void)(level), (void)(is_log_allowed), (void)(topic_id),    \
@@ -1716,8 +1720,8 @@ static void log_print_event(print_target *tgt, ulog_event *ev, bool full_time,
     }
 #endif
 
-    full_time ? time_print_full(tgt, ev, append_space)
-              : time_print_short(tgt, ev, append_space);
+    full_time ? time_print_full(tgt, ev, append_space)    // NOLINT
+              : time_print_short(tgt, ev, append_space);  // NOLINT
 
     prefix_print(tgt);
     level_print(tgt, ev);

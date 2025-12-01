@@ -3,6 +3,9 @@
 // *************************************************************************
 
 #include "ulog_lock_win.h"
+#include <stddef.h>
+#include <synchapi.h>
+#include "ulog.h"
 
 // Internal lock function ----------------------------------------------------
 /** @brief Internal lock adapter for Windows Critical Section. */
