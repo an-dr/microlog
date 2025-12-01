@@ -1,0 +1,200 @@
+# *************************************************************************
+#
+# clang-tidy configuration for microlog
+# Copyright (c) 2025 Andrei Gramakov. All rights reserved.
+#
+# This configuration reinforces current code practices while maintaining
+# flexibility for embedded systems and cross-platform compatibility.
+#
+# *************************************************************************
+
+# Inherit configuration from parent directories
+InheritParentConfig: false
+
+# Use LLVM style as baseline (matching .clang-format)
+FormatStyle: file
+
+# Enable checks that reinforce current code practices
+Checks: >
+  -*,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-assignment-in-if-condition,
+  cert-*,
+  -cert-err33-c,
+  -cert-dcl37-c,
+  -cert-dcl51-cpp,
+  clang-analyzer-*,
+  -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
+  concurrency-*,
+  cppcoreguidelines-*,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-avoid-non-const-global-variables,
+  -cppcoreguidelines-init-variables,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-pro-type-union-access,
+  -cppcoreguidelines-pro-type-vararg,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+  hicpp-multiway-paths-covered,
+  hicpp-no-assembler,
+  hicpp-signed-bitwise,
+  misc-*,
+  -misc-unused-parameters,
+  -misc-non-private-member-variables-in-classes,
+  modernize-*,
+  -modernize-use-trailing-return-type,
+  -modernize-macro-to-enum,
+  -modernize-avoid-c-arrays,
+  performance-*,
+  portability-*,
+  readability-*,
+  -readability-magic-numbers,
+  -readability-function-cognitive-complexity,
+  -readability-identifier-length,
+  -readability-isolate-declaration,
+  -readability-avoid-const-params-in-decls,
+  -readability-non-const-parameter,
+  -readability-uppercase-literal-suffix,
+  -readability-else-after-return,
+
+# Check options
+CheckOptions:
+  # Naming conventions - enforce snake_case for functions/variables
+  - key: readability-identifier-naming.FunctionCase
+    value: lower_case
+  - key: readability-identifier-naming.VariableCase
+    value: lower_case
+  - key: readability-identifier-naming.ParameterCase
+    value: lower_case
+  - key: readability-identifier-naming.LocalVariableCase
+    value: lower_case
+  - key: readability-identifier-naming.GlobalVariableCase
+    value: lower_case
+
+  # Allow internal types with _t suffix
+  - key: readability-identifier-naming.TypedefCase
+    value: lower_case
+  - key: readability-identifier-naming.TypedefSuffix
+    value: ''
+  - key: readability-identifier-naming.StructCase
+    value: lower_case
+  - key: readability-identifier-naming.UnionCase
+    value: lower_case
+
+  # Enforce SCREAMING_SNAKE_CASE for macros
+  - key: readability-identifier-naming.MacroDefinitionCase
+    value: UPPER_CASE
+  - key: readability-identifier-naming.EnumConstantCase
+    value: UPPER_CASE
+
+  # Enforce UPPER_CASE for enum types (ulog_level, ulog_status)
+  - key: readability-identifier-naming.EnumCase
+    value: lower_case
+
+  # Constants should be in lower_case (following project style)
+  - key: readability-identifier-naming.ConstantCase
+    value: lower_case
+  - key: readability-identifier-naming.GlobalConstantCase
+    value: lower_case
+
+  # Static function naming
+  - key: readability-identifier-naming.StaticVariableCase
+    value: lower_case
+
+  # Allow some flexibility for embedded patterns
+  - key: readability-function-size.LineThreshold
+    value: 150
+  - key: readability-function-size.StatementThreshold
+    value: 150
+  - key: readability-function-size.BranchThreshold
+    value: 30
+  - key: readability-function-size.ParameterThreshold
+    value: 10
+  - key: readability-function-size.NestingThreshold
+    value: 6
+
+  # Braces are required for safety
+  - key: readability-braces-around-statements.ShortStatementLines
+    value: 0
+
+  # Line length matches .clang-format
+  - key: readability-line-length.LineLength
+    value: 80
+
+  # Allow some implicit conversions for C compatibility
+  - key: readability-implicit-bool-conversion.AllowIntegerConditions
+    value: true
+  - key: readability-implicit-bool-conversion.AllowPointerConditions
+    value: true
+
+  # Configure memory management checks
+  - key: cppcoreguidelines-no-malloc.Allocations
+    value: 'malloc,calloc,realloc'
+  - key: cppcoreguidelines-no-malloc.Deallocations
+    value: 'free'
+  - key: cppcoreguidelines-no-malloc.Reallocations
+    value: 'realloc'
+
+  # Allow some narrowing for embedded systems
+  - key: cppcoreguidelines-narrowing-conversions.WarnOnIntegerNarrowingConversion
+    value: false
+
+  # Avoid C-style casts but be lenient with platform code
+  - key: cppcoreguidelines-pro-type-cstyle-cast.StrictMode
+    value: false
+
+  # Configure bugprone checks
+  - key: bugprone-assert-side-effect.AssertMacros
+    value: 'assert'
+  - key: bugprone-suspicious-string-compare.WarnOnImplicitComparison
+    value: true
+  - key: bugprone-suspicious-string-compare.WarnOnLogicalNotComparison
+    value: true
+
+  # Performance settings
+  - key: performance-move-const-arg.CheckTriviallyCopyableMove
+    value: false
+  - key: performance-unnecessary-value-param.AllowedTypes
+    value: ''
+
+  # Modernize settings (be conservative for C99 compatibility)
+  - key: modernize-use-nullptr.NullMacros
+    value: 'NULL'
+  - key: modernize-use-default-member-init.UseAssignment
+    value: true
+  - key: modernize-use-default-member-init.IgnoreMacros
+    value: true
+
+  # Readability settings
+  - key: readability-simplify-boolean-expr.ChainedConditionalReturn
+    value: false
+  - key: readability-simplify-boolean-expr.ChainedConditionalAssignment
+    value: false
+
+  # Comment style
+  - key: readability-redundant-declaration.IgnoreMacros
+    value: true
+
+# Files to exclude from analysis
+HeaderFilterRegex: '(include|src|extensions)/.*\.(h|c)$'
+
+# Exclude third-party code and build directories
+ExcludeHeaderFilterRegex: '(tests/unit/doctest|example/build|build)/.*'
+
+# Warning as errors for critical issues
+WarningsAsErrors: >
+  bugprone-use-after-move,
+  bugprone-infinite-loop,
+  bugprone-assert-side-effect,
+  cert-err34-c,
+  cert-msc50-cpp,
+  cert-msc51-cpp,
+  clang-analyzer-core.DivideZero,
+  clang-analyzer-core.NullDereference,
+  clang-analyzer-deadcode.DeadStores,
+  clang-analyzer-unix.Malloc,
+  concurrency-mt-unsafe
+
+# System headers to ignore
+SystemHeaders: false
