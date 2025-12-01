@@ -37,12 +37,14 @@ typedef enum {
 } log_level;
 
 /// @brief Log a message at the specified level.
-/// @param level Log level (LOG_TRACE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL).
+/// @param level Log level (LOG_TRACE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR,
+/// LOG_FATAL).
 /// @param ... printf-style format string and arguments.
-#define log_message(level, ...) ulog(level, __VA_ARGS__) 
+#define log_message(level, ...) ulog(level, __VA_ARGS__)
 
 /// @brief Log a message with a topic at the specified level.
-/// @param level Log level (LOG_TRACE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL).
+/// @param level Log level (LOG_TRACE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR,
+/// LOG_FATAL).
 /// @param topic A string topic (e.g. "NET", "UI") to categorize the message.
 /// @param ... printf-style format string and arguments.
 #define log_topic(level, topic, ...) ulog_t(level, topic, __VA_ARGS__)
