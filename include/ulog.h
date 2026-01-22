@@ -429,6 +429,14 @@ void ulog_log(ulog_level level, const char *file,
 ulog_status ulog_cleanup(void);
 
 /* ============================================================================
+   Feature: Array logging
+============================================================================ */
+              
+void ulog_array_log(ulog_level level, const char *file, int line,
+                    const uint8_t* array, const size_t array_size,
+                    const char *message, ...);
+
+/* ============================================================================
    Optional Feature: Disable
 ============================================================================ */
 
