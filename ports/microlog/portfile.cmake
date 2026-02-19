@@ -10,10 +10,9 @@ vcpkg_cmake_configure(
 
 vcpkg_cmake_install()
 
-# Relocate cmake package config files to the vcpkg-standard location.
-# vcpkg_cmake_config_fixup also corrects PACKAGE_PREFIX_DIR so that
-# src/ulog.c and include/ are still found at the package prefix root.
-vcpkg_cmake_config_fixup(CONFIG_PATH ".")
+# Relocate cmake package config files to the vcpkg-standard location and
+# correct PACKAGE_PREFIX_DIR to point at the installed package root.
+vcpkg_cmake_config_fixup(CONFIG_PATH "lib/cmake/${PORT}")
 
 # microlog is source-distributed (no compiled artifacts); remove debug copy
 file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug")

@@ -92,9 +92,6 @@ endif()
 # ----------------------------------------------------------------------------
 set(ULOG_INSTALL_INCLUDE_IN ${ULOG_CONFIGURED_DIR}/include)
 set(ULOG_INSTALL_SRC_IN ${ULOG_CONFIGURED_DIR}/src/ulog.c)
-set(ULOG_INSTALL_INCLUDE_DST
-    ${CMAKE_INSTALL_PREFIX}/${ULOG_INSTALL_INCLUDE_DIR})
-set(ULOG_INSTALL_SRC_DST ${CMAKE_INSTALL_PREFIX}/${ULOG_INSTALL_SRC_DIR})
 
 install(
   TARGETS ${PROJECT_NAME}
@@ -103,8 +100,8 @@ install(
 
 # Headers (they are sources, not artifacts so copy them explicitly)
 install(DIRECTORY ${ULOG_INSTALL_INCLUDE_IN}
-        DESTINATION ${ULOG_INSTALL_INCLUDE_DST})
-install(FILES ${ULOG_INSTALL_SRC_IN} DESTINATION ${ULOG_INSTALL_SRC_DST})
+        DESTINATION ${ULOG_INSTALL_INCLUDE_DIR})
+install(FILES ${ULOG_INSTALL_SRC_IN} DESTINATION ${ULOG_INSTALL_SRC_DIR})
 
 # ----------------------------------------------------------------------------
 # Packing
@@ -120,11 +117,13 @@ include(CMakePackageConfigHelpers)
 # We have a custom Targets file below. Original is generated like this: install(
 # EXPORT ${PROJECT_NAME}Targets NAMESPACE ${PROJECT_NAME}:: DESTINATION
 # ${CMAKE_INSTALL_PREFIX})
-install(FILES ${ULOG_TARGETS_FILE} DESTINATION ${CMAKE_INSTALL_PREFIX})
+set(ULOG_CMAKE_INSTALL_DIR lib/cmake/${PROJECT_NAME})
+
+install(FILES ${ULOG_TARGETS_FILE} DESTINATION ${ULOG_CMAKE_INSTALL_DIR})
 
 # Make a config file using targets based on the template
 configure_package_config_file(${ULOG_CONFIG_FILE_IN} ${ULOG_CONFIG_FILE_OUT}
-                              INSTALL_DESTINATION ${CMAKE_INSTALL_PREFIX})
+                              INSTALL_DESTINATION ${ULOG_CMAKE_INSTALL_DIR})
 
 # Make a version file
 write_basic_package_version_file(
@@ -133,5 +132,5 @@ write_basic_package_version_file(
   COMPATIBILITY SameMajorVersion)
 
 install(FILES ${ULOG_CONFIG_FILE_OUT} ${ULOG_VERSION_FILE_OUT}
-              ${CMAKE_CURRENT_LIST_DIR}/LICENSE
-        DESTINATION ${CMAKE_INSTALL_PREFIX})
+        DESTINATION ${ULOG_CMAKE_INSTALL_DIR})
+install(FILES ${CMAKE_CURRENT_LIST_DIR}/LICENSE DESTINATION .)
