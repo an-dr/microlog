@@ -35,4 +35,6 @@ jobs:
         run: pwsh -File ./tests/integration/cpm/test_cpm.ps1
 
       - name: Test vcpkg Port
+        env:
+          VCPKG_ROOT: /usr/local/share/vcpkg
         run: pwsh -File ./tests/integration/vcpkg/test_vcpkg.ps1
