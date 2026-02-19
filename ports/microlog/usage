@@ -1,0 +1,12 @@
+microlog provides CMake targets:
+
+    find_package(microlog CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE microlog::microlog)
+
+The library compiles ulog.c into your project at build time.
+Optional compile definitions (pass via target_compile_definitions):
+
+    ULOG_BUILD_COLOR=1              # ANSI color output
+    ULOG_BUILD_TIME=1               # timestamp support
+    ULOG_BUILD_SOURCE_LOCATION=0    # disable file:line prefix
+    ULOG_BUILD_TOPICS_MODE=DYNAMIC  # topic-based filtering
