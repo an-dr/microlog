@@ -1797,8 +1797,11 @@ void ulog_log(ulog_level level, const char *file, int line, const char *topic,
     }
 
     ulog_event ev = {0};
-    log_fill_event(&ev, message, level, file, line, topic_id);
     va_start(ev.message_format_args, message);
+    
+    // IMPORTANT: filling the events should be after the vs_start for compatibility
+    // with the VS ARM64 compiler behavior
+    log_fill_event(&ev, message, level, file, line, topic_id);
 
     prefix_update(&ev);
 
