@@ -1,6 +1,7 @@
 # Tests packages:
 # - CMake
 # - Meson
+# - vcpkg
 
 name: Integration Tests
 
@@ -24,6 +25,9 @@ jobs:
           sudo apt update
           sudo apt install -y meson ninja-build
 
+      - name: Set VCPKG_ROOT
+        run: echo "VCPKG_ROOT=$(dirname $(realpath $(which vcpkg)))" >> $GITHUB_ENV
+        
       - name: Test Meson Package
         run: pwsh -File ./tests/integration/packaging/test_meson.ps1
 
@@ -32,3 +36,6 @@ jobs:
 
       - name: Test CMake + CPM
         run: pwsh -File ./tests/integration/cpm/test_cpm.ps1
+
+      - name: Test vcpkg Port
+        run: pwsh -File ./tests/integration/vcpkg/test_vcpkg.ps1
