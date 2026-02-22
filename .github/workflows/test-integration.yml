@@ -25,6 +25,9 @@ jobs:
           sudo apt update
           sudo apt install -y meson ninja-build
 
+      - name: Set VCPKG_ROOT
+        run: echo "VCPKG_ROOT=$(dirname $(realpath $(which vcpkg)))" >> $GITHUB_ENV
+        
       - name: Test Meson Package
         run: pwsh -File ./tests/integration/packaging/test_meson.ps1
 
@@ -35,6 +38,4 @@ jobs:
         run: pwsh -File ./tests/integration/cpm/test_cpm.ps1
 
       - name: Test vcpkg Port
-        env:
-          VCPKG_ROOT: ${{ env.VCPKG_INSTALLATION_ROOT }}
         run: pwsh -File ./tests/integration/vcpkg/test_vcpkg.ps1
