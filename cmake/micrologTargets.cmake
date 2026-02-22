@@ -67,7 +67,7 @@ get_filename_component(_IMPORT_PREFIX "${CMAKE_CURRENT_LIST_DIR}" ABSOLUTE)
 if(NOT TARGET microlog)
     add_library(microlog STATIC)
 
-    target_sources(microlog PRIVATE "${PACKAGE_PREFIX_DIR}/src/ulog.c" )
+    target_sources(microlog PRIVATE "${PACKAGE_PREFIX_DIR}/share/microlog/src/ulog.c" )
     target_include_directories(microlog PUBLIC "${PACKAGE_PREFIX_DIR}/include" )
     
     add_library(microlog::microlog ALIAS microlog)

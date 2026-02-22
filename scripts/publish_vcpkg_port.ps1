@@ -11,7 +11,7 @@
     Requires vcpkg to be bootstrapped (vcpkg.exe must exist in $VcpkgPath).
 
 .PARAMETER Tag
-    The git tag to publish (e.g. "v7.0.1").
+    The git tag to publish (e.g. "v7.0.2").
     Defaults to the version in the version file.
 
 .PARAMETER VcpkgPath
@@ -20,7 +20,7 @@
 
 .EXAMPLE
     .\scripts\publish_vcpkg_port.ps1
-    .\scripts\publish_vcpkg_port.ps1 -Tag v7.0.1
+    .\scripts\publish_vcpkg_port.ps1 -Tag v7.0.2
     .\scripts\publish_vcpkg_port.ps1 -VcpkgPath C:\src\vcpkg
 #>
 
