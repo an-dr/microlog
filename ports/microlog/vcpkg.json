@@ -1,7 +1,7 @@
 {
     "name": "microlog",
-    "version": "7.0.0",
-    "description": "Configurable C logging library with topic and multi-output support",
+    "version": "@ULOG_VERSION@",
+    "description": "Extensible and configurable logging library for embedded and desktop applications with multi-output and logging toppics ",
     "homepage": "https://github.com/an-dr/microlog",
     "license": "MIT",
     "dependencies": [
