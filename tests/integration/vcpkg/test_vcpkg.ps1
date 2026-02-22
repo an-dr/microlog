@@ -34,13 +34,15 @@ try {
 
     # Build the consumer test project
     cmake -B ./build -DCMAKE_TOOLCHAIN_FILE="$VcpkgToolchain"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "CMake configure failed with exit code $LASTEXITCODE"
+        exit $LASTEXITCODE
+    }
     cmake --build ./build --verbose
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Build failed with exit code $LASTEXITCODE"
         exit $LASTEXITCODE
     }
-
-    Pop-Location
 
 } catch {
 

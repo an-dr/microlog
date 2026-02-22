@@ -92,6 +92,7 @@ endif()
 # ----------------------------------------------------------------------------
 set(ULOG_INSTALL_INCLUDE_IN ${ULOG_CONFIGURED_DIR}/include)
 set(ULOG_INSTALL_SRC_IN ${ULOG_CONFIGURED_DIR}/src/ulog.c)
+set(ULOG_CMAKE_INSTALL_DIR lib/cmake/${PROJECT_NAME})
 
 install(
   TARGETS ${PROJECT_NAME}
@@ -117,8 +118,6 @@ include(CMakePackageConfigHelpers)
 # We have a custom Targets file below. Original is generated like this: install(
 # EXPORT ${PROJECT_NAME}Targets NAMESPACE ${PROJECT_NAME}:: DESTINATION
 # ${CMAKE_INSTALL_PREFIX})
-set(ULOG_CMAKE_INSTALL_DIR lib/cmake/${PROJECT_NAME})
-
 install(FILES ${ULOG_TARGETS_FILE} DESTINATION ${ULOG_CMAKE_INSTALL_DIR})
 
 # Make a config file using targets based on the template

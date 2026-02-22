@@ -36,5 +36,5 @@ jobs:
 
       - name: Test vcpkg Port
         env:
-          VCPKG_ROOT: /usr/local/share/vcpkg
+          VCPKG_ROOT: ${{ env.VCPKG_INSTALLATION_ROOT }}
         run: pwsh -File ./tests/integration/vcpkg/test_vcpkg.ps1
