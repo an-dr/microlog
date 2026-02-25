@@ -331,8 +331,10 @@ ulog_status ulog_event_get_message(ulog_event *ev, char *buffer,
     print_target tgt = {.type       = PRINT_TARGET_BUFFER,
                         .dsc.buffer = {buffer, 0, buffer_size}};
 
-    // Create a copy of the event to avoid va_list issues
-    ulog_event ev_copy = *ev;
+    // Create a copy of the event to avoid va_list issues.
+    // memcpy cost is negligible (~4-10 word moves); vsnprintf below dominates.
+    ulog_event ev_copy;
+    memcpy(&ev_copy, ev, sizeof(ulog_event));
     va_copy(ev_copy.message_format_args, ev->message_format_args);
 
     log_print_message(&tgt, &ev_copy);
@@ -1767,8 +1769,10 @@ ulog_status ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size) {
     print_target tgt = {.type       = PRINT_TARGET_BUFFER,
                         .dsc.buffer = {out, 0, out_size}};
 
-    // Create a copy of the event to avoid va_list issues
-    ulog_event ev_copy = *ev;
+    // Create a copy of the event to avoid va_list issues.
+    // memcpy cost is negligible (~4-10 word moves); vsnprintf below dominates.
+    ulog_event ev_copy;
+    memcpy(&ev_copy, ev, sizeof(ulog_event));
     va_copy(ev_copy.message_format_args, ev->message_format_args);
 
     log_print_event(&tgt, &ev_copy, false, false, false);
@@ -1797,10 +1801,10 @@ void ulog_log(ulog_level level, const char *file, int line, const char *topic,
     }
 
     ulog_event ev = {0};
-    va_start(ev.message_format_args, message);
-    
-    // IMPORTANT: filling the events should be after the va_start for compatibility
-    // with the VS ARM64 compiler behavior
+    va_list args;
+    va_start(args, message);
+    va_copy(ev.message_format_args, args);
+    va_end(args);
     log_fill_event(&ev, message, level, file, line, topic_id);
 
     prefix_update(&ev);
