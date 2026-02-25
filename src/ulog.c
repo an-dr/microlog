@@ -332,8 +332,8 @@ ulog_status ulog_event_get_message(ulog_event *ev, char *buffer,
                         .dsc.buffer = {buffer, 0, buffer_size}};
 
     // Create a copy of the event to avoid va_list issues.
-    // memcpy cost is negligible (~4-5 word moves); vsnprintf below dominates.
-    ulog_event ev_copy = {0};
+    // memcpy cost is negligible (~4-10 word moves); vsnprintf below dominates.
+    ulog_event ev_copy;
     memcpy(&ev_copy, ev, sizeof(ulog_event));
     va_copy(ev_copy.message_format_args, ev->message_format_args);
 
@@ -1770,8 +1770,8 @@ ulog_status ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size) {
                         .dsc.buffer = {out, 0, out_size}};
 
     // Create a copy of the event to avoid va_list issues.
-    // memcpy cost is negligible (~4-5 word moves); vsnprintf below dominates.
-    ulog_event ev_copy = {0};
+    // memcpy cost is negligible (~4-10 word moves); vsnprintf below dominates.
+    ulog_event ev_copy;
     memcpy(&ev_copy, ev, sizeof(ulog_event));
     va_copy(ev_copy.message_format_args, ev->message_format_args);
 
