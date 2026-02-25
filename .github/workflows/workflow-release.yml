@@ -20,3 +20,21 @@ jobs:
     needs: [test-integration]
     name: Create Release
     uses: ./.github/workflows/create-release.yml
+
+  publish-vcpkg-branch:
+    needs: [release]
+    name: Publish vcpkg Branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Configure git identity
+        run: |
+          git config --global user.name  "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          # Embed token so git push to an-dr/vcpkg works without interactive auth
+          git config --global url."https://x-access-token:${{ secrets.VCPKG_PR_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Publish vcpkg branch
+        run: pwsh -File ./scripts/publish_vcpkg_branch.ps1
