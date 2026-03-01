@@ -40,6 +40,8 @@
 | ULOG_BUILD_CONFIG_HEADER_ENABLED | 0                          | -                         | Configuration header mode|
 | ULOG_BUILD_CONFIG_HEADER_NAME    | "ulog_config.h"            | -                         | Configuration header name|
 | ULOG_BUILD_DISABLED              | 0                          | -                         | Disable ulog completely  |
+| ULOG_BUILD_ARRAY_LOGGING         | 1                          | -                         | Array formating          |
+| ULOG_BUILD_ARRAY_MAX_SIZE        | 4096                       | ULOG_BUILD_ARRAY_LOGGING  | Maximum array size       |
 
 ===================================================================================================================== */
 
@@ -1172,8 +1174,8 @@ ulog_status ulog_topic_config(bool enabled) {
 // Private
 // ================
 #ifndef ULOG_BUILD_TOPICS_STATIC_NUM
-    /* If static count not provided, default to 0 */
-    #define ULOG_BUILD_TOPICS_STATIC_NUM 0
+/* If static count not provided, default to 0 */
+#define ULOG_BUILD_TOPICS_STATIC_NUM 0
 #endif
 
 /* Dynamic if mode equals DYNAMIC */
@@ -1872,6 +1874,24 @@ ulog_status ulog_cleanup(void) {
 #endif
 
     return lock_unlock();
+}
+
+/* ============================================================================
+   Core Feature: Clean up
+   (`init_*`, depends on: Locking, Outputs, Prefix, Time, Color)
+============================================================================ */
+
+// Public
+// ================
+
+void ulog_array_log(ulog_level level, const char *file, int line,
+                    const uint8_t *array, const size_t array_size,
+                    const char *message, ...) {
+    if (lock_lock() != ULOG_STATUS_OK) {
+        return;  // Failed to acquire lock, drop log
+    }
+
+    (void)lock_unlock();
 }
 
 #endif  // ULOG_BUILD_DISABLED
