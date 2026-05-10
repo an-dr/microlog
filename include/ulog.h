@@ -110,13 +110,22 @@ typedef struct ulog_event ulog_event;
 
 #if ULOG_BUILD_DISABLED != 1
 
-/// @brief Write event content to a buffer as a log message
+/// @brief Write event content to a buffer as a log message (no ANSI colour)
 /// @param ev Event to convert
 /// @param out Output buffer to write to
 /// @param out_size Size of the output buffer
 /// @return ULOG_STATUS_OK on success, ULOG_STATUS_INVALID_ARGUMENT if invalid
 /// parameters
 ulog_status ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size);
+
+/// @brief Write event content to a buffer as a log message with ANSI colour
+/// @param ev Event to convert
+/// @param out Output buffer to write to
+/// @param out_size Size of the output buffer
+/// @return ULOG_STATUS_OK on success, ULOG_STATUS_INVALID_ARGUMENT if invalid
+/// parameters
+ulog_status ulog_event_to_cstr_colored(ulog_event *ev, char *out,
+                                        size_t out_size);
 
 /// @brief Extract the message from an event into a buffer
 /// @param ev Event to extract message from
@@ -498,7 +507,10 @@ ULOG_STATIC_INLINE struct tm* ulog_event_get_time(ulog_event *ev)
 ULOG_STATIC_INLINE ulog_topic_id ulog_event_get_topic(ulog_event *ev) 
     { (void)ev; return ULOG_TOPIC_ID_INVALID; }
     
-ULOG_STATIC_INLINE ulog_status ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size) 
+ULOG_STATIC_INLINE ulog_status ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size)
+    { (void)ev; (void)out; (void)out_size; return ULOG_STATUS_DISABLED; }
+
+ULOG_STATIC_INLINE ulog_status ulog_event_to_cstr_colored(ulog_event *ev, char *out, size_t out_size)
     { (void)ev; (void)out; (void)out_size; return ULOG_STATUS_DISABLED; }
     
 ULOG_STATIC_INLINE ulog_status ulog_level_config(ulog_level_config_style style) 

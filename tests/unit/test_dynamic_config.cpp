@@ -1,6 +1,7 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest/doctest.h"
 
+#include <cctype>
 #include <cstring>
 #include "ulog.h"
 #include "ut_callback.h"
@@ -120,6 +121,20 @@ TEST_CASE_FIXTURE(TestFixture, "Dynamic Config - Time") {
     last_message = ut_callback_get_last_message();
     REQUIRE(last_message != nullptr);
     REQUIRE(strstr(last_message, "Test message without time") != nullptr);
+}
+
+TEST_CASE_FIXTURE(TestFixture, "Dynamic Config - ulog_event_to_cstr_colored emits ANSI codes") {
+    ulog_cleanup();
+    ut_callback_reset();
+    ulog_output_add(ut_callback_colored, nullptr, ULOG_LEVEL_TRACE);
+    ulog_output_level_set_all(ULOG_LEVEL_TRACE);
+
+    ulog_info("hello");
+
+    const char *msg = ut_callback_get_last_message();
+    REQUIRE(msg != nullptr);
+    CHECK(strstr(msg, "hello") != nullptr);
+    CHECK(strchr(msg, '\x1b') != nullptr);  // ANSI ESC must appear
 }
 
 TEST_CASE_FIXTURE(TestFixture, "Dynamic Config - Topics") {

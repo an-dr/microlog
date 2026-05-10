@@ -9,6 +9,7 @@ extern "C" {
 #define UT_LOG_BUFFER_SIZE 256
 
 void ut_callback(ulog_event *ev, void *arg);
+void ut_callback_colored(ulog_event *ev, void *arg);
 
 int ut_callback_get_message_count();
 char *ut_callback_get_last_message();

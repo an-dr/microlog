@@ -531,17 +531,11 @@ static const char *color_levels[] = {
 #define COLOR_TERMINATOR "\x1b[0m"
 
 static void color_print_start(print_target *tgt, ulog_event *ev) {
-    if (!color_config_is_enabled()) {
-        return;  // Color is disabled, do not print color codes
-    }
-    print_to_target(tgt, "%s", color_levels[ev->level]);  // color start
+    print_to_target(tgt, "%s", color_levels[ev->level]);
 }
 
 static void color_print_end(print_target *tgt) {
-    if (!color_config_is_enabled()) {
-        return;  // Color is disabled, do not print color codes
-    }
-    print_to_target(tgt, "%s", COLOR_TERMINATOR);  // color end
+    print_to_target(tgt, "%s", COLOR_TERMINATOR);
 }
 
 #else  // ULOG_HAS_COLOR
@@ -1012,7 +1006,7 @@ static void output_handle_all(ulog_event *ev) {
 static void output_stdout_handler(ulog_event *ev, void *arg) {
     (void)(arg);  // Unused
     print_target tgt = {.type = PRINT_TARGET_STREAM, .dsc.stream = stdout};
-    log_print_event(&tgt, ev, false, true, true);
+    log_print_event(&tgt, ev, false, color_config_is_enabled(), true);
 }
 
 // Public
@@ -1792,26 +1786,34 @@ void log_fill_event(ulog_event *ev, const char *message, ulog_level level,
     time_fill_current_time(ev);  // Fill time with current value
 }
 
-// Public
-// ================
-
-ulog_status ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size) {
+static ulog_status event_to_cstr_impl(ulog_event *ev, char *out,
+                                       size_t out_size, bool color) {
     if (ev == NULL || out == NULL || out_size == 0) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }
     print_target tgt = {.type       = PRINT_TARGET_BUFFER,
                         .dsc.buffer = {out, 0, out_size}};
 
-    // Create a copy of the event to avoid va_list issues.
-    // memcpy cost is negligible (~4-10 word moves); vsnprintf below dominates.
     ulog_event ev_copy;
     memcpy(&ev_copy, ev, sizeof(ulog_event));
     va_copy(ev_copy.message_format_args, ev->message_format_args);
 
-    log_print_event(&tgt, &ev_copy, false, color_config_is_enabled(), false);
+    log_print_event(&tgt, &ev_copy, false, color, false);
 
     va_end(ev_copy.message_format_args);
     return ULOG_STATUS_OK;
+}
+
+// Public
+// ================
+
+ulog_status ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size) {
+    return event_to_cstr_impl(ev, out, out_size, false);
+}
+
+ulog_status ulog_event_to_cstr_colored(ulog_event *ev, char *out,
+                                        size_t out_size) {
+    return event_to_cstr_impl(ev, out, out_size, true);
 }
 
 void ulog_log(ulog_level level, const char *file, int line, const char *topic,
