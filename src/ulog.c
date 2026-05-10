@@ -153,11 +153,38 @@
     #define ULOG_HAS_TOPICS (ULOG_BUILD_TOPICS_MODE != ULOG_BUILD_TOPICS_MODE_OFF)
 #endif
 
+// Initial values for the dynamic-config runtime structs.
+// In dynamic mode all features are compiled in; these control the starting
+// state so the user can begin logging without an explicit runtime call.
+// Defaults match the previous all-on behaviour for backwards compatibility.
+// Override via ULOG_BUILD_DYNAMIC_<FEATURE> (separate from the static
+// ULOG_BUILD_* flags, which only control compile-time feature inclusion).
+#ifdef ULOG_BUILD_DYNAMIC_COLOR
+    #define ULOG_DYNCONFIG_INIT_COLOR (ULOG_BUILD_DYNAMIC_COLOR ? 1 : 0)
+#else
+    #define ULOG_DYNCONFIG_INIT_COLOR 1
+#endif
+#ifdef ULOG_BUILD_DYNAMIC_TIME
+    #define ULOG_DYNCONFIG_INIT_TIME (ULOG_BUILD_DYNAMIC_TIME ? 1 : 0)
+#else
+    #define ULOG_DYNCONFIG_INIT_TIME 1
+#endif
+#ifdef ULOG_BUILD_DYNAMIC_SOURCE_LOCATION
+    #define ULOG_DYNCONFIG_INIT_SOURCE_LOCATION (ULOG_BUILD_DYNAMIC_SOURCE_LOCATION ? 1 : 0)
+#else
+    #define ULOG_DYNCONFIG_INIT_SOURCE_LOCATION 1
+#endif
+#ifdef ULOG_BUILD_DYNAMIC_LEVEL_SHORT
+    #define ULOG_DYNCONFIG_INIT_LEVEL_SHORT (ULOG_BUILD_DYNAMIC_LEVEL_SHORT ? 1 : 0)
+#else
+    #define ULOG_DYNCONFIG_INIT_LEVEL_SHORT 0
+#endif
+
 /* ============================================================================
    Optional Feature: Dynamic Configuration
 ============================================================================ */
 
-#ifndef ULOG_BUILD_DYNAMIC_CONFIG
+#if !defined(ULOG_BUILD_DYNAMIC_CONFIG) || !(ULOG_BUILD_DYNAMIC_CONFIG)
     #define ULOG_HAS_DYNAMIC_CONFIG 0
 #else
     #define ULOG_HAS_DYNAMIC_CONFIG 1
@@ -438,7 +465,7 @@ typedef struct {
 } color_config;
 
 static color_config color_cfg = {
-    .enabled = (bool)ULOG_HAS_COLOR,
+    .enabled = ULOG_DYNCONFIG_INIT_COLOR,
 };
 
 // Private
@@ -655,7 +682,7 @@ typedef struct {
 } time_config;
 
 static time_config time_cfg = {
-    .enabled = ULOG_HAS_TIME,
+    .enabled = ULOG_DYNCONFIG_INIT_TIME,
 };
 
 // Private
@@ -790,8 +817,19 @@ const ulog_level_descriptor level_names_default = {
     .names     = LEVEL_NAMES_DEFAULT,
 };
 
+#if ULOG_HAS_DYNAMIC_CONFIG
+const ulog_level_descriptor level_names_default_short = {
+    .max_level = ULOG_LEVEL_FATAL,
+    .names     = LEVEL_NAMES_SHORT,
+};
+#endif
+
 level_data_t level_data = {
+#if ULOG_HAS_DYNAMIC_CONFIG && ULOG_DYNCONFIG_INIT_LEVEL_SHORT
+    .dsc = &level_names_default_short,
+#else
     .dsc = &level_names_default,
+#endif
 };
 
 static bool level_is_allowed(ulog_level msg_level, ulog_level log_verbosity) {
@@ -858,12 +896,7 @@ typedef struct {
 } level_config;
 
 static level_config level_cfg = {
-    .short_style = false,
-};
-
-const ulog_level_descriptor level_names_default_short = {
-    .max_level = ULOG_LEVEL_FATAL,
-    .names     = LEVEL_NAMES_SHORT,
+    .short_style = ULOG_DYNCONFIG_INIT_LEVEL_SHORT,
 };
 
 bool level_config_is_short(void) {
@@ -1622,7 +1655,7 @@ typedef struct {
 } src_loc_config;
 
 static src_loc_config src_loc_cfg = {
-    .enabled = (bool)ULOG_HAS_SOURCE_LOCATION,
+    .enabled = ULOG_DYNCONFIG_INIT_SOURCE_LOCATION,
 };
 
 // Private
