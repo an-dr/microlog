@@ -182,6 +182,44 @@ target_include_directories(test_disabled PRIVATE ${ULOG_INCLUDE_DIR})
 target_compile_definitions(test_disabled PRIVATE "-DULOG_BUILD_DISABLED=1")
 add_test(NAME DisabledFeatureTest COMMAND test_disabled)
 
+# --- Issue 157 Regression Tests ---
+# Scenario A (dynamic config): ULOG_BUILD_DYNAMIC_CONFIG=1 overrides every
+# other ULOG_HAS_* flag to 1, so ULOG_BUILD_SOURCE_LOCATION=0 / TIME=0 /
+# LEVEL_SHORT=1 / COLOR=1 are all silently ignored.
+set(ULOG_CONFIG_ISSUE_157 "-DULOG_BUILD_EXTRA_OUTPUTS=8"
+                           "-DULOG_BUILD_DYNAMIC_CONFIG=1"
+                           "-DULOG_BUILD_LEVEL_SHORT=1"
+                           "-DULOG_BUILD_COLOR=1"
+                           "-DULOG_BUILD_SOURCE_LOCATION=0"
+                           "-DULOG_BUILD_TIME=0"
+                           )
+
+add_executable(test_issue_157)
+target_sources(test_issue_157 PRIVATE ${ULOG_SRC}
+                                      ut_callback.c
+                                      test_issue_157.cpp)
+target_include_directories(test_issue_157 PRIVATE ${ULOG_INCLUDE_DIR})
+target_compile_definitions(test_issue_157 PRIVATE ${ULOG_CONFIG_ISSUE_157})
+add_test(NAME Issue157Test COMMAND test_issue_157)
+
+# Scenario B (config-header mode): ULOG_BUILD_CONFIG_HEADER_ENABLED=1 forces
+# every ULOG_HAS_* flag to 1 regardless of what ulog_config_issue157.h says,
+# so the user's SOURCE_LOCATION=0 and LEVEL_SHORT=0 settings are silently
+# ignored.  ulog_event_to_cstr() also hard-codes color=false, so colour is
+# dropped even though the config header enables it.
+set(ULOG_CONFIG_ISSUE_157_STATIC "-DULOG_BUILD_CONFIG_HEADER_ENABLED=1"
+                                  "-DULOG_BUILD_CONFIG_HEADER_NAME=\"ulog_config_issue157.h\""
+                                  )
+
+add_executable(test_issue_157_static)
+target_sources(test_issue_157_static PRIVATE ${ULOG_SRC}
+                                             ut_callback.c
+                                             test_issue_157_static.cpp)
+target_include_directories(test_issue_157_static PRIVATE ${ULOG_INCLUDE_DIR}
+                                                          ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_definitions(test_issue_157_static PRIVATE ${ULOG_CONFIG_ISSUE_157_STATIC})
+add_test(NAME Issue157StaticTest COMMAND test_issue_157_static)
+
 # --- microlog6 Compatibility Test ---
 add_executable(test_microlog6_compat)
 target_sources(test_microlog6_compat PRIVATE ${ULOG_SRC}
