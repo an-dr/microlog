@@ -37,6 +37,18 @@ struct Fixture {
     ~Fixture() { ulog_cleanup(); }
 };
 
+// ULOG_BUILD_COLOR 1 → ANSI codes must appear in ulog_event_to_cstr output
+// (heeplr: ulog_event_to_cstr was hardcoding color=false; now uses color_config_is_enabled())
+TEST_CASE_FIXTURE(Fixture, "Issue157 heeplr - ULOG_BUILD_COLOR=1 respected by ulog_event_to_cstr in static config") {
+    ulog_info("hello");
+
+    const char *msg = ut_callback_get_last_message();
+    REQUIRE(msg != nullptr);
+
+    CHECK(strstr(msg, "hello") != nullptr);
+    CHECK(strchr(msg, '\x1b') != nullptr);  // ANSI ESC must appear
+}
+
 // ULOG_BUILD_SOURCE_LOCATION 0 → source location must not appear
 TEST_CASE_FIXTURE(Fixture, "Issue157 saphieron - ULOG_BUILD_SOURCE_LOCATION=0 respected in static config") {
     ulog_info("hello");

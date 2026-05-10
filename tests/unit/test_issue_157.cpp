@@ -26,6 +26,20 @@ struct Fixture {
     ~Fixture() { ulog_cleanup(); }
 };
 
+// ulog_event_to_cstr must forward the runtime colour state to custom handlers
+// (heeplr confirmed: ulog_event_to_cstr was hardcoding color=false, discarding
+//  ANSI codes even after ulog_color_config(true))
+TEST_CASE_FIXTURE(Fixture, "Issue157 heeplr - ulog_event_to_cstr forwards colour state to custom handler") {
+    ulog_color_config(true);
+    ulog_info("hello");
+
+    const char *msg = ut_callback_get_last_message();
+    REQUIRE(msg != nullptr);
+
+    CHECK(strstr(msg, "hello") != nullptr);
+    CHECK(strchr(msg, '\x1b') != nullptr);  // ANSI ESC must appear
+}
+
 // ulog_level_config(SHORT) must be reflected in custom handler output
 TEST_CASE_FIXTURE(Fixture, "Issue157 - ulog_level_config SHORT reflected in custom handler") {
     ulog_level_config(ULOG_LEVEL_CONFIG_STYLE_SHORT);

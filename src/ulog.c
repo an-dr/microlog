@@ -1808,7 +1808,7 @@ ulog_status ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size) {
     memcpy(&ev_copy, ev, sizeof(ulog_event));
     va_copy(ev_copy.message_format_args, ev->message_format_args);
 
-    log_print_event(&tgt, &ev_copy, false, false, false);
+    log_print_event(&tgt, &ev_copy, false, color_config_is_enabled(), false);
 
     va_end(ev_copy.message_format_args);
     return ULOG_STATUS_OK;
