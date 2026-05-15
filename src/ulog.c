@@ -985,6 +985,18 @@ static void output_stdout_handler(ulog_event *ev, void *arg) {
 // Public
 // ================
 
+ulog_status ulog_output_level_get(ulog_output_id output, ulog_level *out_level) {
+    if (output < ULOG_OUTPUT_STDOUT || output >= OUTPUT_TOTAL_NUM || out_level == NULL) {
+        return ULOG_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (output_data.outputs[output].handler == NULL) {
+        return ULOG_STATUS_NOT_FOUND;  // Output exists but no handler assigned
+    }
+    *out_level = output_data.outputs[output].level;
+    return ULOG_STATUS_OK;
+}
+
 ulog_status ulog_output_level_set(ulog_output_id output, ulog_level level) {
     if (!level_is_valid(level)) {
         return ULOG_STATUS_INVALID_ARGUMENT;
@@ -1249,6 +1261,19 @@ static void topic_print(print_target *tgt, ulog_event *ev) {
     }
 }
 
+/// @brief Get the topic level
+/// @param topic - Topic ID
+/// @param level - Current log level will be stored here
+/// @return ULOG_STATUS_OK if success, ULOG_STATUS_NOT_FOUND if topic not found
+static ulog_status topic_get_level(int topic, ulog_level *level) {
+    topic_t *t = topic_get(topic);
+    if (t != NULL) {
+        *level = t->level;
+        return ULOG_STATUS_OK;
+    }
+    return ULOG_STATUS_NOT_FOUND;
+}
+
 /// @brief Sets the topic level
 /// @param topic - Topic ID
 /// @param level - Log level to set
@@ -1313,6 +1338,17 @@ ulog_status ulog_topic_level_set(const char *topic_name, ulog_level level) {
     return topic_set_level(topic_id, level);
 }
 
+ulog_status ulog_topic_level_get(const char *topic_name, ulog_level *level) {
+    ulog_topic_id topic_id = ulog_topic_get_id(topic_name);
+    if (topic_id == ULOG_TOPIC_ID_INVALID) {
+        return ULOG_STATUS_NOT_FOUND;  // Topic not found, do nothing
+    }
+    if (level == NULL) {
+        return ULOG_STATUS_INVALID_ARGUMENT;
+    }
+    return topic_get_level(topic_id, level);
+}
+
 ulog_topic_id ulog_topic_get_id(const char *topic_name) {
     return topic_str_to_id(topic_name);
 }
@@ -1344,6 +1380,13 @@ ulog_status ulog_topic_remove(const char *topic_name) {
 #if ULOG_HAS_WARN_NOT_ENABLED
 
 ulog_status ulog_topic_level_set(const char *topic_name, ulog_level level) {
+    (void)(topic_name);
+    (void)(level);
+    warn_not_enabled("ULOG_BUILD_TOPICS_MODE");
+    return ULOG_STATUS_DISABLED;
+}
+
+ulog_status ulog_topic_level_get(const char *topic_name, ulog_level *level) {
     (void)(topic_name);
     (void)(level);
     warn_not_enabled("ULOG_BUILD_TOPICS_MODE");

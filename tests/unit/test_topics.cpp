@@ -48,6 +48,27 @@ TEST_CASE_FIXTURE(TestFixture, "Topics: Levels") {
     CHECK(ut_callback_get_message_count() == 5);
 }
 
+TEST_CASE_FIXTURE(TestFixture, "Topics: Get Level") {
+    ulog_level level;
+    ulog_status result;
+
+    ulog_topic_add("topic", ULOG_OUTPUT_ALL, ULOG_LEVEL_TRACE);
+
+    result = ulog_topic_level_set("topic", ULOG_LEVEL_TRACE);
+    CHECK(result == ULOG_STATUS_OK);
+    result = ulog_topic_level_get("topic", &level);
+    CHECK(result == ULOG_STATUS_OK);
+    CHECK(level == ULOG_LEVEL_TRACE);
+
+    result = ulog_topic_level_set("topic", ULOG_LEVEL_WARN);
+    CHECK(result == ULOG_STATUS_OK);
+    result = ulog_topic_level_get("topic", &level);
+    CHECK(result == ULOG_STATUS_OK);
+    CHECK(level == ULOG_LEVEL_WARN);
+
+    ulog_topic_remove("topic");
+}
+
 TEST_CASE_FIXTURE(TestFixture, "Topics: Cannot create topic with empty name") {
     int res;
 

@@ -128,6 +128,23 @@ TEST_CASE_FIXTURE(OutputTestFixture, "Output Level Set Specific") {
     }
 }
 
+TEST_CASE_FIXTURE(OutputTestFixture, "Output Level Get Specific") {
+	SUBCASE("Get stdout level") {
+            ulog_level level;
+            ulog_status result = ulog_output_level_set(ULOG_OUTPUT_STDOUT, ULOG_LEVEL_TRACE);
+            CHECK(result == ULOG_STATUS_OK);
+            result = ulog_output_level_get(ULOG_OUTPUT_STDOUT, &level);
+            CHECK(result == ULOG_STATUS_OK);
+            CHECK(level == ULOG_LEVEL_TRACE);
+
+            result = ulog_output_level_set(ULOG_OUTPUT_STDOUT, ULOG_LEVEL_WARN);
+            CHECK(result == ULOG_STATUS_OK);
+            result = ulog_output_level_get(ULOG_OUTPUT_STDOUT, &level);
+            CHECK(result == ULOG_STATUS_OK);
+            CHECK(level == ULOG_LEVEL_WARN);
+        }
+}
+
 TEST_CASE_FIXTURE(OutputTestFixture, "Output Add Custom Handler") {
     SUBCASE("Add valid custom handler") {
         int test_arg = 42;

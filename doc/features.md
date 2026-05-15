@@ -168,6 +168,15 @@ In this case the stdout-printed line will be:
 INFO  src/main.c:66: Info message 3.000000
 ```
 
+The current log level of an output can be acquired using the `ulog_output_level_get(ulog_output_id output, ulog_level *level)` function:
+
+```c
+ulog_level lvl;
+ulog_output_level_get(ULOG_OUTPUT_STDOUT, &lvl);
+
+printf("loglevel: %s\n", ulog_level_to_string(lvl));
+```
+
 ### Events
 
 The events care information depending on the static configuration. The whole list of possible data:
@@ -280,6 +289,7 @@ When the feature is enabled all logging macros are replaced with empty stubs or 
 | ulog_log                    | `(void)0`                  |
 | ulog_output_add             | `ULOG_OUTPUT_INVALID`      |
 | ulog_output_add_file        | `ULOG_OUTPUT_INVALID`      |
+| ulog_output_level_get       | `ULOG_STATUS_DISABLED`     |
 | ulog_output_level_set       | `ULOG_STATUS_DISABLED`     |
 | ulog_output_level_set_all   | `ULOG_STATUS_DISABLED`     |
 | ulog_output_remove          | `ULOG_STATUS_DISABLED`     |
@@ -290,6 +300,7 @@ When the feature is enabled all logging macros are replaced with empty stubs or 
 | ulog_topic_add              | `ULOG_TOPIC_ID_INVALID`    |
 | ulog_topic_config           | `ULOG_STATUS_DISABLED`     |
 | ulog_topic_get_id           | `ULOG_TOPIC_ID_INVALID`    |
+| ulog_topic_level_get        | `ULOG_STATUS_DISABLED`     |
 | ulog_topic_level_set        | `ULOG_STATUS_DISABLED`     |
 | ulog_topic_remove           | `ULOG_STATUS_DISABLED`     |
 
@@ -416,6 +427,15 @@ ulog_topic_level_set("storage", ULOG_LEVEL_WARN); // Storage is set to WARN
 ulog_topic_info("storage", "No free space"); // generated
 ulog_topic_info("network", "Connected to server"); // filtered out topic
 ulog_topic_debug("storage", "No free space"); // filtered out level DEBUG < INFO
+```
+
+The current loglevel of each topic can be acquired using the `ulog_topic_level_get()` function:
+
+```c
+ulog_level lvl;
+ulog_topic_level_get("network", &lvl);
+
+printf("network loglevel: %s\n", ulog_level_to_string(lvl));
 ```
 
 Topics can be removed by using the `ulog_topic_remove()` function.
