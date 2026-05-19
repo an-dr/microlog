@@ -1787,7 +1787,7 @@ void log_fill_event(ulog_event *ev, const char *message, ulog_level level,
 }
 
 static ulog_status event_to_cstr_impl(ulog_event *ev, char *out,
-                                       size_t out_size, bool color) {
+                                      size_t out_size, bool color) {
     if (ev == NULL || out == NULL || out_size == 0) {
         return ULOG_STATUS_INVALID_ARGUMENT;
     }
@@ -1812,7 +1812,7 @@ ulog_status ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size) {
 }
 
 ulog_status ulog_event_to_cstr_colored(ulog_event *ev, char *out,
-                                        size_t out_size) {
+                                       size_t out_size) {
     return event_to_cstr_impl(ev, out, out_size, true);
 }
 

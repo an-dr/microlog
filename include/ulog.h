@@ -119,13 +119,15 @@ typedef struct ulog_event ulog_event;
 ulog_status ulog_event_to_cstr(ulog_event *ev, char *out, size_t out_size);
 
 /// @brief Write event content to a buffer as a log message with ANSI colour
+/// @note Always emits ANSI colour codes regardless of the runtime colour
+/// configuration set via ulog_color_config().
 /// @param ev Event to convert
 /// @param out Output buffer to write to
 /// @param out_size Size of the output buffer
 /// @return ULOG_STATUS_OK on success, ULOG_STATUS_INVALID_ARGUMENT if invalid
 /// parameters
 ulog_status ulog_event_to_cstr_colored(ulog_event *ev, char *out,
-                                        size_t out_size);
+                                       size_t out_size);
 
 /// @brief Extract the message from an event into a buffer
 /// @param ev Event to extract message from

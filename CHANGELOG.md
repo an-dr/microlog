@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v7.1.0] - 2026-05-19
+
+### Added
+
+- `ulog_event_to_cstr_colored()` — converts a log event to a string with ANSI colour codes, always emitting colour regardless of the runtime colour configuration
+
+### Fixed
+
+- `ULOG_BUILD_DYNAMIC_CONFIG=0` in a user config header was incorrectly activating dynamic config mode (issue #157, reported by saphieron)
+- `output_stdout_handler` ignored the runtime colour configuration set via `ulog_color_config()`, always rendering with colour (issue #157, reported by heeplr)
+
 ## [v7.0.3] - March 06, 2026
 
 ### Fixed

@@ -27,13 +27,18 @@ struct Fixture {
     ~Fixture() { ulog_cleanup(); }
 };
 
-// ULOG_BUILD_COLOR 1 → ANSI codes must appear when using ulog_event_to_cstr_colored
-TEST_CASE_FIXTURE(Fixture, "Event to cstr - ulog_event_to_cstr_colored emits ANSI codes when ULOG_BUILD_COLOR=1") {
-    ulog_cleanup();
-    ut_callback_reset();
-    ulog_output_add(ut_callback_colored, nullptr, ULOG_LEVEL_TRACE);
-    ulog_output_level_set_all(ULOG_LEVEL_TRACE);
+struct ColoredFixture {
+    ColoredFixture() {
+        ulog_cleanup();
+        ut_callback_reset();
+        ulog_output_add(ut_callback_colored, nullptr, ULOG_LEVEL_TRACE);
+        ulog_output_level_set_all(ULOG_LEVEL_TRACE);
+    }
+    ~ColoredFixture() { ulog_cleanup(); }
+};
 
+// ULOG_BUILD_COLOR 1 → ANSI codes must appear when using ulog_event_to_cstr_colored
+TEST_CASE_FIXTURE(ColoredFixture, "Event to cstr - ulog_event_to_cstr_colored emits ANSI codes when ULOG_BUILD_COLOR=1") {
     ulog_info("hello");
 
     const char *msg = ut_callback_get_last_message();
