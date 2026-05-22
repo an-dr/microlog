@@ -3,6 +3,7 @@
 
 # Build artifacts
 build
+build_*/
 dist
 install
 subprojects
@@ -10,6 +11,3 @@ subprojects
 # Logs and dump files
 *.stackdump
 example.log
-
-# Tests
-build_tests

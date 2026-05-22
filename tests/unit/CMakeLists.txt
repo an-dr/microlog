@@ -182,6 +182,23 @@ target_include_directories(test_disabled PRIVATE ${ULOG_INCLUDE_DIR})
 target_compile_definitions(test_disabled PRIVATE "-DULOG_BUILD_DISABLED=1")
 add_test(NAME DisabledFeatureTest COMMAND test_disabled)
 
+# --- Event-to-cstr Tests ---
+# Verify that ulog_event_to_cstr / ulog_event_to_cstr_colored correctly reflect
+# the compile-time static config when built with ulog_config_color_level.h
+# (COLOR=1, LEVEL_SHORT=1, SOURCE_LOCATION=0, TIME=1, DYNAMIC_CONFIG=0).
+set(ULOG_CONFIG_TEST_EVENT_TO_CSTR "-DULOG_BUILD_CONFIG_HEADER_ENABLED=1"
+                                    "-DULOG_BUILD_CONFIG_HEADER_NAME=\"ulog_config_color_level.h\""
+                                    )
+
+add_executable(test_event_to_cstr)
+target_sources(test_event_to_cstr PRIVATE ${ULOG_SRC}
+                                          ut_callback.c
+                                          test_event_to_cstr.cpp)
+target_include_directories(test_event_to_cstr PRIVATE ${ULOG_INCLUDE_DIR}
+                                                       ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_definitions(test_event_to_cstr PRIVATE ${ULOG_CONFIG_TEST_EVENT_TO_CSTR})
+add_test(NAME EventToCstrTest COMMAND test_event_to_cstr)
+
 # --- microlog6 Compatibility Test ---
 add_executable(test_microlog6_compat)
 target_sources(test_microlog6_compat PRIVATE ${ULOG_SRC}

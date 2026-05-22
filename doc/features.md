@@ -272,6 +272,7 @@ When the feature is enabled all logging macros are replaced with empty stubs or 
 | ulog_event_get_time         | `NULL`                     |
 | ulog_event_get_topic        | `ULOG_TOPIC_ID_INVALID`    |
 | ulog_event_to_cstr          | `ULOG_STATUS_DISABLED`     |
+| ulog_event_to_cstr_colored  | `ULOG_STATUS_DISABLED`     |
 | ulog_level_config           | `ULOG_STATUS_DISABLED`     |
 | ulog_level_reset_levels     | `ULOG_STATUS_DISABLED`     |
 | ulog_level_set_new_levels   | `ULOG_STATUS_DISABLED`     |
@@ -463,7 +464,7 @@ Outputs can be removed by using the `ulog_output_remove()` function.
 
 #### User Defined Output
 
-One or more output handler functions which are called with the log data can be provided to the library by using the `ulog_output_add()` function. You can use `ulog_event_to_cstr` to convert the `ulog_event` structure to a string.
+One or more output handler functions which are called with the log data can be provided to the library by using the `ulog_output_add()` function. Use `ulog_event_to_cstr` to convert the event to a plain string, or `ulog_event_to_cstr_colored` to include ANSI colour codes. Note that `ulog_event_to_cstr_colored` always emits colour codes regardless of the runtime colour configuration.
 
 ```c
 void arduino_output_handler(ulog_event *ev, void *arg) {
