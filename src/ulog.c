@@ -184,10 +184,10 @@
    Optional Feature: Dynamic Configuration
 ============================================================================ */
 
-#if !defined(ULOG_BUILD_DYNAMIC_CONFIG) || !(ULOG_BUILD_DYNAMIC_CONFIG)
+#ifndef ULOG_BUILD_DYNAMIC_CONFIG
     #define ULOG_HAS_DYNAMIC_CONFIG 0
 #else
-    #define ULOG_HAS_DYNAMIC_CONFIG 1
+    #define ULOG_HAS_DYNAMIC_CONFIG (ULOG_BUILD_DYNAMIC_CONFIG == 1)
 
     // Undef macros to avoid conflicts
     #undef ULOG_BUILD_EXTRA_OUTPUTS
