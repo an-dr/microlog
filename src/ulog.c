@@ -25,21 +25,21 @@
    Core Feature: Static Configuration
 =======================================================================================================================
 
-| Build Option                     | Dependent Macro(s)        | Purpose                  |
-| -------------------------------- | ------------------------- | ------------------------ |
-| ULOG_BUILD_COLOR                 | ULOG_HAS_COLOR            | Compile color code paths |
-| ULOG_BUILD_PREFIX_SIZE           | ULOG_HAS_PREFIX           | Prefix buffer logic      |
-| ULOG_BUILD_EXTRA_OUTPUTS         | ULOG_HAS_EXTRA_OUTPUTS    | Extra output backends    |
-| ULOG_BUILD_SOURCE_LOCATION       | ULOG_HAS_SOURCE_LOCATION  | File\:line output        |
-| ULOG_BUILD_LEVEL_SHORT           | ULOG_LEVEL_HAS_SHORT/_LONG| Short level style        |
-| ULOG_BUILD_TIME                  | ULOG_HAS_TIME             | Timestamp support        |
-| ULOG_BUILD_TOPICS_MODE           | ULOG_HAS_TOPICS           | Topics mode              |
-| ULOG_BUILD_TOPICS_STATIC_NUM     | -                         | Topic number             |
-| ULOG_BUILD_DYNAMIC_CONFIG        | ULOG_HAS_DYNAMIC_CONFIG   | Runtime toggles          |
-| ULOG_BUILD_WARN_NOT_ENABLED      | ULOG_HAS_WARN_NOT_ENABLED | Warning stubs            |
-| ULOG_BUILD_CONFIG_HEADER_ENABLED | -                         | Configuration header mode|
-| ULOG_BUILD_CONFIG_HEADER_NAME    | -                         | Configuration header name|
-| ULOG_BUILD_DISABLED              | -                         | Disable ulog completely  |
+| Build Option                     | Default (see *_DEFAULT)    | Dependent Macro(s)         | Purpose                   |
+| -------------------------------- | -------------------------- | -------------------------- | ------------------------- |
+| ULOG_BUILD_COLOR                 | 0                          | ULOG_HAS_COLOR             | Compile color code paths  |
+| ULOG_BUILD_PREFIX_SIZE           | 0                          | ULOG_HAS_PREFIX            | Prefix buffer logic       |
+| ULOG_BUILD_EXTRA_OUTPUTS         | 0                          | ULOG_HAS_EXTRA_OUTPUTS     | Extra output backends     |
+| ULOG_BUILD_SOURCE_LOCATION       | 1                          | ULOG_HAS_SOURCE_LOCATION   | File\:line output         |
+| ULOG_BUILD_LEVEL_SHORT           | 0                          | ULOG_HAS_LEVEL_SHORT/_LONG | Short level style         |
+| ULOG_BUILD_TIME                  | 0                          | ULOG_HAS_TIME              | Timestamp support         |
+| ULOG_BUILD_TOPICS_MODE           | TOPICS_MODE_OFF            | ULOG_HAS_TOPICS            | Topics mode               |
+| ULOG_BUILD_TOPICS_STATIC_NUM     | 0                          | -                          | Topic number              |
+| ULOG_BUILD_DYNAMIC_CONFIG        | 0                          | ULOG_HAS_DYNAMIC_CONFIG    | Runtime toggles           |
+| ULOG_BUILD_WARN_NOT_ENABLED      | 1                          | ULOG_HAS_WARN_NOT_ENABLED  | Warning stubs             |
+| ULOG_BUILD_CONFIG_HEADER_ENABLED | 0                          | -                          | Configuration header mode |
+| ULOG_BUILD_CONFIG_HEADER_NAME    | "ulog_config.h"            | -                          | Configuration header name |
+| ULOG_BUILD_DISABLED              | 0                          | -                          | Disable ulog completely   |
 
 ===================================================================================================================== */
 
@@ -56,6 +56,13 @@
 #define ULOG_BUILD_CONFIG_HEADER_ENABLED_DEFAULT 0
 #define ULOG_BUILD_CONFIG_HEADER_NAME_DEFAULT    "ulog_config.h"
 #define ULOG_BUILD_DISABLED_DEFAULT              0
+
+// Default initial runtime state for dynamic-config features.
+// All on by default for backwards compatibility, except LEVEL_SHORT.
+#define ULOG_BUILD_DYNAMIC_COLOR_DEFAULT          1
+#define ULOG_BUILD_DYNAMIC_TIME_DEFAULT           1
+#define ULOG_BUILD_DYNAMIC_SOURCE_LOCATION_DEFAULT 1
+#define ULOG_BUILD_DYNAMIC_LEVEL_SHORT_DEFAULT    0
 
 
 /* ============================================================================
@@ -108,6 +115,37 @@
 #endif // ULOG_BUILD_CONFIG_HEADER_ENABLED
 
 /* ============================================================================
+   Optional Feature: Dynamic Configuration
+   Resolved first so it can override BUILD_ values before HAS_ are derived.
+============================================================================ */
+
+#ifndef ULOG_BUILD_DYNAMIC_CONFIG
+    #define ULOG_HAS_DYNAMIC_CONFIG (ULOG_BUILD_DYNAMIC_CONFIG_DEFAULT == 1)
+#else
+    #define ULOG_HAS_DYNAMIC_CONFIG (ULOG_BUILD_DYNAMIC_CONFIG == 1)
+#endif
+
+// In dynamic mode all features must be compiled in to allow runtime toggling.
+// Override any user-supplied BUILD_ values now, before the HAS_ derivation
+// below, so the standard blocks produce the correct result for both modes.
+#if ULOG_HAS_DYNAMIC_CONFIG
+    #undef  ULOG_BUILD_COLOR
+    #define ULOG_BUILD_COLOR            1
+    #undef  ULOG_BUILD_TIME
+    #define ULOG_BUILD_TIME             1
+    #undef  ULOG_BUILD_SOURCE_LOCATION
+    #define ULOG_BUILD_SOURCE_LOCATION  1
+    #undef  ULOG_BUILD_WARN_NOT_ENABLED
+    #define ULOG_BUILD_WARN_NOT_ENABLED 0
+    #undef  ULOG_BUILD_EXTRA_OUTPUTS
+    #define ULOG_BUILD_EXTRA_OUTPUTS    8
+    #undef  ULOG_BUILD_PREFIX_SIZE
+    #define ULOG_BUILD_PREFIX_SIZE      64
+    #undef  ULOG_BUILD_TOPICS_MODE
+    #define ULOG_BUILD_TOPICS_MODE      ULOG_BUILD_TOPICS_MODE_DYNAMIC
+#endif
+
+/* ============================================================================
     Core Feature: Static Configuration
 ============================================================================ */
 
@@ -132,7 +170,12 @@
 #endif
 
 
-#ifndef ULOG_BUILD_LEVEL_SHORT
+// Dynamic mode compiles in both styles so runtime can switch between them.
+// Static mode is exclusive: either long or short, never both.
+#if ULOG_HAS_DYNAMIC_CONFIG
+    #define ULOG_HAS_LEVEL_LONG  1
+    #define ULOG_HAS_LEVEL_SHORT 1
+#elif !defined(ULOG_BUILD_LEVEL_SHORT)
     #define ULOG_HAS_LEVEL_LONG  (ULOG_BUILD_LEVEL_SHORT_DEFAULT != 1)
     #define ULOG_HAS_LEVEL_SHORT (ULOG_BUILD_LEVEL_SHORT_DEFAULT == 1)
 #else
@@ -161,77 +204,36 @@
     #define ULOG_HAS_WARN_NOT_ENABLED (ULOG_BUILD_WARN_NOT_ENABLED == 1)
 #endif
 
+
 #ifndef ULOG_BUILD_TOPICS_MODE
     #define ULOG_HAS_TOPICS (ULOG_BUILD_TOPICS_MODE_DEFAULT != ULOG_BUILD_TOPICS_MODE_OFF)
 #else
-    /* Topics enabled when mode is not OFF (STATIC or DYNAMIC) */
     #define ULOG_HAS_TOPICS (ULOG_BUILD_TOPICS_MODE != ULOG_BUILD_TOPICS_MODE_OFF)
 #endif
 
-// Initial values for the dynamic-config runtime structs.
-// In dynamic mode all features are compiled in; these control the starting
-// state so the user can begin logging without an explicit runtime call.
-// Defaults match the previous all-on behaviour for backwards compatibility.
-// Override via ULOG_BUILD_DYNAMIC_<FEATURE> (separate from the static
-// ULOG_BUILD_* flags, which only control compile-time feature inclusion).
+// Initial runtime state for dynamic-config feature structs.
+// These only affect the startup value of each runtime toggle; they are
+// independent of the ULOG_BUILD_* compile-time inclusion flags above.
+// Override with ULOG_BUILD_DYNAMIC_<FEATURE>=0/1 at build time.
 #ifndef ULOG_BUILD_DYNAMIC_COLOR
-    #define ULOG_DYNCONFIG_INIT_COLOR 1
+    #define ULOG_DYNCONFIG_INIT_COLOR (ULOG_BUILD_DYNAMIC_COLOR_DEFAULT == 1)
 #else
     #define ULOG_DYNCONFIG_INIT_COLOR (ULOG_BUILD_DYNAMIC_COLOR == 1)
 #endif
 #ifndef ULOG_BUILD_DYNAMIC_TIME
-    #define ULOG_DYNCONFIG_INIT_TIME 1
+    #define ULOG_DYNCONFIG_INIT_TIME (ULOG_BUILD_DYNAMIC_TIME_DEFAULT == 1)
 #else
     #define ULOG_DYNCONFIG_INIT_TIME (ULOG_BUILD_DYNAMIC_TIME == 1)
 #endif
 #ifndef ULOG_BUILD_DYNAMIC_SOURCE_LOCATION
-    #define ULOG_DYNCONFIG_INIT_SOURCE_LOCATION 1
+    #define ULOG_DYNCONFIG_INIT_SOURCE_LOCATION (ULOG_BUILD_DYNAMIC_SOURCE_LOCATION_DEFAULT == 1)
 #else
     #define ULOG_DYNCONFIG_INIT_SOURCE_LOCATION (ULOG_BUILD_DYNAMIC_SOURCE_LOCATION == 1)
 #endif
 #ifndef ULOG_BUILD_DYNAMIC_LEVEL_SHORT
-    #define ULOG_DYNCONFIG_INIT_LEVEL_SHORT 0
+    #define ULOG_DYNCONFIG_INIT_LEVEL_SHORT (ULOG_BUILD_DYNAMIC_LEVEL_SHORT_DEFAULT == 1)
 #else
     #define ULOG_DYNCONFIG_INIT_LEVEL_SHORT (ULOG_BUILD_DYNAMIC_LEVEL_SHORT == 1)
-#endif
-
-/* ============================================================================
-   Optional Feature: Dynamic Configuration
-============================================================================ */
-
-#ifndef ULOG_BUILD_DYNAMIC_CONFIG
-    #define ULOG_HAS_DYNAMIC_CONFIG (ULOG_BUILD_DYNAMIC_CONFIG_DEFAULT == 1)
-#else
-    #define ULOG_HAS_DYNAMIC_CONFIG (ULOG_BUILD_DYNAMIC_CONFIG == 1)
-
-    // Undef macros to avoid conflicts
-    #undef ULOG_BUILD_EXTRA_OUTPUTS
-    #undef ULOG_BUILD_PREFIX_SIZE
-    #undef ULOG_BUILD_TOPICS_MODE
-    #undef ULOG_HAS_COLOR
-    #undef ULOG_HAS_EXTRA_OUTPUTS
-    #undef ULOG_HAS_LEVEL_LONG
-    #undef ULOG_HAS_LEVEL_SHORT
-    #undef ULOG_HAS_PREFIX
-    #undef ULOG_HAS_SOURCE_LOCATION
-    #undef ULOG_HAS_TIME
-    #undef ULOG_HAS_TOPICS
-    #undef ULOG_HAS_WARN_NOT_ENABLED
-
-    // Configure features based on runtime config
-    #define ULOG_BUILD_EXTRA_OUTPUTS 8
-    #define ULOG_BUILD_PREFIX_SIZE 64
-    /* In dynamic configuration mode we enable dynamic topics */
-    #define ULOG_BUILD_TOPICS_MODE ULOG_BUILD_TOPICS_MODE_DYNAMIC
-    #define ULOG_HAS_COLOR 1
-    #define ULOG_HAS_EXTRA_OUTPUTS 1
-    #define ULOG_HAS_LEVEL_LONG 1
-    #define ULOG_HAS_LEVEL_SHORT 1
-    #define ULOG_HAS_PREFIX 1
-    #define ULOG_HAS_SOURCE_LOCATION 1
-    #define ULOG_HAS_TIME 1
-    #define ULOG_HAS_TOPICS 1
-    #define ULOG_HAS_WARN_NOT_ENABLED 0
 #endif
 
 // clang-format on
@@ -1810,6 +1812,8 @@ static ulog_status event_to_cstr_impl(ulog_event *ev, char *out,
     print_target tgt = {.type       = PRINT_TARGET_BUFFER,
                         .dsc.buffer = {out, 0, out_size}};
 
+    // Copy the event to avoid consuming the caller's va_list.
+    // memcpy cost is negligible (~4-10 word moves); vsnprintf below dominates.
     ulog_event ev_copy;
     memcpy(&ev_copy, ev, sizeof(ulog_event));
     va_copy(ev_copy.message_format_args, ev->message_format_args);

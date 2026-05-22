@@ -1,7 +1,6 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest/doctest.h"
 
-#include <cctype>
 #include <cstring>
 #include "ulog.h"
 #include "ut_callback.h"
@@ -19,6 +18,16 @@ struct TestFixture {
         ulog_prefix_set_fn(test_prefix);
     }
     ~TestFixture() = default;
+};
+
+struct TestFixtureColored {
+    TestFixtureColored() {
+        ulog_cleanup();
+        ut_callback_reset();
+        ulog_output_add(ut_callback_colored, nullptr, ULOG_LEVEL_TRACE);
+        ulog_output_level_set_all(ULOG_LEVEL_TRACE);
+    }
+    ~TestFixtureColored() { ulog_cleanup(); }
 };
 
 TEST_CASE_FIXTURE(TestFixture, "Dynamic Config - Prefix") {
@@ -123,12 +132,7 @@ TEST_CASE_FIXTURE(TestFixture, "Dynamic Config - Time") {
     REQUIRE(strstr(last_message, "Test message without time") != nullptr);
 }
 
-TEST_CASE_FIXTURE(TestFixture, "Dynamic Config - ulog_event_to_cstr_colored emits ANSI codes") {
-    ulog_cleanup();
-    ut_callback_reset();
-    ulog_output_add(ut_callback_colored, nullptr, ULOG_LEVEL_TRACE);
-    ulog_output_level_set_all(ULOG_LEVEL_TRACE);
-
+TEST_CASE_FIXTURE(TestFixtureColored, "Dynamic Config - ulog_event_to_cstr_colored emits ANSI codes") {
     ulog_info("hello");
 
     const char *msg = ut_callback_get_last_message();
