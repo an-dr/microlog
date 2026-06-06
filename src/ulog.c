@@ -1384,12 +1384,13 @@ ulog_status ulog_topic_level_set(const char *topic_name, ulog_level level) {
 }
 
 ulog_status ulog_topic_level_get(const char *topic_name, ulog_level *level) {
+    if (is_str_empty(topic_name) || level == NULL) {
+        return ULOG_STATUS_INVALID_ARGUMENT;
+    }
+
     ulog_topic_id topic_id = ulog_topic_get_id(topic_name);
     if (topic_id == ULOG_TOPIC_ID_INVALID) {
         return ULOG_STATUS_NOT_FOUND;  // Topic not found, do nothing
-    }
-    if (level == NULL) {
-        return ULOG_STATUS_INVALID_ARGUMENT;
     }
     return topic_get_level(topic_id, level);
 }
@@ -1480,6 +1481,10 @@ ulog_status ulog_topic_remove(const char *topic_name) {
 // ================
 
 ulog_topic_id topic_str_to_id(const char *str) {
+    if (is_str_empty(str)) {
+        return ULOG_TOPIC_ID_INVALID;
+    }
+
     for (int i = 0; i < TOPIC_STATIC_NUM; i++) {
         if (is_str_empty(topic_data.topics[i].name)) {
             continue;  // Skip empty slot; continue searching
@@ -1578,6 +1583,10 @@ static topic_t *topic_get_last(void) {
 }
 
 ulog_topic_id topic_str_to_id(const char *str) {
+    if (is_str_empty(str)) {
+        return ULOG_TOPIC_ID_INVALID;
+    }
+
     for (topic_t *t = topic_get_first(); t != NULL; t = topic_get_next(t)) {
         if (!is_str_empty(t->name) && strcmp(t->name, str) == 0) {
             return t->id;
