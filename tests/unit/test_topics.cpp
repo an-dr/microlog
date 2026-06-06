@@ -69,6 +69,19 @@ TEST_CASE_FIXTURE(TestFixture, "Topics: Get Level") {
     ulog_topic_remove("topic");
 }
 
+TEST_CASE_FIXTURE(TestFixture, "Topics: Get Level Invalid Arguments") {
+    ulog_level level = ULOG_LEVEL_TRACE;
+
+    ulog_topic_add("topic", ULOG_OUTPUT_ALL, ULOG_LEVEL_WARN);
+
+    CHECK(ulog_topic_level_get(NULL, &level) == ULOG_STATUS_INVALID_ARGUMENT);
+    CHECK(ulog_topic_level_get("", &level) == ULOG_STATUS_INVALID_ARGUMENT);
+    CHECK(ulog_topic_level_get("topic", NULL) == ULOG_STATUS_INVALID_ARGUMENT);
+    CHECK(ulog_topic_level_get("missing", &level) == ULOG_STATUS_NOT_FOUND);
+
+    ulog_topic_remove("topic");
+}
+
 TEST_CASE_FIXTURE(TestFixture, "Topics: Cannot create topic with empty name") {
     int res;
 
