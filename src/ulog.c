@@ -864,7 +864,7 @@ static void level_print(print_target *tgt, ulog_event *ev) {
 
 /// @brief Returns the string representation of the level
 const char *ulog_level_to_string(ulog_level level) {
-    if (level < LEVEL_MIN_VALUE || level >= level_data.dsc->max_level) {
+    if (level < LEVEL_MIN_VALUE || level > level_data.dsc->max_level) {
         return "?";  // Return a default string for invalid levels
     }
 

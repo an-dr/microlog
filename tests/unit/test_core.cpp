@@ -106,3 +106,7 @@ TEST_CASE_FIXTURE(TestFixture, "Invalid Level Handling") {
     result = ulog_level_set_new_levels(&invalid_max_desc);
     CHECK(result == ULOG_STATUS_INVALID_ARGUMENT);
 }
+
+TEST_CASE_FIXTURE(TestFixture, "Maximum Level String") {
+    CHECK(strcmp(ulog_level_to_string(ULOG_LEVEL_FATAL), "FATAL") == 0);
+}
