@@ -14,9 +14,13 @@ $ErrorActionPreference = "Stop"
 Push-Location $PSScriptRoot
 
 try {
-    
-    # Build the test package
-    cmake -B./build/cmake-cpm
+
+    $RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
+
+    # Build the test package. Pass the repo root so CMake can use the local
+    # source tree instead of fetching from a hardcoded upstream URL, which
+    # would fail when running from a fork.
+    cmake -B./build/cmake-cpm "-DMICROLOG_SOURCE_DIR=$RepoRoot"
     cmake --build ./build/cmake-cpm --verbose
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Tests failed with exit code $LASTEXITCODE"
