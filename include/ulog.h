@@ -466,6 +466,7 @@ ulog_topic_id ulog_topic_get_id(const char *topic_name);
 
 
 /// @brief Main logging function - typically called through macros
+/// @details Messages outside the configured level range are dropped.
 /// @param level Log level for this message
 /// @param file Source file name (usually __FILE__)
 /// @param line Source line number (usually __LINE__)

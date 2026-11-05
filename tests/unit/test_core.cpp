@@ -110,3 +110,39 @@ TEST_CASE_FIXTURE(TestFixture, "Invalid Level Handling") {
 TEST_CASE_FIXTURE(TestFixture, "Maximum Level String") {
     CHECK(strcmp(ulog_level_to_string(ULOG_LEVEL_FATAL), "FATAL") == 0);
 }
+
+TEST_CASE_FIXTURE(TestFixture, "Custom levels stay within the name table") {
+    ulog_cleanup();
+    ulog_output_add(ut_callback, nullptr, ULOG_LEVEL_TRACE);
+    const char *previous_name    = ulog_level_to_string(ULOG_LEVEL_INFO);
+    ulog_level_descriptor levels = {
+        .max_level = ULOG_LEVEL_TOTAL,
+        .names     = {"L0", "L1", "L2", "L3", "L4", "L5", "L6", "L7"}};
+    CHECK(ulog_level_set_new_levels(&levels) == ULOG_STATUS_INVALID_ARGUMENT);
+    CHECK(ulog_level_to_string(ULOG_LEVEL_INFO) == previous_name);
+
+    levels.max_level = (ulog_level)99;
+    CHECK(ulog_level_set_new_levels(&levels) == ULOG_STATUS_INVALID_ARGUMENT);
+
+    levels.max_level = ULOG_LEVEL_7;
+    REQUIRE(ulog_level_set_new_levels(&levels) == ULOG_STATUS_OK);
+    ulog_output_level_set_all(ULOG_LEVEL_TRACE);
+    ulog(ULOG_LEVEL_7, "highest custom level");
+    CHECK(ut_callback_get_message_count() == 1);
+    CHECK(strstr(ut_callback_get_last_message(), "L7 ") != nullptr);
+    CHECK(ulog_level_reset_levels() == ULOG_STATUS_OK);
+}
+
+TEST_CASE_FIXTURE(TestFixture, "Logging drops invalid levels") {
+    ulog_cleanup();
+    ulog_output_add(ut_callback, nullptr, ULOG_LEVEL_TRACE);
+    ulog_output_level_set_all(ULOG_LEVEL_TRACE);
+    ulog((ulog_level)-1, "negative level");
+    ulog(ULOG_LEVEL_6, "unconfigured custom level");
+    ulog(ULOG_LEVEL_TOTAL, "one past the level table");
+    ulog((ulog_level)99, "out of range level");
+    CHECK(ut_callback_get_message_count() == 0);
+
+    ulog_info("valid message after rejected levels");
+    CHECK(ut_callback_get_message_count() == 1);
+}

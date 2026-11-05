@@ -873,7 +873,8 @@ const char *ulog_level_to_string(ulog_level level) {
 
 ulog_status ulog_level_set_new_levels(const ulog_level_descriptor *new_levels) {
     if (new_levels == NULL || new_levels->names[0] == NULL ||
-        new_levels->max_level <= LEVEL_MIN_VALUE) {
+        new_levels->max_level <= LEVEL_MIN_VALUE ||
+        new_levels->max_level >= ULOG_LEVEL_TOTAL) {
         return ULOG_STATUS_INVALID_ARGUMENT;  // Invalid argument
     }
     if (lock_lock() != ULOG_STATUS_OK) {
@@ -1892,6 +1893,11 @@ void ulog_log(ulog_level level, const char *file, int line, const char *topic,
               const char *message, ...) {
     if (lock_lock() != ULOG_STATUS_OK) {
         return;  // Failed to acquire lock, drop log
+    }
+
+    if (!level_is_valid(level)) {
+        (void)lock_unlock();
+        return;  // Invalid level, drop log before indexing level tables
     }
 
     // Try to get topic ID, outputs and check if logging is allowed for this
