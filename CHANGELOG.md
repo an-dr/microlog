@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v7.1.1] - November 06, 2026
+
+### Fixed
+
+- `ulog_level_to_string()` returned `?` for the highest configured level, such as `FATAL` by default or the top entry of custom levels (#162, by 94xhn)
+- Out-of-bounds read when `ulog_log()` received an invalid log level: messages outside the configured range are now dropped (#163, by Firat17aze)
+- `ulog_level_set_new_levels()` accepted a `max_level` beyond the level name table: it now returns `ULOG_STATUS_INVALID_ARGUMENT` (#163, by Firat17aze)
+- `ULOG_BUILD_CONFIG_HEADER_ENABLED=0` still enabled configuration header mode, which tried to include `ulog_config.h` and rejected `ULOG_BUILD_*` compiler flags (#164, by Firat17aze)
+
 ## [v7.1.0] - June 06, 2026
 
 ### Added
