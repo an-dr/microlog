@@ -75,9 +75,10 @@
    Optional Feature: Configuration Header
 ============================================================================ */
 
-#ifdef ULOG_BUILD_CONFIG_HEADER_ENABLED
+#if ULOG_BUILD_CONFIG_HEADER_ENABLED == 1
 
-    // If ULOG_BUILD_CONFIG_HEADER_ENABLED is defined, no other ULOG_BUILD_* macros should be defined to avoid conflicts
+    // With the configuration header enabled, keep other ULOG_BUILD_* macros
+    // in that header to avoid conflicts.
     #ifdef ULOG_BUILD_COLOR
         #error "ULOG_BUILD_CONFIG_HEADER_ENABLED cannot be used with ULOG_BUILD_COLOR"
     #endif

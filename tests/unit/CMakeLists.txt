@@ -175,6 +175,18 @@ target_include_directories(test_static_config_header PRIVATE ${ULOG_INCLUDE_DIR}
 target_compile_definitions(test_static_config_header PRIVATE "-DULOG_BUILD_CONFIG_HEADER_ENABLED=1")
 add_test(NAME StaticConfigHeaderTest COMMAND test_static_config_header)
 
+# --- Disabled Config Header Test ---
+# A zero-valued option must allow compiler flags without including a header.
+add_executable(test_config_header_disabled)
+target_sources(test_config_header_disabled PRIVATE ${ULOG_SRC}
+                                                   ut_callback.c
+                                                   test_output.cpp)
+target_include_directories(test_config_header_disabled PRIVATE ${ULOG_INCLUDE_DIR})
+target_compile_definitions(test_config_header_disabled PRIVATE ${ULOG_CONFIG_BASE}
+    "-DULOG_BUILD_CONFIG_HEADER_ENABLED=0"
+    "-DULOG_BUILD_CONFIG_HEADER_NAME=\"missing_ulog_config.h\"")
+add_test(NAME DisabledConfigHeaderTest COMMAND test_config_header_disabled)
+
 # --- Disabled Feature Test ---
 add_executable(test_disabled)
 target_sources(test_disabled PRIVATE test_disabled.cpp)  # No ulog.c source when disabled

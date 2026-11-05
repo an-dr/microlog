@@ -313,7 +313,7 @@ When the feature is enabled all logging macros are replaced with empty stubs or 
 
 As an alternative to defining build options individually via compiler flags, you can define `ULOG_BUILD_CONFIG_HEADER_ENABLED=1` to include a single header file named `ulog_config.h` that contains all configuration options. This approach simplifies configuration management by centralizing all build options in one file.
 
-When `ULOG_BUILD_CONFIG_HEADER_ENABLED` is defined:
+When `ULOG_BUILD_CONFIG_HEADER_ENABLED` is set to `1`:
 
 - The library will include `ulog_config.h`
   - You can overwrite it with `ULOG_BUILD_CONFIG_HEADER_NAME="my_ulog_conf.h"`
