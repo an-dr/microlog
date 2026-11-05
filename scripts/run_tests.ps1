@@ -67,11 +67,13 @@ function Clean-CoverageData($BUILD_DIR) {
 function Generate-CoverageReport($BUILD_DIR) {
     Write-Output "[COVERAGE] Generating coverage report..."
 
+    # ulog.c is built under several configurations, so one function can start on
+    # different lines between builds, which lcov 2.x reports as "inconsistent".
     Write-Output "[COVERAGE] Capturing initial coverage data..."
-    Invoke-ProcessOrThrow lcov --directory $BUILD_DIR --capture --initial --output-file coverage.info --rc geninfo_unexecuted_blocks=1 --ignore-errors mismatch 2>$null
+    Invoke-ProcessOrThrow lcov --directory $BUILD_DIR --capture --initial --output-file coverage.info --rc geninfo_unexecuted_blocks=1 --ignore-errors "mismatch,inconsistent"
 
     Write-Output "[COVERAGE] Capturing coverage data..."
-    Invoke-ProcessOrThrow lcov --directory $BUILD_DIR --capture --output-file coverage.info --rc geninfo_unexecuted_blocks=1 --ignore-errors mismatch 2>$null
+    Invoke-ProcessOrThrow lcov --directory $BUILD_DIR --capture --output-file coverage.info --rc geninfo_unexecuted_blocks=1 --ignore-errors "mismatch,inconsistent"
 
     Write-Output "[COVERAGE] Extracting coverage for specific files..."
     Invoke-ProcessOrThrow lcov --extract coverage.info "*/src/ulog.c" --output-file coverage.info

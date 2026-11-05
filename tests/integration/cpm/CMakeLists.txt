@@ -9,8 +9,10 @@ execute_process(
 message(STATUS "Current commit: ${GIT_COMMIT_HASH}")
 
 include(CPM.cmake)
+# Clone this checkout: the commit under test may not exist in an-dr/microlog,
+# as with pull requests from forks and unpushed commits.
 cpmaddpackage(NAME microlog GIT_REPOSITORY
-              https://github.com/an-dr/microlog.git GIT_TAG ${GIT_COMMIT_HASH})
+              ${CMAKE_CURRENT_SOURCE_DIR}/../../.. GIT_TAG ${GIT_COMMIT_HASH})
 
 add_executable(example_package example.cpp)
 
