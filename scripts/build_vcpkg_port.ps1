@@ -5,7 +5,7 @@
 
 .DESCRIPTION
     Downloads the GitHub source tarball for a given tag, computes its SHA512,
-    and writes a ready-to-use portfile.cmake + vcpkg.json + usage into dist/vcpkg-port/.
+    and writes a ready-to-use portfile.cmake + vcpkg.json into dist/vcpkg-port/.
 
     Can be run locally or from CI.
 
@@ -86,8 +86,5 @@ Set-Content -Path (Join-Path $OutDir "portfile.cmake") -Value $Portfile -NoNewli
 $OverlayJson = Get-Content (Join-Path $RepoRoot "ports/microlog/vcpkg.json") -Raw
 $RegistryJson = $OverlayJson -replace '"version":\s*"[^"]*"', "`"version`": `"$Version`""
 Set-Content -Path (Join-Path $OutDir "vcpkg.json") -Value $RegistryJson -NoNewline
-
-# usage file (copy from overlay port verbatim)
-Copy-Item (Join-Path $RepoRoot "ports/microlog/usage") (Join-Path $OutDir "usage")
 
 Write-Host "Generated port in: $OutDir"

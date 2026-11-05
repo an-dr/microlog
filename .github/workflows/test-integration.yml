@@ -26,7 +26,12 @@ jobs:
           sudo apt install -y meson ninja-build
 
       - name: Set VCPKG_ROOT
-        run: echo "VCPKG_ROOT=$(dirname $(realpath $(which vcpkg)))" >> $GITHUB_ENV
+        run: |
+          if [ -n "$VCPKG_INSTALLATION_ROOT" ]; then
+            echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
+          else
+            echo "VCPKG_ROOT=$(dirname $(realpath $(which vcpkg)))" >> $GITHUB_ENV
+          fi
         
       - name: Test Meson Package
         run: pwsh -File ./tests/integration/packaging/test_meson.ps1
