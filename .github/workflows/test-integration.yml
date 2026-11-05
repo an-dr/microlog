@@ -37,5 +37,8 @@ jobs:
       - name: Test CMake + CPM
         run: pwsh -File ./tests/integration/cpm/test_cpm.ps1
 
+      - name: Test CMake + CPM on a local-only commit
+        run: pwsh -File ./tests/integration/cpm/test_cpm_local_commit.ps1
+
       - name: Test vcpkg Port
         run: pwsh -File ./tests/integration/vcpkg/test_vcpkg.ps1
