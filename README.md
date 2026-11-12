@@ -1,67 +1,46 @@
 # microlog - Extensible and configurable logging library for embedded and desktop applications
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Latest](https://img.shields.io/github/v/tag/an-dr/microlog?style=flat&filter=v*&label=Release)](https://github.com/an-dr/microlog/tags)
-[![Tests](https://github.com/an-dr/microlog/actions/workflows/workflow-tests.yml/badge.svg?branch=main)](https://github.com/an-dr/microlog/actions/workflows/workflow-tests.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Latest](https://img.shields.io/github/v/tag/an-dr/microlog?style=flat&filter=v*&label=Release)](https://github.com/an-dr/microlog/tags) [![Tests](https://github.com/an-dr/microlog/actions/workflows/workflow-tests.yml/badge.svg?branch=main)](https://github.com/an-dr/microlog/actions/workflows/workflow-tests.yml)
+
+## Why microlog
+
+microlog is a C/C++ logging library that started as a fork of [rxi/log.c](https://github.com/rxi/log.c). It works out of the box with two source files, and lets you strip every feature you do not use at compile time, so the same library fits a small microcontroller and a desktop application.
 
 ![main_pic](doc/README/diagram.drawio.svg)
 
-- **Easy to use** - simple API, works out of the box
-- **Advanced filtering** and log levels per **topic** or **output**
-- **Thread-safety** via external locking injection
-- **Customization** - only data you need
-- **Extensible** - add your own features via public API, set of predefined extensions
-- **Support for embedded systems** static allocation, small size
-- **Easy to install** two files for copy-paste and support for many build systems
-- **For everyone** - C and C++ support, works with any compiler, any platform, commercial or open-source use
-
 In the default configuration it looks like this:
 
-|<img src="doc/README/demo0.png" width="800">|
-|-|
-|Picture 1 - default configuration: no time, long default levels, source location, no topics, no colors|
+| <img src="doc/README/demo0.png" width="800">                                                           |
+| ------------------------------------------------------------------------------------------------------ |
+| Picture 1 - default configuration: no time, long default levels, source location, no topics, no colors |
 
-...but in can be very minimalistic :
+...but it can be very minimalistic:
 
-|<img src="doc/README/demo1.png" width="800">|
-|-|
-|Picture 2 - short levels, no colors, no time, no source location|
+| <img src="doc/README/demo1.png" width="800">                     |
+| ---------------------------------------------------------------- |
+| Picture 2 - short levels, no colors, no time, no source location |
 
 ... or feature-rich:
 
-|<img src="doc/README/demo2.png" width="800"> |
-|-|
-|Picture 3 - time, custom prefix for MsgID, custom syslog levels, topics, source location, colors|
-
-The project is based on the following core principles:
-
-- Universal for embedded and desktop applications
-- No feature - no code for compilation
-- Shallow learning curve, works out of box
-- No dependencies
-- Two files for core functionality.
-- Extensions as recipes for your own features.
+| <img src="doc/README/demo2.png" width="800">                                                     |
+| ------------------------------------------------------------------------------------------------ |
+| Picture 3 - time, custom prefix for MsgID, custom syslog levels, topics, source location, colors |
 
 ## Table of Contents
 
-- [microlog - Extensible and configurable logging library for embedded and desktop applications](#microlog---extensible-and-configurable-logging-library-for-embedded-and-desktop-applications)
-    - [Table of Contents](#table-of-contents)
-    - [Quick Start](#quick-start)
-        - [1. Install](#1-install)
-        - [2. Use](#2-use)
-        - [3. Extend](#3-extend)
-    - [Advanced Usage](#advanced-usage)
-    - [Contributing](#contributing)
-    - [Comparison with log.c](#comparison-with-logc)
-        - [Core Differences](#core-differences)
-        - [Key Capabilities Unique to microlog](#key-capabilities-unique-to-microlog)
-    - [Changelog](#changelog)
-    - [License](#license)
-    - [Credits](#credits)
+- [Why microlog](#why-microlog)
+- [Installation](#installation)
+- [Quickstart](#quickstart)
+- [Features](#features)
+- [Configuration](#configuration)
+- [Documentation](#documentation)
+- [Development](#development)
+- [Comparison with log.c](#comparison-with-logc)
+- [Contributing](#contributing)
+- [License](#license)
+- [Status](#status)
 
-## Quick Start
-
-### 1. Install
+## Installation
 
 **Option 1 - Sources**:
 
@@ -119,22 +98,22 @@ exe = executable(
 
 **Option 5 - CPM:**
 
-- Download CPM (https://github.com/cpm-cmake/CPM.cmake)
-- Add microlog to your projects CMAKE file:
+- Download [CPM](https://github.com/cpm-cmake/CPM.cmake)
+- Add microlog to your project's CMake file, replacing `X.Y.Z` with a release version:
 
 ```cmake
 include(cpm/CPM.cmake)
-CPMAddPackage("gh:an-dr/microlog@6.4.5")
+CPMAddPackage("gh:an-dr/microlog@X.Y.Z")
 
 target_link_libraries(${PROJECT_NAME} PUBLIC microlog::microlog)
-target_compile_definitions( microlog PRIVATE ULOG_BUILD_COLOR=1) # configuration
-    
+target_compile_definitions(microlog PRIVATE ULOG_BUILD_COLOR=1) # configuration
+
 # Or use a user-defined configuration header `ulog_config.h`:
 # target_compile_definitions(microlog PRIVATE ULOG_BUILD_CONFIG_HEADER_ENABLED=1)
 # target_include_directories(microlog PRIVATE path/to/directory/containing/ulog_config.h)
 ```
 
-### 2. Use
+## Quickstart
 
 ```cpp
 #include "ulog.h"
@@ -151,30 +130,56 @@ Output:
 INFO  src/main.cpp:4: Hello, World
 ```
 
-### 3. Extend
+More features in action: [`example/main.cpp`](example/main.cpp).
 
-Add missing functionalities via API or use predefined extensions. See [Extensions documentation](extensions/README.md).
+## Features
 
-## Advanced Usage
+- **Easy to use** - simple API, works out of the box
+- **Advanced filtering** - log levels per **topic** or **output**
+- **Thread-safety** - via external locking injection
+- **Customization** - only the data you need
+- **Extensible** - add your own features via the public API, or use the predefined [extensions](extensions/README.md)
+- **Embedded-friendly** - static allocation, small size
+- **Easy to install** - two files to copy-paste, plus packages for several build systems
+- **For everyone** - C and C++ support, any compiler, any platform, commercial or open-source use
 
-[User Manual in `doc/features.md`](doc/features.md) - detailed information about the available features.
+Core principles:
 
-[Extensions](extensions/README.md) - Optional add-ons that use only the public API to enhance functionality.
+- No feature, no code for compilation
+- Shallow learning curve, works out of the box
+- No dependencies
+- Extensions as recipes for your own features
 
-[See the example for more features in action: `example/main.cpp`](example/main.cpp).
+## Configuration
 
-## Contributing
+Features are enabled and tuned at compile time with `ULOG_BUILD_*` definitions, passed as compiler flags or set in a user-defined `ulog_config.h`. Some of them can also be changed at run time when `ULOG_BUILD_DYNAMIC_CONFIG=1`. The full list of options and their defaults is in the [User Manual](doc/features.md).
 
-Contributions are welcome! Please read the [CONTRIBUTING.md](CONTRIBUTING.md) for details, I tried to keep it simple.
+## Documentation
+
+- [User Manual](doc/features.md) - detailed information about the available features
+- [Extensions](extensions/README.md) - optional add-ons that use only the public API: lock helpers for CMSIS, FreeRTOS, pthread, ThreadX and Windows, and a syslog level set
+- [Design](doc/design.md), [code organization](doc/code.md) and [code style](doc/style.md) - for contributors
+- [CHANGELOG.md](CHANGELOG.md) - release history
+
+## Development
+
+Run the unit tests (requires CMake and PowerShell; CI also installs lcov for coverage):
+
+```bash
+pwsh scripts/run_tests.ps1
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the rest of the build setup.
 
 ## Comparison with log.c
 
-microlog started as a fork of [rxi/log.c](https://github.com/rxi/log.c) (~150 lines, 3.3k stars) but evolved into a fundamentally different architecture (~2,500 lines) optimized for embedded systems and advanced filtering. Thanks to compile-time feature stripping, unused features are excluded from the build—so a minimal microlog configuration can match log.c’s footprint in both size and performance.
+microlog started as a fork of [rxi/log.c](https://github.com/rxi/log.c) (~150 lines, 3.3k stars) but evolved into a fundamentally different architecture (~2,600 lines) optimized for embedded systems and advanced filtering. Thanks to compile-time feature stripping, unused features are excluded from the build—so a minimal microlog configuration can match log.c’s footprint in both size and performance.
 
 ### Core Differences
 
 **rxi/log.c**: Minimalist and ready to use. Fixed footprint, 6 levels, simple callbacks.
-**microlog**: Compile-time feature selection. Configurable footprint, 8 renameable levels, multi-dimensional filtering. 
+
+**microlog**: Compile-time feature selection. Configurable footprint, 8 renameable levels, multi-dimensional filtering.
 
 | Feature                   | log.c                                      | microlog                                                                       |
 | ------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------ |
@@ -185,10 +190,10 @@ microlog started as a fork of [rxi/log.c](https://github.com/rxi/log.c) (~150 li
 | **Log Levels**            | 6 fixed                                    | 8, runtime renameable (e.g., syslog)                                           |
 | **Filtering**             | Global + per-callback                      | Per-output + per-topic + global                                                |
 | **Topics/Subsystems**     | Manual prefixes                            | ✅ Full support with filtering per topic and routing                            |
-| **Output Routing**        | All outputs get all logs                   | ✅ Route topics to specific or all outputs                                      |
+| **Output Routing**        | All outputs get all logs                   | ✅ Route topics to specific or all outputs                                      |
 | **Memory**                | Static                                     | ✅ Static or dynamic (user choice)                                              |
 | **Build Systems**         | Manual integration                         | ✅ CMake, Meson, CPM packages                                                   |
-| **Platform Helpers**      | DIY                                        | ✅ FreeRTOS, Zephyr, ThreadX, pthread, Win32                                    |
+| **Platform Helpers**      | DIY                                        | ✅ CMSIS, FreeRTOS, ThreadX, pthread, Win32                                     |
 
 TL;DR:
 
@@ -222,23 +227,24 @@ ulog_level_descriptor syslog = {ULOG_LEVEL_7,
 ulog_level_set_new_levels(&syslog);
 ```
 
-**4. Fine-Grained Code Control** - 12+ build flags to strip features:
+**4. Fine-Grained Code Control** - build flags to strip features, see the [User Manual](doc/features.md):
 
-```
+```c
 -DULOG_BUILD_SOURCE_LOCATION=0  // Remove file:line
--DULOG_BUILD_TIME=0              // Remove timestamps
--DULOG_BUILD_COLOR=0             // Remove ANSI codes
-...
+-DULOG_BUILD_TIME=0             // Remove timestamps
+-DULOG_BUILD_COLOR=0            // Remove ANSI codes
 ```
 
-## Changelog
+## Contributing
 
-See [CHANGELOG.md](CHANGELOG.md) for details.
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## License
 
 This library is free software; you can redistribute it and/or modify it under the terms of the MIT license. See [LICENSE](LICENSE) for details.
 
-## Credits
+Based on [rxi/log.c](https://github.com/rxi/log.c).
 
-Based on [https://github.com/rxi/log.c.git](https://github.com/rxi/log.c.git)
+## Status
+
+Actively maintained; the latest release is listed in [CHANGELOG.md](CHANGELOG.md).
